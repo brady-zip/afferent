@@ -1,0 +1,1 @@
+{"content":"Current Convex Clerk docs use @clerk/react with ConvexProviderWithClerk. Host app reads ctx.auth identity and passes stable provider-neutral identity into the component; Afferent should not depend on Clerk.","source":"web","provider":"websearch","confidence":"MEDIUM","fetched_at":"2026-07-14T15:20:30.444Z","ttl":86400000,"kind":"docs"}

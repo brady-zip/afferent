@@ -1,0 +1,1 @@
+{"content":"Convex Better Auth 0.12.5 requires Convex >=1.25 and Better Auth 1.6.x. Its Vite integration validates auth in the app and exposes getAuthUser; use that only in host wrappers and keep Afferent provider-neutral.","source":"web","provider":"websearch","confidence":"MEDIUM","fetched_at":"2026-07-14T15:20:30.503Z","ttl":86400000,"kind":"docs"}

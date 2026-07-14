@@ -1,0 +1,1 @@
+{"content":"Official Convex docs use convex-test with Vitest 4 and edge-runtime, register components explicitly, and export a package test helper. Add real-browser UI tests and a small deployed/local-backend smoke tier because convex-test is a mock.","source":"web","provider":"websearch","confidence":"MEDIUM","fetched_at":"2026-07-14T15:20:30.560Z","ttl":86400000,"kind":"docs"}

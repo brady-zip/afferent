@@ -1,0 +1,1 @@
+{"content":"Official template keeps component source, client wrapper, React entry point, test helper, and nested Vite example under one package.json and node_modules to prevent duplicate Convex versions.","source":"web","provider":"websearch","confidence":"MEDIUM","fetched_at":"2026-07-14T15:20:30.272Z","ttl":86400000,"kind":"docs"}

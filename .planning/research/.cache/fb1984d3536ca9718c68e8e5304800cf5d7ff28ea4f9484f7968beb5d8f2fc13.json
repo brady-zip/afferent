@@ -1,0 +1,1 @@
+{"content":"Convex Auth 0.0.94 supports Vite React but remains beta. It should be a demo/integration-fixture dependency, not an Afferent runtime dependency; app wrappers authenticate before component calls.","source":"web","provider":"websearch","confidence":"MEDIUM","fetched_at":"2026-07-14T15:20:30.384Z","ttl":86400000,"kind":"docs"}

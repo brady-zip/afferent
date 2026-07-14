@@ -1,0 +1,1 @@
+{"content":"Vite 8.1 with plugin-react 6 requires Node 20.19 or 22.12+, while React Router 8 requires Node 22.22 and React 19.2.7. Use Node 24 LTS and React 19.2.7 in the demo.","source":"web","provider":"websearch","confidence":"MEDIUM","fetched_at":"2026-07-14T15:20:30.676Z","ttl":86400000,"kind":"docs"}

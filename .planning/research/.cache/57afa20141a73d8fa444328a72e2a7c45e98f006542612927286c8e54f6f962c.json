@@ -1,0 +1,1 @@
+{"content":"Do not introduce a workspace/Turbo boundary: Convex official guidance prefers one package.json to avoid duplicate Convex copies. Use npm, Changesets for semver/changelog, and npm trusted publishing with OIDC/provenance.","source":"web","provider":"websearch","confidence":"MEDIUM","fetched_at":"2026-07-14T15:20:30.735Z","ttl":86400000,"kind":"web"}
