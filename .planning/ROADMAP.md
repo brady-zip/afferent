@@ -28,7 +28,22 @@ Afferent reaches its first public release through four coarse vertical slices. T
   3. Convex Auth, Clerk, and Better Auth fixtures derive actor identity and admin permission inside trusted host functions, behave equivalently, and reject missing or forged identity, permission, and scope arguments.
   4. A visitor can browse every permitted board under the installation-wide policy while an authenticated user can create, edit, withdraw, vote on, and discuss feedback with stable attribution and totals.
   5. Repeated vote operations remain one membership per actor, and comment replies identify one parent without creating nested discussion trees.
-**Plans:** TBD
+**Plans:** 5 plans in 5 waves
+
+**Wave 1**
+- [ ] `01-01-PLAN.md` — Define the failing packed-consumer acceptance test and approve the dependency matrix.
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] `01-02-PLAN.md` — Ship the packed Walking Skeleton with a real scoped component write/read and fixture interaction.
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] `01-03-PLAN.md` — Add secure multi-board lifecycle, scope isolation, DTO privacy, and real-backend pagination.
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [ ] `01-04-PLAN.md` — Add idempotent voting, flat replies, and privacy-preserving actor anonymization.
+
+**Wave 5** *(blocked on Wave 4 completion)*
+- [ ] `01-05-PLAN.md` — Prove three-provider conformance, reject forged authority, and close packed-artifact quality gates.
 **UI hint**: yes
 
 ### Phase 2: Complete Feedback-to-Changelog Workflow
