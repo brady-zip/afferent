@@ -173,17 +173,96 @@ Explicit exclusions for the first product direction, documented to prevent scope
 
 ## Traceability
 
-Roadmap phase mapping will be populated during roadmap creation.
+Every v1 requirement maps to exactly one roadmap phase.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ACCS-01 | TBD | Pending |
+| ACCS-01 | Phase 1 | Pending |
+| ACCS-02 | Phase 1 | Pending |
+| ACCS-03 | Phase 1 | Pending |
+| ACCS-04 | Phase 1 | Pending |
+| ACCS-05 | Phase 1 | Pending |
+| ACCS-06 | Phase 1 | Pending |
+| FDBK-01 | Phase 1 | Pending |
+| FDBK-02 | Phase 1 | Pending |
+| FDBK-03 | Phase 1 | Pending |
+| FDBK-04 | Phase 1 | Pending |
+| FDBK-05 | Phase 1 | Pending |
+| FDBK-06 | Phase 1 | Pending |
+| FDBK-07 | Phase 1 | Pending |
+| FDBK-08 | Phase 1 | Pending |
+| DISC-01 | Phase 2 | Pending |
+| DISC-02 | Phase 2 | Pending |
+| DISC-03 | Phase 2 | Pending |
+| DISC-04 | Phase 2 | Pending |
+| DISC-05 | Phase 2 | Pending |
+| DISC-06 | Phase 2 | Pending |
+| DISC-07 | Phase 2 | Pending |
+| DISC-08 | Phase 2 | Pending |
+| ADMN-01 | Phase 2 | Pending |
+| ADMN-02 | Phase 2 | Pending |
+| ADMN-03 | Phase 2 | Pending |
+| ADMN-04 | Phase 2 | Pending |
+| ADMN-05 | Phase 2 | Pending |
+| ADMN-06 | Phase 2 | Pending |
+| ADMN-07 | Phase 2 | Pending |
+| ADMN-08 | Phase 2 | Pending |
+| ADMN-09 | Phase 2 | Pending |
+| ADMN-10 | Phase 2 | Pending |
+| RMAP-01 | Phase 2 | Pending |
+| RMAP-02 | Phase 2 | Pending |
+| RMAP-03 | Phase 2 | Pending |
+| CHLG-01 | Phase 2 | Pending |
+| CHLG-02 | Phase 2 | Pending |
+| CHLG-03 | Phase 2 | Pending |
+| CHLG-04 | Phase 2 | Pending |
+| CHLG-05 | Phase 2 | Pending |
+| CHLG-06 | Phase 2 | Pending |
+| NOTF-01 | Phase 2 | Pending |
+| NOTF-02 | Phase 2 | Pending |
+| NOTF-03 | Phase 2 | Pending |
+| NOTF-04 | Phase 2 | Pending |
+| NOTF-05 | Phase 2 | Pending |
+| NOTF-06 | Phase 2 | Pending |
+| NOTF-07 | Phase 2 | Pending |
+| COMP-01 | Phase 4 | Pending |
+| COMP-02 | Phase 1 | Pending |
+| COMP-03 | Phase 1 | Pending |
+| COMP-04 | Phase 1 | Pending |
+| COMP-05 | Phase 1 | Pending |
+| COMP-06 | Phase 1 | Pending |
+| COMP-07 | Phase 1 | Pending |
+| UI-01 | Phase 2 | Pending |
+| UI-02 | Phase 2 | Pending |
+| UI-03 | Phase 2 | Pending |
+| UI-04 | Phase 3 | Pending |
+| UI-05 | Phase 3 | Pending |
+| UI-06 | Phase 3 | Pending |
+| UI-07 | Phase 3 | Pending |
+| DEMO-01 | Phase 4 | Pending |
+| DEMO-02 | Phase 4 | Pending |
+| DEMO-03 | Phase 4 | Pending |
+| DEMO-04 | Phase 4 | Pending |
+| DEMO-05 | Phase 4 | Pending |
+| DEMO-06 | Phase 4 | Pending |
+| DEMO-07 | Phase 4 | Pending |
+| QUAL-01 | Phase 2 | Pending |
+| QUAL-02 | Phase 1 | Pending |
+| QUAL-03 | Phase 1 | Pending |
+| QUAL-04 | Phase 3 | Pending |
+| QUAL-05 | Phase 4 | Pending |
+| QUAL-06 | Phase 4 | Pending |
+| QUAL-07 | Phase 3 | Pending |
+| QUAL-08 | Phase 3 | Pending |
+| QUAL-09 | Phase 4 | Pending |
+| QUAL-10 | Phase 1 | Pending |
+| QUAL-11 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 80 total
-- Mapped to phases: 0
-- Unmapped: 80 ⚠️
+- Mapped to phases: 80
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-07-15*
-*Last updated: 2026-07-15 after initial definition*
+*Last updated: 2026-07-15 after roadmap creation*
