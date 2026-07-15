@@ -1,0 +1,4 @@
+interface:
+  display_name: "h5i Radio"
+  short_description: "Message live peer agents through h5i radio"
+  default_prompt: "Use $radio to ask Claude a question and wait for the reply."
