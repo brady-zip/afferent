@@ -110,14 +110,14 @@ Requirements for the first production-ready public release. Roadmap creation wil
 
 - [ ] **QUAL-01**: Automated component tests verify domain invariants, authorization boundaries, visibility rules, voting idempotency, merges, status projections, changelog publication, and notifications.
 - [ ] **QUAL-02**: Auth-conformance tests verify equivalent identity and authorization behavior for Convex Auth, Clerk, and Better Auth fixtures.
-- [ ] **QUAL-03**: A clean consumer fixture can install the packed npm artifact, run Convex code generation, typecheck, and build without source-relative workspace imports.
+- [x] **QUAL-03**: A clean consumer fixture can install the packed npm artifact, run Convex code generation, typecheck, and build without source-relative workspace imports.
 - [ ] **QUAL-04**: A clean consumer fixture can install registry components and build them against the supported package version range.
 - [ ] **QUAL-05**: Browser tests verify the public feedback, roadmap, changelog, notification, and admin workflows against a real Convex deployment.
 - [ ] **QUAL-06**: Adversarial two-user tests verify that sandbox reads, writes, search, counts, seeds, resets, and cleanup never cross visitor scopes.
 - [ ] **QUAL-07**: Supplied public and admin interfaces meet documented WCAG 2.2 AA-oriented keyboard, focus, announcement, contrast, zoom, and reflow checks.
 - [ ] **QUAL-08**: Supplied public and admin interfaces support phone, tablet, and desktop layouts.
 - [ ] **QUAL-09**: Documentation covers installation, component mounting, all three auth integrations, access policy, headless React usage, shadcn installation, customization, testing, deployment, and upgrades.
-- [ ] **QUAL-10**: The repository and published package include the Apache-2.0 license.
+- [x] **QUAL-10**: The repository and published package include the Apache-2.0 license.
 - [ ] **QUAL-11**: A validated npm release publishes explicit package exports, declarations, provenance, and synchronized package, registry, documentation, and demo versions.
 
 ## v2 Requirements
@@ -248,17 +248,18 @@ Every v1 requirement maps to exactly one roadmap phase.
 | DEMO-07 | Phase 4 | Pending |
 | QUAL-01 | Phase 2 | Pending |
 | QUAL-02 | Phase 1 | Pending |
-| QUAL-03 | Phase 1 | Pending |
+| QUAL-03 | Phase 1 | Complete |
 | QUAL-04 | Phase 3 | Pending |
 | QUAL-05 | Phase 4 | Pending |
 | QUAL-06 | Phase 4 | Pending |
 | QUAL-07 | Phase 3 | Pending |
 | QUAL-08 | Phase 3 | Pending |
 | QUAL-09 | Phase 4 | Pending |
-| QUAL-10 | Phase 1 | Pending |
+| QUAL-10 | Phase 1 | Complete |
 | QUAL-11 | Phase 4 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 80 total
 - Mapped to phases: 80
 - Unmapped: 0 ✓
