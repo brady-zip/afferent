@@ -17,6 +17,7 @@ import {
   requireScope,
 } from "../model/scope.js";
 import { PUBLIC_POST_VISIBILITY } from "../model/visibility.js";
+import { requireTagInScope } from "../model/tags.js";
 import {
   postStatusKeyValidator,
   searchResultDtoValidator,
@@ -164,10 +165,7 @@ async function normalizeFilters(
       ? undefined
       : await requireBoardInScope(ctx, args.scopeId, args.boardId);
   if (args.tagId === undefined) return { boardId: board?._id };
-  const tagId = ctx.db.normalizeId("tags", args.tagId);
-  if (!tagId) invalidInput("tag does not exist");
-  const tag = await ctx.db.get(tagId);
-  if (!tag || tag.scopeId !== args.scopeId) invalidInput("tag does not exist");
+  const tag = await requireTagInScope(ctx, args.scopeId, args.tagId);
   return { boardId: board?._id, tagId: tag._id };
 }
 

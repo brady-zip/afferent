@@ -11,11 +11,7 @@ import {
   postStatusKeyValidator,
 } from "../validators.js";
 import schema from "../schema.js";
-import {
-  authenticationRequired,
-  invalidInput,
-  notFound,
-} from "../model/errors.js";
+import { authenticationRequired, invalidInput } from "../model/errors.js";
 import {
   requireBoardInScope,
   requireInstallation,
@@ -23,6 +19,7 @@ import {
 } from "../model/scope.js";
 import { toFeedbackPostDto } from "../model/views.js";
 import { PUBLIC_POST_VISIBILITY } from "../model/visibility.js";
+import { requireTagInScope as loadTagInScope } from "../model/tags.js";
 
 const MAX_FEED_PAGE_SIZE = 50;
 
@@ -52,11 +49,7 @@ async function requireTagInScope(
   scopeId: string,
   tagId: string,
 ) {
-  const normalized = ctx.db.normalizeId("tags", tagId);
-  if (!normalized) notFound("tag");
-  const tag = await ctx.db.get(normalized);
-  if (!tag || tag.scopeId !== scopeId) notFound("tag");
-  return tag;
+  return await loadTagInScope(ctx, scopeId, tagId);
 }
 
 function pagePosts(

@@ -49,7 +49,22 @@ export const feedbackOrderValidator = v.union(
   v.literal("trending"),
 );
 
-export const tagDtoValidator = v.object({ id: v.string(), name: v.string() });
+export const tagDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  id: v.string(),
+  name: v.string(),
+});
+
+export const tagListDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  tags: v.array(tagDtoValidator),
+});
+
+export const tagDeleteResultValidator = v.object({
+  contractVersion: v.literal(1),
+  tagId: v.string(),
+  status: v.union(v.literal("pending"), v.literal("deleted")),
+});
 
 export const commentDtoValidator = v.object({
   contractVersion: v.literal(1),
@@ -261,6 +276,7 @@ export const postActivityDtoValidator = v.object({
   toStatus: v.optional(postStatusKeyValidator),
   fromBoardId: v.optional(v.string()),
   toBoardId: v.optional(v.string()),
+  tagId: v.optional(v.string()),
 });
 
 export const postActivityPageDtoValidator = v.object({

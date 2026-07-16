@@ -18,6 +18,7 @@ export async function appendPostActivity(
     toStatus?: string;
     fromBoardId?: Doc<"boards">["_id"];
     toBoardId?: Doc<"boards">["_id"];
+    tagId?: Doc<"tags">["_id"];
   },
 ) {
   return await ctx.db.insert("postActivity", {
@@ -57,5 +58,6 @@ export async function toPostActivityDto(
     ...(activity.toBoardId === undefined
       ? {}
       : { toBoardId: String(activity.toBoardId) }),
+    ...(activity.tagId === undefined ? {} : { tagId: String(activity.tagId) }),
   };
 }

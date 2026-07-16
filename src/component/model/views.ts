@@ -107,6 +107,12 @@ export async function toFeedbackPostDto(
     voteCount: post.voteCount,
     commentCount: post.commentCount,
     totals: { votes: post.voteCount, comments: post.commentCount },
-    tags: tagRows.map((tag) => ({ id: String(tag!._id), name: tag!.name })),
+    tags: tagRows
+      .filter((tag) => tag!.state === "active")
+      .map((tag) => ({
+        contractVersion: 1 as const,
+        id: String(tag!._id),
+        name: tag!.name,
+      })),
   };
 }

@@ -2,7 +2,15 @@ import { spawnSync } from "node:child_process";
 
 const result = spawnSync(
   "npm",
-  ["exec", "--", "vitest", "run", "tests/integration/tag-cleanup-backend.test.ts"],
+  [
+    "exec",
+    "--",
+    "vitest",
+    "run",
+    "--config",
+    "vitest.scope.config.ts",
+    "tests/integration/tag-cleanup-backend.test.ts",
+  ],
   { cwd: process.cwd(), encoding: "utf8" },
 );
 

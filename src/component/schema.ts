@@ -149,7 +149,15 @@ export default defineSchema({
   tags: defineTable({
     scopeId: v.string(),
     name: v.string(),
-  }).index("by_scope_name", ["scopeId", "name"]),
+    normalizedName: v.string(),
+    state: v.union(
+      v.literal("active"),
+      v.literal("deleting"),
+      v.literal("deleted"),
+    ),
+  })
+    .index("by_scope_name", ["scopeId", "normalizedName"])
+    .index("by_scope_state_name", ["scopeId", "state", "normalizedName"]),
   postTags: defineTable({
     scopeId: v.string(),
     postId: v.id("posts"),
@@ -177,6 +185,7 @@ export default defineSchema({
     orderId: v.string(),
   })
     .index("by_scope_post", ["scopeId", "postId"])
+    .index("by_scope_tag_post", ["scopeId", "tagId", "postId"])
     .index("by_scope_tag_visibility_created", [
       "scopeId",
       "tagId",
@@ -244,6 +253,7 @@ export default defineSchema({
   })
     .index("by_scope_post", ["scopeId", "postId"])
     .index("by_scope_post_tag", ["scopeId", "postId", "tagId"])
+    .index("by_scope_tag_post", ["scopeId", "tagId", "postId"])
     .searchIndex("search_tagged_posts", {
       searchField: "searchText",
       filterFields: [
@@ -291,5 +301,16 @@ export default defineSchema({
     toStatus: v.optional(v.string()),
     fromBoardId: v.optional(v.id("boards")),
     toBoardId: v.optional(v.id("boards")),
+    tagId: v.optional(v.id("tags")),
   }).index("by_scope_post_occurred", ["scopeId", "postId", "occurredAt"]),
+  tagCleanupJobs: defineTable({
+    scopeId: v.string(),
+    tagId: v.id("tags"),
+    actorId: v.id("actors"),
+    state: v.union(v.literal("pending"), v.literal("complete")),
+    createdAt: v.number(),
+    completedAt: v.optional(v.number()),
+  })
+    .index("by_scope_tag", ["scopeId", "tagId"])
+    .index("by_scope_state_created", ["scopeId", "state", "createdAt"]),
 });

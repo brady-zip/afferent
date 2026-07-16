@@ -16,6 +16,9 @@ import type {
   SimilarPostResultDto,
   FeedbackPostDto,
   PostActivityPageDto,
+  TagDeleteResultDto,
+  TagDto,
+  TagListDto,
   VerifiedActor,
 } from "./contracts.js";
 
@@ -313,6 +316,59 @@ export function createClientWithScope(
           postId: args.postId,
           paginationOpts: args.paginationOpts ?? { numItems: 20, cursor: null },
         })) as unknown as PostActivityPageDto;
+      },
+      async listTags(ctx) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        if (!(await options.authorizeAdmin(ctx)))
+          throw new Error("ADMIN_AUTHORIZATION_REQUIRED");
+        return (await ctx.runQuery(component.admin.tags.listTags, {
+          scopeId,
+        })) as unknown as TagListDto;
+      },
+      async createTag(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        if (!(await options.authorizeAdmin(ctx)))
+          throw new Error("ADMIN_AUTHORIZATION_REQUIRED");
+        return (await ctx.runMutation(component.admin.tags.createTag, {
+          scopeId,
+          name: args.name,
+        })) as unknown as TagDto;
+      },
+      async renameTag(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        if (!(await options.authorizeAdmin(ctx)))
+          throw new Error("ADMIN_AUTHORIZATION_REQUIRED");
+        return (await ctx.runMutation(component.admin.tags.renameTag, {
+          scopeId,
+          tagId: args.tagId,
+          name: args.name,
+        })) as unknown as TagDto;
+      },
+      async setPostTag(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        if (!(await options.authorizeAdmin(ctx)))
+          throw new Error("ADMIN_AUTHORIZATION_REQUIRED");
+        const actor = await options.resolveActor(ctx);
+        if (!actor) throw new Error("AUTHENTICATION_REQUIRED");
+        return (await ctx.runMutation(component.admin.tags.setPostTag, {
+          scopeId,
+          actor,
+          postId: args.postId,
+          tagId: args.tagId,
+          desired: args.desired,
+        })) as unknown as FeedbackPostDto;
+      },
+      async deleteTag(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        if (!(await options.authorizeAdmin(ctx)))
+          throw new Error("ADMIN_AUTHORIZATION_REQUIRED");
+        const actor = await options.resolveActor(ctx);
+        if (!actor) throw new Error("AUTHENTICATION_REQUIRED");
+        return (await ctx.runMutation(component.admin.tags.deleteTag, {
+          scopeId,
+          actor,
+          tagId: args.tagId,
+        })) as unknown as TagDeleteResultDto;
       },
     },
   };

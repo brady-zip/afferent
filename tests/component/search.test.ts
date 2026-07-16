@@ -86,6 +86,8 @@ describe("bounded feedback search", () => {
       const tagId = await runCtx.db.insert("tags", {
         scopeId: "scope:alpha",
         name: "Reporting",
+        normalizedName: "reporting",
+        state: "active",
       });
       await runCtx.db.insert("postTags", {
         scopeId: "scope:alpha",

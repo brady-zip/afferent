@@ -59,6 +59,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               id: string;
               occurredAt: number;
               postId: string;
+              tagId?: string;
               toBoardId?: string;
               toStatus?:
                 | "open"
@@ -153,7 +154,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 | "Complete"
                 | "Closed";
             };
-            tags: Array<{ id: string; name: string }>;
+            tags: Array<{ contractVersion: 1; id: string; name: string }>;
             title: string;
             totals: { comments: number; votes: number };
             voteCount: number;
@@ -197,7 +198,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 | "Complete"
                 | "Closed";
             };
-            tags: Array<{ id: string; name: string }>;
+            tags: Array<{ contractVersion: 1; id: string; name: string }>;
             title: string;
             totals: { comments: number; votes: number };
             voteCount: number;
@@ -241,7 +242,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 | "Complete"
                 | "Closed";
             };
-            tags: Array<{ id: string; name: string }>;
+            tags: Array<{ contractVersion: 1; id: string; name: string }>;
             title: string;
             totals: { comments: number; votes: number };
             voteCount: number;
@@ -285,7 +286,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 | "Complete"
                 | "Closed";
             };
-            tags: Array<{ id: string; name: string }>;
+            tags: Array<{ contractVersion: 1; id: string; name: string }>;
             title: string;
             totals: { comments: number; votes: number };
             voteCount: number;
@@ -335,7 +336,93 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 | "Complete"
                 | "Closed";
             };
-            tags: Array<{ id: string; name: string }>;
+            tags: Array<{ contractVersion: 1; id: string; name: string }>;
+            title: string;
+            totals: { comments: number; votes: number };
+            voteCount: number;
+          },
+          Name
+        >;
+      };
+      tags: {
+        createTag: FunctionReference<
+          "mutation",
+          "internal",
+          { name: string; scopeId: string },
+          { contractVersion: 1; id: string; name: string },
+          Name
+        >;
+        deleteTag: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            actor: {
+              avatarUrl?: string;
+              displayName?: string;
+              externalKey: string;
+            };
+            scopeId: string;
+            tagId: string;
+          },
+          { contractVersion: 1; status: "pending" | "deleted"; tagId: string },
+          Name
+        >;
+        listTags: FunctionReference<
+          "query",
+          "internal",
+          { scopeId: string },
+          {
+            contractVersion: 1;
+            tags: Array<{ contractVersion: 1; id: string; name: string }>;
+          },
+          Name
+        >;
+        renameTag: FunctionReference<
+          "mutation",
+          "internal",
+          { name: string; scopeId: string; tagId: string },
+          { contractVersion: 1; id: string; name: string },
+          Name
+        >;
+        setPostTag: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            actor: {
+              avatarUrl?: string;
+              displayName?: string;
+              externalKey: string;
+            };
+            desired: boolean;
+            postId: string;
+            scopeId: string;
+            tagId: string;
+          },
+          {
+            author: { avatarUrl?: string; displayName?: string; id: string };
+            board: { id: string; name: string; slug: string };
+            boardId: string;
+            body: string;
+            commentCount: number;
+            contractVersion: 2;
+            id: string;
+            status: {
+              key:
+                | "open"
+                | "under_review"
+                | "planned"
+                | "in_progress"
+                | "complete"
+                | "closed";
+              label:
+                | "Open"
+                | "Under Review"
+                | "Planned"
+                | "In Progress"
+                | "Complete"
+                | "Closed";
+            };
+            tags: Array<{ contractVersion: 1; id: string; name: string }>;
             title: string;
             totals: { comments: number; votes: number };
             voteCount: number;
@@ -432,7 +519,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               | "Complete"
               | "Closed";
           };
-          tags: Array<{ id: string; name: string }>;
+          tags: Array<{ contractVersion: 1; id: string; name: string }>;
           title: string;
           totals: { comments: number; votes: number };
           voteCount: number;
@@ -520,6 +607,28 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 };
             ok: false;
           },
+        Name
+      >;
+      createTag: FunctionReference<
+        "mutation",
+        "internal",
+        { name: string; scopeId: string },
+        { contractVersion: 1; id: string; name: string },
+        Name
+      >;
+      deleteTag: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          actor: {
+            avatarUrl?: string;
+            displayName?: string;
+            externalKey: string;
+          };
+          scopeId: string;
+          tagId: string;
+        },
+        { contractVersion: 1; status: "pending" | "deleted"; tagId: string },
         Name
       >;
       editPost: FunctionReference<
@@ -700,7 +809,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 | "Complete"
                 | "Closed";
             };
-            tags: Array<{ id: string; name: string }>;
+            tags: Array<{ contractVersion: 1; id: string; name: string }>;
             title: string;
             totals: { comments: number; votes: number };
             voteCount: number;
@@ -730,7 +839,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 | "Complete"
                 | "Closed";
             };
-            tags: Array<{ id: string; name: string }>;
+            tags: Array<{ contractVersion: 1; id: string; name: string }>;
             title: string;
             totals: { comments: number; votes: number };
             voteCount: number;
@@ -773,6 +882,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             id: string;
             occurredAt: number;
             postId: string;
+            tagId?: string;
             toBoardId?: string;
             toStatus?:
               | "open"
@@ -854,6 +964,16 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         },
         Name
       >;
+      listTags: FunctionReference<
+        "query",
+        "internal",
+        { scopeId: string },
+        {
+          contractVersion: 1;
+          tags: Array<{ contractVersion: 1; id: string; name: string }>;
+        },
+        Name
+      >;
       movePost: FunctionReference<
         "mutation",
         "internal",
@@ -891,11 +1011,18 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               | "Complete"
               | "Closed";
           };
-          tags: Array<{ id: string; name: string }>;
+          tags: Array<{ contractVersion: 1; id: string; name: string }>;
           title: string;
           totals: { comments: number; votes: number };
           voteCount: number;
         },
+        Name
+      >;
+      renameTag: FunctionReference<
+        "mutation",
+        "internal",
+        { name: string; scopeId: string; tagId: string },
+        { contractVersion: 1; id: string; name: string },
         Name
       >;
       searchFeedback: FunctionReference<
@@ -980,7 +1107,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               | "Complete"
               | "Closed";
           };
-          tags: Array<{ id: string; name: string }>;
+          tags: Array<{ contractVersion: 1; id: string; name: string }>;
           title: string;
           totals: { comments: number; votes: number };
           voteCount: number;
@@ -1024,7 +1151,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               | "Complete"
               | "Closed";
           };
-          tags: Array<{ id: string; name: string }>;
+          tags: Array<{ contractVersion: 1; id: string; name: string }>;
           title: string;
           totals: { comments: number; votes: number };
           voteCount: number;
@@ -1074,7 +1201,52 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               | "Complete"
               | "Closed";
           };
-          tags: Array<{ id: string; name: string }>;
+          tags: Array<{ contractVersion: 1; id: string; name: string }>;
+          title: string;
+          totals: { comments: number; votes: number };
+          voteCount: number;
+        },
+        Name
+      >;
+      setPostTag: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          actor: {
+            avatarUrl?: string;
+            displayName?: string;
+            externalKey: string;
+          };
+          desired: boolean;
+          postId: string;
+          scopeId: string;
+          tagId: string;
+        },
+        {
+          author: { avatarUrl?: string; displayName?: string; id: string };
+          board: { id: string; name: string; slug: string };
+          boardId: string;
+          body: string;
+          commentCount: number;
+          contractVersion: 2;
+          id: string;
+          status: {
+            key:
+              | "open"
+              | "under_review"
+              | "planned"
+              | "in_progress"
+              | "complete"
+              | "closed";
+            label:
+              | "Open"
+              | "Under Review"
+              | "Planned"
+              | "In Progress"
+              | "Complete"
+              | "Closed";
+          };
+          tags: Array<{ contractVersion: 1; id: string; name: string }>;
           title: string;
           totals: { comments: number; votes: number };
           voteCount: number;
@@ -1557,7 +1729,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   | "Complete"
                   | "Closed";
               };
-              tags: Array<{ id: string; name: string }>;
+              tags: Array<{ contractVersion: 1; id: string; name: string }>;
               title: string;
               totals: { comments: number; votes: number };
               voteCount: number;
@@ -1587,7 +1759,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   | "Complete"
                   | "Closed";
               };
-              tags: Array<{ id: string; name: string }>;
+              tags: Array<{ contractVersion: 1; id: string; name: string }>;
               title: string;
               totals: { comments: number; votes: number };
               voteCount: number;

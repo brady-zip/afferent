@@ -91,7 +91,19 @@ export type PostDto = Readonly<{
   tags: string[];
 }>;
 
-export type TagDto = Readonly<{ id: TagId; name: string }>;
+export type TagDto = Readonly<{
+  contractVersion: 1;
+  id: TagId;
+  name: string;
+}>;
+
+export type TagListDto = Readonly<{ contractVersion: 1; tags: TagDto[] }>;
+
+export type TagDeleteResultDto = Readonly<{
+  contractVersion: 1;
+  tagId: TagId;
+  status: "pending" | "deleted";
+}>;
 
 export type FeedbackPostDto = Readonly<{
   contractVersion: 2;
@@ -196,6 +208,7 @@ export type PostActivityDto = Readonly<{
   toStatus?: PostStatusKey;
   fromBoardId?: BoardId;
   toBoardId?: BoardId;
+  tagId?: TagId;
 }>;
 
 export type PostActivityPageDto = Readonly<{
@@ -267,6 +280,18 @@ export const listPostActivityIntentValidator = v.object({
   postId: v.string(),
   paginationOpts: v.optional(paginationOptsValidator),
 });
+export const listTagsIntentValidator = v.object({});
+export const createTagIntentValidator = v.object({ name: v.string() });
+export const renameTagIntentValidator = v.object({
+  tagId: v.string(),
+  name: v.string(),
+});
+export const setPostTagIntentValidator = v.object({
+  postId: v.string(),
+  tagId: v.string(),
+  desired: v.boolean(),
+});
+export const deleteTagIntentValidator = v.object({ tagId: v.string() });
 
 export const listCommentsIntentValidator = v.object({
   postId: v.string(),
@@ -416,7 +441,28 @@ export const publicFeedbackPostDtoValidator = v.object({
   voteCount: v.number(),
   commentCount: v.number(),
   totals: v.object({ votes: v.number(), comments: v.number() }),
-  tags: v.array(v.object({ id: v.string(), name: v.string() })),
+  tags: v.array(
+    v.object({
+      contractVersion: v.literal(1),
+      id: v.string(),
+      name: v.string(),
+    }),
+  ),
+});
+
+export const tagResultValidator = v.object({
+  contractVersion: v.literal(1),
+  id: v.string(),
+  name: v.string(),
+});
+export const tagListResultValidator = v.object({
+  contractVersion: v.literal(1),
+  tags: v.array(tagResultValidator),
+});
+export const tagDeleteResultValidator = v.object({
+  contractVersion: v.literal(1),
+  tagId: v.string(),
+  status: v.union(v.literal("pending"), v.literal("deleted")),
 });
 
 export const publicCommentDtoValidator = v.object({
@@ -647,4 +693,18 @@ export interface AdminCapabilities<
     ctx: QueryContext,
     args: { postId: PostId; paginationOpts?: PaginationOptions },
   ): Promise<PostActivityPageDto>;
+  listTags(ctx: QueryContext, args: Record<string, never>): Promise<TagListDto>;
+  createTag(ctx: MutationContext, args: { name: string }): Promise<TagDto>;
+  renameTag(
+    ctx: MutationContext,
+    args: { tagId: TagId; name: string },
+  ): Promise<TagDto>;
+  setPostTag(
+    ctx: MutationContext,
+    args: { postId: PostId; tagId: TagId; desired: boolean },
+  ): Promise<FeedbackPostDto>;
+  deleteTag(
+    ctx: MutationContext,
+    args: { tagId: TagId },
+  ): Promise<TagDeleteResultDto>;
 }

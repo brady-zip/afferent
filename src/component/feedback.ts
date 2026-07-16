@@ -16,3 +16,10 @@ export {
   setPostStatus,
 } from "./admin/posts.js";
 export { listPostActivity } from "./admin/activity.js";
+export {
+  createTag,
+  deleteTag,
+  listTags,
+  renameTag,
+  setPostTag,
+} from "./admin/tags.js";

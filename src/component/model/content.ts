@@ -41,7 +41,7 @@ function normalizedLineEndings(value: string) {
 export function normalizePlainText(
   value: string,
   field: string,
-  maximum = SAFE_MARKDOWN_LIMITS.plainText,
+  maximum: number = SAFE_MARKDOWN_LIMITS.plainText,
 ) {
   const normalized = value.trim().replace(/\s+/gu, " ");
   if (!normalized || normalized.length > maximum) {
@@ -73,7 +73,7 @@ function validateNode(node: MarkdownNode, field: string): void {
 export function validateSafeMarkdown(
   value: string,
   field: string,
-  maximum = SAFE_MARKDOWN_LIMITS.markdown,
+  maximum: number = SAFE_MARKDOWN_LIMITS.markdown,
 ) {
   const normalized = normalizedLineEndings(value);
   if (!normalized || normalized.length > maximum) {

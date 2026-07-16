@@ -246,6 +246,8 @@ describe("ranked public feedback discovery", () => {
       const tagId = await runCtx.db.insert("tags", {
         scopeId: "scope:filters",
         name: "Performance",
+        normalizedName: "performance",
+        state: "active",
       });
       const insert = async (
         boardId: string,
