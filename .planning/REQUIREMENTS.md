@@ -12,16 +12,16 @@ Requirements for the first production-ready public release. Roadmap creation wil
 - [x] **ACCS-01**: An installer can configure one installation-wide read policy that makes Afferent content either public or restricted to authenticated users.
 - [x] **ACCS-02**: Only users authenticated by the host application can create posts, vote, or comment.
 - [x] **ACCS-03**: The host application can map a verified auth-provider identity to a stable provider-neutral Afferent actor.
-- [ ] **ACCS-04**: The host application decides whether an authenticated actor can perform Afferent admin operations.
-- [ ] **ACCS-05**: Afferent rejects participation and admin operations when the host wrapper does not supply the required verified actor or permission.
+- [x] **ACCS-04**: The host application decides whether an authenticated actor can perform Afferent admin operations.
+- [x] **ACCS-05**: Afferent rejects participation and admin operations when the host wrapper does not supply the required verified actor or permission.
 - [x] **ACCS-06**: A normal Afferent installation represents exactly one product while supporting multiple feedback boards.
 
 ### Feedback Participation
 
 - [x] **FDBK-01**: A visitor can browse posts on every board permitted by the installation-wide read policy.
 - [x] **FDBK-02**: An authenticated user can create a feedback post on a board.
-- [ ] **FDBK-03**: An authenticated author can edit their own feedback post.
-- [ ] **FDBK-04**: An authenticated author can withdraw their own feedback post without destroying its history.
+- [x] **FDBK-03**: An authenticated author can edit their own feedback post.
+- [x] **FDBK-04**: An authenticated author can withdraw their own feedback post without destroying its history.
 - [ ] **FDBK-05**: An authenticated user can add or remove their one vote on a feedback post without creating duplicate vote memberships.
 - [ ] **FDBK-06**: An authenticated user can add a flat comment to a feedback post.
 - [ ] **FDBK-07**: An authenticated user can reply to a specific comment through a lightweight reply reference without creating unbounded comment nesting.
@@ -180,13 +180,13 @@ Every v1 requirement maps to exactly one roadmap phase.
 | ACCS-01 | Phase 1 | Complete |
 | ACCS-02 | Phase 1 | Complete |
 | ACCS-03 | Phase 1 | Complete |
-| ACCS-04 | Phase 1 | Pending |
-| ACCS-05 | Phase 1 | Pending |
+| ACCS-04 | Phase 1 | Complete |
+| ACCS-05 | Phase 1 | Complete |
 | ACCS-06 | Phase 1 | Complete |
 | FDBK-01 | Phase 1 | Complete |
 | FDBK-02 | Phase 1 | Complete |
-| FDBK-03 | Phase 1 | Pending |
-| FDBK-04 | Phase 1 | Pending |
+| FDBK-03 | Phase 1 | Complete |
+| FDBK-04 | Phase 1 | Complete |
 | FDBK-05 | Phase 1 | Pending |
 | FDBK-06 | Phase 1 | Pending |
 | FDBK-07 | Phase 1 | Pending |

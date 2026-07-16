@@ -5,16 +5,16 @@ milestone_name: milestone
 current_phase: 01
 current_phase_name: Secure Installable Feedback Board
 status: executing
-stopped_at: Completed 01-02-PLAN.md
-last_updated: "2026-07-16T03:26:17.538Z"
+stopped_at: Completed 01-03-PLAN.md
+last_updated: "2026-07-16T05:24:44.349Z"
 last_activity: 2026-07-16
-last_activity_desc: Plan 01-02 completed
+last_activity_desc: Plan 01-03 completed
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 5
-  completed_plans: 2
-  percent: 40
+  completed_plans: 3
+  percent: 60
 ---
 
 # Project State
@@ -29,30 +29,30 @@ See: .planning/PROJECT.md (updated 2026-07-14)
 ## Current Position
 
 Phase: 01 (Secure Installable Feedback Board) — EXECUTING
-Plan: 3 of 5
-Status: Ready to execute Plan 3
-Last activity: 2026-07-16 — Plan 01-02 completed
+Plan: 4 of 5
+Status: Ready to execute Plan 4
+Last activity: 2026-07-16 — Plan 01-03 completed
 
-Progress: [████░░░░░░] 40%
+Progress: [██████░░░░] 60%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 2
-- Average duration: 78 min
-- Total execution time: 156 min
+- Total plans completed: 3
+- Average duration: 59 min
+- Total execution time: 177 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| Phase 01 | 2 | 156 min | 78 min |
+| Phase 01 | 3 | 177 min | 59 min |
 
 **Recent Trend:**
 
-- Last 5 plans: 8 min, 148 min
-- Trend: Artifact integration established
+- Last 5 plans: 8 min, 148 min, 21 min
+- Trend: Secure domain foundation established
 
 *Updated after each plan completion*
 
@@ -61,6 +61,7 @@ Progress: [████░░░░░░] 40%
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | Phase 01 P02 | 148 min | 2 tasks | 30 files |
+| Phase 01 P03 | 21 min | 3 tasks | 27 files |
 
 ## Accumulated Context
 
@@ -78,6 +79,9 @@ Recent decisions affecting current work:
 - [Phase 01]: Generate committed ComponentApi bindings through a disposable anonymous Convex deployment. — The current CLI requires deployment configuration before component codegen.
 - [Phase 01]: Publish a declaration-only component tsconfig beside built component output. — Consumer component typechecking should validate package declarations instead of emitted JavaScript.
 - [Phase 01]: Keep exact React type pins fixture-only. — Strict TSX needs declaration packages, but the package runtime peer surface remains Convex and React only.
+- [Phase 01]: Use full domain-separated SHA-256 base64url scope derivation from verified external identity. — This keeps demo scopes deterministic, opaque, fixed length, and based only on server-verified identity.
+- [Phase 01]: Normalize branded string IDs inside shared scope guards to preserve not-found equivalence. — Component-boundary ID validation must not distinguish malformed IDs from valid identifiers belonging to another scope.
+- [Phase 01]: Ship convex-helpers as a regular runtime dependency for packed component consumers. — The paginator is an internal shipped runtime implementation detail and packed consumers must install it automatically.
 
 ### Pending Todos
 
@@ -99,6 +103,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-16T03:26:17.533Z
-Stopped at: Completed 01-02-PLAN.md
+Last session: 2026-07-16T05:24:18.198Z
+Stopped at: Completed 01-03-PLAN.md
 Resume file: None
