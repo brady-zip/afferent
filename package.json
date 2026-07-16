@@ -28,6 +28,14 @@
       "types": "./dist/client/adapters/convex-auth.d.ts",
       "default": "./dist/client/adapters/convex-auth.js"
     },
+    "./adapters/clerk.js": {
+      "types": "./dist/client/adapters/clerk.d.ts",
+      "default": "./dist/client/adapters/clerk.js"
+    },
+    "./adapters/better-auth.js": {
+      "types": "./dist/client/adapters/better-auth.d.ts",
+      "default": "./dist/client/adapters/better-auth.js"
+    },
     "./convex.config.js": {
       "types": "./dist/component/convex.config.d.ts",
       "default": "./dist/component/convex.config.js"
@@ -44,8 +52,11 @@
     "codegen:component": "node scripts/codegen-component.mjs",
     "test": "npm run test:component && npm run test:package",
     "test:auth-conformance": "vitest run tests/conformance",
+    "test:backend": "vitest run --config vitest.scope.config.ts tests/integration/pagination-backend.test.ts",
     "test:component": "vitest run tests/component",
+    "test:model": "vitest run tests/model",
     "test:package": "node --test tests/integration/walking-skeleton.test.mjs",
+    "test:scope": "vitest run --config vitest.scope.config.ts tests/integration/scope-matrix.test.ts",
     "test:static": "vitest run tests/static",
     "typecheck": "tsc --noEmit --project tsconfig.json",
     "lint": "oxlint",

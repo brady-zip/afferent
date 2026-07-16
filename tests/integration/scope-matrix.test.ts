@@ -4,7 +4,10 @@ import { describe, expect, test, vi } from "vitest";
 import { api } from "../../src/component/_generated/api.js";
 import type { ComponentApi } from "../../src/component/_generated/component.js";
 import { createScopedAfferentClient } from "../../src/client/server.js";
+import { createAfferentClient } from "../../src/client/index.js";
 import type { BoardId, PostId } from "../../src/client/index.js";
+import { normalizeClerkIdentity } from "../../src/client/adapters/clerk.js";
+import { normalizeBetterAuthUser } from "../../src/client/adapters/better-auth.js";
 import schema from "../../src/component/schema.js";
 
 const modules = import.meta.glob("../../src/component/**/*.ts");
@@ -269,5 +272,96 @@ describe("server-derived scope isolation", () => {
     expect(
       await beta.read.getPost(ctx as never, { postId: betaPost.id }),
     ).toMatchObject({ author: { displayName: "fixture:beta" } });
+  });
+
+  test("runs provider-shaped actors through fixed and server-scoped clients without linking", async () => {
+    const backend = convexTest(schema, modules);
+    const component = api as unknown as ComponentApi;
+    const ctx = backendContext(backend);
+    const clerkActor = normalizeClerkIdentity({
+      issuer: "issuer.example",
+      subject: "same-raw-id",
+      name: "Clerk Before",
+    });
+    const betterActor = normalizeBetterAuthUser({
+      id: "same-raw-id",
+      name: "Better User",
+    });
+    const fixed = createAfferentClient(component, {
+      resolveActor: async () => clerkActor,
+      authorizeAdmin: async () => true,
+      isAuthenticated: async () => true,
+    });
+    const scoped = createScopedAfferentClient(component, {
+      resolveScope: async () => "provider-sandbox",
+      resolveActor: async () => betterActor,
+      authorizeAdmin: async () => true,
+      isAuthenticated: async () => true,
+    });
+
+    const fixedBoard = (
+      await fixed.admin.configureInstallation(ctx as never, {
+        readPolicy: "authenticated",
+        boards: [{ slug: "feedback", name: "Feedback" }],
+      })
+    ).boards[0];
+    const scopedBoard = (
+      await scoped.admin.configureInstallation(ctx as never, {
+        readPolicy: "authenticated",
+        boards: [{ slug: "feedback", name: "Feedback" }],
+      })
+    ).boards[0];
+    const fixedPost = await fixed.participation.createPost(ctx as never, {
+      boardId: fixedBoard.id,
+      title: "Fixed",
+      body: "Clerk",
+    });
+    const scopedPost = await scoped.participation.createPost(ctx as never, {
+      boardId: scopedBoard.id,
+      title: "Scoped",
+      body: "Better Auth",
+    });
+    await fixed.participation.editPost(ctx as never, {
+      postId: fixedPost.id,
+      body: "Clerk edited",
+    });
+    await fixed.participation.setVote(ctx as never, {
+      postId: fixedPost.id,
+      desired: true,
+    });
+    await fixed.participation.addComment(ctx as never, {
+      postId: fixedPost.id,
+      body: "Clerk comment",
+    });
+    expect(await fixed.read.listBoards(ctx as never, {})).toMatchObject({
+      boards: [{ slug: "feedback" }],
+    });
+    expect(await fixed.read.listPosts(ctx as never, { boardId: fixedBoard.id })).toMatchObject({
+      posts: [{ id: fixedPost.id }],
+    });
+    expect(await fixed.read.getPost(ctx as never, { postId: fixedPost.id })).toMatchObject({
+      body: "Clerk edited",
+      voteCount: 1,
+      commentCount: 1,
+    });
+    expect(await fixed.read.countPosts(ctx as never, { boardId: fixedBoard.id })).toEqual({
+      contractVersion: 1,
+      count: 1,
+    });
+    expect(await fixed.read.listComments(ctx as never, { postId: fixedPost.id })).toMatchObject({
+      comments: [{ body: "Clerk comment" }],
+    });
+    await fixed.participation.withdrawPost(ctx as never, { postId: fixedPost.id });
+
+    const actors = await backend.run(async (runCtx) =>
+      runCtx.db.query("actors").withIndex("by_scope_external_key").collect(),
+    );
+    expect(actors.map(({ scopeId, externalKey }) => ({ scopeId, externalKey }))).toEqual(
+      expect.arrayContaining([
+        { scopeId: "afferent:single-product:v1", externalKey: clerkActor.externalKey },
+        { scopeId: "provider-sandbox", externalKey: betterActor.externalKey },
+      ]),
+    );
+    expect(fixedPost.author.id).not.toBe(scopedPost.author.id);
   });
 });
