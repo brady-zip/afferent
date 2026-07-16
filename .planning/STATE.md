@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 2
 current_phase_name: Complete Feedback-to-Changelog Workflow
 status: executing
-stopped_at: Phase 2 context gathered
-last_updated: "2026-07-16T21:29:50.905Z"
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-07-16T21:49:45.751Z"
 last_activity: 2026-07-16
-last_activity_desc: Phase 2 planning complete — 10 plans ready
+last_activity_desc: Completed ranked feedback discovery and headless feed hooks
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 8
-  completed_plans: 8
+  total_plans: 18
+  completed_plans: 9
   percent: 25
 ---
 
@@ -28,10 +28,10 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 
 ## Current Position
 
-Phase: 2 — Complete Feedback-to-Changelog Workflow
-Plan: 0 of 10
+Phase: 2 (Complete Feedback-to-Changelog Workflow) — EXECUTING
+Plan: 2 of 10
 Status: Ready to execute
-Last activity: 2026-07-16 — Phase 2 planning complete — 10 plans ready
+Last activity: 2026-07-16 — Completed ranked feedback discovery and headless feed hooks
 
 Progress: [███░░░░░░░] 25%
 
@@ -68,6 +68,7 @@ _Updated after each plan completion_
 | Phase 01 P06 | 4 min    | 2 tasks | 8 files  |
 | Phase 01 P07 | 5 min    | 2 tasks | 6 files  |
 | Phase 01 P08 | 10 min   | 3 tasks | 13 files |
+| Phase 02 P01 | 12 min   | 3 tasks | 24 files |
 
 ## Accumulated Context
 
@@ -102,6 +103,9 @@ Recent decisions affecting current work:
 - [Phase 01]: Expose bounded post counts with an explicit hasMore signal. — A cap-plus-one sentinel distinguishes exact totals through 50 from capped lower bounds.
 - [Phase 01]: Build declarations before Phase 1 fixture and package release checks. — Clean self-referencing fixture projects require emitted Afferent declarations before independent compilation.
 - [Phase 01]: Parameterize full trusted Convex host contexts with any data model. — Generated schema and schema-less Convex handlers remain assignable without weakening runtime authority boundaries.
+- [Phase 02]: Use a contractVersion 2 feedback-page DTO while preserving the closed contractVersion 1 direct post and board-page contracts. — Discovery needs six statuses and tag DTOs without silently widening the shipped v1 union.
+- [Phase 02]: Materialize one bounded postTagFeeds row per tag membership. — Single-tag feeds stay scope-first and rank-indexed without scan or page filtering.
+- [Phase 02]: Treat convex-helpers usePaginatedQuery results as the canonical accumulated feed. — A second page cache would retain stale hidden rows and mask pagination gaps.
 
 ### Pending Todos
 
@@ -123,6 +127,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-16T20:26:41.353Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-complete-feedback-to-changelog-workflow/02-CONTEXT.md
+Last session: 2026-07-16T21:48:47.382Z
+Stopped at: Completed 02-01-PLAN.md
+Resume file: None

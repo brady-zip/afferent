@@ -29,11 +29,11 @@ Requirements for the first production-ready public release. Roadmap creation wil
 
 ### Discovery and Duplicates
 
-- [ ] **DISC-01**: A visitor can browse visible feedback ordered by newest activity.
-- [ ] **DISC-02**: A visitor can browse visible feedback ordered by vote total.
-- [ ] **DISC-03**: A visitor can browse visible feedback using a documented trending order.
+- [x] **DISC-01**: A visitor can browse visible feedback ordered by newest activity.
+- [x] **DISC-02**: A visitor can browse visible feedback ordered by vote total.
+- [x] **DISC-03**: A visitor can browse visible feedback using a documented trending order.
 - [ ] **DISC-04**: A visitor can search visible feedback by text relevance.
-- [ ] **DISC-05**: A visitor can filter visible feedback by board, status, and admin-assigned tag.
+- [x] **DISC-05**: A visitor can filter visible feedback by board, status, and admin-assigned tag.
 - [ ] **DISC-06**: A user composing a new post can see deterministic similar-post suggestions before submission.
 - [ ] **DISC-07**: An authorized admin can merge a duplicate post into a canonical post while preserving actors, votes, comments, and activity history.
 - [ ] **DISC-08**: A request for a merged post resolves to a durable tombstone or redirect that identifies the canonical post.
@@ -88,9 +88,9 @@ Requirements for the first production-ready public release. Roadmap creation wil
 
 ### React and Source-Owned UI
 
-- [ ] **UI-01**: A React developer can use headless hooks and providers for public browsing, participation, roadmap, changelog, notifications, and admin operations.
-- [ ] **UI-02**: The headless React layer accepts host-generated function references and does not require a specific auth provider, router, toast library, or packaged design system.
-- [ ] **UI-03**: Headless APIs expose explicit authentication-loading, pagination, mutation-pending, empty, and error states.
+- [x] **UI-01**: A React developer can use headless hooks and providers for public browsing, participation, roadmap, changelog, notifications, and admin operations.
+- [x] **UI-02**: The headless React layer accepts host-generated function references and does not require a specific auth provider, router, toast library, or packaged design system.
+- [x] **UI-03**: Headless APIs expose explicit authentication-loading, pagination, mutation-pending, empty, and error states.
 - [ ] **UI-04**: A developer can install source-owned shadcn components for the public feedback, roadmap, changelog, and notification experiences.
 - [ ] **UI-05**: A developer can install source-owned shadcn components for feedback administration, moderation, roadmap status management, and changelog publishing.
 - [ ] **UI-06**: A developer can obtain the canonical UI source from both a shadcn registry and mirrored repository examples.
@@ -108,7 +108,7 @@ Requirements for the first production-ready public release. Roadmap creation wil
 
 ### Release Quality
 
-- [ ] **QUAL-01**: Automated component tests verify domain invariants, authorization boundaries, visibility rules, voting idempotency, merges, status projections, changelog publication, and notifications.
+- [x] **QUAL-01**: Automated component tests verify domain invariants, authorization boundaries, visibility rules, voting idempotency, merges, status projections, changelog publication, and notifications.
 - [x] **QUAL-02**: Auth-conformance tests verify equivalent identity and authorization behavior for Convex Auth, Clerk, and Better Auth fixtures.
 - [x] **QUAL-03**: A clean consumer fixture can install the packed npm artifact, run Convex code generation, typecheck, and build without source-relative workspace imports.
 - [ ] **QUAL-04**: A clean consumer fixture can install registry components and build them against the supported package version range.
@@ -158,105 +158,105 @@ Custom status configuration and machine-readable export are deliberate post-rese
 
 Explicit exclusions for the first product direction, documented to prevent scope creep.
 
-| Feature | Reason |
-|---------|--------|
-| Multi-product organizations in one component installation | v1 deliberately defines one installation as one product and avoids organization-level tenancy and roles. |
-| Component-owned authentication or admin membership | The host application remains the identity and authorization source of truth across all supported providers. |
-| Anonymous writes by default | Public browsing with authenticated participation provides safer attribution and abuse controls. |
-| Per-board access-control policies | Installation-wide policy provides the chosen configurability without multiplying authorization states. |
-| Independent roadmap records | The roadmap is intentionally a projection of feedback workflow status. |
-| Automatic duplicate merging | Human confirmation prevents distinct needs and votes from being combined incorrectly. |
-| Automatic changelog publication | Administrators retain editorial control over public announcements. |
-| Deep comment threading and social reactions | Flat comments with reply references keep discussion and moderation focused on feedback. |
-| Opaque packaged design system | Headless APIs and copy-owned shadcn source preserve consumer styling and ownership. |
-| Shared mutable public demo workspace | Private per-user sandboxes prevent vandalism and cross-visitor interference. |
+| Feature                                                   | Reason                                                                                                      |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Multi-product organizations in one component installation | v1 deliberately defines one installation as one product and avoids organization-level tenancy and roles.    |
+| Component-owned authentication or admin membership        | The host application remains the identity and authorization source of truth across all supported providers. |
+| Anonymous writes by default                               | Public browsing with authenticated participation provides safer attribution and abuse controls.             |
+| Per-board access-control policies                         | Installation-wide policy provides the chosen configurability without multiplying authorization states.      |
+| Independent roadmap records                               | The roadmap is intentionally a projection of feedback workflow status.                                      |
+| Automatic duplicate merging                               | Human confirmation prevents distinct needs and votes from being combined incorrectly.                       |
+| Automatic changelog publication                           | Administrators retain editorial control over public announcements.                                          |
+| Deep comment threading and social reactions               | Flat comments with reply references keep discussion and moderation focused on feedback.                     |
+| Opaque packaged design system                             | Headless APIs and copy-owned shadcn source preserve consumer styling and ownership.                         |
+| Shared mutable public demo workspace                      | Private per-user sandboxes prevent vandalism and cross-visitor interference.                                |
 
 ## Traceability
 
 Every v1 requirement maps to exactly one roadmap phase.
 
-| Requirement | Phase | Status |
-|-------------|-------|--------|
-| ACCS-01 | Phase 1 | Complete |
-| ACCS-02 | Phase 1 | Complete |
-| ACCS-03 | Phase 1 | Complete |
-| ACCS-04 | Phase 1 | Complete |
-| ACCS-05 | Phase 1 | Complete |
-| ACCS-06 | Phase 1 | Complete |
-| FDBK-01 | Phase 1 | Complete |
-| FDBK-02 | Phase 1 | Complete |
-| FDBK-03 | Phase 1 | Complete |
-| FDBK-04 | Phase 1 | Complete |
-| FDBK-05 | Phase 1 | Complete |
-| FDBK-06 | Phase 1 | Complete |
-| FDBK-07 | Phase 1 | Complete |
-| FDBK-08 | Phase 1 | Complete |
-| DISC-01 | Phase 2 | Pending |
-| DISC-02 | Phase 2 | Pending |
-| DISC-03 | Phase 2 | Pending |
-| DISC-04 | Phase 2 | Pending |
-| DISC-05 | Phase 2 | Pending |
-| DISC-06 | Phase 2 | Pending |
-| DISC-07 | Phase 2 | Pending |
-| DISC-08 | Phase 2 | Pending |
-| ADMN-01 | Phase 2 | Pending |
-| ADMN-02 | Phase 2 | Pending |
-| ADMN-03 | Phase 2 | Pending |
-| ADMN-04 | Phase 2 | Pending |
-| ADMN-05 | Phase 2 | Pending |
-| ADMN-06 | Phase 2 | Pending |
-| ADMN-07 | Phase 2 | Pending |
-| ADMN-08 | Phase 2 | Pending |
-| ADMN-09 | Phase 2 | Pending |
-| ADMN-10 | Phase 2 | Pending |
-| RMAP-01 | Phase 2 | Pending |
-| RMAP-02 | Phase 2 | Pending |
-| RMAP-03 | Phase 2 | Pending |
-| CHLG-01 | Phase 2 | Pending |
-| CHLG-02 | Phase 2 | Pending |
-| CHLG-03 | Phase 2 | Pending |
-| CHLG-04 | Phase 2 | Pending |
-| CHLG-05 | Phase 2 | Pending |
-| CHLG-06 | Phase 2 | Pending |
-| NOTF-01 | Phase 2 | Pending |
-| NOTF-02 | Phase 2 | Pending |
-| NOTF-03 | Phase 2 | Pending |
-| NOTF-04 | Phase 2 | Pending |
-| NOTF-05 | Phase 2 | Pending |
-| NOTF-06 | Phase 2 | Pending |
-| NOTF-07 | Phase 2 | Pending |
-| COMP-01 | Phase 4 | Pending |
-| COMP-02 | Phase 1 | Complete |
-| COMP-03 | Phase 1 | Complete |
-| COMP-04 | Phase 1 | Complete |
-| COMP-05 | Phase 1 | Complete |
-| COMP-06 | Phase 1 | Complete |
-| COMP-07 | Phase 1 | Complete |
-| UI-01 | Phase 2 | Pending |
-| UI-02 | Phase 2 | Pending |
-| UI-03 | Phase 2 | Pending |
-| UI-04 | Phase 3 | Pending |
-| UI-05 | Phase 3 | Pending |
-| UI-06 | Phase 3 | Pending |
-| UI-07 | Phase 3 | Pending |
-| DEMO-01 | Phase 4 | Pending |
-| DEMO-02 | Phase 4 | Pending |
-| DEMO-03 | Phase 4 | Pending |
-| DEMO-04 | Phase 4 | Pending |
-| DEMO-05 | Phase 4 | Pending |
-| DEMO-06 | Phase 4 | Pending |
-| DEMO-07 | Phase 4 | Pending |
-| QUAL-01 | Phase 2 | Pending |
-| QUAL-02 | Phase 1 | Complete |
-| QUAL-03 | Phase 1 | Complete |
-| QUAL-04 | Phase 3 | Pending |
-| QUAL-05 | Phase 4 | Pending |
-| QUAL-06 | Phase 4 | Pending |
-| QUAL-07 | Phase 3 | Pending |
-| QUAL-08 | Phase 3 | Pending |
-| QUAL-09 | Phase 4 | Pending |
-| QUAL-10 | Phase 1 | Complete |
-| QUAL-11 | Phase 4 | Pending |
+| Requirement | Phase   | Status   |
+| ----------- | ------- | -------- |
+| ACCS-01     | Phase 1 | Complete |
+| ACCS-02     | Phase 1 | Complete |
+| ACCS-03     | Phase 1 | Complete |
+| ACCS-04     | Phase 1 | Complete |
+| ACCS-05     | Phase 1 | Complete |
+| ACCS-06     | Phase 1 | Complete |
+| FDBK-01     | Phase 1 | Complete |
+| FDBK-02     | Phase 1 | Complete |
+| FDBK-03     | Phase 1 | Complete |
+| FDBK-04     | Phase 1 | Complete |
+| FDBK-05     | Phase 1 | Complete |
+| FDBK-06     | Phase 1 | Complete |
+| FDBK-07     | Phase 1 | Complete |
+| FDBK-08     | Phase 1 | Complete |
+| DISC-01     | Phase 2 | Complete |
+| DISC-02     | Phase 2 | Complete |
+| DISC-03     | Phase 2 | Complete |
+| DISC-04     | Phase 2 | Pending  |
+| DISC-05     | Phase 2 | Complete |
+| DISC-06     | Phase 2 | Pending  |
+| DISC-07     | Phase 2 | Pending  |
+| DISC-08     | Phase 2 | Pending  |
+| ADMN-01     | Phase 2 | Pending  |
+| ADMN-02     | Phase 2 | Pending  |
+| ADMN-03     | Phase 2 | Pending  |
+| ADMN-04     | Phase 2 | Pending  |
+| ADMN-05     | Phase 2 | Pending  |
+| ADMN-06     | Phase 2 | Pending  |
+| ADMN-07     | Phase 2 | Pending  |
+| ADMN-08     | Phase 2 | Pending  |
+| ADMN-09     | Phase 2 | Pending  |
+| ADMN-10     | Phase 2 | Pending  |
+| RMAP-01     | Phase 2 | Pending  |
+| RMAP-02     | Phase 2 | Pending  |
+| RMAP-03     | Phase 2 | Pending  |
+| CHLG-01     | Phase 2 | Pending  |
+| CHLG-02     | Phase 2 | Pending  |
+| CHLG-03     | Phase 2 | Pending  |
+| CHLG-04     | Phase 2 | Pending  |
+| CHLG-05     | Phase 2 | Pending  |
+| CHLG-06     | Phase 2 | Pending  |
+| NOTF-01     | Phase 2 | Pending  |
+| NOTF-02     | Phase 2 | Pending  |
+| NOTF-03     | Phase 2 | Pending  |
+| NOTF-04     | Phase 2 | Pending  |
+| NOTF-05     | Phase 2 | Pending  |
+| NOTF-06     | Phase 2 | Pending  |
+| NOTF-07     | Phase 2 | Pending  |
+| COMP-01     | Phase 4 | Pending  |
+| COMP-02     | Phase 1 | Complete |
+| COMP-03     | Phase 1 | Complete |
+| COMP-04     | Phase 1 | Complete |
+| COMP-05     | Phase 1 | Complete |
+| COMP-06     | Phase 1 | Complete |
+| COMP-07     | Phase 1 | Complete |
+| UI-01       | Phase 2 | Complete |
+| UI-02       | Phase 2 | Complete |
+| UI-03       | Phase 2 | Complete |
+| UI-04       | Phase 3 | Pending  |
+| UI-05       | Phase 3 | Pending  |
+| UI-06       | Phase 3 | Pending  |
+| UI-07       | Phase 3 | Pending  |
+| DEMO-01     | Phase 4 | Pending  |
+| DEMO-02     | Phase 4 | Pending  |
+| DEMO-03     | Phase 4 | Pending  |
+| DEMO-04     | Phase 4 | Pending  |
+| DEMO-05     | Phase 4 | Pending  |
+| DEMO-06     | Phase 4 | Pending  |
+| DEMO-07     | Phase 4 | Pending  |
+| QUAL-01     | Phase 2 | Complete |
+| QUAL-02     | Phase 1 | Complete |
+| QUAL-03     | Phase 1 | Complete |
+| QUAL-04     | Phase 3 | Pending  |
+| QUAL-05     | Phase 4 | Pending  |
+| QUAL-06     | Phase 4 | Pending  |
+| QUAL-07     | Phase 3 | Pending  |
+| QUAL-08     | Phase 3 | Pending  |
+| QUAL-09     | Phase 4 | Pending  |
+| QUAL-10     | Phase 1 | Complete |
+| QUAL-11     | Phase 4 | Pending  |
 
 **Coverage:**
 
@@ -265,5 +265,6 @@ Every v1 requirement maps to exactly one roadmap phase.
 - Unmapped: 0 ✓
 
 ---
-*Requirements defined: 2026-07-15*
-*Last updated: 2026-07-15 after roadmap creation*
+
+_Requirements defined: 2026-07-15_
+_Last updated: 2026-07-15 after roadmap creation_
