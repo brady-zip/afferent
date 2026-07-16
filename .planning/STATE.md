@@ -5,16 +5,16 @@ milestone_name: milestone
 current_phase: 2
 current_phase_name: Complete Feedback-to-Changelog Workflow
 status: executing
-stopped_at: Completed 02-03-PLAN.md
-last_updated: "2026-07-16T22:38:34.839Z"
+stopped_at: Completed 02-04-PLAN.md
+last_updated: "2026-07-16T22:58:36.491Z"
 last_activity: 2026-07-16
-last_activity_desc: Completed moderation, activity history, participation limits, and headless admin hooks
+last_activity_desc: Completed stable tag administration, bounded cleanup, and headless tag controls
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 18
-  completed_plans: 11
-  percent: 61
+  completed_plans: 12
+  percent: 67
 ---
 
 # Project State
@@ -29,30 +29,30 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 ## Current Position
 
 Phase: 2 (Complete Feedback-to-Changelog Workflow) — EXECUTING
-Plan: 4 of 10
+Plan: 5 of 10
 Status: Ready to execute
-Last activity: 2026-07-16 — Completed moderation, activity history, participation limits, and headless admin hooks
+Last activity: 2026-07-16 — Completed stable tag administration, bounded cleanup, and headless tag controls
 
-Progress: [██████░░░░] 61%
+Progress: [███████░░░] 67%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 11
-- Average duration: 32 min
-- Total execution time: 351 min
+- Total plans completed: 12
+- Average duration: 31 min
+- Total execution time: 366 min
 
 **By Phase:**
 
 | Phase    | Plans | Total   | Avg/Plan |
 | -------- | ----- | ------- | -------- |
 | Phase 01 | 8     | 299 min | 37 min   |
-| Phase 02 | 3     | 52 min  | 17 min   |
+| Phase 02 | 4     | 67 min  | 17 min   |
 
 **Recent Trend:**
 
-- Last 5 plans: 5 min, 10 min, 12 min, 14 min, 26 min
+- Last 5 plans: 10 min, 12 min, 14 min, 26 min, 15 min
 - Trend: Phase 2 is building the complete feedback lifecycle in bounded vertical slices
 
 _Updated after each plan completion_
@@ -72,6 +72,7 @@ _Updated after each plan completion_
 | Phase 02 P01 | 12 min   | 3 tasks | 24 files |
 | Phase 02 P02 | 14 min   | 3 tasks | 26 files |
 | Phase 02 P03 | 26 min   | 3 tasks | 45 files |
+| Phase 02 P04 | 15min    | 3 tasks | 26 files |
 
 ## Accumulated Context
 
@@ -115,6 +116,9 @@ Recent decisions affecting current work:
 - [Phase 02]: Expected participation failures return typed values after rate consumption so Convex commits exactly one charge.
 - [Phase 02]: Status, lifecycle, and discussion lock remain orthogonal; archive and withdrawal share one public visibility predicate.
 - [Phase 02]: Activity stores immutable typed metadata and opaque actor IDs, resolving current actor display only on authorized reads.
+- [Phase 02]: Use an active/deleting/deleted tag lifecycle so public projections hide a tag atomically before bounded cleanup. — Prevents partial multi-transaction cleanup from leaking through public DTOs, feeds, or search.
+- [Phase 02]: Drain tag memberships, feed rows, and search rows in separate 50-row scheduled continuation batches. — Keeps every transaction bounded with headroom and makes retries idempotent.
+- [Phase 02]: Version TagDto at contractVersion 1 and key tag mutation state by entity and action. — Preserves additive public contracts and explicit headless async state.
 
 ### Pending Todos
 
@@ -136,6 +140,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-16T22:38:24.723Z
-Stopped at: Completed 02-03-PLAN.md
+Last session: 2026-07-16T22:58:22.849Z
+Stopped at: Completed 02-04-PLAN.md
 Resume file: None

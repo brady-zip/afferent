@@ -42,8 +42,8 @@ Requirements for the first production-ready public release. Roadmap creation wil
 
 - [x] **ADMN-01**: An authorized admin can edit a feedback post.
 - [x] **ADMN-02**: An authorized admin can move a feedback post between boards.
-- [ ] **ADMN-03**: An authorized admin can create and manage internal tags.
-- [ ] **ADMN-04**: An authorized admin can assign and remove internal tags on feedback posts.
+- [x] **ADMN-03**: An authorized admin can create and manage internal tags.
+- [x] **ADMN-04**: An authorized admin can assign and remove internal tags on feedback posts.
 - [x] **ADMN-05**: An authorized admin can move a feedback post among the built-in Open, Under Review, Planned, In Progress, Complete, and Closed statuses.
 - [x] **ADMN-06**: An authorized admin can lock or unlock discussion on a feedback post.
 - [x] **ADMN-07**: An authorized admin can archive and restore a feedback post.
@@ -201,8 +201,8 @@ Every v1 requirement maps to exactly one roadmap phase.
 | DISC-08     | Phase 2 | Pending  |
 | ADMN-01     | Phase 2 | Complete |
 | ADMN-02     | Phase 2 | Complete |
-| ADMN-03     | Phase 2 | Pending  |
-| ADMN-04     | Phase 2 | Pending  |
+| ADMN-03     | Phase 2 | Complete |
+| ADMN-04     | Phase 2 | Complete |
 | ADMN-05     | Phase 2 | Complete |
 | ADMN-06     | Phase 2 | Complete |
 | ADMN-07     | Phase 2 | Complete |
