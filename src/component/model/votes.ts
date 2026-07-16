@@ -3,6 +3,7 @@ import type { MutationCtx, QueryCtx } from "../_generated/server.js";
 import { requirePostInScope, requireScope } from "./scope.js";
 
 type DatabaseContext = Pick<QueryCtx | MutationCtx, "db">;
+const MAX_RECONCILABLE_MEMBERSHIPS = 10_000;
 
 export function projectVoteState(
   hasMembership: boolean,
@@ -52,7 +53,10 @@ export async function reconcileVoteCount(
     .withIndex("by_scope_post_actor", (q) =>
       q.eq("scopeId", scopeId).eq("postId", post._id),
     )
-    .collect();
+    .take(MAX_RECONCILABLE_MEMBERSHIPS + 1);
+  if (memberships.length > MAX_RECONCILABLE_MEMBERSHIPS) {
+    throw new Error("VOTE_RECONCILIATION_LIMIT_EXCEEDED");
+  }
   if (post.voteCount !== memberships.length) {
     await ctx.db.patch(post._id, { voteCount: memberships.length });
   }

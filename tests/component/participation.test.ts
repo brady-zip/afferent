@@ -113,6 +113,29 @@ describe("authenticated participation", () => {
         desired: false,
       }),
     ).toMatchObject({ voteCount: 0 });
+
+    await Promise.all(
+      [true, false, true, false, true].map((desired) =>
+        client.participation.setVote(ctx as never, {
+          postId: post.id,
+          desired,
+        }),
+      ),
+    );
+    const mixed = await backend.run(async (runCtx) => ({
+      post: await runCtx.db.get(post.id as never),
+      votes: await runCtx.db
+        .query("votes")
+        .withIndex("by_scope_post_actor", (q) =>
+          q
+            .eq("scopeId", "afferent:single-product:v1")
+            .eq("postId", post.id as never),
+        )
+        .collect(),
+    }));
+    expect(mixed.post?.voteCount).toBeGreaterThanOrEqual(0);
+    expect(mixed.post?.voteCount).toBe(mixed.votes.length);
+    expect(mixed.votes.length).toBeLessThanOrEqual(1);
   });
 
   test("rejects invalid vote targets without actor or membership writes", async () => {
