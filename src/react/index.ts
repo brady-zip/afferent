@@ -1,5 +1,6 @@
 export type {
   AfferentBindings,
+  AdminBindings,
   FeedbackFeedQueryReference,
   FeedbackSearchQueryReference,
   PublicBindings,
@@ -15,6 +16,20 @@ export {
   useFeedbackSearch,
   useSimilarPosts,
 } from "./hooks/feedback.js";
+export {
+  mapAdminCapabilityState,
+  mapModerationError,
+  moderationActionKey,
+  useAdminCapability,
+  usePostActivity,
+  usePostModeration,
+} from "./hooks/admin.js";
+export type {
+  AdminCapabilityState,
+  ModerationAction,
+  ModerationError,
+  PostActivityState,
+} from "./hooks/admin.js";
 export type {
   BoundedDiscoveryState,
   FeedbackFeedArgs,

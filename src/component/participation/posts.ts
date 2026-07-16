@@ -10,7 +10,7 @@ import {
   requirePostInScope,
   requireScope,
 } from "../model/scope.js";
-import { toFeedbackPostDto, toPostDto } from "../model/views.js";
+import { toPostDto } from "../model/views.js";
 import { computeTrendingScore, patchPostRanking } from "../model/scoring.js";
 import {
   HIDDEN_POST_VISIBILITY,
@@ -123,14 +123,10 @@ export const editPost = mutation({
     } catch (error) {
       if (error instanceof ConvexError) {
         const data = error.data as { code?: string; message?: string };
-        return expectedFailure(
-          data.code === "NOT_OWNER"
-            ? "NOT_AUTHORIZED"
-            : data.code === "NOT_FOUND"
-              ? "NOT_FOUND"
-              : "VALIDATION",
-          data.message ?? "Post edit failed",
-        );
+        let code: "NOT_AUTHORIZED" | "NOT_FOUND" | "VALIDATION" = "VALIDATION";
+        if (data.code === "NOT_OWNER") code = "NOT_AUTHORIZED";
+        if (data.code === "NOT_FOUND") code = "NOT_FOUND";
+        return expectedFailure(code, data.message ?? "Post edit failed");
       }
       throw error;
     }

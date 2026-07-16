@@ -33,14 +33,25 @@ export async function consumeParticipationLimit(
     scopeId: string;
   },
 ) {
-  const actorLimit =
-    args.operation === "create_post"
-      ? "createPostActor"
-      : args.operation === "vote"
-        ? "voteActor"
-        : args.operation === "subscribe"
-          ? "subscribeActor"
-          : "commentActor";
+  let actorLimit:
+    "createPostActor" | "voteActor" | "subscribeActor" | "commentActor";
+  switch (args.operation) {
+    case "create_post": {
+      actorLimit = "createPostActor";
+      break;
+    }
+    case "vote": {
+      actorLimit = "voteActor";
+      break;
+    }
+    case "subscribe": {
+      actorLimit = "subscribeActor";
+      break;
+    }
+    default: {
+      actorLimit = "commentActor";
+    }
+  }
   const actor = await limiter.limit(ctx, actorLimit, {
     key: `${args.scopeId}:${args.actorKey}`,
     reserve: false,

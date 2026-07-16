@@ -1,4 +1,4 @@
-import type { FunctionReference } from "convex/server";
+import type { DefaultFunctionArgs, FunctionReference } from "convex/server";
 
 import type {
   BoardId,
@@ -9,6 +9,9 @@ import type {
   TagId,
   SearchResultDto,
   SimilarPostResultDto,
+  FeedbackPostDto,
+  PostActivityPageDto,
+  PostId,
 } from "../client/contracts.js";
 
 export type FeedbackFeedQueryReference = FunctionReference<
@@ -49,11 +52,44 @@ export interface PublicBindings {
   suggestSimilarPosts?: SimilarPostsQueryReference;
 }
 
+type AdminMutationReference<Args extends DefaultFunctionArgs> =
+  FunctionReference<"mutation", "public", Args, FeedbackPostDto>;
+
+export interface AdminBindings {
+  capability: FunctionReference<
+    "query",
+    "public",
+    Record<string, never>,
+    boolean
+  >;
+  editPost: AdminMutationReference<{
+    postId: PostId;
+    title?: string;
+    body?: string;
+  }>;
+  movePost: AdminMutationReference<{ postId: PostId; boardId: BoardId }>;
+  setPostStatus: AdminMutationReference<{
+    postId: PostId;
+    status: PostStatusKey;
+  }>;
+  setDiscussionLock: AdminMutationReference<{
+    postId: PostId;
+    locked: boolean;
+  }>;
+  setArchived: AdminMutationReference<{ postId: PostId; archived: boolean }>;
+  listPostActivity: FunctionReference<
+    "query",
+    "public",
+    { postId: PostId; paginationOpts: PaginationOptions },
+    PostActivityPageDto
+  >;
+}
+
 export interface AfferentBindings {
   public: PublicBindings;
   participation?: Readonly<Record<string, unknown>>;
   notifications?: Readonly<Record<string, unknown>>;
   roadmap?: Readonly<Record<string, unknown>>;
   changelog?: Readonly<Record<string, unknown>>;
-  admin?: Readonly<Record<string, unknown>>;
+  admin?: AdminBindings;
 }
