@@ -32,12 +32,12 @@ Afferent reaches its first public release through four coarse vertical slices. T
   4. A visitor can browse every permitted board under the installation-wide policy while an authenticated user can create, edit, withdraw, vote on, and discuss feedback with stable attribution and totals.
   5. Repeated vote operations remain one membership per actor, and comment replies identify one parent without creating nested discussion trees.
 
-**Plans:** 3/5 plans executed
+**Plans:** 4/5 plans executed
 
 - [x] 01-01-PLAN.md
 - [x] 01-02-PLAN.md
 - [x] 01-03-PLAN.md
-- [ ] 01-04-PLAN.md
+- [x] 01-04-PLAN.md
 - [ ] 01-05-PLAN.md
 
 **Wave 1**
@@ -119,7 +119,7 @@ Phases execute sequentially: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Secure Installable Feedback Board | 3/5 | In Progress|  |
+| 1. Secure Installable Feedback Board | 4/5 | In Progress|  |
 | 2. Complete Feedback-to-Changelog Workflow | 0/TBD | Not started | - |
 | 3. Source-Owned Product Interface | 0/TBD | Not started | - |
 | 4. Hosted Production Release | 0/TBD | Not started | - |

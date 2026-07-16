@@ -22,9 +22,9 @@ Requirements for the first production-ready public release. Roadmap creation wil
 - [x] **FDBK-02**: An authenticated user can create a feedback post on a board.
 - [x] **FDBK-03**: An authenticated author can edit their own feedback post.
 - [x] **FDBK-04**: An authenticated author can withdraw their own feedback post without destroying its history.
-- [ ] **FDBK-05**: An authenticated user can add or remove their one vote on a feedback post without creating duplicate vote memberships.
-- [ ] **FDBK-06**: An authenticated user can add a flat comment to a feedback post.
-- [ ] **FDBK-07**: An authenticated user can reply to a specific comment through a lightweight reply reference without creating unbounded comment nesting.
+- [x] **FDBK-05**: An authenticated user can add or remove their one vote on a feedback post without creating duplicate vote memberships.
+- [x] **FDBK-06**: An authenticated user can add a flat comment to a feedback post.
+- [x] **FDBK-07**: An authenticated user can reply to a specific comment through a lightweight reply reference without creating unbounded comment nesting.
 - [x] **FDBK-08**: A visitor can see stable author attribution, vote totals, comment totals, status, board, and tags wherever a visible post is presented.
 
 ### Discovery and Duplicates
@@ -187,9 +187,9 @@ Every v1 requirement maps to exactly one roadmap phase.
 | FDBK-02 | Phase 1 | Complete |
 | FDBK-03 | Phase 1 | Complete |
 | FDBK-04 | Phase 1 | Complete |
-| FDBK-05 | Phase 1 | Pending |
-| FDBK-06 | Phase 1 | Pending |
-| FDBK-07 | Phase 1 | Pending |
+| FDBK-05 | Phase 1 | Complete |
+| FDBK-06 | Phase 1 | Complete |
+| FDBK-07 | Phase 1 | Complete |
 | FDBK-08 | Phase 1 | Complete |
 | DISC-01 | Phase 2 | Pending |
 | DISC-02 | Phase 2 | Pending |

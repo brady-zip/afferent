@@ -5,16 +5,16 @@ milestone_name: milestone
 current_phase: 01
 current_phase_name: Secure Installable Feedback Board
 status: executing
-stopped_at: Completed 01-03-PLAN.md
-last_updated: "2026-07-16T05:24:44.349Z"
+stopped_at: Completed 01-04-PLAN.md
+last_updated: "2026-07-16T14:43:13.351Z"
 last_activity: 2026-07-16
-last_activity_desc: Plan 01-03 completed
+last_activity_desc: Plan 01-04 completed
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 5
-  completed_plans: 3
-  percent: 60
+  completed_plans: 4
+  percent: 80
 ---
 
 # Project State
@@ -29,29 +29,29 @@ See: .planning/PROJECT.md (updated 2026-07-14)
 ## Current Position
 
 Phase: 01 (Secure Installable Feedback Board) — EXECUTING
-Plan: 4 of 5
-Status: Ready to execute Plan 4
-Last activity: 2026-07-16 — Plan 01-03 completed
+Plan: 5 of 5
+Status: Ready to execute Plan 5
+Last activity: 2026-07-16 — Plan 01-04 completed
 
-Progress: [██████░░░░] 60%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 3
-- Average duration: 59 min
-- Total execution time: 177 min
+- Total plans completed: 4
+- Average duration: 67 min
+- Total execution time: 267 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| Phase 01 | 3 | 177 min | 59 min |
+| Phase 01 | 4 | 267 min | 67 min |
 
 **Recent Trend:**
 
-- Last 5 plans: 8 min, 148 min, 21 min
+- Last 5 plans: 8 min, 148 min, 21 min, 90 min
 - Trend: Secure domain foundation established
 
 *Updated after each plan completion*
@@ -62,6 +62,7 @@ Progress: [██████░░░░] 60%
 |------|----------|-------|-------|
 | Phase 01 P02 | 148 min | 2 tasks | 30 files |
 | Phase 01 P03 | 21 min | 3 tasks | 27 files |
+| Phase 01 P04 | 90 min | 3 tasks | 23 files |
 
 ## Accumulated Context
 
@@ -82,6 +83,9 @@ Recent decisions affecting current work:
 - [Phase 01]: Use full domain-separated SHA-256 base64url scope derivation from verified external identity. — This keeps demo scopes deterministic, opaque, fixed length, and based only on server-verified identity.
 - [Phase 01]: Normalize branded string IDs inside shared scope guards to preserve not-found equivalence. — Component-boundary ID validation must not distinguish malformed IDs from valid identifiers belonging to another scope.
 - [Phase 01]: Ship convex-helpers as a regular runtime dependency for packed component consumers. — The paginator is an internal shipped runtime implementation detail and packed consumers must install it automatically.
+- [Phase 01]: Treat scope/post/actor vote memberships as canonical state and maintain counters only in the same transaction. — Retries and concurrency cannot drift the projection from membership truth.
+- [Phase 01]: Keep discussions flat with one optional same-scope, same-post root-parent reference. — This preserves reply context without unbounded nesting or recursive DTOs.
+- [Phase 01]: Use domain-tagged 128-bit random tombstones for idempotent anonymization while retaining stable actor relationships. — Identity becomes unlinkable while authored content and participation totals remain coherent.
 
 ### Pending Todos
 
@@ -103,6 +107,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-16T05:24:18.198Z
-Stopped at: Completed 01-03-PLAN.md
+Last session: 2026-07-16T14:43:13.346Z
+Stopped at: Completed 01-04-PLAN.md
 Resume file: None
