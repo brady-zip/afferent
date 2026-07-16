@@ -41,7 +41,17 @@ describe("component-compatible post pagination", () => {
     const alpha = scoped("derived-alpha");
     const beta = scoped("derived-beta");
 
-    const setup = async (client: typeof fixed, prefix: string) => {
+    const setup = async ({
+      client,
+      prefix,
+      scopeId,
+      externalKey,
+    }: {
+      client: typeof fixed;
+      prefix: string;
+      scopeId: string;
+      externalKey: string;
+    }) => {
       const configured = await client.admin.configureInstallation(
         ctx as never,
         {
@@ -52,20 +62,54 @@ describe("component-compatible post pagination", () => {
           ],
         },
       );
-      for (let index = 0; index < 50; index += 1) {
-        await client.participation.createPost(ctx as never, {
-          boardId: configured.boards[index % 2].id,
-          title: `${prefix}-${index.toString().padStart(2, "0")}`,
-          body: prefix,
+      await backend.run(async (runCtx) => {
+        const actorId = await runCtx.db.insert("actors", {
+          scopeId,
+          externalKey,
         });
-      }
+        for (let index = 0; index < 50; index += 1) {
+          const createdAt = Date.now() + index;
+          const postId = await runCtx.db.insert("posts", {
+            scopeId,
+            boardId: configured.boards[index % 2].id as never,
+            actorId,
+            title: `${prefix}-${index.toString().padStart(2, "0")}`,
+            body: prefix,
+            searchText: `${prefix}-${index}`,
+            lifecycleState: "active",
+            statusKey: "open",
+            voteCount: 0,
+            commentCount: 0,
+            createdAt,
+            currentStatusSince: createdAt,
+            trendingScore: createdAt,
+            visibilityKey: "visible",
+          });
+          await runCtx.db.patch(postId, { orderId: String(postId) });
+        }
+      });
       return configured.boards;
     };
 
     const [fixedBoards, alphaBoards, betaBoards] = await Promise.all([
-      setup(fixed, "fixed"),
-      setup(alpha, "alpha"),
-      setup(beta, "beta"),
+      setup({
+        client: fixed,
+        prefix: "fixed",
+        scopeId: "afferent:single-product:v1",
+        externalKey: "fixture:fixed",
+      }),
+      setup({
+        client: alpha,
+        prefix: "alpha",
+        scopeId: "derived-alpha",
+        externalKey: "fixture:derived-alpha",
+      }),
+      setup({
+        client: beta,
+        prefix: "beta",
+        scopeId: "derived-beta",
+        externalKey: "fixture:derived-beta",
+      }),
     ]);
     expect(alphaBoards.map((board) => board.slug)).toEqual(
       betaBoards.map((board) => board.slug),

@@ -255,8 +255,9 @@ export function runFactoryAuthorityConformance(
             body: "Must not persist",
           }),
         ),
-      ).rejects.toMatchObject({
-        data: { code: "NOT_FOUND", resource: "board" },
+      ).resolves.toMatchObject({
+        ok: false,
+        error: { code: "NOT_FOUND" },
       });
 
       const otherPosts = await runWithContext(backend, identity, (ctx) =>

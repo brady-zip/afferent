@@ -5,7 +5,7 @@ import {
   installationResultValidator,
   listPostsIntentValidator,
   postPageResultValidator,
-  publicPostDtoValidator,
+  publicPostActionResultValidator,
 } from "afferent";
 import type { BoardId } from "afferent";
 import type { ComponentApi } from "afferent/_generated/component.js";
@@ -31,7 +31,7 @@ export const configureInstallation = mutation({
 
 export const createPost = mutation({
   args: createPostIntentValidator.fields,
-  returns: publicPostDtoValidator,
+  returns: publicPostActionResultValidator,
   handler: (ctx, args) =>
     client.participation.createPost(ctx, {
       ...args,

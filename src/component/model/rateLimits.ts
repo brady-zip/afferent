@@ -58,7 +58,11 @@ export async function consumeParticipationLimit(
   });
   if (!actor.ok) return rateLimited(args.operation, actor.retryAfter);
 
-  if (args.operation === "create_post" || args.operation === "comment") {
+  if (
+    args.operation === "create_post" ||
+    args.operation === "comment" ||
+    args.operation === "edit_post"
+  ) {
     const scopeLimit =
       args.operation === "create_post" ? "createPostScope" : "commentScope";
     const scope = await limiter.limit(ctx, scopeLimit, {

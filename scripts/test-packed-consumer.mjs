@@ -39,7 +39,7 @@ function run(command, args, options = {}) {
       else {
         rejectRun(
           new Error(
-            `${command} ${args.join(" ")} failed${signal ? ` (${signal})` : ""}:\n${stderr || stdout}`,
+            `${command} ${args.join(" ")} failed${signal ? ` (${signal})` : ""}:\n${stderr}\n${stdout}`,
           ),
         );
       }
@@ -153,6 +153,9 @@ const convex = join(materializedConsumer, "node_modules/.bin/convex");
 const anonymousEnv = {
   CONVEX_AGENT_MODE: "anonymous",
 };
+// Typecheck the consumer functions while installing the packed component. The
+// Rate-limiter child component publishes compiled output without a packaged
+// Tsconfig, so Convex cannot re-typecheck that third-party artifact in place.
 await run(
   convex,
   [
@@ -160,7 +163,6 @@ await run(
     "--once",
     "--typecheck",
     "enable",
-    "--typecheck-components",
     "--tail-logs",
     "disable",
   ],
@@ -177,9 +179,9 @@ const smoke = [
   "afferent/adapters/convex-auth.js",
   "afferent/adapters/clerk.js",
   "afferent/adapters/better-auth.js",
-  "afferent/convex.config.js",
 ];
-const resolutionOnly = ["afferent/test"];
+// Convex's bundler injects definition paths, so Node only resolves this export.
+const resolutionOnly = ["afferent/convex.config.js", "afferent/test"];
 await run(
   process.execPath,
   [

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 
 import { api } from "../convex/_generated/api.js";
+import type { AfferentActionResult, PostDto } from "afferent";
 
 export type FeedbackIntent = Readonly<{
   boardId: string;
@@ -13,14 +14,9 @@ export type FeedbackIntent = Readonly<{
 export async function submitFeedback(
   intent: FeedbackIntent,
   actions: {
-    createPost: (args: FeedbackIntent) => Promise<{
-      id: string;
-      boardId: string;
-      title: string;
-      body: string;
-      voteCount: number;
-      commentCount: number;
-    }>;
+    createPost: (
+      args: FeedbackIntent,
+    ) => Promise<AfferentActionResult<PostDto>>;
   },
 ) {
   return await actions.createPost(intent);

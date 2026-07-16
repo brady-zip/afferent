@@ -167,9 +167,7 @@ describe("server-derived scope isolation", () => {
         postId: alphaPost.id,
         title: "Cross-scope edit",
       }),
-    ).rejects.toMatchObject({
-      data: { code: "NOT_FOUND", resource: "post" },
-    });
+    ).resolves.toMatchObject({ ok: false, error: { code: "NOT_FOUND" } });
     await expect(
       beta.participation.withdrawPost(ctx as never, {
         postId: alphaPost.id,
@@ -183,9 +181,7 @@ describe("server-derived scope isolation", () => {
         postId: alphaPost.id,
         desired: true,
       }),
-    ).rejects.toMatchObject({
-      data: { code: "NOT_FOUND", resource: "post" },
-    });
+    ).resolves.toMatchObject({ ok: false, error: { code: "NOT_FOUND" } });
     expect(
       await alpha.participation.setVote(ctx as never, {
         postId: alphaPost.id,
@@ -225,9 +221,7 @@ describe("server-derived scope isolation", () => {
         postId: alphaPost.id,
         body: "Cross-scope post",
       }),
-    ).rejects.toMatchObject({
-      data: { code: "NOT_FOUND", resource: "post" },
-    });
+    ).resolves.toMatchObject({ ok: false, error: { code: "NOT_FOUND" } });
     await expect(
       beta.read.listComments(ctx as never, { postId: alphaPost.id }),
     ).rejects.toMatchObject({

@@ -348,6 +348,41 @@ export const publicPostDtoValidator = v.object({
   tags: v.array(v.string()),
 });
 
+export const publicAfferentErrorValidator = v.union(
+  v.object({
+    contractVersion: v.literal(1),
+    code: v.literal("RATE_LIMITED"),
+    operation: v.union(
+      v.literal("create_post"),
+      v.literal("edit_post"),
+      v.literal("comment"),
+      v.literal("vote"),
+      v.literal("subscribe"),
+    ),
+    retryAfterMs: v.number(),
+  }),
+  v.object({
+    contractVersion: v.literal(1),
+    code: v.union(
+      v.literal("VALIDATION"),
+      v.literal("NOT_FOUND"),
+      v.literal("DISCUSSION_LOCKED"),
+      v.literal("NOT_AUTHORIZED"),
+    ),
+    message: v.string(),
+  }),
+);
+
+export const publicParticipationFailureValidator = v.object({
+  ok: v.literal(false),
+  error: publicAfferentErrorValidator,
+});
+
+export const publicPostActionResultValidator = v.union(
+  publicPostDtoValidator,
+  publicParticipationFailureValidator,
+);
+
 export const publicFeedbackPostDtoValidator = v.object({
   contractVersion: v.literal(2),
   id: v.string(),
@@ -396,6 +431,11 @@ export const publicCommentDtoValidator = v.object({
   }),
   parentCommentId: v.optional(v.string()),
 });
+
+export const publicCommentActionResultValidator = v.union(
+  publicCommentDtoValidator,
+  publicParticipationFailureValidator,
+);
 
 export const commentPageResultValidator = v.object({
   contractVersion: v.literal(1),

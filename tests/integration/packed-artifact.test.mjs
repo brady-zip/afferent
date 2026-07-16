@@ -91,7 +91,8 @@ test("the release gate covers every suite and every supported packed export", as
   ]) {
     assert.ok(gate.includes(exported), `release gate is missing ${exported}`);
   }
-  assert.match(gate, /--typecheck-components/);
+  assert.match(gate, /"--typecheck",\s*\n\s*"enable"/);
+  assert.match(gate, /rate-limiter child component/i);
   assert.match(gate, /private data-model export/);
 });
 
