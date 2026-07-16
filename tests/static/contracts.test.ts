@@ -34,11 +34,8 @@ const FORBIDDEN_MODULES = [
 function sourceFilesBelow(directory: string): string[] {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const child = path.join(directory, entry.name);
-    return entry.isDirectory()
-      ? sourceFilesBelow(child)
-      : entry.name.endsWith(".ts")
-        ? [child]
-        : [];
+    if (entry.isDirectory()) return sourceFilesBelow(child);
+    return entry.name.endsWith(".ts") ? [child] : [];
   });
 }
 
@@ -84,9 +81,9 @@ describe("public contract privacy", () => {
       "totals",
       "voteCount",
     ]);
-    expect(Object.keys(publicPostDtoValidator.fields.author.fields).sort()).toEqual(
-      ["avatarUrl", "displayName", "id"],
-    );
+    expect(
+      Object.keys(publicPostDtoValidator.fields.author.fields).sort(),
+    ).toEqual(["avatarUrl", "displayName", "id"]);
   });
 
   test("keeps comment DTOs flat and provider-neutral", () => {

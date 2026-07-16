@@ -51,7 +51,7 @@ test("the release gate covers every suite and every supported packed export", as
     "test:scope",
     "test:backend",
   ]) {
-    assert.match(gate, new RegExp(command.replace(":", "\\:")));
+    assert.ok(gate.includes(command), `release gate is missing ${command}`);
   }
   for (const exported of [
     "afferent",
@@ -62,7 +62,7 @@ test("the release gate covers every suite and every supported packed export", as
     "afferent/convex.config.js",
     "afferent/test",
   ]) {
-    assert.match(gate, new RegExp(exported.replaceAll("/", "\\/")));
+    assert.ok(gate.includes(exported), `release gate is missing ${exported}`);
   }
   assert.match(gate, /--typecheck-components/);
   assert.match(gate, /private data-model export/);

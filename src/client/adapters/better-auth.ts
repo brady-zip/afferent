@@ -8,7 +8,7 @@ export type SessionValidatedBetterAuthUser = Readonly<{
 
 function optionalDisplay(value: string | null | undefined): string | undefined {
   const normalized = value?.trim();
-  return normalized ? normalized : undefined;
+  return normalized || undefined;
 }
 
 export function normalizeBetterAuthUser(

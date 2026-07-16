@@ -9,7 +9,7 @@ export type VerifiedClerkIdentity = Readonly<{
 
 function optionalDisplay(value: string | undefined): string | undefined {
   const normalized = value?.trim();
-  return normalized ? normalized : undefined;
+  return normalized || undefined;
 }
 
 export function normalizeClerkIdentity(

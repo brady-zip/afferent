@@ -200,15 +200,11 @@ describe("server-derived scope isolation", () => {
     const scopedVotes = await backend.run(async (runCtx) => ({
       alpha: await runCtx.db
         .query("votes")
-        .withIndex("by_scope_post_actor", (q) =>
-          q.eq("scopeId", "scope-alpha"),
-        )
+        .withIndex("by_scope_post_actor", (q) => q.eq("scopeId", "scope-alpha"))
         .collect(),
       beta: await runCtx.db
         .query("votes")
-        .withIndex("by_scope_post_actor", (q) =>
-          q.eq("scopeId", "scope-beta"),
-        )
+        .withIndex("by_scope_post_actor", (q) => q.eq("scopeId", "scope-beta"))
         .collect(),
     }));
     expect(scopedVotes).toEqual({ alpha: [], beta: [] });
@@ -336,29 +332,44 @@ describe("server-derived scope isolation", () => {
     expect(await fixed.read.listBoards(ctx as never, {})).toMatchObject({
       boards: [{ slug: "feedback" }],
     });
-    expect(await fixed.read.listPosts(ctx as never, { boardId: fixedBoard.id })).toMatchObject({
-      posts: [{ id: fixedPost.id }],
+    const fixedPosts = await fixed.read.listPosts(ctx as never, {
+      boardId: fixedBoard.id,
     });
-    expect(await fixed.read.getPost(ctx as never, { postId: fixedPost.id })).toMatchObject({
+    expect(fixedPosts).toMatchObject({ posts: [{ id: fixedPost.id }] });
+    const fixedPostResult = await fixed.read.getPost(ctx as never, {
+      postId: fixedPost.id,
+    });
+    expect(fixedPostResult).toMatchObject({
       body: "Clerk edited",
       voteCount: 1,
       commentCount: 1,
     });
-    expect(await fixed.read.countPosts(ctx as never, { boardId: fixedBoard.id })).toEqual({
+    expect(
+      await fixed.read.countPosts(ctx as never, { boardId: fixedBoard.id }),
+    ).toEqual({
       contractVersion: 1,
       count: 1,
     });
-    expect(await fixed.read.listComments(ctx as never, { postId: fixedPost.id })).toMatchObject({
+    expect(
+      await fixed.read.listComments(ctx as never, { postId: fixedPost.id }),
+    ).toMatchObject({
       comments: [{ body: "Clerk comment" }],
     });
-    await fixed.participation.withdrawPost(ctx as never, { postId: fixedPost.id });
+    await fixed.participation.withdrawPost(ctx as never, {
+      postId: fixedPost.id,
+    });
 
     const actors = await backend.run(async (runCtx) =>
       runCtx.db.query("actors").withIndex("by_scope_external_key").collect(),
     );
-    expect(actors.map(({ scopeId, externalKey }) => ({ scopeId, externalKey }))).toEqual(
+    expect(
+      actors.map(({ scopeId, externalKey }) => ({ scopeId, externalKey })),
+    ).toEqual(
       expect.arrayContaining([
-        { scopeId: "afferent:single-product:v1", externalKey: clerkActor.externalKey },
+        {
+          scopeId: "afferent:single-product:v1",
+          externalKey: clerkActor.externalKey,
+        },
         { scopeId: "provider-sandbox", externalKey: betterActor.externalKey },
       ]),
     );
