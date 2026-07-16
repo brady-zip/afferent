@@ -153,4 +153,118 @@ describe("authenticated participation", () => {
     expect(persisted.actors).toHaveLength(1);
     expect(persisted.votes).toEqual([]);
   });
+
+  test("adds flat root comments and one-level replies with exact totals", async () => {
+    const backend = convexTest(schema, modules);
+    let actor: VerifiedActor = {
+      externalKey: "fixture:commenter",
+      displayName: "Commenter",
+    };
+    const client = createAfferentClient(api as unknown as ComponentApi, {
+      resolveActor: async () => actor,
+      authorizeAdmin: async () => true,
+      isAuthenticated: async () => true,
+    });
+    const ctx = backendContext(backend);
+    const configured = await client.admin.configureInstallation(ctx as never, {
+      readPolicy: "public",
+      boards: [{ slug: "feedback", name: "Feedback" }],
+    });
+    const firstPost = await client.participation.createPost(ctx as never, {
+      boardId: configured.boards[0].id,
+      title: "Flat comments",
+      body: "One reply edge.",
+    });
+    const secondPost = await client.participation.createPost(ctx as never, {
+      boardId: configured.boards[0].id,
+      title: "Other post",
+      body: "Parents cannot cross posts.",
+    });
+
+    const root = await client.participation.addComment(ctx as never, {
+      postId: firstPost.id,
+      body: " Root comment ",
+    });
+    expect(root).toMatchObject({
+      postId: firstPost.id,
+      body: "Root comment",
+      author: { displayName: "Commenter" },
+    });
+    expect(root).not.toHaveProperty("parentCommentId");
+
+    const reply = await client.participation.addComment(ctx as never, {
+      postId: firstPost.id,
+      parentCommentId: root.id,
+      body: "One reply",
+    });
+    expect(reply).toMatchObject({
+      postId: firstPost.id,
+      parentCommentId: root.id,
+    });
+
+    actor = { externalKey: "fixture:invalid-commenter" };
+    await expect(
+      client.participation.addComment(ctx as never, {
+        postId: firstPost.id,
+        parentCommentId: reply.id,
+        body: "Too deep",
+      }),
+    ).rejects.toMatchObject({ data: { code: "INVALID_INPUT" } });
+    await expect(
+      client.participation.addComment(ctx as never, {
+        postId: secondPost.id,
+        parentCommentId: root.id,
+        body: "Wrong post",
+      }),
+    ).rejects.toMatchObject({ data: { code: "INVALID_INPUT" } });
+    await expect(
+      client.participation.addComment(ctx as never, {
+        postId: firstPost.id,
+        parentCommentId: "j57fakeopaqueid" as typeof root.id,
+        body: "Missing parent",
+      }),
+    ).rejects.toMatchObject({
+      data: { code: "NOT_FOUND", resource: "comment" },
+    });
+
+    const page = await client.read.listComments(ctx as never, {
+      postId: firstPost.id,
+      paginationOpts: { numItems: 10, cursor: null },
+    });
+    expect(page.comments).toHaveLength(2);
+    expect(page.comments).toEqual(expect.arrayContaining([root, reply]));
+    expect(page.comments.every((comment) => !Array.isArray(comment.replies))).toBe(
+      true,
+    );
+    expect(
+      await client.read.getPost(ctx as never, { postId: firstPost.id }),
+    ).toMatchObject({ commentCount: 2, totals: { comments: 2 } });
+
+    const persisted = await backend.run(async (runCtx) => ({
+      comments: await runCtx.db.query("comments").collect(),
+      rejectedActor: await runCtx.db
+        .query("actors")
+        .withIndex("by_scope_external_key", (q) =>
+          q
+            .eq("scopeId", "afferent:single-product:v1")
+            .eq("externalKey", "fixture:invalid-commenter"),
+        )
+        .unique(),
+    }));
+    expect(persisted.comments).toHaveLength(2);
+    expect(persisted.rejectedActor).toBeNull();
+
+    await client.participation.withdrawPost(ctx as never, {
+      postId: firstPost.id,
+    });
+    await expect(
+      client.participation.addComment(ctx as never, {
+        postId: firstPost.id,
+        body: "Too late",
+      }),
+    ).rejects.toMatchObject({ data: { code: "INVALID_INPUT" } });
+    expect(
+      await client.read.getPost(ctx as never, { postId: firstPost.id }),
+    ).toMatchObject({ commentCount: 2 });
+  });
 });

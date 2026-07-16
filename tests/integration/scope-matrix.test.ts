@@ -118,7 +118,7 @@ describe("server-derived scope isolation", () => {
       title: "Alpha only",
       body: "alpha",
     });
-    await beta.participation.createPost(ctx as never, {
+    const betaPost = await beta.participation.createPost(ctx as never, {
       boardId: betaBoard.id,
       title: "Beta only",
       body: "beta",
@@ -209,5 +209,42 @@ describe("server-derived scope isolation", () => {
         .collect(),
     }));
     expect(scopedVotes).toEqual({ alpha: [], beta: [] });
+
+    const alphaRoot = await alpha.participation.addComment(ctx as never, {
+      postId: alphaPost.id,
+      body: "Alpha root",
+    });
+    await alpha.participation.addComment(ctx as never, {
+      postId: alphaPost.id,
+      parentCommentId: alphaRoot.id,
+      body: "Alpha reply",
+    });
+    await expect(
+      beta.participation.addComment(ctx as never, {
+        postId: alphaPost.id,
+        body: "Cross-scope post",
+      }),
+    ).rejects.toMatchObject({
+      data: { code: "NOT_FOUND", resource: "post" },
+    });
+    await expect(
+      beta.read.listComments(ctx as never, { postId: alphaPost.id }),
+    ).rejects.toMatchObject({
+      data: { code: "NOT_FOUND", resource: "post" },
+    });
+    expect(
+      await alpha.read.listComments(ctx as never, { postId: alphaPost.id }),
+    ).toMatchObject({
+      comments: [
+        { id: alphaRoot.id, body: "Alpha root" },
+        { parentCommentId: alphaRoot.id, body: "Alpha reply" },
+      ],
+    });
+    expect(
+      await alpha.read.getPost(ctx as never, { postId: alphaPost.id }),
+    ).toMatchObject({ commentCount: 2, totals: { comments: 2 } });
+    expect(
+      await beta.read.getPost(ctx as never, { postId: betaPost.id }),
+    ).toMatchObject({ commentCount: 0, totals: { comments: 0 } });
   });
 });
