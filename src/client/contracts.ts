@@ -11,6 +11,8 @@ export type CommentId = BrandedId<"CommentId">;
 export type TagId = BrandedId<"TagId">;
 export type ActivityId = BrandedId<"ActivityId">;
 
+export type RoadmapStatusKey = "planned" | "in_progress" | "complete";
+
 export type PostStatusKey =
   "open" | "under_review" | "planned" | "in_progress" | "complete" | "closed";
 export type FeedbackOrder = "newest" | "top" | "trending";
@@ -152,6 +154,32 @@ export type FeedbackPageDto = Readonly<{
   contractVersion: 2;
   page: FeedbackPostDto[];
   posts: FeedbackPostDto[];
+  isDone: boolean;
+  continueCursor: string;
+  splitCursor?: string | null;
+  pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+}>;
+
+export type RoadmapItemDto = Readonly<{
+  contractVersion: 1;
+  id: PostId;
+  boardId: BoardId;
+  board: BoardDto;
+  title: string;
+  status: Readonly<{
+    key: RoadmapStatusKey;
+    label: "Planned" | "In Progress" | "Complete";
+  }>;
+  currentStatusSince: number;
+  createdAt: number;
+  voteCount: number;
+  commentCount: number;
+}>;
+
+export type RoadmapGroupPageDto = Readonly<{
+  contractVersion: 1;
+  page: RoadmapItemDto[];
+  items: RoadmapItemDto[];
   isDone: boolean;
   continueCursor: string;
   splitCursor?: string | null;
@@ -317,6 +345,17 @@ export const listFeedbackIntentValidator = v.object({
     ),
   ),
   tagId: v.optional(v.string()),
+  paginationOpts: v.optional(paginationOptsValidator),
+});
+
+export const listRoadmapGroupIntentValidator = v.object({
+  status: v.union(
+    v.literal("planned"),
+    v.literal("in_progress"),
+    v.literal("complete"),
+  ),
+  boardId: v.optional(v.string()),
+  sessionGeneration: v.optional(v.string()),
   paginationOpts: v.optional(paginationOptsValidator),
 });
 
@@ -542,6 +581,46 @@ export const feedbackPageResultValidator = v.object({
   ),
 });
 
+export const roadmapItemResultValidator = v.object({
+  contractVersion: v.literal(1),
+  id: v.string(),
+  boardId: v.string(),
+  board: publicBoardDtoValidator,
+  title: v.string(),
+  status: v.object({
+    key: v.union(
+      v.literal("planned"),
+      v.literal("in_progress"),
+      v.literal("complete"),
+    ),
+    label: v.union(
+      v.literal("Planned"),
+      v.literal("In Progress"),
+      v.literal("Complete"),
+    ),
+  }),
+  currentStatusSince: v.number(),
+  createdAt: v.number(),
+  voteCount: v.number(),
+  commentCount: v.number(),
+});
+
+export const roadmapGroupPageResultValidator = v.object({
+  contractVersion: v.literal(1),
+  page: v.array(roadmapItemResultValidator),
+  items: v.array(roadmapItemResultValidator),
+  isDone: v.boolean(),
+  continueCursor: v.string(),
+  splitCursor: v.optional(v.union(v.string(), v.null())),
+  pageStatus: v.optional(
+    v.union(
+      v.literal("SplitRecommended"),
+      v.literal("SplitRequired"),
+      v.null(),
+    ),
+  ),
+});
+
 export const discoveryPostResultValidator = v.object({
   contractVersion: v.literal(1),
   id: v.string(),
@@ -609,6 +688,15 @@ export interface ReadCapabilities<Context> {
       paginationOpts?: PaginationOptions;
     },
   ): Promise<FeedbackPageDto>;
+  listRoadmapGroup(
+    ctx: Context,
+    args: {
+      status: RoadmapStatusKey;
+      boardId?: BoardId;
+      sessionGeneration?: string;
+      paginationOpts?: PaginationOptions;
+    },
+  ): Promise<RoadmapGroupPageDto>;
   searchFeedback(
     ctx: Context,
     args: {

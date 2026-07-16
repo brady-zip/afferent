@@ -964,6 +964,62 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         },
         Name
       >;
+      listRoadmapGroup: FunctionReference<
+        "query",
+        "internal",
+        {
+          boardId?: string;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          scopeId: string;
+          status: "planned" | "in_progress" | "complete";
+          viewerAuthenticated: boolean;
+        },
+        {
+          continueCursor: string;
+          contractVersion: 1;
+          isDone: boolean;
+          items: Array<{
+            board: { id: string; name: string; slug: string };
+            boardId: string;
+            commentCount: number;
+            contractVersion: 1;
+            createdAt: number;
+            currentStatusSince: number;
+            id: string;
+            status: {
+              key: "planned" | "in_progress" | "complete";
+              label: "Planned" | "In Progress" | "Complete";
+            };
+            title: string;
+            voteCount: number;
+          }>;
+          page: Array<{
+            board: { id: string; name: string; slug: string };
+            boardId: string;
+            commentCount: number;
+            contractVersion: 1;
+            createdAt: number;
+            currentStatusSince: number;
+            id: string;
+            status: {
+              key: "planned" | "in_progress" | "complete";
+              label: "Planned" | "In Progress" | "Complete";
+            };
+            title: string;
+            voteCount: number;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        },
+        Name
+      >;
       listTags: FunctionReference<
         "query",
         "internal",
@@ -1846,6 +1902,64 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               totals: { comments: number; votes: number };
               voteCount: number;
             }>;
+            splitCursor?: string | null;
+          },
+          Name
+        >;
+      };
+      roadmap: {
+        listRoadmapGroup: FunctionReference<
+          "query",
+          "internal",
+          {
+            boardId?: string;
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+            scopeId: string;
+            status: "planned" | "in_progress" | "complete";
+            viewerAuthenticated: boolean;
+          },
+          {
+            continueCursor: string;
+            contractVersion: 1;
+            isDone: boolean;
+            items: Array<{
+              board: { id: string; name: string; slug: string };
+              boardId: string;
+              commentCount: number;
+              contractVersion: 1;
+              createdAt: number;
+              currentStatusSince: number;
+              id: string;
+              status: {
+                key: "planned" | "in_progress" | "complete";
+                label: "Planned" | "In Progress" | "Complete";
+              };
+              title: string;
+              voteCount: number;
+            }>;
+            page: Array<{
+              board: { id: string; name: string; slug: string };
+              boardId: string;
+              commentCount: number;
+              contractVersion: 1;
+              createdAt: number;
+              currentStatusSince: number;
+              id: string;
+              status: {
+                key: "planned" | "in_progress" | "complete";
+                label: "Planned" | "In Progress" | "Complete";
+              };
+              title: string;
+              voteCount: number;
+            }>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
             splitCursor?: string | null;
           },
           Name

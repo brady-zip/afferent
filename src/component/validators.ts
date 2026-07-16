@@ -49,6 +49,12 @@ export const feedbackOrderValidator = v.union(
   v.literal("trending"),
 );
 
+export const roadmapStatusKeyValidator = v.union(
+  v.literal("planned"),
+  v.literal("in_progress"),
+  v.literal("complete"),
+);
+
 export const tagDtoValidator = v.object({
   contractVersion: v.literal(1),
   id: v.string(),
@@ -168,6 +174,42 @@ export const feedbackPageDtoValidator = v.object({
   contractVersion: v.literal(2),
   page: v.array(feedbackPostDtoValidator),
   posts: v.array(feedbackPostDtoValidator),
+  isDone: v.boolean(),
+  continueCursor: v.string(),
+  splitCursor: v.optional(v.union(v.string(), v.null())),
+  pageStatus: v.optional(
+    v.union(
+      v.literal("SplitRecommended"),
+      v.literal("SplitRequired"),
+      v.null(),
+    ),
+  ),
+});
+
+export const roadmapItemDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  id: v.string(),
+  boardId: v.string(),
+  board: boardDtoValidator,
+  title: v.string(),
+  status: v.object({
+    key: roadmapStatusKeyValidator,
+    label: v.union(
+      v.literal("Planned"),
+      v.literal("In Progress"),
+      v.literal("Complete"),
+    ),
+  }),
+  currentStatusSince: v.number(),
+  createdAt: v.number(),
+  voteCount: v.number(),
+  commentCount: v.number(),
+});
+
+export const roadmapGroupPageDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  page: v.array(roadmapItemDtoValidator),
+  items: v.array(roadmapItemDtoValidator),
   isDone: v.boolean(),
   continueCursor: v.string(),
   splitCursor: v.optional(v.union(v.string(), v.null())),

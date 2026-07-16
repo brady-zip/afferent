@@ -142,6 +142,23 @@ export default defineSchema({
       "createdAt",
       "orderId",
     ])
+    .index("by_scope_status_visibility_roadmap", [
+      "scopeId",
+      "statusKey",
+      "visibilityKey",
+      "currentStatusSince",
+      "createdAt",
+      "orderId",
+    ])
+    .index("by_scope_board_status_visibility_roadmap", [
+      "scopeId",
+      "boardId",
+      "statusKey",
+      "visibilityKey",
+      "currentStatusSince",
+      "createdAt",
+      "orderId",
+    ])
     .searchIndex("search_posts", {
       searchField: "searchText",
       filterFields: ["scopeId", "visibilityKey", "boardId", "statusKey"],

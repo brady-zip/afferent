@@ -7,6 +7,7 @@ export { listBoards } from "./public/boards.js";
 export { countPosts, getPost, listPosts } from "./public/posts.js";
 export { listFeedback } from "./public/feeds.js";
 export { searchFeedback, suggestSimilarPosts } from "./public/search.js";
+export { listRoadmapGroup } from "./public/roadmap.js";
 export { listComments } from "./public/comments.js";
 export {
   editPost as adminEditPost,

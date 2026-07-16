@@ -16,6 +16,7 @@ import type {
   SimilarPostResultDto,
   FeedbackPostDto,
   PostActivityPageDto,
+  RoadmapGroupPageDto,
   TagDeleteResultDto,
   TagDto,
   TagListDto,
@@ -91,6 +92,19 @@ export function createClientWithScope(
             cursor: null,
           },
         })) as unknown as FeedbackPageDto;
+      },
+      async listRoadmapGroup(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        return (await ctx.runQuery(component.public.roadmap.listRoadmapGroup, {
+          scopeId,
+          viewerAuthenticated: await viewerAuthenticated(options, ctx),
+          status: args.status,
+          ...(args.boardId === undefined ? {} : { boardId: args.boardId }),
+          paginationOpts: args.paginationOpts ?? {
+            numItems: 20,
+            cursor: null,
+          },
+        })) as unknown as RoadmapGroupPageDto;
       },
       async searchFeedback(ctx, args) {
         const scopeId = await resolveRequiredScope(options.resolveScope, ctx);

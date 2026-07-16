@@ -35,6 +35,7 @@ import type * as public_boards from "../public/boards.js";
 import type * as public_comments from "../public/comments.js";
 import type * as public_feeds from "../public/feeds.js";
 import type * as public_posts from "../public/posts.js";
+import type * as public_roadmap from "../public/roadmap.js";
 import type * as public_search from "../public/search.js";
 import type * as validators from "../validators.js";
 
@@ -73,6 +74,7 @@ const fullApi: ApiFromModules<{
   "public/comments": typeof public_comments;
   "public/feeds": typeof public_feeds;
   "public/posts": typeof public_posts;
+  "public/roadmap": typeof public_roadmap;
   "public/search": typeof public_search;
   validators: typeof validators;
 }> = anyApi as any;
