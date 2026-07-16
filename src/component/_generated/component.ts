@@ -908,6 +908,26 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         },
         Name
       >;
+      getPostSubscription: FunctionReference<
+        "query",
+        "internal",
+        {
+          actor: {
+            avatarUrl?: string;
+            displayName?: string;
+            externalKey: string;
+          };
+          postId: string;
+          scopeId: string;
+        },
+        {
+          contractVersion: 1;
+          explicitOptOut: boolean;
+          postId: string;
+          subscribed: boolean;
+        },
+        Name
+      >;
       getPublishedChangelogBySlug: FunctionReference<
         "query",
         "internal",
@@ -947,6 +967,20 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             };
             status: "entry";
           },
+        Name
+      >;
+      getUnreadCount: FunctionReference<
+        "query",
+        "internal",
+        {
+          actor: {
+            avatarUrl?: string;
+            displayName?: string;
+            externalKey: string;
+          };
+          scopeId: string;
+        },
+        { contractVersion: 1; count: number },
         Name
       >;
       listBoards: FunctionReference<
@@ -1088,6 +1122,64 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             totals: { comments: number; votes: number };
             voteCount: number;
           }>;
+          splitCursor?: string | null;
+        },
+        Name
+      >;
+      listNotifications: FunctionReference<
+        "query",
+        "internal",
+        {
+          actor: {
+            avatarUrl?: string;
+            displayName?: string;
+            externalKey: string;
+          };
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          scopeId: string;
+        },
+        {
+          continueCursor: string;
+          contractVersion: 1;
+          isDone: boolean;
+          notifications: Array<{
+            contractVersion: 1;
+            entityId: string;
+            eventId: string;
+            id: string;
+            initiator: { avatarUrl?: string; displayName?: string; id: string };
+            occurredAt: number;
+            read: boolean;
+            type:
+              | "status_changed"
+              | "admin_replied"
+              | "comment_replied"
+              | "mentioned"
+              | "changelog_published";
+          }>;
+          page: Array<{
+            contractVersion: 1;
+            entityId: string;
+            eventId: string;
+            id: string;
+            initiator: { avatarUrl?: string; displayName?: string; id: string };
+            occurredAt: number;
+            read: boolean;
+            type:
+              | "status_changed"
+              | "admin_replied"
+              | "comment_replied"
+              | "mentioned"
+              | "changelog_published";
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
         },
         Name
@@ -1356,6 +1448,35 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         {
           contractVersion: 1;
           tags: Array<{ contractVersion: 1; id: string; name: string }>;
+        },
+        Name
+      >;
+      markNotificationRead: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          actor: {
+            avatarUrl?: string;
+            displayName?: string;
+            externalKey: string;
+          };
+          notificationId: string;
+          scopeId: string;
+        },
+        {
+          contractVersion: 1;
+          entityId: string;
+          eventId: string;
+          id: string;
+          initiator: { avatarUrl?: string; displayName?: string; id: string };
+          occurredAt: number;
+          read: boolean;
+          type:
+            | "status_changed"
+            | "admin_replied"
+            | "comment_replied"
+            | "mentioned"
+            | "changelog_published";
         },
         Name
       >;
@@ -1693,6 +1814,51 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         },
         Name
       >;
+      setSubscription: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          actor: {
+            avatarUrl?: string;
+            displayName?: string;
+            externalKey: string;
+          };
+          desired: boolean;
+          postId: string;
+          scopeId: string;
+        },
+        | {
+            contractVersion: 1;
+            explicitOptOut: boolean;
+            postId: string;
+            subscribed: boolean;
+          }
+        | {
+            error:
+              | {
+                  code:
+                    | "VALIDATION"
+                    | "NOT_FOUND"
+                    | "DISCUSSION_LOCKED"
+                    | "NOT_AUTHORIZED";
+                  contractVersion: 1;
+                  message: string;
+                }
+              | {
+                  code: "RATE_LIMITED";
+                  contractVersion: 1;
+                  operation:
+                    | "create_post"
+                    | "edit_post"
+                    | "comment"
+                    | "vote"
+                    | "subscribe";
+                  retryAfterMs: number;
+                };
+            ok: false;
+          },
+        Name
+      >;
       setVote: FunctionReference<
         "mutation",
         "internal",
@@ -1839,6 +2005,119 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         },
         Name
       >;
+    };
+    notifications: {
+      inbox: {
+        getUnreadCount: FunctionReference<
+          "query",
+          "internal",
+          {
+            actor: {
+              avatarUrl?: string;
+              displayName?: string;
+              externalKey: string;
+            };
+            scopeId: string;
+          },
+          { contractVersion: 1; count: number },
+          Name
+        >;
+        listNotifications: FunctionReference<
+          "query",
+          "internal",
+          {
+            actor: {
+              avatarUrl?: string;
+              displayName?: string;
+              externalKey: string;
+            };
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+            scopeId: string;
+          },
+          {
+            continueCursor: string;
+            contractVersion: 1;
+            isDone: boolean;
+            notifications: Array<{
+              contractVersion: 1;
+              entityId: string;
+              eventId: string;
+              id: string;
+              initiator: {
+                avatarUrl?: string;
+                displayName?: string;
+                id: string;
+              };
+              occurredAt: number;
+              read: boolean;
+              type:
+                | "status_changed"
+                | "admin_replied"
+                | "comment_replied"
+                | "mentioned"
+                | "changelog_published";
+            }>;
+            page: Array<{
+              contractVersion: 1;
+              entityId: string;
+              eventId: string;
+              id: string;
+              initiator: {
+                avatarUrl?: string;
+                displayName?: string;
+                id: string;
+              };
+              occurredAt: number;
+              read: boolean;
+              type:
+                | "status_changed"
+                | "admin_replied"
+                | "comment_replied"
+                | "mentioned"
+                | "changelog_published";
+            }>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            splitCursor?: string | null;
+          },
+          Name
+        >;
+        markNotificationRead: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            actor: {
+              avatarUrl?: string;
+              displayName?: string;
+              externalKey: string;
+            };
+            notificationId: string;
+            scopeId: string;
+          },
+          {
+            contractVersion: 1;
+            entityId: string;
+            eventId: string;
+            id: string;
+            initiator: { avatarUrl?: string; displayName?: string; id: string };
+            occurredAt: number;
+            read: boolean;
+            type:
+              | "status_changed"
+              | "admin_replied"
+              | "comment_replied"
+              | "mentioned"
+              | "changelog_published";
+          },
+          Name
+        >;
+      };
     };
     participation: {
       comments: {
@@ -2027,6 +2306,73 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             totals: { comments: number; votes: number };
             voteCount: number;
           },
+          Name
+        >;
+      };
+      subscriptions: {
+        getPostSubscription: FunctionReference<
+          "query",
+          "internal",
+          {
+            actor: {
+              avatarUrl?: string;
+              displayName?: string;
+              externalKey: string;
+            };
+            postId: string;
+            scopeId: string;
+          },
+          {
+            contractVersion: 1;
+            explicitOptOut: boolean;
+            postId: string;
+            subscribed: boolean;
+          },
+          Name
+        >;
+        setSubscription: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            actor: {
+              avatarUrl?: string;
+              displayName?: string;
+              externalKey: string;
+            };
+            desired: boolean;
+            postId: string;
+            scopeId: string;
+          },
+          | {
+              contractVersion: 1;
+              explicitOptOut: boolean;
+              postId: string;
+              subscribed: boolean;
+            }
+          | {
+              error:
+                | {
+                    code:
+                      | "VALIDATION"
+                      | "NOT_FOUND"
+                      | "DISCUSSION_LOCKED"
+                      | "NOT_AUTHORIZED";
+                    contractVersion: 1;
+                    message: string;
+                  }
+                | {
+                    code: "RATE_LIMITED";
+                    contractVersion: 1;
+                    operation:
+                      | "create_post"
+                      | "edit_post"
+                      | "comment"
+                      | "vote"
+                      | "subscribe";
+                    retryAfterMs: number;
+                  };
+              ok: false;
+            },
           Name
         >;
       };

@@ -293,6 +293,94 @@ export default defineSchema({
     body: v.string(),
     parentCommentId: v.optional(v.id("comments")),
   }).index("by_scope_post", ["scopeId", "postId"]),
+  postSubscriptions: defineTable({
+    scopeId: v.string(),
+    postId: v.id("posts"),
+    actorId: v.id("actors"),
+    state: v.union(v.literal("subscribed"), v.literal("opted_out")),
+    updatedAt: v.number(),
+  })
+    .index("by_scope_post_actor", ["scopeId", "postId", "actorId"])
+    .index("by_scope_post_state_actor", [
+      "scopeId",
+      "postId",
+      "state",
+      "actorId",
+    ])
+    .index("by_scope_actor_post", ["scopeId", "actorId", "postId"]),
+  notificationEvents: defineTable({
+    scopeId: v.string(),
+    type: v.union(
+      v.literal("status_changed"),
+      v.literal("admin_replied"),
+      v.literal("comment_replied"),
+      v.literal("mentioned"),
+      v.literal("changelog_published"),
+    ),
+    initiatorActorId: v.id("actors"),
+    postId: v.optional(v.id("posts")),
+    entityId: v.string(),
+    occurredAt: v.number(),
+    guardKey: v.string(),
+  })
+    .index("by_scope_guard", ["scopeId", "guardKey"])
+    .index("by_scope_post_time", ["scopeId", "postId", "occurredAt"]),
+  notificationEventRecipients: defineTable({
+    scopeId: v.string(),
+    eventId: v.id("notificationEvents"),
+    actorId: v.id("actors"),
+    state: v.union(v.literal("pending"), v.literal("materialized")),
+  })
+    .index("by_scope_event_actor", ["scopeId", "eventId", "actorId"])
+    .index("by_scope_event_state_actor", [
+      "scopeId",
+      "eventId",
+      "state",
+      "actorId",
+    ]),
+  notificationFanoutJobs: defineTable({
+    scopeId: v.string(),
+    eventId: v.id("notificationEvents"),
+    state: v.union(v.literal("pending"), v.literal("complete")),
+    createdAt: v.number(),
+    completedAt: v.optional(v.number()),
+  })
+    .index("by_scope_event", ["scopeId", "eventId"])
+    .index("by_scope_state_created", ["scopeId", "state", "createdAt"]),
+  notificationInbox: defineTable({
+    scopeId: v.string(),
+    actorId: v.id("actors"),
+    eventId: v.id("notificationEvents"),
+    type: v.union(
+      v.literal("status_changed"),
+      v.literal("admin_replied"),
+      v.literal("comment_replied"),
+      v.literal("mentioned"),
+      v.literal("changelog_published"),
+    ),
+    entityId: v.string(),
+    occurredAt: v.number(),
+    orderId: v.string(),
+    unreadKey: v.union(v.literal("unread"), v.literal("read")),
+    readAt: v.optional(v.number()),
+  })
+    .index("by_scope_actor_time", [
+      "scopeId",
+      "actorId",
+      "occurredAt",
+      "orderId",
+    ])
+    .index("by_scope_event_actor", ["scopeId", "eventId", "actorId"])
+    .index("by_scope_actor_unread", [
+      "scopeId",
+      "actorId",
+      "unreadKey",
+    ]),
+  notificationUnreadCounts: defineTable({
+    scopeId: v.string(),
+    actorId: v.id("actors"),
+    count: v.number(),
+  }).index("by_scope_actor", ["scopeId", "actorId"]),
   postActivity: defineTable({
     scopeId: v.string(),
     postId: v.id("posts"),

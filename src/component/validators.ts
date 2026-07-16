@@ -97,6 +97,53 @@ export const commentPageDtoValidator = v.object({
   ),
 });
 
+export const notificationEventTypeValidator = v.union(
+  v.literal("status_changed"),
+  v.literal("admin_replied"),
+  v.literal("comment_replied"),
+  v.literal("mentioned"),
+  v.literal("changelog_published"),
+);
+
+export const postSubscriptionDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  postId: v.string(),
+  subscribed: v.boolean(),
+  explicitOptOut: v.boolean(),
+});
+
+export const notificationDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  id: v.string(),
+  eventId: v.string(),
+  type: notificationEventTypeValidator,
+  entityId: v.string(),
+  occurredAt: v.number(),
+  read: v.boolean(),
+  initiator: actorDtoValidator,
+});
+
+export const notificationPageDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  page: v.array(notificationDtoValidator),
+  notifications: v.array(notificationDtoValidator),
+  isDone: v.boolean(),
+  continueCursor: v.string(),
+  splitCursor: v.optional(v.union(v.string(), v.null())),
+  pageStatus: v.optional(
+    v.union(
+      v.literal("SplitRecommended"),
+      v.literal("SplitRequired"),
+      v.null(),
+    ),
+  ),
+});
+
+export const unreadNotificationCountDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  count: v.number(),
+});
+
 export const postDtoValidator = v.object({
   contractVersion: v.literal(1),
   id: v.string(),

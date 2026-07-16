@@ -3,6 +3,10 @@ export { anonymizeActor } from "./admin/actors.js";
 export { createPost, editPost, withdrawPost } from "./participation/posts.js";
 export { setVote } from "./participation/votes.js";
 export { addComment } from "./participation/comments.js";
+export {
+  getPostSubscription,
+  setSubscription,
+} from "./participation/subscriptions.js";
 export { listBoards } from "./public/boards.js";
 export { countPosts, getPost, listPosts } from "./public/posts.js";
 export { listFeedback } from "./public/feeds.js";
@@ -35,3 +39,8 @@ export {
   renameTag,
   setPostTag,
 } from "./admin/tags.js";
+export {
+  getUnreadCount,
+  listNotifications,
+  markNotificationRead,
+} from "./notifications/inbox.js";

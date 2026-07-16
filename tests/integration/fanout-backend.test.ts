@@ -56,7 +56,7 @@ describe("notification fanout continuation", () => {
       return { initiatorActorId, postId };
     });
 
-    const captured = await backend.mutation(api.notifications.events.captureTestEvent, {
+    const captured = await backend.mutation(internal.notifications.events.captureTestEvent, {
       scopeId: "scope:fanout",
       initiatorActorId: String(seeded.initiatorActorId),
       postId: String(seeded.postId),

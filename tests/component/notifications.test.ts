@@ -2,7 +2,7 @@ import { convexTest } from "convex-test";
 import { describe, expect, test, vi } from "vitest";
 
 import { createScopedAfferentClient } from "../../src/client/server.js";
-import { api } from "../../src/component/_generated/api.js";
+import { api, internal } from "../../src/component/_generated/api.js";
 import type { ComponentApi } from "../../src/component/_generated/component.js";
 import schema from "../../src/component/schema.js";
 import { withRateLimiter } from "../helpers/rate-limiter.js";
@@ -51,9 +51,15 @@ describe("subscription and notification invariants", () => {
     });
 
     expect(
-      await author.notifications.getPostSubscription(ctx, { postId: post.id }),
+      await backend.query(api.participation.subscriptions.getPostSubscription, {
+        scopeId: "scope:alpha",
+        actor: { externalKey: "alpha:author" },
+        postId: post.id,
+      }),
     ).toMatchObject({ subscribed: true, explicitOptOut: false });
-    await participant.notifications.setPostSubscription(ctx, {
+    await backend.mutation(api.participation.subscriptions.setSubscription, {
+      scopeId: "scope:alpha",
+      actor: { externalKey: "alpha:participant" },
       postId: post.id,
       desired: false,
     });
@@ -62,7 +68,9 @@ describe("subscription and notification invariants", () => {
       body: "I remain opted out",
     });
     expect(
-      await participant.notifications.getPostSubscription(ctx, {
+      await backend.query(api.participation.subscriptions.getPostSubscription, {
+        scopeId: "scope:alpha",
+        actor: { externalKey: "alpha:participant" },
         postId: post.id,
       }),
     ).toMatchObject({ subscribed: false, explicitOptOut: true });
@@ -71,7 +79,9 @@ describe("subscription and notification invariants", () => {
       desired: true,
     });
     expect(
-      await participant.notifications.getPostSubscription(ctx, {
+      await backend.query(api.participation.subscriptions.getPostSubscription, {
+        scopeId: "scope:alpha",
+        actor: { externalKey: "alpha:participant" },
         postId: post.id,
       }),
     ).toMatchObject({ subscribed: false, explicitOptOut: true });
@@ -98,7 +108,9 @@ describe("subscription and notification invariants", () => {
       title: "Event taxonomy",
       body: "Exactly five event kinds",
     });
-    await recipient.notifications.setPostSubscription(ctx, {
+    await backend.mutation(api.participation.subscriptions.setSubscription, {
+      scopeId: "scope:alpha",
+      actor: { externalKey: "alpha:recipient" },
       postId: post.id,
       desired: true,
     });
@@ -122,7 +134,9 @@ describe("subscription and notification invariants", () => {
     });
     await backend.finishAllScheduledFunctions(() => vi.runAllTimers());
 
-    const inbox = await recipient.notifications.listNotifications(ctx, {
+    const inbox = await backend.query(api.notifications.inbox.listNotifications, {
+      scopeId: "scope:alpha",
+      actor: { externalKey: "alpha:recipient" },
       paginationOpts: { numItems: 20, cursor: null },
     });
     expect(inbox.page.map((row: any) => row.type).sort()).toEqual([
@@ -131,7 +145,9 @@ describe("subscription and notification invariants", () => {
     ]);
     expect(new Set(inbox.page.map((row: any) => row.eventId)).size).toBe(2);
     expect(
-      await beta.notifications.listNotifications(ctx, {
+      await backend.query(api.notifications.inbox.listNotifications, {
+        scopeId: "scope:beta",
+        actor: { externalKey: "beta:actor" },
         paginationOpts: { numItems: 20, cursor: null },
       }),
     ).toMatchObject({ page: [] });
@@ -168,7 +184,7 @@ describe("subscription and notification invariants", () => {
       return actorId;
     });
 
-    await backend.mutation(api.notifications.inbox.enforceInboxRetention, {
+    await backend.mutation(internal.notifications.inbox.enforceInboxRetention, {
       scopeId: "scope:trim",
       actorId: String(seeded),
     });

@@ -13,6 +13,7 @@ import {
 } from "../model/scope.js";
 import {
   HIDDEN_POST_VISIBILITY,
+  isPostPubliclyVisible,
   PUBLIC_POST_VISIBILITY,
 } from "../model/visibility.js";
 import { toFeedbackPostDto } from "../model/views.js";
@@ -21,6 +22,10 @@ import {
   postStatusKeyValidator,
   verifiedActorValidator,
 } from "../validators.js";
+import {
+  captureNotificationEvent,
+  listCurrentSubscriberActorIds,
+} from "../notifications/events.js";
 
 async function loadAdminPost(
   ctx: Parameters<typeof requirePostInScope>[0],
@@ -142,6 +147,22 @@ export const setPostStatus = mutation({
         fromStatus: post.statusKey,
         toStatus: args.status,
       });
+      if (isPostPubliclyVisible(post)) {
+        const subscriberActorIds = await listCurrentSubscriberActorIds(
+          ctx,
+          args.scopeId,
+          post._id,
+        );
+        await captureNotificationEvent(ctx, {
+          scopeId: args.scopeId,
+          type: "status_changed",
+          initiatorActorId: actorId,
+          postId: post._id,
+          entityId: String(post._id),
+          guardKey: `status:${post._id}:${args.status}:${now}`,
+          subscriberActorIds,
+        });
+      }
     }
     return await toFeedbackPostDto(ctx, {
       ...updated,

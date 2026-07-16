@@ -13,6 +13,12 @@ import {
   verifiedActorValidator,
 } from "../validators.js";
 import { patchPostRanking } from "../model/scoring.js";
+import { resolveDeliverableMentionActorIds } from "../model/mentions.js";
+import {
+  captureNotificationEvent,
+  listCurrentSubscriberActorIds,
+} from "../notifications/events.js";
+import { ensureAutoSubscription } from "./subscriptions.js";
 
 export const addComment = mutation({
   args: {
@@ -84,6 +90,55 @@ export const addComment = mutation({
     await patchPostRanking(ctx, post, {
       commentCount: post.commentCount + 1,
     });
+    await ensureAutoSubscription(ctx, {
+      scopeId: args.scopeId,
+      postId: post._id,
+      actorId,
+    });
+    const mentionActorIds = await resolveDeliverableMentionActorIds(
+      ctx,
+      args.scopeId,
+      body,
+    );
+    if (args.isAdmin) {
+      const subscriberActorIds = await listCurrentSubscriberActorIds(
+        ctx,
+        args.scopeId,
+        post._id,
+      );
+      await captureNotificationEvent(ctx, {
+        scopeId: args.scopeId,
+        type: "admin_replied",
+        initiatorActorId: actorId,
+        postId: post._id,
+        entityId: String(commentId),
+        guardKey: `comment:${commentId}:admin`,
+        subscriberActorIds,
+        ...(parent === undefined ? {} : { replyActorId: parent.actorId }),
+        mentionActorIds,
+      });
+    } else if (parent !== undefined) {
+      await captureNotificationEvent(ctx, {
+        scopeId: args.scopeId,
+        type: "comment_replied",
+        initiatorActorId: actorId,
+        postId: post._id,
+        entityId: String(commentId),
+        guardKey: `comment:${commentId}:reply`,
+        replyActorId: parent.actorId,
+        mentionActorIds,
+      });
+    } else if (mentionActorIds.length > 0) {
+      await captureNotificationEvent(ctx, {
+        scopeId: args.scopeId,
+        type: "mentioned",
+        initiatorActorId: actorId,
+        postId: post._id,
+        entityId: String(commentId),
+        guardKey: `comment:${commentId}:mention`,
+        mentionActorIds,
+      });
+    }
     const comment = await ctx.db.get(commentId);
     if (!comment) throw new Error("COMMENT_INSERT_INVARIANT");
     return await toCommentDto(ctx, comment);

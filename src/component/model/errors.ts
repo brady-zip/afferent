@@ -43,7 +43,14 @@ export function invalidInput(message: string): never {
 }
 
 export function notFound(
-  resource: "board" | "post" | "comment" | "actor" | "tag" | "changelog",
+  resource:
+    | "board"
+    | "post"
+    | "comment"
+    | "actor"
+    | "tag"
+    | "changelog"
+    | "notification",
 ): never {
   throw new ConvexError({ code: "NOT_FOUND", resource });
 }

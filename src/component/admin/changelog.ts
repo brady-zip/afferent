@@ -22,6 +22,10 @@ import {
   adminChangelogEntryDtoValidator,
   verifiedActorValidator,
 } from "../validators.js";
+import {
+  captureNotificationEvent,
+  listCurrentSubscriberActorIds,
+} from "../notifications/events.js";
 
 async function insertNotificationGuard(
   ctx: MutationCtx,
@@ -45,7 +49,34 @@ async function insertNotificationGuard(
       ...args,
       createdAt: Date.now(),
     });
+    return true;
   }
+  return false;
+}
+
+async function captureChangelogNotification(
+  ctx: MutationCtx,
+  args: {
+    scopeId: string;
+    entryId: Id<"changelogEntries">;
+    postId: Id<"posts">;
+    actorId: Id<"actors">;
+  },
+) {
+  const subscriberActorIds = await listCurrentSubscriberActorIds(
+    ctx,
+    args.scopeId,
+    args.postId,
+  );
+  await captureNotificationEvent(ctx, {
+    scopeId: args.scopeId,
+    type: "changelog_published",
+    initiatorActorId: args.actorId,
+    postId: args.postId,
+    entityId: String(args.entryId),
+    guardKey: `changelog:${args.entryId}:${args.postId}`,
+    subscriberActorIds,
+  });
 }
 
 async function appendLinkedActivity(
@@ -236,11 +267,19 @@ export const setChangelogLinks = mutation({
           sortOrder,
         });
         if (entry.publishedAt !== undefined) {
-          await insertNotificationGuard(ctx, {
+          const inserted = await insertNotificationGuard(ctx, {
             scopeId: args.scopeId,
             entryId: entry._id,
             postId: post._id,
           });
+          if (inserted) {
+            await captureChangelogNotification(ctx, {
+              scopeId: args.scopeId,
+              entryId: entry._id,
+              postId: post._id,
+              actorId,
+            });
+          }
           await appendPostActivity(ctx, {
             scopeId: args.scopeId,
             postId: post._id,
@@ -305,11 +344,19 @@ export const publishChangelog = mutation({
         link.postId,
       );
       if (post) {
-        await insertNotificationGuard(ctx, {
+        const inserted = await insertNotificationGuard(ctx, {
           scopeId: args.scopeId,
           entryId: entry._id,
           postId: post._id,
         });
+        if (inserted) {
+          await captureChangelogNotification(ctx, {
+            scopeId: args.scopeId,
+            entryId: entry._id,
+            postId: post._id,
+            actorId,
+          });
+        }
       }
     }
     await appendLinkedActivity(ctx, {

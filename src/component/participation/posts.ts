@@ -22,6 +22,7 @@ import {
   verifiedActorValidator,
 } from "../validators.js";
 import { normalizePlainText, validateSafeMarkdown } from "../model/content.js";
+import { ensureAutoSubscription } from "./subscriptions.js";
 
 function postSearchText(title: string, body: string) {
   return `${title}\n${body}`;
@@ -87,6 +88,11 @@ export const createPost = mutation({
       postId,
       actorId,
       type: "create",
+    });
+    await ensureAutoSubscription(ctx, {
+      scopeId: args.scopeId,
+      postId,
+      actorId,
     });
     return await toPostDto(ctx, post);
   },

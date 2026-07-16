@@ -5,6 +5,8 @@ const result = spawnSync(
   [
     "./node_modules/vitest/vitest.mjs",
     "run",
+    "--config",
+    "vitest.scope.config.ts",
     "tests/integration/fanout-backend.test.ts",
   ],
   { stdio: "inherit" },
