@@ -31,4 +31,9 @@ export default defineSchema({
     voteCount: v.number(),
     commentCount: v.number(),
   }).index("by_scope_board_state", ["scopeId", "boardId", "lifecycleState"]),
+  votes: defineTable({
+    scopeId: v.string(),
+    postId: v.id("posts"),
+    actorId: v.id("actors"),
+  }).index("by_scope_post_actor", ["scopeId", "postId", "actorId"]),
 });

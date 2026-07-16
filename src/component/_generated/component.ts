@@ -208,6 +208,35 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         },
         Name
       >;
+      setVote: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          actor: {
+            avatarUrl?: string;
+            displayName?: string;
+            externalKey: string;
+          };
+          desired: boolean;
+          postId: string;
+          scopeId: string;
+        },
+        {
+          author: { avatarUrl?: string; displayName?: string; id: string };
+          board: { id: string; name: string; slug: string };
+          boardId: string;
+          body: string;
+          commentCount: number;
+          contractVersion: 1;
+          id: string;
+          status: { key: "open"; label: "Open" };
+          tags: Array<string>;
+          title: string;
+          totals: { comments: number; votes: number };
+          voteCount: number;
+        },
+        Name
+      >;
       withdrawPost: FunctionReference<
         "mutation",
         "internal",
@@ -308,6 +337,37 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               displayName?: string;
               externalKey: string;
             };
+            postId: string;
+            scopeId: string;
+          },
+          {
+            author: { avatarUrl?: string; displayName?: string; id: string };
+            board: { id: string; name: string; slug: string };
+            boardId: string;
+            body: string;
+            commentCount: number;
+            contractVersion: 1;
+            id: string;
+            status: { key: "open"; label: "Open" };
+            tags: Array<string>;
+            title: string;
+            totals: { comments: number; votes: number };
+            voteCount: number;
+          },
+          Name
+        >;
+      };
+      votes: {
+        setVote: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            actor: {
+              avatarUrl?: string;
+              displayName?: string;
+              externalKey: string;
+            };
+            desired: boolean;
             postId: string;
             scopeId: string;
           },

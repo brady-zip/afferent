@@ -4,5 +4,6 @@ export {
   editPost,
   withdrawPost,
 } from "./participation/posts.js";
+export { setVote } from "./participation/votes.js";
 export { listBoards } from "./public/boards.js";
 export { countPosts, getPost, listPosts } from "./public/posts.js";

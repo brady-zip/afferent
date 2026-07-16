@@ -133,6 +133,15 @@ export function createClientWithScope(
           { scopeId, actor, postId: args.postId },
         )) as unknown as PostDto;
       },
+      async setVote(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        const actor = await options.resolveActor(ctx);
+        if (!actor) throw new Error("AUTHENTICATION_REQUIRED");
+        return (await ctx.runMutation(
+          component.participation.votes.setVote,
+          { scopeId, actor, postId: args.postId, desired: args.desired },
+        )) as unknown as PostDto;
+      },
     },
     admin: {
       async configureInstallation(ctx, args) {

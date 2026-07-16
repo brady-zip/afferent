@@ -9,6 +9,7 @@ import {
   createPostIntentValidator,
   editPostIntentValidator,
   publicPostDtoValidator,
+  setVoteIntentValidator,
   withdrawPostIntentValidator,
 } from "../../src/client/contracts.js";
 import { toActorDto, toBoardDto } from "../../src/component/model/views.js";
@@ -40,6 +41,10 @@ describe("public contract privacy", () => {
       "title",
     ]);
     expect(Object.keys(withdrawPostIntentValidator.fields)).toEqual(["postId"]);
+    expect(Object.keys(setVoteIntentValidator.fields).sort()).toEqual([
+      "desired",
+      "postId",
+    ]);
   });
 
   test("freezes the exact versioned public post DTO shape", () => {

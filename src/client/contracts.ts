@@ -77,6 +77,11 @@ export const editPostIntentValidator = v.object({
 
 export const withdrawPostIntentValidator = v.object({ postId: v.string() });
 
+export const setVoteIntentValidator = v.object({
+  postId: v.string(),
+  desired: v.boolean(),
+});
+
 export const listPostsIntentValidator = v.object({
   boardId: v.string(),
   paginationOpts: v.optional(paginationOptsValidator),
@@ -176,6 +181,10 @@ export interface ParticipationCapabilities<Context> {
     args: { postId: PostId; title?: string; body?: string },
   ): Promise<PostDto>;
   withdrawPost(ctx: Context, args: { postId: PostId }): Promise<PostDto>;
+  setVote(
+    ctx: Context,
+    args: { postId: PostId; desired: boolean },
+  ): Promise<PostDto>;
 }
 
 export interface AdminCapabilities<Context> {

@@ -28,6 +28,7 @@ export {
   postListResultValidator,
   postPageResultValidator,
   publicPostDtoValidator,
+  setVoteIntentValidator,
   withdrawPostIntentValidator,
 } from "./contracts.js";
 
