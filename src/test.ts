@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 import type { TestConvex } from "convex-test";
 import type { GenericSchema, SchemaDefinition } from "convex/server";
+import rateLimiterTest from "@convex-dev/rate-limiter/test";
 
 import schema from "./component/schema.js";
 
@@ -11,6 +12,7 @@ export function register(
   name = "afferent",
 ) {
   testBackend.registerComponent(name, schema, modules);
+  rateLimiterTest.register(testBackend, `${name}/rateLimiter`);
 }
 
 export default { register, schema, modules };

@@ -9,10 +9,27 @@ export type ActorId = BrandedId<"ActorId">;
 export type PostId = BrandedId<"PostId">;
 export type CommentId = BrandedId<"CommentId">;
 export type TagId = BrandedId<"TagId">;
+export type ActivityId = BrandedId<"ActivityId">;
 
 export type PostStatusKey =
   "open" | "under_review" | "planned" | "in_progress" | "complete" | "closed";
 export type FeedbackOrder = "newest" | "top" | "trending";
+
+export type AfferentErrorDto =
+  | Readonly<{
+      contractVersion: 1;
+      code: "RATE_LIMITED";
+      operation: "create_post" | "edit_post" | "comment" | "vote" | "subscribe";
+      retryAfterMs: number;
+    }>
+  | Readonly<{
+      contractVersion: 1;
+      code: "VALIDATION" | "NOT_FOUND" | "DISCUSSION_LOCKED" | "NOT_AUTHORIZED";
+      message: string;
+    }>;
+
+export type AfferentActionResult<T> =
+  T | Readonly<{ ok: false; error: AfferentErrorDto }>;
 
 export type DiscoveryPostDto = Readonly<{
   contractVersion: 1;
@@ -154,6 +171,42 @@ export type CommentPageDto = Readonly<{
   pageStatus?: "SplitRecommended" | "SplitRequired" | null;
 }>;
 
+export type PostActivityDto = Readonly<{
+  contractVersion: 1;
+  id: ActivityId;
+  postId: PostId;
+  type:
+    | "create"
+    | "edit"
+    | "status_change"
+    | "board_move"
+    | "tag_add"
+    | "tag_remove"
+    | "lock"
+    | "unlock"
+    | "archive"
+    | "restore"
+    | "merge"
+    | "changelog_publish"
+    | "changelog_unpublish";
+  occurredAt: number;
+  actor?: PostDto["author"];
+  changedFields?: string[];
+  fromStatus?: PostStatusKey;
+  toStatus?: PostStatusKey;
+  fromBoardId?: BoardId;
+  toBoardId?: BoardId;
+}>;
+
+export type PostActivityPageDto = Readonly<{
+  contractVersion: 1;
+  page: PostActivityDto[];
+  isDone: boolean;
+  continueCursor: string;
+  splitCursor?: string | null;
+  pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+}>;
+
 export const configureInstallationIntentValidator = v.object({
   readPolicy: v.union(v.literal("public"), v.literal("authenticated")),
   boards: v.array(v.object({ slug: v.string(), name: v.string() })),
@@ -184,6 +237,35 @@ export const addCommentIntentValidator = v.object({
   postId: v.string(),
   body: v.string(),
   parentCommentId: v.optional(v.string()),
+});
+
+export const adminEditPostIntentValidator = editPostIntentValidator;
+export const movePostIntentValidator = v.object({
+  postId: v.string(),
+  boardId: v.string(),
+});
+export const setPostStatusIntentValidator = v.object({
+  postId: v.string(),
+  status: v.union(
+    v.literal("open"),
+    v.literal("under_review"),
+    v.literal("planned"),
+    v.literal("in_progress"),
+    v.literal("complete"),
+    v.literal("closed"),
+  ),
+});
+export const setDiscussionLockIntentValidator = v.object({
+  postId: v.string(),
+  locked: v.boolean(),
+});
+export const setArchivedIntentValidator = v.object({
+  postId: v.string(),
+  archived: v.boolean(),
+});
+export const listPostActivityIntentValidator = v.object({
+  postId: v.string(),
+  paginationOpts: v.optional(paginationOptsValidator),
 });
 
 export const listCommentsIntentValidator = v.object({
@@ -466,25 +548,28 @@ export interface ParticipationCapabilities<Context> {
   createPost(
     ctx: Context,
     args: { boardId: BoardId; title: string; body: string },
-  ): Promise<PostDto>;
+  ): Promise<AfferentActionResult<PostDto>>;
   editPost(
     ctx: Context,
     args: { postId: PostId; title?: string; body?: string },
-  ): Promise<PostDto>;
+  ): Promise<AfferentActionResult<PostDto>>;
   withdrawPost(ctx: Context, args: { postId: PostId }): Promise<PostDto>;
   setVote(
     ctx: Context,
     args: { postId: PostId; desired: boolean },
-  ): Promise<PostDto>;
+  ): Promise<AfferentActionResult<PostDto>>;
   addComment(
     ctx: Context,
     args: { postId: PostId; body: string; parentCommentId?: CommentId },
-  ): Promise<CommentDto>;
+  ): Promise<AfferentActionResult<CommentDto>>;
 }
 
-export interface AdminCapabilities<Context> {
+export interface AdminCapabilities<
+  QueryContext,
+  MutationContext = QueryContext,
+> {
   configureInstallation(
-    ctx: Context,
+    ctx: MutationContext,
     args: {
       readPolicy: "public" | "authenticated";
       boards: readonly { slug: string; name: string }[];
@@ -495,7 +580,31 @@ export interface AdminCapabilities<Context> {
     boards: BoardDto[];
   }>;
   anonymizeActor(
-    ctx: Context,
+    ctx: MutationContext,
     args: { actorId: ActorId },
   ): Promise<PostDto["author"]>;
+  editPost(
+    ctx: MutationContext,
+    args: { postId: PostId; title?: string; body?: string },
+  ): Promise<FeedbackPostDto>;
+  movePost(
+    ctx: MutationContext,
+    args: { postId: PostId; boardId: BoardId },
+  ): Promise<FeedbackPostDto>;
+  setPostStatus(
+    ctx: MutationContext,
+    args: { postId: PostId; status: PostStatusKey },
+  ): Promise<FeedbackPostDto>;
+  setDiscussionLock(
+    ctx: MutationContext,
+    args: { postId: PostId; locked: boolean },
+  ): Promise<FeedbackPostDto>;
+  setArchived(
+    ctx: MutationContext,
+    args: { postId: PostId; archived: boolean },
+  ): Promise<FeedbackPostDto>;
+  listPostActivity(
+    ctx: QueryContext,
+    args: { postId: PostId; paginationOpts?: PaginationOptions },
+  ): Promise<PostActivityPageDto>;
 }

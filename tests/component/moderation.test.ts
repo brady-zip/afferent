@@ -1,4 +1,6 @@
 import { convexTest } from "convex-test";
+
+import { withRateLimiter } from "../helpers/rate-limiter.js";
 import { describe, expect, test } from "vitest";
 
 import { createAfferentClient } from "../../src/client/index.js";
@@ -22,7 +24,7 @@ function context(backend: ReturnType<typeof convexTest>) {
 
 describe("admin moderation and append-only activity", () => {
   test("keeps status, archive, and discussion lock orthogonal", async () => {
-    const backend = convexTest(schema, modules);
+    const backend = withRateLimiter(convexTest(schema, modules));
     const client = createAfferentClient(api as unknown as ComponentApi, {
       resolveActor: async () => ({
         externalKey: "fixture:moderator",
@@ -124,12 +126,12 @@ describe("admin moderation and append-only activity", () => {
       statusKey: "closed",
       lifecycleState: "active",
       discussionLocked: true,
-      archivedAt: undefined,
     });
+    expect(persisted).not.toHaveProperty("archivedAt");
   });
 
   test("re-authorizes every admin call and exposes bounded admin-only activity", async () => {
-    const backend = convexTest(schema, modules);
+    const backend = withRateLimiter(convexTest(schema, modules));
     let allowed = true;
     let authorizationChecks = 0;
     const client = createAfferentClient(api as unknown as ComponentApi, {

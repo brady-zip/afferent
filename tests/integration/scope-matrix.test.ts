@@ -1,4 +1,6 @@
 import { convexTest } from "convex-test";
+
+import { withRateLimiter } from "../helpers/rate-limiter.js";
 import { describe, expect, test, vi } from "vitest";
 
 import { api } from "../../src/component/_generated/api.js";
@@ -78,7 +80,7 @@ describe("server-derived scope isolation", () => {
   });
 
   test("keeps identical boards, posts, counts, and reactive reads isolated", async () => {
-    const backend = convexTest(schema, modules);
+    const backend = withRateLimiter(convexTest(schema, modules));
     const component = api as unknown as ComponentApi;
     const ctx = backendContext(backend);
     const makeClient = (scope: string, actor: string) =>
@@ -271,7 +273,7 @@ describe("server-derived scope isolation", () => {
   });
 
   test("runs provider-shaped actors through fixed and server-scoped clients without linking", async () => {
-    const backend = convexTest(schema, modules);
+    const backend = withRateLimiter(convexTest(schema, modules));
     const component = api as unknown as ComponentApi;
     const ctx = backendContext(backend);
     const clerkActor = normalizeClerkIdentity({

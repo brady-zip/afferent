@@ -1,4 +1,6 @@
 import { convexTest } from "convex-test";
+
+import { withRateLimiter } from "../helpers/rate-limiter.js";
 import { describe, expect, test, vi } from "vitest";
 
 import { createAfferentClient } from "../../src/client/index.js";
@@ -48,7 +50,7 @@ describe("actor anonymization", () => {
   });
 
   test("removes identity while retaining content, relationships, and totals", async () => {
-    const backend = convexTest(schema, modules);
+    const backend = withRateLimiter(convexTest(schema, modules));
     let actor: VerifiedActor = {
       externalKey: "fixture:erasable-user",
       displayName: "Erase Me",

@@ -1,4 +1,6 @@
 import { convexTest } from "convex-test";
+
+import { withRateLimiter } from "../helpers/rate-limiter.js";
 import { describe, expect, test } from "vitest";
 
 import { createAfferentClient } from "../../src/client/index.js";
@@ -11,7 +13,7 @@ const modules = import.meta.glob("../../src/component/**/*.ts");
 
 describe("author-owned post lifecycle", () => {
   test("refreshes actors transactionally and preserves withdrawn history", async () => {
-    const backend = convexTest(schema, modules);
+    const backend = withRateLimiter(convexTest(schema, modules));
     let actor: VerifiedActor = {
       externalKey: "fixture:author",
       displayName: "Original Author",
@@ -50,7 +52,10 @@ describe("author-owned post lifecycle", () => {
         postId: created.id,
         title: "Stolen",
       }),
-    ).rejects.toMatchObject({ data: { code: "NOT_OWNER" } });
+    ).resolves.toMatchObject({
+      ok: false,
+      error: { code: "NOT_AUTHORIZED" },
+    });
 
     actor = {
       externalKey: "fixture:author",
@@ -89,9 +94,9 @@ describe("author-owned post lifecycle", () => {
     });
     const activePosts = await client.read.listPosts(ctx as never, { boardId });
     expect(activePosts.posts).toEqual([]);
-    expect(
-      await client.read.getPost(ctx as never, { postId: created.id }),
-    ).toMatchObject({ id: created.id, title: "Edited title" });
+    await expect(
+      client.read.getPost(ctx as never, { postId: created.id }),
+    ).rejects.toMatchObject({ data: { code: "NOT_FOUND", resource: "post" } });
 
     const persisted = await backend.run(async (runCtx) => {
       const actors = await runCtx.db
@@ -114,7 +119,7 @@ describe("author-owned post lifecycle", () => {
   });
 
   test("reports exact and truncated board counts without changing post totals", async () => {
-    const backend = convexTest(schema, modules);
+    const backend = withRateLimiter(convexTest(schema, modules));
     const client = createAfferentClient(api as unknown as ComponentApi, {
       resolveActor: async () => ({ externalKey: "fixture:count-author" }),
       authorizeAdmin: async () => true,

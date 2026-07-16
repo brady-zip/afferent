@@ -8,3 +8,11 @@ export { countPosts, getPost, listPosts } from "./public/posts.js";
 export { listFeedback } from "./public/feeds.js";
 export { searchFeedback, suggestSimilarPosts } from "./public/search.js";
 export { listComments } from "./public/comments.js";
+export {
+  editPost as adminEditPost,
+  movePost,
+  setArchived,
+  setDiscussionLock,
+  setPostStatus,
+} from "./admin/posts.js";
+export { listPostActivity } from "./admin/activity.js";

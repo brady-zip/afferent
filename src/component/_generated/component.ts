@@ -24,6 +24,70 @@ import type { FunctionReference } from "convex/server";
 export type ComponentApi<Name extends string | undefined = string | undefined> =
   {
     admin: {
+      activity: {
+        listPostActivity: FunctionReference<
+          "query",
+          "internal",
+          {
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+            postId: string;
+            scopeId: string;
+          },
+          {
+            continueCursor: string;
+            contractVersion: 1;
+            isDone: boolean;
+            page: Array<{
+              actor?: { avatarUrl?: string; displayName?: string; id: string };
+              changedFields?: Array<string>;
+              contractVersion: 1;
+              fromBoardId?: string;
+              fromStatus?:
+                | "open"
+                | "under_review"
+                | "planned"
+                | "in_progress"
+                | "complete"
+                | "closed";
+              id: string;
+              occurredAt: number;
+              postId: string;
+              toBoardId?: string;
+              toStatus?:
+                | "open"
+                | "under_review"
+                | "planned"
+                | "in_progress"
+                | "complete"
+                | "closed";
+              type:
+                | "create"
+                | "edit"
+                | "status_change"
+                | "board_move"
+                | "tag_add"
+                | "tag_remove"
+                | "lock"
+                | "unlock"
+                | "archive"
+                | "restore"
+                | "merge"
+                | "changelog_publish"
+                | "changelog_unpublish";
+            }>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            splitCursor?: string | null;
+          },
+          Name
+        >;
+      };
       actors: {
         anonymizeActor: FunctionReference<
           "mutation",
@@ -50,6 +114,235 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           Name
         >;
       };
+      posts: {
+        editPost: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            actor: {
+              avatarUrl?: string;
+              displayName?: string;
+              externalKey: string;
+            };
+            body?: string;
+            postId: string;
+            scopeId: string;
+            title?: string;
+          },
+          {
+            author: { avatarUrl?: string; displayName?: string; id: string };
+            board: { id: string; name: string; slug: string };
+            boardId: string;
+            body: string;
+            commentCount: number;
+            contractVersion: 2;
+            id: string;
+            status: {
+              key:
+                | "open"
+                | "under_review"
+                | "planned"
+                | "in_progress"
+                | "complete"
+                | "closed";
+              label:
+                | "Open"
+                | "Under Review"
+                | "Planned"
+                | "In Progress"
+                | "Complete"
+                | "Closed";
+            };
+            tags: Array<{ id: string; name: string }>;
+            title: string;
+            totals: { comments: number; votes: number };
+            voteCount: number;
+          },
+          Name
+        >;
+        movePost: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            actor: {
+              avatarUrl?: string;
+              displayName?: string;
+              externalKey: string;
+            };
+            boardId: string;
+            postId: string;
+            scopeId: string;
+          },
+          {
+            author: { avatarUrl?: string; displayName?: string; id: string };
+            board: { id: string; name: string; slug: string };
+            boardId: string;
+            body: string;
+            commentCount: number;
+            contractVersion: 2;
+            id: string;
+            status: {
+              key:
+                | "open"
+                | "under_review"
+                | "planned"
+                | "in_progress"
+                | "complete"
+                | "closed";
+              label:
+                | "Open"
+                | "Under Review"
+                | "Planned"
+                | "In Progress"
+                | "Complete"
+                | "Closed";
+            };
+            tags: Array<{ id: string; name: string }>;
+            title: string;
+            totals: { comments: number; votes: number };
+            voteCount: number;
+          },
+          Name
+        >;
+        setArchived: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            actor: {
+              avatarUrl?: string;
+              displayName?: string;
+              externalKey: string;
+            };
+            archived: boolean;
+            postId: string;
+            scopeId: string;
+          },
+          {
+            author: { avatarUrl?: string; displayName?: string; id: string };
+            board: { id: string; name: string; slug: string };
+            boardId: string;
+            body: string;
+            commentCount: number;
+            contractVersion: 2;
+            id: string;
+            status: {
+              key:
+                | "open"
+                | "under_review"
+                | "planned"
+                | "in_progress"
+                | "complete"
+                | "closed";
+              label:
+                | "Open"
+                | "Under Review"
+                | "Planned"
+                | "In Progress"
+                | "Complete"
+                | "Closed";
+            };
+            tags: Array<{ id: string; name: string }>;
+            title: string;
+            totals: { comments: number; votes: number };
+            voteCount: number;
+          },
+          Name
+        >;
+        setDiscussionLock: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            actor: {
+              avatarUrl?: string;
+              displayName?: string;
+              externalKey: string;
+            };
+            locked: boolean;
+            postId: string;
+            scopeId: string;
+          },
+          {
+            author: { avatarUrl?: string; displayName?: string; id: string };
+            board: { id: string; name: string; slug: string };
+            boardId: string;
+            body: string;
+            commentCount: number;
+            contractVersion: 2;
+            id: string;
+            status: {
+              key:
+                | "open"
+                | "under_review"
+                | "planned"
+                | "in_progress"
+                | "complete"
+                | "closed";
+              label:
+                | "Open"
+                | "Under Review"
+                | "Planned"
+                | "In Progress"
+                | "Complete"
+                | "Closed";
+            };
+            tags: Array<{ id: string; name: string }>;
+            title: string;
+            totals: { comments: number; votes: number };
+            voteCount: number;
+          },
+          Name
+        >;
+        setPostStatus: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            actor: {
+              avatarUrl?: string;
+              displayName?: string;
+              externalKey: string;
+            };
+            postId: string;
+            scopeId: string;
+            status:
+              | "open"
+              | "under_review"
+              | "planned"
+              | "in_progress"
+              | "complete"
+              | "closed";
+          },
+          {
+            author: { avatarUrl?: string; displayName?: string; id: string };
+            board: { id: string; name: string; slug: string };
+            boardId: string;
+            body: string;
+            commentCount: number;
+            contractVersion: 2;
+            id: string;
+            status: {
+              key:
+                | "open"
+                | "under_review"
+                | "planned"
+                | "in_progress"
+                | "complete"
+                | "closed";
+              label:
+                | "Open"
+                | "Under Review"
+                | "Planned"
+                | "In Progress"
+                | "Complete"
+                | "Closed";
+            };
+            tags: Array<{ id: string; name: string }>;
+            title: string;
+            totals: { comments: number; votes: number };
+            voteCount: number;
+          },
+          Name
+        >;
+      };
     };
     feedback: {
       addComment: FunctionReference<
@@ -62,17 +355,87 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             externalKey: string;
           };
           body: string;
+          isAdmin: boolean;
           parentCommentId?: string;
           postId: string;
           scopeId: string;
         },
+        | {
+            author: { avatarUrl?: string; displayName?: string; id: string };
+            body: string;
+            contractVersion: 1;
+            id: string;
+            parentCommentId?: string;
+            postId: string;
+          }
+        | {
+            error:
+              | {
+                  code:
+                    | "VALIDATION"
+                    | "NOT_FOUND"
+                    | "DISCUSSION_LOCKED"
+                    | "NOT_AUTHORIZED";
+                  contractVersion: 1;
+                  message: string;
+                }
+              | {
+                  code: "RATE_LIMITED";
+                  contractVersion: 1;
+                  operation:
+                    | "create_post"
+                    | "edit_post"
+                    | "comment"
+                    | "vote"
+                    | "subscribe";
+                  retryAfterMs: number;
+                };
+            ok: false;
+          },
+        Name
+      >;
+      adminEditPost: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          actor: {
+            avatarUrl?: string;
+            displayName?: string;
+            externalKey: string;
+          };
+          body?: string;
+          postId: string;
+          scopeId: string;
+          title?: string;
+        },
         {
           author: { avatarUrl?: string; displayName?: string; id: string };
+          board: { id: string; name: string; slug: string };
+          boardId: string;
           body: string;
-          contractVersion: 1;
+          commentCount: number;
+          contractVersion: 2;
           id: string;
-          parentCommentId?: string;
-          postId: string;
+          status: {
+            key:
+              | "open"
+              | "under_review"
+              | "planned"
+              | "in_progress"
+              | "complete"
+              | "closed";
+            label:
+              | "Open"
+              | "Under Review"
+              | "Planned"
+              | "In Progress"
+              | "Complete"
+              | "Closed";
+          };
+          tags: Array<{ id: string; name: string }>;
+          title: string;
+          totals: { comments: number; votes: number };
+          voteCount: number;
         },
         Name
       >;
@@ -119,20 +482,44 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           scopeId: string;
           title: string;
         },
-        {
-          author: { avatarUrl?: string; displayName?: string; id: string };
-          board: { id: string; name: string; slug: string };
-          boardId: string;
-          body: string;
-          commentCount: number;
-          contractVersion: 1;
-          id: string;
-          status: { key: "open"; label: "Open" };
-          tags: Array<string>;
-          title: string;
-          totals: { comments: number; votes: number };
-          voteCount: number;
-        },
+        | {
+            author: { avatarUrl?: string; displayName?: string; id: string };
+            board: { id: string; name: string; slug: string };
+            boardId: string;
+            body: string;
+            commentCount: number;
+            contractVersion: 1;
+            id: string;
+            status: { key: "open"; label: "Open" };
+            tags: Array<string>;
+            title: string;
+            totals: { comments: number; votes: number };
+            voteCount: number;
+          }
+        | {
+            error:
+              | {
+                  code:
+                    | "VALIDATION"
+                    | "NOT_FOUND"
+                    | "DISCUSSION_LOCKED"
+                    | "NOT_AUTHORIZED";
+                  contractVersion: 1;
+                  message: string;
+                }
+              | {
+                  code: "RATE_LIMITED";
+                  contractVersion: 1;
+                  operation:
+                    | "create_post"
+                    | "edit_post"
+                    | "comment"
+                    | "vote"
+                    | "subscribe";
+                  retryAfterMs: number;
+                };
+            ok: false;
+          },
         Name
       >;
       editPost: FunctionReference<
@@ -149,20 +536,44 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           scopeId: string;
           title?: string;
         },
-        {
-          author: { avatarUrl?: string; displayName?: string; id: string };
-          board: { id: string; name: string; slug: string };
-          boardId: string;
-          body: string;
-          commentCount: number;
-          contractVersion: 1;
-          id: string;
-          status: { key: "open"; label: "Open" };
-          tags: Array<string>;
-          title: string;
-          totals: { comments: number; votes: number };
-          voteCount: number;
-        },
+        | {
+            author: { avatarUrl?: string; displayName?: string; id: string };
+            board: { id: string; name: string; slug: string };
+            boardId: string;
+            body: string;
+            commentCount: number;
+            contractVersion: 1;
+            id: string;
+            status: { key: "open"; label: "Open" };
+            tags: Array<string>;
+            title: string;
+            totals: { comments: number; votes: number };
+            voteCount: number;
+          }
+        | {
+            error:
+              | {
+                  code:
+                    | "VALIDATION"
+                    | "NOT_FOUND"
+                    | "DISCUSSION_LOCKED"
+                    | "NOT_AUTHORIZED";
+                  contractVersion: 1;
+                  message: string;
+                }
+              | {
+                  code: "RATE_LIMITED";
+                  contractVersion: 1;
+                  operation:
+                    | "create_post"
+                    | "edit_post"
+                    | "comment"
+                    | "vote"
+                    | "subscribe";
+                  retryAfterMs: number;
+                };
+            ok: false;
+          },
         Name
       >;
       getPost: FunctionReference<
@@ -328,6 +739,68 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         },
         Name
       >;
+      listPostActivity: FunctionReference<
+        "query",
+        "internal",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          postId: string;
+          scopeId: string;
+        },
+        {
+          continueCursor: string;
+          contractVersion: 1;
+          isDone: boolean;
+          page: Array<{
+            actor?: { avatarUrl?: string; displayName?: string; id: string };
+            changedFields?: Array<string>;
+            contractVersion: 1;
+            fromBoardId?: string;
+            fromStatus?:
+              | "open"
+              | "under_review"
+              | "planned"
+              | "in_progress"
+              | "complete"
+              | "closed";
+            id: string;
+            occurredAt: number;
+            postId: string;
+            toBoardId?: string;
+            toStatus?:
+              | "open"
+              | "under_review"
+              | "planned"
+              | "in_progress"
+              | "complete"
+              | "closed";
+            type:
+              | "create"
+              | "edit"
+              | "status_change"
+              | "board_move"
+              | "tag_add"
+              | "tag_remove"
+              | "lock"
+              | "unlock"
+              | "archive"
+              | "restore"
+              | "merge"
+              | "changelog_publish"
+              | "changelog_unpublish";
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        },
+        Name
+      >;
       listPosts: FunctionReference<
         "query",
         "internal",
@@ -381,6 +854,50 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         },
         Name
       >;
+      movePost: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          actor: {
+            avatarUrl?: string;
+            displayName?: string;
+            externalKey: string;
+          };
+          boardId: string;
+          postId: string;
+          scopeId: string;
+        },
+        {
+          author: { avatarUrl?: string; displayName?: string; id: string };
+          board: { id: string; name: string; slug: string };
+          boardId: string;
+          body: string;
+          commentCount: number;
+          contractVersion: 2;
+          id: string;
+          status: {
+            key:
+              | "open"
+              | "under_review"
+              | "planned"
+              | "in_progress"
+              | "complete"
+              | "closed";
+            label:
+              | "Open"
+              | "Under Review"
+              | "Planned"
+              | "In Progress"
+              | "Complete"
+              | "Closed";
+          };
+          tags: Array<{ id: string; name: string }>;
+          title: string;
+          totals: { comments: number; votes: number };
+          voteCount: number;
+        },
+        Name
+      >;
       searchFeedback: FunctionReference<
         "query",
         "internal",
@@ -426,6 +943,144 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         },
         Name
       >;
+      setArchived: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          actor: {
+            avatarUrl?: string;
+            displayName?: string;
+            externalKey: string;
+          };
+          archived: boolean;
+          postId: string;
+          scopeId: string;
+        },
+        {
+          author: { avatarUrl?: string; displayName?: string; id: string };
+          board: { id: string; name: string; slug: string };
+          boardId: string;
+          body: string;
+          commentCount: number;
+          contractVersion: 2;
+          id: string;
+          status: {
+            key:
+              | "open"
+              | "under_review"
+              | "planned"
+              | "in_progress"
+              | "complete"
+              | "closed";
+            label:
+              | "Open"
+              | "Under Review"
+              | "Planned"
+              | "In Progress"
+              | "Complete"
+              | "Closed";
+          };
+          tags: Array<{ id: string; name: string }>;
+          title: string;
+          totals: { comments: number; votes: number };
+          voteCount: number;
+        },
+        Name
+      >;
+      setDiscussionLock: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          actor: {
+            avatarUrl?: string;
+            displayName?: string;
+            externalKey: string;
+          };
+          locked: boolean;
+          postId: string;
+          scopeId: string;
+        },
+        {
+          author: { avatarUrl?: string; displayName?: string; id: string };
+          board: { id: string; name: string; slug: string };
+          boardId: string;
+          body: string;
+          commentCount: number;
+          contractVersion: 2;
+          id: string;
+          status: {
+            key:
+              | "open"
+              | "under_review"
+              | "planned"
+              | "in_progress"
+              | "complete"
+              | "closed";
+            label:
+              | "Open"
+              | "Under Review"
+              | "Planned"
+              | "In Progress"
+              | "Complete"
+              | "Closed";
+          };
+          tags: Array<{ id: string; name: string }>;
+          title: string;
+          totals: { comments: number; votes: number };
+          voteCount: number;
+        },
+        Name
+      >;
+      setPostStatus: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          actor: {
+            avatarUrl?: string;
+            displayName?: string;
+            externalKey: string;
+          };
+          postId: string;
+          scopeId: string;
+          status:
+            | "open"
+            | "under_review"
+            | "planned"
+            | "in_progress"
+            | "complete"
+            | "closed";
+        },
+        {
+          author: { avatarUrl?: string; displayName?: string; id: string };
+          board: { id: string; name: string; slug: string };
+          boardId: string;
+          body: string;
+          commentCount: number;
+          contractVersion: 2;
+          id: string;
+          status: {
+            key:
+              | "open"
+              | "under_review"
+              | "planned"
+              | "in_progress"
+              | "complete"
+              | "closed";
+            label:
+              | "Open"
+              | "Under Review"
+              | "Planned"
+              | "In Progress"
+              | "Complete"
+              | "Closed";
+          };
+          tags: Array<{ id: string; name: string }>;
+          title: string;
+          totals: { comments: number; votes: number };
+          voteCount: number;
+        },
+        Name
+      >;
       setVote: FunctionReference<
         "mutation",
         "internal",
@@ -439,20 +1094,44 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           postId: string;
           scopeId: string;
         },
-        {
-          author: { avatarUrl?: string; displayName?: string; id: string };
-          board: { id: string; name: string; slug: string };
-          boardId: string;
-          body: string;
-          commentCount: number;
-          contractVersion: 1;
-          id: string;
-          status: { key: "open"; label: "Open" };
-          tags: Array<string>;
-          title: string;
-          totals: { comments: number; votes: number };
-          voteCount: number;
-        },
+        | {
+            author: { avatarUrl?: string; displayName?: string; id: string };
+            board: { id: string; name: string; slug: string };
+            boardId: string;
+            body: string;
+            commentCount: number;
+            contractVersion: 1;
+            id: string;
+            status: { key: "open"; label: "Open" };
+            tags: Array<string>;
+            title: string;
+            totals: { comments: number; votes: number };
+            voteCount: number;
+          }
+        | {
+            error:
+              | {
+                  code:
+                    | "VALIDATION"
+                    | "NOT_FOUND"
+                    | "DISCUSSION_LOCKED"
+                    | "NOT_AUTHORIZED";
+                  contractVersion: 1;
+                  message: string;
+                }
+              | {
+                  code: "RATE_LIMITED";
+                  contractVersion: 1;
+                  operation:
+                    | "create_post"
+                    | "edit_post"
+                    | "comment"
+                    | "vote"
+                    | "subscribe";
+                  retryAfterMs: number;
+                };
+            ok: false;
+          },
         Name
       >;
       suggestSimilarPosts: FunctionReference<
@@ -534,18 +1213,43 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               externalKey: string;
             };
             body: string;
+            isAdmin: boolean;
             parentCommentId?: string;
             postId: string;
             scopeId: string;
           },
-          {
-            author: { avatarUrl?: string; displayName?: string; id: string };
-            body: string;
-            contractVersion: 1;
-            id: string;
-            parentCommentId?: string;
-            postId: string;
-          },
+          | {
+              author: { avatarUrl?: string; displayName?: string; id: string };
+              body: string;
+              contractVersion: 1;
+              id: string;
+              parentCommentId?: string;
+              postId: string;
+            }
+          | {
+              error:
+                | {
+                    code:
+                      | "VALIDATION"
+                      | "NOT_FOUND"
+                      | "DISCUSSION_LOCKED"
+                      | "NOT_AUTHORIZED";
+                    contractVersion: 1;
+                    message: string;
+                  }
+                | {
+                    code: "RATE_LIMITED";
+                    contractVersion: 1;
+                    operation:
+                      | "create_post"
+                      | "edit_post"
+                      | "comment"
+                      | "vote"
+                      | "subscribe";
+                    retryAfterMs: number;
+                  };
+              ok: false;
+            },
           Name
         >;
       };
@@ -564,20 +1268,44 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             scopeId: string;
             title: string;
           },
-          {
-            author: { avatarUrl?: string; displayName?: string; id: string };
-            board: { id: string; name: string; slug: string };
-            boardId: string;
-            body: string;
-            commentCount: number;
-            contractVersion: 1;
-            id: string;
-            status: { key: "open"; label: "Open" };
-            tags: Array<string>;
-            title: string;
-            totals: { comments: number; votes: number };
-            voteCount: number;
-          },
+          | {
+              author: { avatarUrl?: string; displayName?: string; id: string };
+              board: { id: string; name: string; slug: string };
+              boardId: string;
+              body: string;
+              commentCount: number;
+              contractVersion: 1;
+              id: string;
+              status: { key: "open"; label: "Open" };
+              tags: Array<string>;
+              title: string;
+              totals: { comments: number; votes: number };
+              voteCount: number;
+            }
+          | {
+              error:
+                | {
+                    code:
+                      | "VALIDATION"
+                      | "NOT_FOUND"
+                      | "DISCUSSION_LOCKED"
+                      | "NOT_AUTHORIZED";
+                    contractVersion: 1;
+                    message: string;
+                  }
+                | {
+                    code: "RATE_LIMITED";
+                    contractVersion: 1;
+                    operation:
+                      | "create_post"
+                      | "edit_post"
+                      | "comment"
+                      | "vote"
+                      | "subscribe";
+                    retryAfterMs: number;
+                  };
+              ok: false;
+            },
           Name
         >;
         editPost: FunctionReference<
@@ -594,20 +1322,44 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             scopeId: string;
             title?: string;
           },
-          {
-            author: { avatarUrl?: string; displayName?: string; id: string };
-            board: { id: string; name: string; slug: string };
-            boardId: string;
-            body: string;
-            commentCount: number;
-            contractVersion: 1;
-            id: string;
-            status: { key: "open"; label: "Open" };
-            tags: Array<string>;
-            title: string;
-            totals: { comments: number; votes: number };
-            voteCount: number;
-          },
+          | {
+              author: { avatarUrl?: string; displayName?: string; id: string };
+              board: { id: string; name: string; slug: string };
+              boardId: string;
+              body: string;
+              commentCount: number;
+              contractVersion: 1;
+              id: string;
+              status: { key: "open"; label: "Open" };
+              tags: Array<string>;
+              title: string;
+              totals: { comments: number; votes: number };
+              voteCount: number;
+            }
+          | {
+              error:
+                | {
+                    code:
+                      | "VALIDATION"
+                      | "NOT_FOUND"
+                      | "DISCUSSION_LOCKED"
+                      | "NOT_AUTHORIZED";
+                    contractVersion: 1;
+                    message: string;
+                  }
+                | {
+                    code: "RATE_LIMITED";
+                    contractVersion: 1;
+                    operation:
+                      | "create_post"
+                      | "edit_post"
+                      | "comment"
+                      | "vote"
+                      | "subscribe";
+                    retryAfterMs: number;
+                  };
+              ok: false;
+            },
           Name
         >;
         withdrawPost: FunctionReference<
@@ -653,20 +1405,44 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             postId: string;
             scopeId: string;
           },
-          {
-            author: { avatarUrl?: string; displayName?: string; id: string };
-            board: { id: string; name: string; slug: string };
-            boardId: string;
-            body: string;
-            commentCount: number;
-            contractVersion: 1;
-            id: string;
-            status: { key: "open"; label: "Open" };
-            tags: Array<string>;
-            title: string;
-            totals: { comments: number; votes: number };
-            voteCount: number;
-          },
+          | {
+              author: { avatarUrl?: string; displayName?: string; id: string };
+              board: { id: string; name: string; slug: string };
+              boardId: string;
+              body: string;
+              commentCount: number;
+              contractVersion: 1;
+              id: string;
+              status: { key: "open"; label: "Open" };
+              tags: Array<string>;
+              title: string;
+              totals: { comments: number; votes: number };
+              voteCount: number;
+            }
+          | {
+              error:
+                | {
+                    code:
+                      | "VALIDATION"
+                      | "NOT_FOUND"
+                      | "DISCUSSION_LOCKED"
+                      | "NOT_AUTHORIZED";
+                    contractVersion: 1;
+                    message: string;
+                  }
+                | {
+                    code: "RATE_LIMITED";
+                    contractVersion: 1;
+                    operation:
+                      | "create_post"
+                      | "edit_post"
+                      | "comment"
+                      | "vote"
+                      | "subscribe";
+                    retryAfterMs: number;
+                  };
+              ok: false;
+            },
           Name
         >;
       };

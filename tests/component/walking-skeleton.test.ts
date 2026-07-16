@@ -1,4 +1,6 @@
 import { convexTest } from "convex-test";
+
+import { withRateLimiter } from "../helpers/rate-limiter.js";
 import { describe, expect, test } from "vitest";
 
 import { api } from "../../src/component/_generated/api.js";
@@ -11,7 +13,7 @@ const modules = import.meta.glob("../../src/component/**/*.ts");
 
 describe("packed walking skeleton component", () => {
   test("configures a fixed-scope board and creates and lists one safe post DTO", async () => {
-    const backend = convexTest(schema, modules);
+    const backend = withRateLimiter(convexTest(schema, modules));
     const component = api as unknown as ComponentApi;
     const client = createAfferentClient(component, {
       resolveActor: async () => ({

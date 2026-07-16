@@ -13,9 +13,9 @@ import { authenticationRequired, invalidInput } from "../model/errors.js";
 import {
   requireBoardInScope,
   requireInstallation,
-  requirePostInScope,
   requireScope,
 } from "../model/scope.js";
+import { requireVisiblePost } from "../model/visibility.js";
 import { toPostDto } from "../model/views.js";
 
 const MAX_POSTS = 50;
@@ -51,11 +51,11 @@ export const listPosts = query({
     }
     const result = await paginator(ctx.db, schema)
       .query("posts")
-      .withIndex("by_scope_board_state", (q) =>
+      .withIndex("by_scope_board_visibility_created", (q) =>
         q
           .eq("scopeId", args.scopeId)
           .eq("boardId", board._id)
-          .eq("lifecycleState", "active"),
+          .eq("visibilityKey", "visible"),
       )
       .order("desc")
       .paginate(args.paginationOpts);
@@ -81,7 +81,7 @@ export const getPost = query({
   handler: async (ctx, args) => {
     requireScope(args.scopeId);
     await requireReadPolicy(ctx, args.scopeId, args.viewerAuthenticated);
-    const post = await requirePostInScope(ctx, args.scopeId, args.postId);
+    const post = await requireVisiblePost(ctx, args.scopeId, args.postId);
     return await toPostDto(ctx, post);
   },
 });
@@ -97,7 +97,16 @@ export const countPosts = query({
     requireScope(args.scopeId);
     await requireReadPolicy(ctx, args.scopeId, args.viewerAuthenticated);
     const board = await requireBoardInScope(ctx, args.scopeId, args.boardId);
-    const posts = await ctx.db
+    const visiblePosts = await ctx.db
+      .query("posts")
+      .withIndex("by_scope_board_visibility_created", (q) =>
+        q
+          .eq("scopeId", args.scopeId)
+          .eq("boardId", board._id)
+          .eq("visibilityKey", "visible"),
+      )
+      .take(MAX_POSTS + 1);
+    const legacyPosts = await ctx.db
       .query("posts")
       .withIndex("by_scope_board_state", (q) =>
         q
@@ -106,6 +115,10 @@ export const countPosts = query({
           .eq("lifecycleState", "active"),
       )
       .take(MAX_POSTS + 1);
+    const posts = [
+      ...visiblePosts,
+      ...legacyPosts.filter((post) => post.visibilityKey === undefined),
+    ].slice(0, MAX_POSTS + 1);
     return {
       contractVersion: 1 as const,
       count: Math.min(posts.length, MAX_POSTS),

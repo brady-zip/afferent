@@ -1,4 +1,6 @@
 import { convexTest } from "convex-test";
+
+import { withRateLimiter } from "../helpers/rate-limiter.js";
 import { componentsGeneric, type UserIdentity } from "convex/server";
 import { describe, expect, test, vi } from "vitest";
 
@@ -37,7 +39,7 @@ export type ProviderFactoryScenario = Readonly<{
 }>;
 
 async function createBackend(scenario: ProviderFactoryScenario) {
-  const backend = convexTest(schema, modules);
+  const backend = withRateLimiter(convexTest(schema, modules));
   register(backend, "afferent");
   scenario.registerBackend?.(backend);
   const prepared = await scenario.prepareIdentity?.(backend);
@@ -131,11 +133,8 @@ export function runFactoryAuthorityConformance(
           ),
         ).rejects.toThrow();
       }
-      const afterInvalidSessions = await runWithContext(
-        backend,
-        null,
-        (ctx) =>
-          client.read.listPosts(ctx, { boardId: configured.boards[0].id }),
+      const afterInvalidSessions = await runWithContext(backend, null, (ctx) =>
+        client.read.listPosts(ctx, { boardId: configured.boards[0].id }),
       );
       expect(afterInvalidSessions.posts).toEqual([]);
     });
@@ -147,10 +146,7 @@ export function runFactoryAuthorityConformance(
         .mockResolvedValueOnce(false)
         .mockResolvedValueOnce(true)
         .mockResolvedValueOnce(true);
-      const client = scenario.createClient(
-        components.afferent,
-        authorizeAdmin,
-      );
+      const client = scenario.createClient(components.afferent, authorizeAdmin);
 
       await expect(
         runWithContext(backend, identity, (ctx) =>
@@ -195,23 +191,20 @@ export function runFactoryAuthorityConformance(
         client,
       );
 
-      const created = await runWithContext(
-        backend,
-        identity,
-        (ctx) =>
-          client.participation.createPost(ctx, {
-            boardId: configured.boards[0].id,
-            title: "Trusted",
-            body: "Provider-derived",
-            userId: "attacker",
-            externalKey: "attacker:key",
-            isAdmin: true,
-            scopeId: "attacker-scope",
-            providerRecord: {
-              email: "attacker@example.test",
-              role: "admin",
-            },
-          } as never),
+      const created = await runWithContext(backend, identity, (ctx) =>
+        client.participation.createPost(ctx, {
+          boardId: configured.boards[0].id,
+          title: "Trusted",
+          body: "Provider-derived",
+          userId: "attacker",
+          externalKey: "attacker:key",
+          isAdmin: true,
+          scopeId: "attacker-scope",
+          providerRecord: {
+            email: "attacker@example.test",
+            role: "admin",
+          },
+        } as never),
       );
 
       expect(created.author).toMatchObject({
@@ -266,13 +259,10 @@ export function runFactoryAuthorityConformance(
         data: { code: "NOT_FOUND", resource: "board" },
       });
 
-      const otherPosts = await runWithContext(
-        backend,
-        identity,
-        (ctx) =>
-          scoped.read.listPosts(ctx, {
-            boardId: otherConfiguration.boards[0].id,
-          }),
+      const otherPosts = await runWithContext(backend, identity, (ctx) =>
+        scoped.read.listPosts(ctx, {
+          boardId: otherConfiguration.boards[0].id,
+        }),
       );
       expect(otherPosts.posts).toEqual([]);
     });

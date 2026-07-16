@@ -3,6 +3,9 @@ import type { ClientResolvers } from "./internal.js";
 
 export type {
   ActorId,
+  ActivityId,
+  AfferentActionResult,
+  AfferentErrorDto,
   AdminCapabilities,
   BoardDto,
   BoardId,
@@ -19,6 +22,8 @@ export type {
   PostDto,
   PostPageDto,
   PostId,
+  PostActivityDto,
+  PostActivityPageDto,
   PostStatusKey,
   ReadCapabilities,
   SearchResultDto,
@@ -29,6 +34,7 @@ export type {
 } from "./contracts.js";
 export {
   addCommentIntentValidator,
+  adminEditPostIntentValidator,
   anonymizeActorIntentValidator,
   boardListResultValidator,
   commentPageResultValidator,
@@ -42,6 +48,7 @@ export {
   installationResultValidator,
   listBoardsIntentValidator,
   listCommentsIntentValidator,
+  listPostActivityIntentValidator,
   listFeedbackIntentValidator,
   listPostsIntentValidator,
   postListResultValidator,
@@ -53,6 +60,10 @@ export {
   searchFeedbackIntentValidator,
   searchFeedbackResultValidator,
   setVoteIntentValidator,
+  setArchivedIntentValidator,
+  setDiscussionLockIntentValidator,
+  setPostStatusIntentValidator,
+  movePostIntentValidator,
   similarPostResultValidator,
   suggestSimilarPostsIntentValidator,
   withdrawPostIntentValidator,

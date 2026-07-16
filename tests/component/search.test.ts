@@ -1,4 +1,6 @@
 import { convexTest } from "convex-test";
+
+import { withRateLimiter } from "../helpers/rate-limiter.js";
 import { describe, expect, test } from "vitest";
 
 import { createScopedAfferentClient } from "../../src/client/index.js";
@@ -19,16 +21,19 @@ function backendContext(backend: ReturnType<typeof convexTest>) {
 }
 
 function client(scopeId: string) {
+  let actorSequence = 0;
   return createScopedAfferentClient(api as unknown as ComponentApi, {
     resolveScope: async () => scopeId,
-    resolveActor: async () => ({ externalKey: `${scopeId}:actor` }),
+    resolveActor: async () => ({
+      externalKey: `${scopeId}:actor:${Math.floor(actorSequence++ / 5)}`,
+    }),
     authorizeAdmin: async () => true,
   });
 }
 
 describe("bounded feedback search", () => {
   test("searches only visible rows in the derived scope with honest truncation", async () => {
-    const backend = convexTest(schema, modules);
+    const backend = withRateLimiter(convexTest(schema, modules));
     const ctx = backendContext(backend);
     const alpha = client("scope:alpha");
     const beta = client("scope:beta");
@@ -116,7 +121,7 @@ describe("bounded feedback search", () => {
   }, 20_000);
 
   test("returns deterministic cross-board suggestions without raw scores", async () => {
-    const backend = convexTest(schema, modules);
+    const backend = withRateLimiter(convexTest(schema, modules));
     const ctx = backendContext(backend);
     const alpha = client("scope:similar");
     const configured = await alpha.admin.configureInstallation(ctx as never, {

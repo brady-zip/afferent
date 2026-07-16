@@ -1,4 +1,6 @@
 import { convexTest } from "convex-test";
+
+import { withRateLimiter } from "../helpers/rate-limiter.js";
 import { describe, expect, test } from "vitest";
 
 import { createAfferentClient } from "../../src/client/index.js";
@@ -9,7 +11,7 @@ import schema from "../../src/component/schema.js";
 const modules = import.meta.glob("../../src/component/**/*.ts");
 
 function createHarness() {
-  const backend = convexTest(schema, modules);
+  const backend = withRateLimiter(convexTest(schema, modules));
   const client = createAfferentClient(api as unknown as ComponentApi, {
     resolveActor: async () => ({
       externalKey: "fixture:installation-author",
@@ -58,9 +60,15 @@ describe("additive installation configuration", () => {
         slug: "feedback",
         name: "Feature Requests",
       }),
-      expect.objectContaining({ id: bugs.id, slug: "bugs", name: "Bug Reports" }),
+      expect.objectContaining({
+        id: bugs.id,
+        slug: "bugs",
+        name: "Bug Reports",
+      }),
     ]);
-    expect(await client.read.getPost(ctx as never, { postId: post.id })).toMatchObject({
+    expect(
+      await client.read.getPost(ctx as never, { postId: post.id }),
+    ).toMatchObject({
       id: post.id,
       boardId: bugs.id,
     });
@@ -81,7 +89,9 @@ describe("additive installation configuration", () => {
       boards: [{ slug: "ideas", name: "Product Ideas" }],
     });
     expect(retried.boards).toHaveLength(3);
-    expect(retried.boards.find((board) => board.slug === "ideas")).toMatchObject({
+    expect(
+      retried.boards.find((board) => board.slug === "ideas"),
+    ).toMatchObject({
       id: ideas.id,
       name: "Product Ideas",
     });
@@ -110,7 +120,9 @@ describe("additive installation configuration", () => {
     const persisted = await backend.run(async (runCtx) => ({
       installation: await runCtx.db
         .query("installations")
-        .withIndex("by_scope", (q) => q.eq("scopeId", "afferent:single-product:v1"))
+        .withIndex("by_scope", (q) =>
+          q.eq("scopeId", "afferent:single-product:v1"),
+        )
         .unique(),
       boards: await runCtx.db
         .query("boards")
@@ -121,7 +133,11 @@ describe("additive installation configuration", () => {
     }));
     expect(persisted.installation?.readPolicy).toBe("public");
     expect(persisted.boards).toHaveLength(19);
-    expect(persisted.boards.map(({ slug }) => slug)).not.toContain("overflow-a");
-    expect(persisted.boards.map(({ slug }) => slug)).not.toContain("overflow-b");
+    expect(persisted.boards.map(({ slug }) => slug)).not.toContain(
+      "overflow-a",
+    );
+    expect(persisted.boards.map(({ slug }) => slug)).not.toContain(
+      "overflow-b",
+    );
   });
 });

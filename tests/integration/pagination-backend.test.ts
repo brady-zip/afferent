@@ -1,4 +1,6 @@
 import { convexTest } from "convex-test";
+
+import { withRateLimiter } from "../helpers/rate-limiter.js";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -13,7 +15,7 @@ const modules = import.meta.glob("../../src/component/**/*.ts");
 
 describe("component-compatible post pagination", () => {
   test("preserves helper metadata and remains gap-free after reactive mutations", async () => {
-    const backend = convexTest(schema, modules);
+    const backend = withRateLimiter(convexTest(schema, modules));
     const component = api as unknown as ComponentApi;
     const ctx = {
       auth: { getUserIdentity: async () => null },
@@ -40,13 +42,16 @@ describe("component-compatible post pagination", () => {
     const beta = scoped("derived-beta");
 
     const setup = async (client: typeof fixed, prefix: string) => {
-      const configured = await client.admin.configureInstallation(ctx as never, {
-        readPolicy: "public",
-        boards: [
-          { slug: "feedback", name: "Feedback" },
-          { slug: "bugs", name: "Bugs" },
-        ],
-      });
+      const configured = await client.admin.configureInstallation(
+        ctx as never,
+        {
+          readPolicy: "public",
+          boards: [
+            { slug: "feedback", name: "Feedback" },
+            { slug: "bugs", name: "Bugs" },
+          ],
+        },
+      );
       for (let index = 0; index < 50; index += 1) {
         await client.participation.createPost(ctx as never, {
           boardId: configured.boards[index % 2].id,
@@ -66,10 +71,13 @@ describe("component-compatible post pagination", () => {
       betaBoards.map((board) => board.slug),
     );
 
-    const first = await alpha.read.listPosts(ctx as never, {
-      boardId: alphaBoards[0].id,
-      paginationOpts: { numItems: 10, cursor: null },
-    } as never);
+    const first = await alpha.read.listPosts(
+      ctx as never,
+      {
+        boardId: alphaBoards[0].id,
+        paginationOpts: { numItems: 10, cursor: null },
+      } as never,
+    );
     expect(first.page).toHaveLength(10);
     expect(first.posts).toEqual(first.page);
     expect(first).toEqual(
@@ -96,17 +104,22 @@ describe("component-compatible post pagination", () => {
       postId: first.page[1].id,
     });
 
-    const second = await alpha.read.listPosts(ctx as never, {
-      boardId: alphaBoards[0].id,
-      paginationOpts: {
-        numItems: 10,
-        cursor: first.continueCursor,
-        endCursor: first.endCursor,
-      },
-    } as never);
+    const second = await alpha.read.listPosts(
+      ctx as never,
+      {
+        boardId: alphaBoards[0].id,
+        paginationOpts: {
+          numItems: 10,
+          cursor: first.continueCursor,
+          endCursor: first.endCursor,
+        },
+      } as never,
+    );
     expect(second.page).toHaveLength(10);
     expect(
-      second.page.some((post) => first.page.some((seen) => seen.id === post.id)),
+      second.page.some((post) =>
+        first.page.some((seen) => seen.id === post.id),
+      ),
     ).toBe(false);
     expect(second.page.every((post) => post.title.startsWith("alpha-"))).toBe(
       true,
@@ -116,10 +129,13 @@ describe("component-compatible post pagination", () => {
     let cursor: string | null = null;
     let done = false;
     while (!done) {
-      const page = await alpha.read.listPosts(ctx as never, {
-        boardId: alphaBoards[0].id,
-        paginationOpts: { numItems: 10, cursor },
-      } as never);
+      const page = await alpha.read.listPosts(
+        ctx as never,
+        {
+          boardId: alphaBoards[0].id,
+          paginationOpts: { numItems: 10, cursor },
+        } as never,
+      );
       fresh.push(...page.page.map((post) => post.id));
       cursor = page.continueCursor;
       done = page.isDone;
@@ -129,17 +145,23 @@ describe("component-compatible post pagination", () => {
     expect(fresh).toContain(inserted.id);
     expect(fresh).not.toContain(first.page[1].id);
 
-    const betaPage = await beta.read.listPosts(ctx as never, {
-      boardId: betaBoards[0].id,
-      paginationOpts: { numItems: 10, cursor: null },
-    } as never);
+    const betaPage = await beta.read.listPosts(
+      ctx as never,
+      {
+        boardId: betaBoards[0].id,
+        paginationOpts: { numItems: 10, cursor: null },
+      } as never,
+    );
     expect(betaPage.page.every((post) => post.title.startsWith("beta-"))).toBe(
       true,
     );
-    const fixedPage = await fixed.read.listPosts(ctx as never, {
-      boardId: fixedBoards[0].id,
-      paginationOpts: { numItems: 10, cursor: null },
-    } as never);
+    const fixedPage = await fixed.read.listPosts(
+      ctx as never,
+      {
+        boardId: fixedBoards[0].id,
+        paginationOpts: { numItems: 10, cursor: null },
+      } as never,
+    );
     expect(Object.keys(fixedPage).sort()).toEqual(Object.keys(betaPage).sort());
     expect(fixedPage.page).toHaveLength(betaPage.page.length);
   });

@@ -1,4 +1,6 @@
 import { convexTest } from "convex-test";
+
+import { withRateLimiter } from "../helpers/rate-limiter.js";
 import { describe, expect, test } from "vitest";
 
 import { createAfferentClient } from "../../src/client/index.js";
@@ -22,7 +24,7 @@ function context(backend: ReturnType<typeof convexTest>) {
 
 describe("fixed transactional participation limits", () => {
   test("returns an actionable actor create-post denial after five attempts", async () => {
-    const backend = convexTest(schema, modules);
+    const backend = withRateLimiter(convexTest(schema, modules));
     const client = createAfferentClient(api as unknown as ComponentApi, {
       resolveActor: async () => ({ externalKey: "fixture:limited-author" }),
       authorizeAdmin: async () => false,
@@ -65,7 +67,7 @@ describe("fixed transactional participation limits", () => {
   });
 
   test("commits one charge for a semantic failure and does not double-charge a denial", async () => {
-    const backend = convexTest(schema, modules);
+    const backend = withRateLimiter(convexTest(schema, modules));
     const client = createAfferentClient(api as unknown as ComponentApi, {
       resolveActor: async () => ({ externalKey: "fixture:invalid-author" }),
       authorizeAdmin: async () => false,

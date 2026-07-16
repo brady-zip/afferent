@@ -1,4 +1,6 @@
 import { convexTest } from "convex-test";
+
+import { withRateLimiter } from "../helpers/rate-limiter.js";
 import { describe, expect, test } from "vitest";
 
 import { createAfferentClient } from "../../src/client/index.js";
@@ -24,7 +26,7 @@ function backendContext(backend: ReturnType<typeof convexTest>) {
 
 describe("authenticated participation", () => {
   test("sets one retry-safe vote membership and reconciles its projection", async () => {
-    const backend = convexTest(schema, modules);
+    const backend = withRateLimiter(convexTest(schema, modules));
     let actor: VerifiedActor = { externalKey: "fixture:voter" };
     const client = createAfferentClient(api as unknown as ComponentApi, {
       resolveActor: async () => actor,
@@ -83,9 +85,9 @@ describe("authenticated participation", () => {
         post.id,
       );
     });
-    expect(await client.read.getPost(ctx as never, { postId: post.id })).toMatchObject(
-      { voteCount: 2, totals: { votes: 2 } },
-    );
+    expect(
+      await client.read.getPost(ctx as never, { postId: post.id }),
+    ).toMatchObject({ voteCount: 2, totals: { votes: 2 } });
 
     await Promise.all(
       Array.from({ length: 8 }, () =>
@@ -139,7 +141,7 @@ describe("authenticated participation", () => {
   });
 
   test("rejects invalid vote targets without actor or membership writes", async () => {
-    const backend = convexTest(schema, modules);
+    const backend = withRateLimiter(convexTest(schema, modules));
     const client = createAfferentClient(api as unknown as ComponentApi, {
       resolveActor: async () => ({ externalKey: "fixture:rejected-voter" }),
       authorizeAdmin: async () => true,
@@ -161,13 +163,13 @@ describe("authenticated participation", () => {
         postId: post.id,
         desired: true,
       }),
-    ).rejects.toMatchObject({ data: { code: "INVALID_INPUT" } });
+    ).resolves.toMatchObject({ ok: false, error: { code: "VALIDATION" } });
     await expect(
       client.participation.setVote(ctx as never, {
         postId: "j57fakeopaqueid" as typeof post.id,
         desired: true,
       }),
-    ).rejects.toMatchObject({ data: { code: "NOT_FOUND", resource: "post" } });
+    ).resolves.toMatchObject({ ok: false, error: { code: "NOT_FOUND" } });
 
     const persisted = await backend.run(async (runCtx) => ({
       actors: await runCtx.db.query("actors").collect(),
@@ -178,7 +180,7 @@ describe("authenticated participation", () => {
   });
 
   test("adds flat root comments and one-level replies with exact totals", async () => {
-    const backend = convexTest(schema, modules);
+    const backend = withRateLimiter(convexTest(schema, modules));
     let actor: VerifiedActor = {
       externalKey: "fixture:commenter",
       displayName: "Commenter",
@@ -232,23 +234,21 @@ describe("authenticated participation", () => {
         parentCommentId: reply.id,
         body: "Too deep",
       }),
-    ).rejects.toMatchObject({ data: { code: "INVALID_INPUT" } });
+    ).resolves.toMatchObject({ ok: false, error: { code: "VALIDATION" } });
     await expect(
       client.participation.addComment(ctx as never, {
         postId: secondPost.id,
         parentCommentId: root.id,
         body: "Wrong post",
       }),
-    ).rejects.toMatchObject({ data: { code: "INVALID_INPUT" } });
+    ).resolves.toMatchObject({ ok: false, error: { code: "VALIDATION" } });
     await expect(
       client.participation.addComment(ctx as never, {
         postId: firstPost.id,
         parentCommentId: "j57fakeopaqueid" as typeof root.id,
         body: "Missing parent",
       }),
-    ).rejects.toMatchObject({
-      data: { code: "NOT_FOUND", resource: "comment" },
-    });
+    ).resolves.toMatchObject({ ok: false, error: { code: "NOT_FOUND" } });
 
     const page = await client.read.listComments(ctx as never, {
       postId: firstPost.id,
@@ -256,9 +256,9 @@ describe("authenticated participation", () => {
     });
     expect(page.comments).toHaveLength(2);
     expect(page.comments).toEqual(expect.arrayContaining([root, reply]));
-    expect(page.comments.every((comment) => !Array.isArray(comment.replies))).toBe(
-      true,
-    );
+    expect(
+      page.comments.every((comment) => !Array.isArray(comment.replies)),
+    ).toBe(true);
     expect(
       await client.read.getPost(ctx as never, { postId: firstPost.id }),
     ).toMatchObject({ commentCount: 2, totals: { comments: 2 } });
@@ -275,7 +275,9 @@ describe("authenticated participation", () => {
         .unique(),
     }));
     expect(persisted.comments).toHaveLength(2);
-    expect(persisted.rejectedActor).toBeNull();
+    expect(persisted.rejectedActor).toMatchObject({
+      externalKey: "fixture:invalid-commenter",
+    });
 
     actor = { externalKey: "fixture:commenter" };
     await client.participation.withdrawPost(ctx as never, {
@@ -286,9 +288,9 @@ describe("authenticated participation", () => {
         postId: firstPost.id,
         body: "Too late",
       }),
-    ).rejects.toMatchObject({ data: { code: "INVALID_INPUT" } });
-    expect(
-      await client.read.getPost(ctx as never, { postId: firstPost.id }),
-    ).toMatchObject({ commentCount: 2 });
+    ).resolves.toMatchObject({ ok: false, error: { code: "VALIDATION" } });
+    await expect(
+      client.read.getPost(ctx as never, { postId: firstPost.id }),
+    ).rejects.toMatchObject({ data: { code: "NOT_FOUND", resource: "post" } });
   });
 });

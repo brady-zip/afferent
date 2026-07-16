@@ -1,20 +1,26 @@
 import { ConvexError, v } from "convex/values";
 
 import { mutation } from "../_generated/server.js";
-import { invalidInput, notOwner } from "../model/errors.js";
+import { expectedFailure, invalidInput, notOwner } from "../model/errors.js";
 import { upsertActor } from "../model/actors.js";
+import { appendPostActivity } from "../model/activity.js";
+import { consumeParticipationLimit } from "../model/rateLimits.js";
 import {
   requireBoardInScope,
   requirePostInScope,
   requireScope,
 } from "../model/scope.js";
-import { toPostDto } from "../model/views.js";
+import { toFeedbackPostDto, toPostDto } from "../model/views.js";
 import { computeTrendingScore, patchPostRanking } from "../model/scoring.js";
 import {
   HIDDEN_POST_VISIBILITY,
   PUBLIC_POST_VISIBILITY,
 } from "../model/visibility.js";
-import { postDtoValidator, verifiedActorValidator } from "../validators.js";
+import {
+  postDtoValidator,
+  postMutationResultValidator,
+  verifiedActorValidator,
+} from "../validators.js";
 import { normalizePlainText, validateSafeMarkdown } from "../model/content.js";
 
 function postSearchText(title: string, body: string) {
@@ -29,13 +35,33 @@ export const createPost = mutation({
     title: v.string(),
     body: v.string(),
   },
-  returns: postDtoValidator,
+  returns: postMutationResultValidator,
   handler: async (ctx, args) => {
     requireScope(args.scopeId);
-    const title = normalizePlainText(args.title, "title");
-    const body = validateSafeMarkdown(args.body, "body");
-    const board = await requireBoardInScope(ctx, args.scopeId, args.boardId);
     const actorId = await upsertActor(ctx, args.scopeId, args.actor);
+    const limited = await consumeParticipationLimit(ctx, {
+      operation: "create_post",
+      actorKey: String(actorId),
+      scopeId: args.scopeId,
+    });
+    if (limited) return limited;
+    let title: string;
+    let body: string;
+    let board;
+    try {
+      title = normalizePlainText(args.title, "title");
+      body = validateSafeMarkdown(args.body, "body");
+      board = await requireBoardInScope(ctx, args.scopeId, args.boardId);
+    } catch (error) {
+      if (error instanceof ConvexError) {
+        const data = error.data as { code?: string; message?: string };
+        return expectedFailure(
+          data.code === "NOT_FOUND" ? "NOT_FOUND" : "VALIDATION",
+          data.message ?? "Post creation failed",
+        );
+      }
+      throw error;
+    }
     const createdAt = Date.now();
     const postId = await ctx.db.insert("posts", {
       scopeId: args.scopeId,
@@ -56,6 +82,12 @@ export const createPost = mutation({
     await ctx.db.patch(postId, { orderId: String(postId) });
     const post = await ctx.db.get(postId);
     if (!post) throw new ConvexError({ code: "INVARIANT_VIOLATION" });
+    await appendPostActivity(ctx, {
+      scopeId: args.scopeId,
+      postId,
+      actorId,
+      type: "create",
+    });
     return await toPostDto(ctx, post);
   },
 });
@@ -68,17 +100,39 @@ export const editPost = mutation({
     title: v.optional(v.string()),
     body: v.optional(v.string()),
   },
-  returns: postDtoValidator,
+  returns: postMutationResultValidator,
   handler: async (ctx, args) => {
     requireScope(args.scopeId);
+    const actorId = await upsertActor(ctx, args.scopeId, args.actor);
+    const limited = await consumeParticipationLimit(ctx, {
+      operation: "edit_post",
+      actorKey: String(actorId),
+      scopeId: args.scopeId,
+    });
+    if (limited) return limited;
     if (args.title === undefined && args.body === undefined) {
       invalidInput("at least one editable field is required");
     }
-    const actorId = await upsertActor(ctx, args.scopeId, args.actor);
-    const post = await requirePostInScope(ctx, args.scopeId, args.postId);
-    if (post.actorId !== actorId) notOwner();
-    if (post.lifecycleState !== "active") {
-      invalidInput("withdrawn posts cannot be edited");
+    let post;
+    try {
+      post = await requirePostInScope(ctx, args.scopeId, args.postId);
+      if (post.actorId !== actorId) notOwner();
+      if (post.lifecycleState !== "active" || post.archivedAt !== undefined) {
+        invalidInput("hidden posts cannot be edited");
+      }
+    } catch (error) {
+      if (error instanceof ConvexError) {
+        const data = error.data as { code?: string; message?: string };
+        return expectedFailure(
+          data.code === "NOT_OWNER"
+            ? "NOT_AUTHORIZED"
+            : data.code === "NOT_FOUND"
+              ? "NOT_FOUND"
+              : "VALIDATION",
+          data.message ?? "Post edit failed",
+        );
+      }
+      throw error;
     }
     const title =
       args.title === undefined
@@ -106,6 +160,16 @@ export const editPost = mutation({
         ctx.db.patch(projection._id, { searchText: patch.searchText }),
       ),
     );
+    await appendPostActivity(ctx, {
+      scopeId: args.scopeId,
+      postId: post._id,
+      actorId,
+      type: "edit",
+      changedFields: [
+        ...(args.title === undefined ? [] : ["title"]),
+        ...(args.body === undefined ? [] : ["body"]),
+      ],
+    });
     return await toPostDto(ctx, { ...post, ...patch });
   },
 });

@@ -8,13 +8,17 @@
  * @module
  */
 
+import type * as admin_activity from "../admin/activity.js";
 import type * as admin_actors from "../admin/actors.js";
 import type * as admin_installation from "../admin/installation.js";
+import type * as admin_posts from "../admin/posts.js";
 import type * as feedback from "../feedback.js";
+import type * as model_activity from "../model/activity.js";
 import type * as model_actors from "../model/actors.js";
 import type * as model_comments from "../model/comments.js";
 import type * as model_content from "../model/content.js";
 import type * as model_errors from "../model/errors.js";
+import type * as model_rateLimits from "../model/rateLimits.js";
 import type * as model_scope from "../model/scope.js";
 import type * as model_scoring from "../model/scoring.js";
 import type * as model_similarity from "../model/similarity.js";
@@ -39,13 +43,17 @@ import type {
 import { anyApi, componentsGeneric } from "convex/server";
 
 const fullApi: ApiFromModules<{
+  "admin/activity": typeof admin_activity;
   "admin/actors": typeof admin_actors;
   "admin/installation": typeof admin_installation;
+  "admin/posts": typeof admin_posts;
   feedback: typeof feedback;
+  "model/activity": typeof model_activity;
   "model/actors": typeof model_actors;
   "model/comments": typeof model_comments;
   "model/content": typeof model_content;
   "model/errors": typeof model_errors;
+  "model/rateLimits": typeof model_rateLimits;
   "model/scope": typeof model_scope;
   "model/scoring": typeof model_scoring;
   "model/similarity": typeof model_similarity;
@@ -89,4 +97,6 @@ export const internal: FilterApi<
   FunctionReference<any, "internal">
 > = anyApi as any;
 
-export const components = componentsGeneric() as unknown as {};
+export const components = componentsGeneric() as unknown as {
+  rateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
+};

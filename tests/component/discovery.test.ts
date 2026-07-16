@@ -1,4 +1,6 @@
 import { convexTest } from "convex-test";
+
+import { withRateLimiter } from "../helpers/rate-limiter.js";
 import { describe, expect, test } from "vitest";
 
 import { createScopedAfferentClient } from "../../src/client/server.js";
@@ -31,7 +33,7 @@ function scopedClient(scopeId: string) {
 
 describe("ranked public feedback discovery", () => {
   test("pages Newest, Top, and Trending through the trusted scoped host client", async () => {
-    const backend = convexTest(schema, modules);
+    const backend = withRateLimiter(convexTest(schema, modules));
     const ctx = backendContext(backend);
     const alpha = scopedClient("scope:alpha");
     const beta = scopedClient("scope:beta");
@@ -223,7 +225,7 @@ describe("ranked public feedback discovery", () => {
   });
 
   test("serves board, status, and one-tag shapes without post-page filtering", async () => {
-    const backend = convexTest(schema, modules);
+    const backend = withRateLimiter(convexTest(schema, modules));
     const ctx = backendContext(backend);
     const client = scopedClient("scope:filters");
     const installation = await client.admin.configureInstallation(

@@ -1,13 +1,17 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 
 import { mutation } from "../_generated/server.js";
 import { upsertActor } from "../model/actors.js";
-import { invalidInput } from "../model/errors.js";
+import { expectedFailure, invalidInput } from "../model/errors.js";
 import { requirePostInScope, requireScope } from "../model/scope.js";
 import { findVoteMembership, projectVoteState } from "../model/votes.js";
 import { toPostDto } from "../model/views.js";
-import { postDtoValidator, verifiedActorValidator } from "../validators.js";
+import {
+  postMutationResultValidator,
+  verifiedActorValidator,
+} from "../validators.js";
 import { patchPostRanking } from "../model/scoring.js";
+import { consumeParticipationLimit } from "../model/rateLimits.js";
 
 export const setVote = mutation({
   args: {
@@ -16,15 +20,33 @@ export const setVote = mutation({
     postId: v.string(),
     desired: v.boolean(),
   },
-  returns: postDtoValidator,
+  returns: postMutationResultValidator,
   handler: async (ctx, args) => {
     requireScope(args.scopeId);
-    const post = await requirePostInScope(ctx, args.scopeId, args.postId);
-    if (post.lifecycleState !== "active") {
-      invalidInput("withdrawn posts cannot be voted on");
+    const actorId = await upsertActor(ctx, args.scopeId, args.actor);
+    const limited = await consumeParticipationLimit(ctx, {
+      operation: "vote",
+      actorKey: String(actorId),
+      scopeId: args.scopeId,
+    });
+    if (limited) return limited;
+    let post;
+    try {
+      post = await requirePostInScope(ctx, args.scopeId, args.postId);
+      if (post.lifecycleState !== "active" || post.archivedAt !== undefined) {
+        invalidInput("hidden posts cannot be voted on");
+      }
+    } catch (error) {
+      if (error instanceof ConvexError) {
+        const data = error.data as { code?: string; message?: string };
+        return expectedFailure(
+          data.code === "NOT_FOUND" ? "NOT_FOUND" : "VALIDATION",
+          data.message ?? "Vote failed",
+        );
+      }
+      throw error;
     }
 
-    const actorId = await upsertActor(ctx, args.scopeId, args.actor);
     const membership = await findVoteMembership(ctx, {
       scopeId: args.scopeId,
       postId: post._id,

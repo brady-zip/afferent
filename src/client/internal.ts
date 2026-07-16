@@ -14,6 +14,8 @@ import type {
   ReadCapabilities,
   SearchResultDto,
   SimilarPostResultDto,
+  FeedbackPostDto,
+  PostActivityPageDto,
   VerifiedActor,
 } from "./contracts.js";
 
@@ -24,14 +26,14 @@ export type HostContext = ReadContext | MutationContext;
 export type ClientResolvers = Readonly<{
   resolveScope: (ctx: HostContext) => Promise<string>;
   resolveActor: (ctx: MutationContext) => Promise<VerifiedActor | null>;
-  authorizeAdmin: (ctx: MutationContext) => Promise<boolean>;
+  authorizeAdmin: (ctx: HostContext) => Promise<boolean>;
   isAuthenticated?: (ctx: ReadContext) => Promise<boolean>;
 }>;
 
 export type AfferentClient = Readonly<{
   read: ReadCapabilities<ReadContext>;
   participation: ParticipationCapabilities<MutationContext>;
-  admin: AdminCapabilities<MutationContext>;
+  admin: AdminCapabilities<ReadContext, MutationContext>;
 }>;
 
 async function resolveRequiredScope(
@@ -199,6 +201,7 @@ export function createClientWithScope(
             actor,
             postId: args.postId,
             body: args.body,
+            isAdmin: await options.authorizeAdmin(ctx),
             ...(args.parentCommentId === undefined
               ? {}
               : { parentCommentId: args.parentCommentId }),
@@ -234,6 +237,82 @@ export function createClientWithScope(
           scopeId,
           actorId: args.actorId,
         })) as unknown as PostDto["author"];
+      },
+      async editPost(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        if (!(await options.authorizeAdmin(ctx)))
+          throw new Error("ADMIN_AUTHORIZATION_REQUIRED");
+        const actor = await options.resolveActor(ctx);
+        if (!actor) throw new Error("AUTHENTICATION_REQUIRED");
+        return (await ctx.runMutation(component.admin.posts.editPost, {
+          scopeId,
+          actor,
+          postId: args.postId,
+          ...(args.title === undefined ? {} : { title: args.title }),
+          ...(args.body === undefined ? {} : { body: args.body }),
+        })) as unknown as FeedbackPostDto;
+      },
+      async movePost(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        if (!(await options.authorizeAdmin(ctx)))
+          throw new Error("ADMIN_AUTHORIZATION_REQUIRED");
+        const actor = await options.resolveActor(ctx);
+        if (!actor) throw new Error("AUTHENTICATION_REQUIRED");
+        return (await ctx.runMutation(component.admin.posts.movePost, {
+          scopeId,
+          actor,
+          postId: args.postId,
+          boardId: args.boardId,
+        })) as unknown as FeedbackPostDto;
+      },
+      async setPostStatus(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        if (!(await options.authorizeAdmin(ctx)))
+          throw new Error("ADMIN_AUTHORIZATION_REQUIRED");
+        const actor = await options.resolveActor(ctx);
+        if (!actor) throw new Error("AUTHENTICATION_REQUIRED");
+        return (await ctx.runMutation(component.admin.posts.setPostStatus, {
+          scopeId,
+          actor,
+          postId: args.postId,
+          status: args.status,
+        })) as unknown as FeedbackPostDto;
+      },
+      async setDiscussionLock(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        if (!(await options.authorizeAdmin(ctx)))
+          throw new Error("ADMIN_AUTHORIZATION_REQUIRED");
+        const actor = await options.resolveActor(ctx);
+        if (!actor) throw new Error("AUTHENTICATION_REQUIRED");
+        return (await ctx.runMutation(component.admin.posts.setDiscussionLock, {
+          scopeId,
+          actor,
+          postId: args.postId,
+          locked: args.locked,
+        })) as unknown as FeedbackPostDto;
+      },
+      async setArchived(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        if (!(await options.authorizeAdmin(ctx)))
+          throw new Error("ADMIN_AUTHORIZATION_REQUIRED");
+        const actor = await options.resolveActor(ctx);
+        if (!actor) throw new Error("AUTHENTICATION_REQUIRED");
+        return (await ctx.runMutation(component.admin.posts.setArchived, {
+          scopeId,
+          actor,
+          postId: args.postId,
+          archived: args.archived,
+        })) as unknown as FeedbackPostDto;
+      },
+      async listPostActivity(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        if (!(await options.authorizeAdmin(ctx)))
+          throw new Error("ADMIN_AUTHORIZATION_REQUIRED");
+        return (await ctx.runQuery(component.admin.activity.listPostActivity, {
+          scopeId,
+          postId: args.postId,
+          paginationOpts: args.paginationOpts ?? { numItems: 20, cursor: null },
+        })) as unknown as PostActivityPageDto;
       },
     },
   };

@@ -195,6 +195,89 @@ export const similarPostResultDtoValidator = v.object({
   hasMore: v.boolean(),
 });
 
+export const participationFailureValidator = v.object({
+  ok: v.literal(false),
+  error: v.union(
+    v.object({
+      contractVersion: v.literal(1),
+      code: v.union(
+        v.literal("VALIDATION"),
+        v.literal("NOT_FOUND"),
+        v.literal("DISCUSSION_LOCKED"),
+        v.literal("NOT_AUTHORIZED"),
+      ),
+      message: v.string(),
+    }),
+    v.object({
+      contractVersion: v.literal(1),
+      code: v.literal("RATE_LIMITED"),
+      operation: v.union(
+        v.literal("create_post"),
+        v.literal("edit_post"),
+        v.literal("comment"),
+        v.literal("vote"),
+        v.literal("subscribe"),
+      ),
+      retryAfterMs: v.number(),
+    }),
+  ),
+});
+
+export const postMutationResultValidator = v.union(
+  postDtoValidator,
+  participationFailureValidator,
+);
+
+export const commentMutationResultValidator = v.union(
+  commentDtoValidator,
+  participationFailureValidator,
+);
+
+export const activityTypeValidator = v.union(
+  v.literal("create"),
+  v.literal("edit"),
+  v.literal("status_change"),
+  v.literal("board_move"),
+  v.literal("tag_add"),
+  v.literal("tag_remove"),
+  v.literal("lock"),
+  v.literal("unlock"),
+  v.literal("archive"),
+  v.literal("restore"),
+  v.literal("merge"),
+  v.literal("changelog_publish"),
+  v.literal("changelog_unpublish"),
+);
+
+export const postActivityDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  id: v.string(),
+  postId: v.string(),
+  type: activityTypeValidator,
+  occurredAt: v.number(),
+  actor: v.optional(actorDtoValidator),
+  changedFields: v.optional(v.array(v.string())),
+  fromStatus: v.optional(postStatusKeyValidator),
+  toStatus: v.optional(postStatusKeyValidator),
+  fromBoardId: v.optional(v.string()),
+  toBoardId: v.optional(v.string()),
+});
+
+export const postActivityPageDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  page: v.array(postActivityDtoValidator),
+  isDone: v.boolean(),
+  continueCursor: v.string(),
+  splitCursor: v.optional(v.union(v.string(), v.null())),
+  pageStatus: v.optional(
+    v.union(
+      v.literal("SplitRecommended"),
+      v.literal("SplitRequired"),
+      v.null(),
+    ),
+  ),
+});
+
 export const boardListDtoValidator = v.object({
   contractVersion: v.literal(1),
   boards: v.array(boardDtoValidator),
