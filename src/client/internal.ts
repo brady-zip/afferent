@@ -10,6 +10,7 @@ import type {
   BoardDto,
   ParticipationCapabilities,
   PostDto,
+  PostPageDto,
   ReadCapabilities,
   VerifiedActor,
 } from "./contracts.js";
@@ -72,7 +73,11 @@ export function createClientWithScope(
           scopeId,
           boardId: args.boardId,
           viewerAuthenticated: await viewerAuthenticated(options, ctx),
-        })) as unknown as { contractVersion: 1; posts: PostDto[] };
+          paginationOpts: args.paginationOpts ?? {
+            numItems: 50,
+            cursor: null,
+          },
+        })) as unknown as PostPageDto;
       },
       async getPost(ctx, args) {
         const scopeId = await resolveRequiredScope(options.resolveScope, ctx);

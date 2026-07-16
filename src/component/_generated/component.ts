@@ -158,9 +158,38 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
       listPosts: FunctionReference<
         "query",
         "internal",
-        { boardId: string; scopeId: string; viewerAuthenticated: boolean },
         {
+          boardId: string;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          scopeId: string;
+          viewerAuthenticated: boolean;
+        },
+        {
+          continueCursor: string;
           contractVersion: 1;
+          isDone: boolean;
+          page: Array<{
+            author: { avatarUrl?: string; displayName?: string; id: string };
+            board: { id: string; name: string; slug: string };
+            boardId: string;
+            body: string;
+            commentCount: number;
+            contractVersion: 1;
+            id: string;
+            status: { key: "open"; label: "Open" };
+            tags: Array<string>;
+            title: string;
+            totals: { comments: number; votes: number };
+            voteCount: number;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           posts: Array<{
             author: { avatarUrl?: string; displayName?: string; id: string };
             board: { id: string; name: string; slug: string };
@@ -175,6 +204,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             totals: { comments: number; votes: number };
             voteCount: number;
           }>;
+          splitCursor?: string | null;
         },
         Name
       >;
@@ -343,9 +373,38 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         listPosts: FunctionReference<
           "query",
           "internal",
-          { boardId: string; scopeId: string; viewerAuthenticated: boolean },
           {
+            boardId: string;
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+            scopeId: string;
+            viewerAuthenticated: boolean;
+          },
+          {
+            continueCursor: string;
             contractVersion: 1;
+            isDone: boolean;
+            page: Array<{
+              author: { avatarUrl?: string; displayName?: string; id: string };
+              board: { id: string; name: string; slug: string };
+              boardId: string;
+              body: string;
+              commentCount: number;
+              contractVersion: 1;
+              id: string;
+              status: { key: "open"; label: "Open" };
+              tags: Array<string>;
+              title: string;
+              totals: { comments: number; votes: number };
+              voteCount: number;
+            }>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
             posts: Array<{
               author: { avatarUrl?: string; displayName?: string; id: string };
               board: { id: string; name: string; slug: string };
@@ -360,6 +419,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               totals: { comments: number; votes: number };
               voteCount: number;
             }>;
+            splitCursor?: string | null;
           },
           Name
         >;

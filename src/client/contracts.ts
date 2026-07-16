@@ -1,3 +1,4 @@
+import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 
 declare const idBrand: unique symbol;
@@ -38,6 +39,25 @@ export type PostDto = Readonly<{
   tags: string[];
 }>;
 
+export type PaginationOptions = Readonly<{
+  numItems: number;
+  cursor: string | null;
+  endCursor?: string | null;
+  id?: number;
+  maximumRowsRead?: number;
+  maximumBytesRead?: number;
+}>;
+
+export type PostPageDto = Readonly<{
+  contractVersion: 1;
+  page: PostDto[];
+  posts: PostDto[];
+  isDone: boolean;
+  continueCursor: string;
+  splitCursor?: string | null;
+  pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+}>;
+
 export const configureInstallationIntentValidator = v.object({
   readPolicy: v.union(v.literal("public"), v.literal("authenticated")),
   boards: v.array(v.object({ slug: v.string(), name: v.string() })),
@@ -59,6 +79,7 @@ export const withdrawPostIntentValidator = v.object({ postId: v.string() });
 
 export const listPostsIntentValidator = v.object({
   boardId: v.string(),
+  paginationOpts: v.optional(paginationOptsValidator),
 });
 
 export const listBoardsIntentValidator = v.object({});
@@ -103,6 +124,22 @@ export const postListResultValidator = v.object({
   posts: v.array(publicPostDtoValidator),
 });
 
+export const postPageResultValidator = v.object({
+  contractVersion: v.literal(1),
+  page: v.array(publicPostDtoValidator),
+  posts: v.array(publicPostDtoValidator),
+  isDone: v.boolean(),
+  continueCursor: v.string(),
+  splitCursor: v.optional(v.union(v.string(), v.null())),
+  pageStatus: v.optional(
+    v.union(
+      v.literal("SplitRecommended"),
+      v.literal("SplitRequired"),
+      v.null(),
+    ),
+  ),
+});
+
 export const boardListResultValidator = v.object({
   contractVersion: v.literal(1),
   boards: v.array(publicBoardDtoValidator),
@@ -120,11 +157,8 @@ export interface ReadCapabilities<Context> {
   ): Promise<{ contractVersion: 1; boards: BoardDto[] }>;
   listPosts(
     ctx: Context,
-    args: { boardId: BoardId },
-  ): Promise<{
-    contractVersion: 1;
-    posts: PostDto[];
-  }>;
+    args: { boardId: BoardId; paginationOpts?: PaginationOptions },
+  ): Promise<PostPageDto>;
   getPost(ctx: Context, args: { postId: PostId }): Promise<PostDto>;
   countPosts(
     ctx: Context,

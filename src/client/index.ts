@@ -13,7 +13,9 @@ export type {
   BoardDto,
   BoardId,
   ParticipationCapabilities,
+  PaginationOptions,
   PostDto,
+  PostPageDto,
   PostId,
   ReadCapabilities,
   VerifiedActor,
@@ -30,6 +32,7 @@ export {
   listBoardsIntentValidator,
   listPostsIntentValidator,
   postListResultValidator,
+  postPageResultValidator,
   publicPostDtoValidator,
   withdrawPostIntentValidator,
 } from "./contracts.js";

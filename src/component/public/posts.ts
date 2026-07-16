@@ -1,12 +1,15 @@
+import { paginationOptsValidator } from "convex/server";
+import { paginator } from "convex-helpers/server/pagination";
 import { v } from "convex/values";
 
 import { query } from "../_generated/server.js";
 import {
   countDtoValidator,
   postDtoValidator,
-  postListDtoValidator,
+  postPageDtoValidator,
 } from "../validators.js";
-import { authenticationRequired } from "../model/errors.js";
+import schema from "../schema.js";
+import { authenticationRequired, invalidInput } from "../model/errors.js";
 import {
   requireBoardInScope,
   requireInstallation,
@@ -33,13 +36,20 @@ export const listPosts = query({
     scopeId: v.string(),
     boardId: v.string(),
     viewerAuthenticated: v.boolean(),
+    paginationOpts: paginationOptsValidator,
   },
-  returns: postListDtoValidator,
+  returns: postPageDtoValidator,
   handler: async (ctx, args) => {
     requireScope(args.scopeId);
     await requireReadPolicy(ctx, args.scopeId, args.viewerAuthenticated);
     const board = await requireBoardInScope(ctx, args.scopeId, args.boardId);
-    const posts = await ctx.db
+    if (
+      args.paginationOpts.numItems < 1 ||
+      args.paginationOpts.numItems > MAX_POSTS
+    ) {
+      invalidInput(`pagination numItems must be between 1 and ${MAX_POSTS}`);
+    }
+    const result = await paginator(ctx.db, schema)
       .query("posts")
       .withIndex("by_scope_board_state", (q) =>
         q
@@ -48,10 +58,15 @@ export const listPosts = query({
           .eq("lifecycleState", "active"),
       )
       .order("desc")
-      .take(MAX_POSTS);
+      .paginate(args.paginationOpts);
+    const page = await Promise.all(
+      result.page.map((post) => toPostDto(ctx, post)),
+    );
     return {
       contractVersion: 1 as const,
-      posts: await Promise.all(posts.map((post) => toPostDto(ctx, post))),
+      ...result,
+      page,
+      posts: page,
     };
   },
 });
