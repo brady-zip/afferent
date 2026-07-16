@@ -1,23 +1,26 @@
 import { describe, expect, test } from "vitest";
 
+import { createClerkAfferentFixture } from "../../fixtures/auth-clerk/convex/afferent.js";
 import { normalizeClerkIdentity } from "../../src/client/adapters/clerk.js";
 import { normalizeBetterAuthUser } from "../../src/client/adapters/better-auth.js";
-import { runAuthorityConformance } from "./harness.js";
+import { runFactoryAuthorityConformance } from "./harness.js";
 
-describe("Clerk trusted-host adapter", () => {
+describe("Clerk trusted-host factory", () => {
   const identity = {
     issuer: "https://clerk.example.test",
     subject: "user_123",
+    tokenIdentifier: "clerk|user_123",
     name: "Ada",
     pictureUrl: "https://img.example.test/ada.png",
     email: "private@example.test",
     role: "admin",
   };
 
-  runAuthorityConformance({
+  runFactoryAuthorityConformance({
     name: "Clerk",
-    authenticatedActor: async () => normalizeClerkIdentity(identity),
-    anonymousActor: async () => null,
+    identity,
+    expectedDisplayName: "Ada",
+    createClient: createClerkAfferentFixture,
   });
 
   test("namespaces verified issuer and subject and maps only display facts", () => {
@@ -39,7 +42,7 @@ describe("Clerk trusted-host adapter", () => {
 
   test("never links the same raw provider ID across providers", () => {
     const clerk = normalizeClerkIdentity({ issuer: "issuer", subject: "same" });
-    const better = normalizeBetterAuthUser({ id: "same" });
+    const better = normalizeBetterAuthUser({ _id: "same" });
     expect(clerk.externalKey).not.toBe(better.externalKey);
   });
 });

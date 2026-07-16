@@ -1,13 +1,33 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
+import { createConvexAuthAfferentFixture } from "../../fixtures/auth-convex-auth/convex/afferent.js";
 import { normalizeConvexAuthUserId } from "../../src/client/adapters/convex-auth.js";
-import { runAuthorityConformance } from "./harness.js";
+import { runFactoryAuthorityConformance } from "./harness.js";
 
-describe("Convex Auth trusted-host adapter", () => {
-  runAuthorityConformance({
+const getAuthUserId = vi.fn(async (ctx: { auth: { getUserIdentity(): Promise<unknown> } }) => {
+  const identity = (await ctx.auth.getUserIdentity()) as
+    | { subject?: string }
+    | null;
+  return identity?.subject ?? null;
+});
+
+describe("Convex Auth trusted-host factory", () => {
+  runFactoryAuthorityConformance({
     name: "Convex Auth",
-    authenticatedActor: async () => normalizeConvexAuthUserId("user_123"),
-    anonymousActor: async () => null,
+    identity: {
+      issuer: "https://convex-auth.example.test",
+      subject: "user_123",
+      tokenIdentifier: "convex-auth|user_123",
+    },
+    createClient: (component, authorizeAdmin) =>
+      createConvexAuthAfferentFixture(
+        component,
+        authorizeAdmin,
+        getAuthUserId,
+      ),
+    assertTrustedIdentityResolution: () => {
+      expect(getAuthUserId).toHaveBeenCalled();
+    },
   });
 
   test("uses only the stable helper-resolved user ID", () => {
