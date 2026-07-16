@@ -4,16 +4,16 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 01
 current_phase_name: Secure Installable Feedback Board
-status: ready_to_execute
-stopped_at: Phase 01 gap-closure Plans 01-06 through 01-08 ready for execution
-last_updated: "2026-07-16T18:08:20.000Z"
+status: executing
+stopped_at: Completed 01-06-PLAN.md
+last_updated: "2026-07-16T18:38:11.390Z"
 last_activity: 2026-07-16
-last_activity_desc: Phase 01 gap closure planned in 3 additive plans
+last_activity_desc: Completed Plan 01-06 auth fixture compilation
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 8
-  completed_plans: 5
+  completed_plans: 6
   percent: 0
 ---
 
@@ -28,12 +28,12 @@ See: .planning/PROJECT.md (updated 2026-07-14)
 
 ## Current Position
 
-Phase: 01 (Secure Installable Feedback Board) — GAP CLOSURE PLANNED
-Plan: 5 of 8
-Status: Ready to execute Plans 01-06 through 01-08
-Last activity: 2026-07-16 — Added three verified gap-closure plans
+Phase: 01 (Secure Installable Feedback Board) — EXECUTING
+Plan: 7 of 8
+Status: Ready to execute Plan 01-07
+Last activity: 2026-07-16 — Completed Plan 01-06 auth fixture compilation
 
-Progress: [██████░░░░] 63%
+Progress: [████████░░] 75%
 
 ## Performance Metrics
 
@@ -45,25 +45,26 @@ Progress: [██████░░░░] 63%
 
 **By Phase:**
 
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| Phase 01 | 5 | 280 min | 56 min |
+| Phase    | Plans | Total   | Avg/Plan |
+| -------- | ----- | ------- | -------- |
+| Phase 01 | 5     | 280 min | 56 min   |
 
 **Recent Trend:**
 
 - Last 5 plans: 8 min, 148 min, 21 min, 90 min, 13 min
 - Trend: Secure installable feedback board completed and release-shaped
 
-*Updated after each plan completion*
+_Updated after each plan completion_
 
 **Plan History:**
 
-| Plan | Duration | Tasks | Files |
-|------|----------|-------|-------|
-| Phase 01 P02 | 148 min | 2 tasks | 30 files |
-| Phase 01 P03 | 21 min | 3 tasks | 27 files |
-| Phase 01 P04 | 90 min | 3 tasks | 23 files |
-| Phase 01 P05 | 13m | 3 tasks | 16 files |
+| Plan         | Duration | Tasks   | Files    |
+| ------------ | -------- | ------- | -------- |
+| Phase 01 P02 | 148 min  | 2 tasks | 30 files |
+| Phase 01 P03 | 21 min   | 3 tasks | 27 files |
+| Phase 01 P04 | 90 min   | 3 tasks | 23 files |
+| Phase 01 P05 | 13m      | 3 tasks | 16 files |
+| Phase 01 P06 | 4 min    | 2 tasks | 8 files  |
 
 ## Accumulated Context
 
@@ -89,6 +90,9 @@ Recent decisions affecting current work:
 - [Phase 01]: Use domain-tagged 128-bit random tombstones for idempotent anonymization while retaining stable actor relationships. — Identity becomes unlinkable while authored content and participation totals remain coherent.
 - [Phase 01]: Provider packages remain fixture-only dev dependencies; exported adapters are pure normalizers. — Consumers pay no provider runtime dependency unless they select that fixture.
 - [Phase 01]: Verify the types-only ComponentApi export through declarations, consumer codegen, and ATTW rather than runtime import. — The export intentionally has no JavaScript runtime condition.
+- [Phase 01]: Normalize Better Auth users from the session-validated component document _id, never private provider or session fields. — The component user document ID is stable and already session-validated by the trusted host helper.
+- [Phase 01]: Expose full Convex query and mutation contexts only to trusted host resolvers. — Current provider helpers require real server capabilities while browser intent validators remain authority-free.
+- [Phase 01]: Commit generated-style Better Auth component references for offline fixture compilation. — Provider fixture typechecks must not require live credentials or deployment codegen.
 
 ### Pending Todos
 
@@ -104,12 +108,12 @@ None yet.
 
 Items acknowledged and carried forward from initial requirements:
 
-| Category | Item | Status | Deferred At |
-|----------|------|--------|-------------|
-| Product | Custom statuses, moderation queue, exports/imports, delivery adapters, named integrations, AI analysis, analytics, taxonomy, and localization | Tracked in v2 requirements | Initialization |
+| Category | Item                                                                                                                                          | Status                     | Deferred At    |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | -------------- |
+| Product  | Custom statuses, moderation queue, exports/imports, delivery adapters, named integrations, AI analysis, analytics, taxonomy, and localization | Tracked in v2 requirements | Initialization |
 
 ## Session Continuity
 
-Last session: 2026-07-16T18:08:20.000Z
-Stopped at: Phase 01 gap-closure Plans 01-06 through 01-08 ready for execution
+Last session: 2026-07-16T18:37:54.031Z
+Stopped at: Completed 01-06-PLAN.md
 Resume file: None
