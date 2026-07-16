@@ -122,6 +122,33 @@ describe("status-derived public roadmap", () => {
         createdAt: now - 10_000,
         currentStatusSince: now - 1000,
       });
+      const plannedTieNewerCreated = await insert({
+        scopeId: "scope:alpha",
+        boardId: alphaInstall.boards[0].id,
+        actorId: alphaActor,
+        title: "Planned tie newer creation",
+        statusKey: "planned",
+        createdAt: now - 4000,
+        currentStatusSince: now - 3000,
+      });
+      const plannedTieA = await insert({
+        scopeId: "scope:alpha",
+        boardId: alphaInstall.boards[0].id,
+        actorId: alphaActor,
+        title: "Planned opaque tie A",
+        statusKey: "planned",
+        createdAt: now - 5000,
+        currentStatusSince: now - 3000,
+      });
+      const plannedTieB = await insert({
+        scopeId: "scope:alpha",
+        boardId: alphaInstall.boards[0].id,
+        actorId: alphaActor,
+        title: "Planned opaque tie B",
+        statusKey: "planned",
+        createdAt: now - 5000,
+        currentStatusSince: now - 3000,
+      });
       const inProgress = await insert({
         scopeId: "scope:alpha",
         boardId: alphaInstall.boards[1].id,
@@ -209,6 +236,9 @@ describe("status-derived public roadmap", () => {
       return {
         plannedOlder,
         plannedNewer,
+        plannedTieNewerCreated,
+        plannedTieA,
+        plannedTieB,
         inProgress,
         recentComplete,
         betaPlanned,
@@ -227,15 +257,21 @@ describe("status-derived public roadmap", () => {
     const plannedTail = await alpha.read.listRoadmapGroup(ctx, {
       status: "planned",
       paginationOpts: {
-        numItems: 5,
+        numItems: 10,
         cursor: firstPlanned.continueCursor,
         ...(firstPlanned.splitCursor === undefined
           ? {}
           : { endCursor: firstPlanned.splitCursor }),
       },
     });
+    const opaqueTieIds = [
+      String(seeded.plannedTieA),
+      String(seeded.plannedTieB),
+    ].sort((left, right) => right.localeCompare(left));
     expect(plannedTail.page.map((item: any) => item.id)).toEqual([
       String(seeded.plannedOlder),
+      String(seeded.plannedTieNewerCreated),
+      ...opaqueTieIds,
     ]);
 
     const inProgress = await alpha.read.listRoadmapGroup(ctx, {
