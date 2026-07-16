@@ -89,9 +89,9 @@ describe("author-owned post lifecycle", () => {
     });
     const activePosts = await client.read.listPosts(ctx as never, { boardId });
     expect(activePosts.posts).toEqual([]);
-    expect(await client.read.getPost(ctx as never, { postId: created.id })).toMatchObject(
-      { id: created.id, title: "Edited title" },
-    );
+    expect(
+      await client.read.getPost(ctx as never, { postId: created.id }),
+    ).toMatchObject({ id: created.id, title: "Edited title" });
 
     const persisted = await backend.run(async (runCtx) => {
       const actors = await runCtx.db
@@ -111,5 +111,122 @@ describe("author-owned post lifecycle", () => {
       displayName: "Refreshed Author",
     });
     expect(persisted.post).toMatchObject({ lifecycleState: "withdrawn" });
+  });
+
+  test("reports exact and truncated board counts without changing post totals", async () => {
+    const backend = convexTest(schema, modules);
+    const client = createAfferentClient(api as unknown as ComponentApi, {
+      resolveActor: async () => ({ externalKey: "fixture:count-author" }),
+      authorizeAdmin: async () => true,
+      isAuthenticated: async () => true,
+    });
+    const ctx = {
+      auth: { getUserIdentity: async () => null },
+      runMutation: (
+        reference: Parameters<typeof backend.mutation>[0],
+        args: object,
+      ) => backend.mutation(reference, args),
+      runQuery: (
+        reference: Parameters<typeof backend.query>[0],
+        args: object,
+      ) => backend.query(reference, args),
+    };
+    const configured = await client.admin.configureInstallation(ctx as never, {
+      readPolicy: "public",
+      boards: [{ slug: "feedback", name: "Feedback" }],
+    });
+    const boardId = configured.boards[0].id;
+
+    expect(await client.read.countPosts(ctx as never, { boardId })).toEqual({
+      contractVersion: 1,
+      count: 0,
+      hasMore: false,
+    });
+
+    const exactPostId = await backend.run(async (runCtx) => {
+      const actorId = await runCtx.db.insert("actors", {
+        scopeId: "afferent:single-product:v1",
+        externalKey: "fixture:seeded-count-author",
+      });
+      let firstPostId;
+      for (let index = 0; index < 50; index += 1) {
+        const postId = await runCtx.db.insert("posts", {
+          scopeId: "afferent:single-product:v1",
+          boardId: boardId as never,
+          actorId,
+          title: `Post ${index}`,
+          body: "Count boundary",
+          lifecycleState: "active",
+          statusKey: "open",
+          voteCount: index === 0 ? 7 : 0,
+          commentCount: index === 0 ? 9 : 0,
+        });
+        firstPostId ??= postId;
+      }
+      await runCtx.db.insert("posts", {
+        scopeId: "afferent:single-product:v1",
+        boardId: boardId as never,
+        actorId,
+        title: "Withdrawn",
+        body: "Not counted",
+        lifecycleState: "withdrawn",
+        statusKey: "open",
+        voteCount: 0,
+        commentCount: 0,
+      });
+      await runCtx.db.insert("posts", {
+        scopeId: "another-scope",
+        boardId: boardId as never,
+        actorId,
+        title: "Another scope",
+        body: "Not counted",
+        lifecycleState: "active",
+        statusKey: "open",
+        voteCount: 0,
+        commentCount: 0,
+      });
+      return firstPostId!;
+    });
+
+    expect(await client.read.countPosts(ctx as never, { boardId })).toEqual({
+      contractVersion: 1,
+      count: 50,
+      hasMore: false,
+    });
+    expect(
+      await client.read.getPost(ctx as never, { postId: exactPostId as never }),
+    ).toMatchObject({
+      voteCount: 7,
+      commentCount: 9,
+      totals: { votes: 7, comments: 9 },
+    });
+
+    await backend.run(async (runCtx) => {
+      const actor = await runCtx.db
+        .query("actors")
+        .withIndex("by_scope_external_key", (q) =>
+          q
+            .eq("scopeId", "afferent:single-product:v1")
+            .eq("externalKey", "fixture:seeded-count-author"),
+        )
+        .unique();
+      await runCtx.db.insert("posts", {
+        scopeId: "afferent:single-product:v1",
+        boardId: boardId as never,
+        actorId: actor!._id,
+        title: "Sentinel post",
+        body: "Signals truncation",
+        lifecycleState: "active",
+        statusKey: "open",
+        voteCount: 0,
+        commentCount: 0,
+      });
+    });
+
+    expect(await client.read.countPosts(ctx as never, { boardId })).toEqual({
+      contractVersion: 1,
+      count: 50,
+      hasMore: true,
+    });
   });
 });

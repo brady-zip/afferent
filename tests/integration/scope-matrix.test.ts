@@ -135,7 +135,7 @@ describe("server-derived scope isolation", () => {
     expect(alphaPosts.posts).toMatchObject([{ title: "Alpha only" }]);
     expect(
       await alpha.read.countPosts(ctx as never, { boardId: alphaBoard.id }),
-    ).toEqual({ contractVersion: 1, count: 1 });
+    ).toEqual({ contractVersion: 1, count: 1, hasMore: false });
 
     await expect(
       beta.read.getPost(ctx as never, { postId: alphaPost.id }),
@@ -353,6 +353,7 @@ describe("server-derived scope isolation", () => {
     ).toEqual({
       contractVersion: 1,
       count: 1,
+      hasMore: false,
     });
     expect(
       await fixed.read.listComments(ctx as never, { postId: fixedPost.id }),

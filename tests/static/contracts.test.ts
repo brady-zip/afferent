@@ -9,6 +9,7 @@ import {
   addCommentIntentValidator,
   anonymizeActorIntentValidator,
   createPostIntentValidator,
+  countResultValidator,
   editPostIntentValidator,
   publicPostDtoValidator,
   publicCommentDtoValidator,
@@ -113,6 +114,14 @@ describe("public contract privacy", () => {
     expect(
       Object.keys(publicPostDtoValidator.fields.author.fields).sort(),
     ).toEqual(["avatarUrl", "displayName", "id"]);
+  });
+
+  test("makes bounded post counts explicit in the public result validator", () => {
+    expect(Object.keys(countResultValidator.fields).sort()).toEqual([
+      "contractVersion",
+      "count",
+      "hasMore",
+    ]);
   });
 
   test("keeps comment DTOs flat and provider-neutral", () => {
