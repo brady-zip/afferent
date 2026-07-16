@@ -246,5 +246,28 @@ describe("server-derived scope isolation", () => {
     expect(
       await beta.read.getPost(ctx as never, { postId: betaPost.id }),
     ).toMatchObject({ commentCount: 0, totals: { comments: 0 } });
+
+    await expect(
+      beta.admin.anonymizeActor(ctx as never, {
+        actorId: alphaPost.author.id,
+      }),
+    ).rejects.toMatchObject({
+      data: { code: "NOT_FOUND", resource: "actor" },
+    });
+    await expect(
+      beta.admin.anonymizeActor(ctx as never, {
+        actorId: "j57fakeopaqueid" as typeof alphaPost.author.id,
+      }),
+    ).rejects.toMatchObject({
+      data: { code: "NOT_FOUND", resource: "actor" },
+    });
+    expect(
+      await alpha.admin.anonymizeActor(ctx as never, {
+        actorId: alphaPost.author.id,
+      }),
+    ).toEqual({ id: alphaPost.author.id, displayName: "Anonymous" });
+    expect(
+      await beta.read.getPost(ctx as never, { postId: betaPost.id }),
+    ).toMatchObject({ author: { displayName: "fixture:beta" } });
   });
 });
