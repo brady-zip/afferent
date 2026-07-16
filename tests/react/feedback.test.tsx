@@ -1,7 +1,9 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-const usePaginatedQuery = vi.fn();
+const { usePaginatedQuery } = vi.hoisted(() => ({
+  usePaginatedQuery: vi.fn(),
+}));
 
 vi.mock("convex-helpers/react", () => ({ usePaginatedQuery }));
 
