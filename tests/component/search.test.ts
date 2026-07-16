@@ -63,9 +63,7 @@ describe("bounded feedback search", () => {
       body: "Download results as CSV",
     });
 
-    const result = await backend.query(api["public/search"].searchFeedback, {
-      scopeId: "scope:alpha",
-      viewerAuthenticated: false,
+    const result = await alpha.read.searchFeedback(ctx as never, {
       query: "export feedback",
     });
     expect(result).toMatchObject({ contractVersion: 1, hasMore: true });
@@ -100,23 +98,16 @@ describe("bounded feedback search", () => {
       });
       return { postId: String(postId), tagId: String(tagId) };
     });
-    const tagResult = await backend.query(api["public/search"].searchFeedback, {
-      scopeId: "scope:alpha",
-      viewerAuthenticated: false,
+    const tagResult = await alpha.read.searchFeedback(ctx as never, {
       query: "export feedback",
       tagId: tagged.tagId,
     });
     expect(tagResult.items.map(({ id }) => id)).toEqual([tagged.postId]);
 
-    const boardResult = await backend.query(
-      api["public/search"].searchFeedback,
-      {
-        scopeId: "scope:alpha",
-        viewerAuthenticated: false,
-        query: "export feedback",
-        boardId: alphaInstall.boards[1].id,
-      },
-    );
+    const boardResult = await alpha.read.searchFeedback(ctx as never, {
+      query: "export feedback",
+      boardId: alphaInstall.boards[1].id,
+    });
     expect(
       boardResult.items.every(
         (item) => item.board.id === alphaInstall.boards[1].id,
@@ -147,15 +138,10 @@ describe("bounded feedback search", () => {
       });
     }
 
-    const result = await backend.query(
-      api["public/search"].suggestSimilarPosts,
-      {
-        scopeId: "scope:similar",
-        viewerAuthenticated: false,
-        title: "Export feedback CSV",
-        body: "Download reports",
-      },
-    );
+    const result = await alpha.read.suggestSimilarPosts(ctx as never, {
+      title: "Export feedback CSV",
+      body: "Download reports",
+    });
     expect(result.items.map(({ title }) => title)).toEqual([
       "CSV feedback export",
       "Export feedback reports",

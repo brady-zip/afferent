@@ -7,6 +7,8 @@ import type {
   PaginationOptions,
   PostStatusKey,
   TagId,
+  SearchResultDto,
+  SimilarPostResultDto,
 } from "../client/contracts.js";
 
 export type FeedbackFeedQueryReference = FunctionReference<
@@ -22,8 +24,29 @@ export type FeedbackFeedQueryReference = FunctionReference<
   FeedbackPageDto
 >;
 
+export type FeedbackSearchQueryReference = FunctionReference<
+  "query",
+  "public",
+  {
+    query: string;
+    boardId?: BoardId;
+    status?: PostStatusKey;
+    tagId?: TagId;
+  },
+  SearchResultDto
+>;
+
+export type SimilarPostsQueryReference = FunctionReference<
+  "query",
+  "public",
+  { title: string; body?: string; limit?: number },
+  SimilarPostResultDto
+>;
+
 export interface PublicBindings {
   listFeedback: FeedbackFeedQueryReference;
+  searchFeedback?: FeedbackSearchQueryReference;
+  suggestSimilarPosts?: SimilarPostsQueryReference;
 }
 
 export interface AfferentBindings {

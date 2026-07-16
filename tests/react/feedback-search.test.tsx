@@ -41,7 +41,11 @@ describe("bounded discovery hooks", () => {
       hasMore: false,
     });
     expect(
-      mapBoundedDiscoveryState({ contractVersion: 1, items: [], hasMore: false }),
+      mapBoundedDiscoveryState({
+        contractVersion: 1,
+        items: [],
+        hasMore: false,
+      }),
     ).toMatchObject({ status: "empty", items: [], hasMore: false });
     expect(
       mapBoundedDiscoveryState({
@@ -50,6 +54,12 @@ describe("bounded discovery hooks", () => {
         hasMore: true,
       }),
     ).toMatchObject({ status: "ready", hasMore: true });
+    expect(
+      mapBoundedDiscoveryState(new Error("network unavailable")),
+    ).toMatchObject({
+      status: "error",
+      error: new Error("network unavailable"),
+    });
   });
 
   test("uses injected bounded refs without fabricating pagination controls", () => {
@@ -95,11 +105,15 @@ describe("bounded discovery hooks", () => {
       public: { listFeedback: bindings.public.listFeedback },
     } as unknown as AfferentBindings;
     const markup = renderToStaticMarkup(
-      <AfferentProvider bindings={incomplete} auth={{ status: "unauthenticated" }}>
+      <AfferentProvider
+        bindings={incomplete}
+        auth={{ status: "unauthenticated" }}
+      >
         <Probe />
       </AfferentProvider>,
     );
     expect(markup).toContain("unsupported:unsupported");
-    expect(useQuery).not.toHaveBeenCalled();
+    expect(useQuery).toHaveBeenNthCalledWith(1, expect.anything(), "skip");
+    expect(useQuery).toHaveBeenNthCalledWith(2, expect.anything(), "skip");
   });
 });

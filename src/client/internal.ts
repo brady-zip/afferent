@@ -12,6 +12,8 @@ import type {
   PostDto,
   PostPageDto,
   ReadCapabilities,
+  SearchResultDto,
+  SimilarPostResultDto,
   VerifiedActor,
 } from "./contracts.js";
 
@@ -84,6 +86,30 @@ export function createClientWithScope(
             cursor: null,
           },
         })) as unknown as FeedbackPageDto;
+      },
+      async searchFeedback(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        return (await ctx.runQuery(component.public.search.searchFeedback, {
+          scopeId,
+          viewerAuthenticated: await viewerAuthenticated(options, ctx),
+          query: args.query,
+          ...(args.boardId === undefined ? {} : { boardId: args.boardId }),
+          ...(args.status === undefined ? {} : { status: args.status }),
+          ...(args.tagId === undefined ? {} : { tagId: args.tagId }),
+        })) as unknown as SearchResultDto;
+      },
+      async suggestSimilarPosts(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        return (await ctx.runQuery(
+          component.public.search.suggestSimilarPosts,
+          {
+            scopeId,
+            viewerAuthenticated: await viewerAuthenticated(options, ctx),
+            title: args.title,
+            ...(args.body === undefined ? {} : { body: args.body }),
+            ...(args.limit === undefined ? {} : { limit: args.limit }),
+          },
+        )) as unknown as SimilarPostResultDto;
       },
       async getPost(ctx, args) {
         const scopeId = await resolveRequiredScope(options.resolveScope, ctx);

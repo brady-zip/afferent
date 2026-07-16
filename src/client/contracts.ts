@@ -14,6 +14,35 @@ export type PostStatusKey =
   "open" | "under_review" | "planned" | "in_progress" | "complete" | "closed";
 export type FeedbackOrder = "newest" | "top" | "trending";
 
+export type DiscoveryPostDto = Readonly<{
+  contractVersion: 1;
+  id: PostId;
+  title: string;
+  board: BoardDto;
+  status: Readonly<{
+    key: PostStatusKey;
+    label:
+      | "Open"
+      | "Under Review"
+      | "Planned"
+      | "In Progress"
+      | "Complete"
+      | "Closed";
+  }>;
+}>;
+
+export type SearchResultDto = Readonly<{
+  contractVersion: 1;
+  items: DiscoveryPostDto[];
+  hasMore: boolean;
+}>;
+
+export type SimilarPostResultDto = Readonly<{
+  contractVersion: 1;
+  items: DiscoveryPostDto[];
+  hasMore: boolean;
+}>;
+
 export type VerifiedActor = Readonly<{
   externalKey: string;
   displayName?: string;
@@ -184,6 +213,28 @@ export const listFeedbackIntentValidator = v.object({
   paginationOpts: v.optional(paginationOptsValidator),
 });
 
+export const searchFeedbackIntentValidator = v.object({
+  query: v.string(),
+  boardId: v.optional(v.string()),
+  status: v.optional(
+    v.union(
+      v.literal("open"),
+      v.literal("under_review"),
+      v.literal("planned"),
+      v.literal("in_progress"),
+      v.literal("complete"),
+      v.literal("closed"),
+    ),
+  ),
+  tagId: v.optional(v.string()),
+});
+
+export const suggestSimilarPostsIntentValidator = v.object({
+  title: v.string(),
+  body: v.optional(v.string()),
+  limit: v.optional(v.number()),
+});
+
 export const listBoardsIntentValidator = v.object({});
 
 export const getPostIntentValidator = v.object({ postId: v.string() });
@@ -323,6 +374,43 @@ export const feedbackPageResultValidator = v.object({
   ),
 });
 
+export const discoveryPostResultValidator = v.object({
+  contractVersion: v.literal(1),
+  id: v.string(),
+  title: v.string(),
+  board: publicBoardDtoValidator,
+  status: v.object({
+    key: v.union(
+      v.literal("open"),
+      v.literal("under_review"),
+      v.literal("planned"),
+      v.literal("in_progress"),
+      v.literal("complete"),
+      v.literal("closed"),
+    ),
+    label: v.union(
+      v.literal("Open"),
+      v.literal("Under Review"),
+      v.literal("Planned"),
+      v.literal("In Progress"),
+      v.literal("Complete"),
+      v.literal("Closed"),
+    ),
+  }),
+});
+
+export const searchFeedbackResultValidator = v.object({
+  contractVersion: v.literal(1),
+  items: v.array(discoveryPostResultValidator),
+  hasMore: v.boolean(),
+});
+
+export const similarPostResultValidator = v.object({
+  contractVersion: v.literal(1),
+  items: v.array(discoveryPostResultValidator),
+  hasMore: v.boolean(),
+});
+
 export const boardListResultValidator = v.object({
   contractVersion: v.literal(1),
   boards: v.array(publicBoardDtoValidator),
@@ -353,6 +441,19 @@ export interface ReadCapabilities<Context> {
       paginationOpts?: PaginationOptions;
     },
   ): Promise<FeedbackPageDto>;
+  searchFeedback(
+    ctx: Context,
+    args: {
+      query: string;
+      boardId?: BoardId;
+      status?: PostStatusKey;
+      tagId?: TagId;
+    },
+  ): Promise<SearchResultDto>;
+  suggestSimilarPosts(
+    ctx: Context,
+    args: { title: string; body?: string; limit?: number },
+  ): Promise<SimilarPostResultDto>;
   getPost(ctx: Context, args: { postId: PostId }): Promise<PostDto>;
   countPosts(ctx: Context, args: { boardId: BoardId }): Promise<PostCountDto>;
   listComments(
