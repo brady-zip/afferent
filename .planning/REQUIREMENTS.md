@@ -9,23 +9,23 @@ Requirements for the first production-ready public release. Roadmap creation wil
 
 ### Access and Identity
 
-- [ ] **ACCS-01**: An installer can configure one installation-wide read policy that makes Afferent content either public or restricted to authenticated users.
-- [ ] **ACCS-02**: Only users authenticated by the host application can create posts, vote, or comment.
-- [ ] **ACCS-03**: The host application can map a verified auth-provider identity to a stable provider-neutral Afferent actor.
+- [x] **ACCS-01**: An installer can configure one installation-wide read policy that makes Afferent content either public or restricted to authenticated users.
+- [x] **ACCS-02**: Only users authenticated by the host application can create posts, vote, or comment.
+- [x] **ACCS-03**: The host application can map a verified auth-provider identity to a stable provider-neutral Afferent actor.
 - [ ] **ACCS-04**: The host application decides whether an authenticated actor can perform Afferent admin operations.
 - [ ] **ACCS-05**: Afferent rejects participation and admin operations when the host wrapper does not supply the required verified actor or permission.
-- [ ] **ACCS-06**: A normal Afferent installation represents exactly one product while supporting multiple feedback boards.
+- [x] **ACCS-06**: A normal Afferent installation represents exactly one product while supporting multiple feedback boards.
 
 ### Feedback Participation
 
-- [ ] **FDBK-01**: A visitor can browse posts on every board permitted by the installation-wide read policy.
-- [ ] **FDBK-02**: An authenticated user can create a feedback post on a board.
+- [x] **FDBK-01**: A visitor can browse posts on every board permitted by the installation-wide read policy.
+- [x] **FDBK-02**: An authenticated user can create a feedback post on a board.
 - [ ] **FDBK-03**: An authenticated author can edit their own feedback post.
 - [ ] **FDBK-04**: An authenticated author can withdraw their own feedback post without destroying its history.
 - [ ] **FDBK-05**: An authenticated user can add or remove their one vote on a feedback post without creating duplicate vote memberships.
 - [ ] **FDBK-06**: An authenticated user can add a flat comment to a feedback post.
 - [ ] **FDBK-07**: An authenticated user can reply to a specific comment through a lightweight reply reference without creating unbounded comment nesting.
-- [ ] **FDBK-08**: A visitor can see stable author attribution, vote totals, comment totals, status, board, and tags wherever a visible post is presented.
+- [x] **FDBK-08**: A visitor can see stable author attribution, vote totals, comment totals, status, board, and tags wherever a visible post is presented.
 
 ### Discovery and Duplicates
 
@@ -79,12 +79,12 @@ Requirements for the first production-ready public release. Roadmap creation wil
 ### Component and Auth Integration
 
 - [ ] **COMP-01**: A developer can install Afferent from a published npm package as a reusable Convex component.
-- [ ] **COMP-02**: A developer can mount typed public-read, authenticated-participation, and authorized-admin wrapper APIs in the host Convex application.
-- [ ] **COMP-03**: Public component contracts use stable provider-neutral DTOs and opaque string identifiers rather than exposing component-internal documents or provider records.
+- [x] **COMP-02**: A developer can mount typed public-read, authenticated-participation, and authorized-admin wrapper APIs in the host Convex application.
+- [x] **COMP-03**: Public component contracts use stable provider-neutral DTOs and opaque string identifiers rather than exposing component-internal documents or provider records.
 - [ ] **COMP-04**: A developer can integrate Afferent with Convex Auth using a documented adapter or recipe verified by an integration fixture.
 - [ ] **COMP-05**: A developer can integrate Afferent with Clerk using a documented adapter or recipe verified by an integration fixture.
 - [ ] **COMP-06**: A developer can integrate Afferent with the Convex Better Auth component using a documented adapter or recipe verified by an integration fixture.
-- [ ] **COMP-07**: Auth integration code derives actor identity and admin permission inside trusted host functions rather than accepting `userId`, `isAdmin`, or demo scope from browser arguments.
+- [x] **COMP-07**: Auth integration code derives actor identity and admin permission inside trusted host functions rather than accepting `userId`, `isAdmin`, or demo scope from browser arguments.
 
 ### React and Source-Owned UI
 
@@ -177,20 +177,20 @@ Every v1 requirement maps to exactly one roadmap phase.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ACCS-01 | Phase 1 | Pending |
-| ACCS-02 | Phase 1 | Pending |
-| ACCS-03 | Phase 1 | Pending |
+| ACCS-01 | Phase 1 | Complete |
+| ACCS-02 | Phase 1 | Complete |
+| ACCS-03 | Phase 1 | Complete |
 | ACCS-04 | Phase 1 | Pending |
 | ACCS-05 | Phase 1 | Pending |
-| ACCS-06 | Phase 1 | Pending |
-| FDBK-01 | Phase 1 | Pending |
-| FDBK-02 | Phase 1 | Pending |
+| ACCS-06 | Phase 1 | Complete |
+| FDBK-01 | Phase 1 | Complete |
+| FDBK-02 | Phase 1 | Complete |
 | FDBK-03 | Phase 1 | Pending |
 | FDBK-04 | Phase 1 | Pending |
 | FDBK-05 | Phase 1 | Pending |
 | FDBK-06 | Phase 1 | Pending |
 | FDBK-07 | Phase 1 | Pending |
-| FDBK-08 | Phase 1 | Pending |
+| FDBK-08 | Phase 1 | Complete |
 | DISC-01 | Phase 2 | Pending |
 | DISC-02 | Phase 2 | Pending |
 | DISC-03 | Phase 2 | Pending |
@@ -226,12 +226,12 @@ Every v1 requirement maps to exactly one roadmap phase.
 | NOTF-06 | Phase 2 | Pending |
 | NOTF-07 | Phase 2 | Pending |
 | COMP-01 | Phase 4 | Pending |
-| COMP-02 | Phase 1 | Pending |
-| COMP-03 | Phase 1 | Pending |
+| COMP-02 | Phase 1 | Complete |
+| COMP-03 | Phase 1 | Complete |
 | COMP-04 | Phase 1 | Pending |
 | COMP-05 | Phase 1 | Pending |
 | COMP-06 | Phase 1 | Pending |
-| COMP-07 | Phase 1 | Pending |
+| COMP-07 | Phase 1 | Complete |
 | UI-01 | Phase 2 | Pending |
 | UI-02 | Phase 2 | Pending |
 | UI-03 | Phase 2 | Pending |
