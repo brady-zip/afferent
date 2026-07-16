@@ -91,7 +91,47 @@ Afferent reaches its first public release through four coarse vertical slices. T
 4. Users can manage subscriptions, receive and read the defined in-app status, admin-reply, comment-reply, mention, and changelog notifications, while hosts can consume the same events through a typed vendor-neutral delivery contract.
 5. A React developer can exercise every public, participation, roadmap, changelog, notification, and admin workflow through injected host function references with explicit loading, pagination, pending, empty, and error states, backed by automated invariant and security tests.
 
-**Plans:** TBD
+**Plans:** 0/10 plans executed
+**Wave 1**
+
+- [ ] 02-01-PLAN.md
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 02-02-PLAN.md
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 02-03-PLAN.md
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [ ] 02-04-PLAN.md
+
+**Wave 5** *(blocked on Wave 4 completion)*
+
+- [ ] 02-06-PLAN.md
+
+**Wave 6** *(blocked on Wave 5 completion)*
+
+- [ ] 02-07-PLAN.md
+
+**Wave 7** *(blocked on Wave 6 completion)*
+
+- [ ] 02-08-PLAN.md
+
+**Wave 8** *(blocked on Wave 7 completion)*
+
+- [ ] 02-05-PLAN.md
+
+**Wave 9** *(blocked on Wave 8 completion)*
+
+- [ ] 02-09-PLAN.md
+
+**Wave 10** *(blocked on Wave 9 completion)*
+
+- [ ] 02-10-PLAN.md
+
 **UI hint**: yes
 
 ### Phase 3: Source-Owned Product Interface
@@ -135,7 +175,7 @@ Phases execute sequentially: 1 -> 2 -> 3 -> 4
 | Phase                                      | Plans Complete | Status      | Completed  |
 | ------------------------------------------ | -------------- | ----------- | ---------- |
 | 1. Secure Installable Feedback Board       | 8/8            | Complete    | 2026-07-16 |
-| 2. Complete Feedback-to-Changelog Workflow | 0/TBD          | Not started | -          |
+| 2. Complete Feedback-to-Changelog Workflow | 0/10 | Planned    |  |
 | 3. Source-Owned Product Interface          | 0/TBD          | Not started | -          |
 | 4. Hosted Production Release               | 0/TBD          | Not started | -          |
 
