@@ -172,5 +172,42 @@ describe("server-derived scope isolation", () => {
     ).rejects.toMatchObject({
       data: { code: "NOT_FOUND", resource: "post" },
     });
+
+    await expect(
+      beta.participation.setVote(ctx as never, {
+        postId: alphaPost.id,
+        desired: true,
+      }),
+    ).rejects.toMatchObject({
+      data: { code: "NOT_FOUND", resource: "post" },
+    });
+    expect(
+      await alpha.participation.setVote(ctx as never, {
+        postId: alphaPost.id,
+        desired: true,
+      }),
+    ).toMatchObject({ voteCount: 1, totals: { votes: 1 } });
+    expect(
+      await alpha.participation.setVote(ctx as never, {
+        postId: alphaPost.id,
+        desired: false,
+      }),
+    ).toMatchObject({ voteCount: 0, totals: { votes: 0 } });
+
+    const scopedVotes = await backend.run(async (runCtx) => ({
+      alpha: await runCtx.db
+        .query("votes")
+        .withIndex("by_scope_post_actor", (q) =>
+          q.eq("scopeId", "scope-alpha"),
+        )
+        .collect(),
+      beta: await runCtx.db
+        .query("votes")
+        .withIndex("by_scope_post_actor", (q) =>
+          q.eq("scopeId", "scope-beta"),
+        )
+        .collect(),
+    }));
+    expect(scopedVotes).toEqual({ alpha: [], beta: [] });
   });
 });
