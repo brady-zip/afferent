@@ -11,6 +11,7 @@ import type {
   CommentDto,
   CommentPageDto,
   ParticipationCapabilities,
+  PostCountDto,
   PostDto,
   PostPageDto,
   ReadCapabilities,
@@ -86,7 +87,7 @@ export function createClientWithScope(
           scopeId,
           boardId: args.boardId,
           viewerAuthenticated: await viewerAuthenticated(options, ctx),
-        })) as unknown as { contractVersion: 1; count: number };
+        })) as unknown as PostCountDto;
       },
       async listComments(ctx, args) {
         const scopeId = await resolveRequiredScope(options.resolveScope, ctx);

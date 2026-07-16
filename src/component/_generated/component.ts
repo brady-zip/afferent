@@ -102,7 +102,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         "query",
         "internal",
         { boardId: string; scopeId: string; viewerAuthenticated: boolean },
-        { contractVersion: 1; count: number },
+        { contractVersion: 1; count: number; hasMore: boolean },
         Name
       >;
       createPost: FunctionReference<
@@ -557,7 +557,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           "query",
           "internal",
           { boardId: string; scopeId: string; viewerAuthenticated: boolean },
-          { contractVersion: 1; count: number },
+          { contractVersion: 1; count: number; hasMore: boolean },
           Name
         >;
         getPost: FunctionReference<

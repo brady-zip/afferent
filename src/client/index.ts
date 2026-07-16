@@ -11,6 +11,7 @@ export type {
   CommentPageDto,
   ParticipationCapabilities,
   PaginationOptions,
+  PostCountDto,
   PostDto,
   PostPageDto,
   PostId,

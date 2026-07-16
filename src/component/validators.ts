@@ -115,4 +115,5 @@ export const boardListDtoValidator = v.object({
 export const countDtoValidator = v.object({
   contractVersion: v.literal(1),
   count: v.number(),
+  hasMore: v.boolean(),
 });

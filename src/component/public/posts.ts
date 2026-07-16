@@ -106,6 +106,10 @@ export const countPosts = query({
           .eq("lifecycleState", "active"),
       )
       .take(MAX_POSTS + 1);
-    return { contractVersion: 1 as const, count: posts.length };
+    return {
+      contractVersion: 1 as const,
+      count: Math.min(posts.length, MAX_POSTS),
+      hasMore: posts.length > MAX_POSTS,
+    };
   },
 });

@@ -59,6 +59,12 @@ export type PostPageDto = Readonly<{
   pageStatus?: "SplitRecommended" | "SplitRequired" | null;
 }>;
 
+export type PostCountDto = Readonly<{
+  contractVersion: 1;
+  count: number;
+  hasMore: boolean;
+}>;
+
 export type CommentDto = Readonly<{
   contractVersion: 1;
   id: CommentId;
@@ -215,6 +221,7 @@ export const boardListResultValidator = v.object({
 export const countResultValidator = v.object({
   contractVersion: v.literal(1),
   count: v.number(),
+  hasMore: v.boolean(),
 });
 
 export interface ReadCapabilities<Context> {
@@ -227,10 +234,7 @@ export interface ReadCapabilities<Context> {
     args: { boardId: BoardId; paginationOpts?: PaginationOptions },
   ): Promise<PostPageDto>;
   getPost(ctx: Context, args: { postId: PostId }): Promise<PostDto>;
-  countPosts(
-    ctx: Context,
-    args: { boardId: BoardId },
-  ): Promise<{ contractVersion: 1; count: number }>;
+  countPosts(ctx: Context, args: { boardId: BoardId }): Promise<PostCountDto>;
   listComments(
     ctx: Context,
     args: { postId: PostId; paginationOpts?: PaginationOptions },
