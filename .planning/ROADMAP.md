@@ -65,7 +65,7 @@ Afferent reaches its first public release through four coarse vertical slices. T
 
 **Wave 6** _(blocked on Wave 5 completion)_
 
-- [ ] `01-06-PLAN.md` — Make all auth fixtures independently compilable and repair the Better Auth helper boundary.
+- [x] `01-06-PLAN.md` — Make all auth fixtures independently compilable and repair the Better Auth helper boundary. (completed 2026-07-16)
 
 **Wave 7** _(blocked on Wave 6 completion)_
 
@@ -73,7 +73,7 @@ Afferent reaches its first public release through four coarse vertical slices. T
 
 **Wave 8** _(blocked on Wave 7 completion)_
 
-- [ ] `01-08-PLAN.md` — Lock additive board configuration, honest bounded counts, and required Phase 1 release gates.
+- [x] `01-08-PLAN.md` — Lock additive board configuration, honest bounded counts, and required Phase 1 release gates. (completed 2026-07-16)
 
 **UI hint**: yes
 

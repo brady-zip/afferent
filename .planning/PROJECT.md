@@ -17,19 +17,22 @@ SaaS teams can add deeply integrated product feedback to an existing Convex appl
 - **Success metric**: A team can install Afferent into an existing Convex app, connect its existing auth provider, restyle the supplied UI, and run the complete feedback-to-roadmap-to-changelog workflow
 - **Strategy notes**: Native Convex ownership is the primary promise; complete restylability and avoiding another feedback SaaS subscription are supporting benefits
 
+## Current State
+
+Phase 1, Secure Installable Feedback Board, is complete and verified. The packed Convex component now supports provider-neutral trusted-host integration for Convex Auth, Clerk, and Better Auth; secure multi-board feedback; voting and flat discussion; actor anonymization; and clean-consumer release gates. Phase 2 is next: complete the feedback-to-roadmap-to-changelog workflow and expose it through the headless React contract.
+
 ## Requirements
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Developers can install Afferent as a reusable Convex component distributed through npm. — Validated in Phase 1: Secure Installable Feedback Board.
+- [x] A host application can connect Afferent to Convex Auth, Clerk, or the Convex Better Auth component without coupling Afferent's internal data model to a specific provider. — Validated in Phase 1.
+- [x] The host application owns authentication and admin authorization, then passes stable identity and authorization context into Afferent through typed app-level APIs. — Validated in Phase 1.
+- [x] One Afferent installation supports one product with multiple public feedback boards. — Validated in Phase 1.
+- [x] Visitors can browse feedback publicly while authenticated users can submit posts, vote, and comment under a configurable installation-wide access policy. — Validated in Phase 1.
 
 ### Active
 
-- [ ] Developers can install Afferent as a reusable Convex component distributed through npm.
-- [ ] A host application can connect Afferent to Convex Auth, Clerk, or the Convex Better Auth component without coupling Afferent's internal data model to a specific provider.
-- [ ] The host application owns authentication and admin authorization, then passes stable identity and authorization context into Afferent through typed app-level APIs.
-- [ ] One Afferent installation supports one product with multiple public feedback boards.
-- [ ] Visitors can browse feedback publicly while authenticated users can submit posts, vote, and comment under a configurable installation-wide access policy.
 - [ ] Administrators can moderate and organize feedback, manage workflow statuses, and move posts through the product lifecycle.
 - [ ] Selected workflow statuses form a public, status-driven roadmap.
 - [ ] Administrators can manually create and publish changelog entries and optionally link them to completed feedback posts.
@@ -110,4 +113,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-14 after initialization*
+*Last updated: 2026-07-16 after Phase 1 completion*
