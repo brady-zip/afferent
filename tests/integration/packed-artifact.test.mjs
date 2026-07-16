@@ -38,6 +38,32 @@ test("the release gate covers every suite and every supported packed export", as
     manifest.scripts["test:package"],
     "node --test tests/integration/packed-artifact.test.mjs",
   );
+  assert.equal(
+    manifest.scripts["test:fixtures"],
+    "tsc --project fixtures/auth-convex-auth/tsconfig.json && tsc --project fixtures/auth-clerk/tsconfig.json && tsc --project fixtures/auth-better-auth/tsconfig.json",
+  );
+  assert.equal(
+    manifest.scripts["test:backend:real"],
+    "node scripts/test-pagination-backend.mjs",
+  );
+  assert.notEqual(
+    manifest.scripts["test:backend:real"],
+    manifest.scripts["test:backend"],
+  );
+  for (const command of [
+    "test:fixtures",
+    "test:auth-conformance",
+    "test:scope",
+    "test:component",
+    "test:static",
+    "test:backend:real",
+    "test:package",
+  ]) {
+    assert.ok(
+      manifest.scripts["test:phase1"].includes(command),
+      `Phase 1 release gate is missing ${command}`,
+    );
+  }
 
   const gate = await readFile(
     join(repositoryRoot, "scripts/test-packed-consumer.mjs"),
