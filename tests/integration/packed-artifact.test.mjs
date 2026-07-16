@@ -51,6 +51,7 @@ test("the release gate covers every suite and every supported packed export", as
     manifest.scripts["test:backend"],
   );
   for (const command of [
+    "build",
     "test:fixtures",
     "test:auth-conformance",
     "test:scope",

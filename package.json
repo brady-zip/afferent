@@ -58,7 +58,7 @@
     "test:fixtures": "tsc --project fixtures/auth-convex-auth/tsconfig.json && tsc --project fixtures/auth-clerk/tsconfig.json && tsc --project fixtures/auth-better-auth/tsconfig.json",
     "test:model": "vitest run tests/model",
     "test:package": "node --test tests/integration/packed-artifact.test.mjs",
-    "test:phase1": "npm run test:fixtures && npm run test:auth-conformance && npm run test:scope && npm run test:component && npm run test:static && npm run test:backend:real && npm run test:package",
+    "test:phase1": "npm run build && npm run test:fixtures && npm run test:auth-conformance && npm run test:scope && npm run test:component && npm run test:static && npm run test:backend:real && npm run test:package",
     "test:scope": "vitest run --config vitest.scope.config.ts tests/integration/scope-matrix.test.ts",
     "test:static": "vitest run tests/static",
     "typecheck": "tsc --noEmit --project tsconfig.json",
