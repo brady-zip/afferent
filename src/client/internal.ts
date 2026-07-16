@@ -8,6 +8,8 @@ import type { ComponentApi } from "../component/_generated/component.js";
 import type {
   AdminCapabilities,
   BoardDto,
+  CommentDto,
+  CommentPageDto,
   ParticipationCapabilities,
   PostDto,
   PostPageDto,
@@ -95,6 +97,18 @@ export function createClientWithScope(
           viewerAuthenticated: await viewerAuthenticated(options, ctx),
         })) as unknown as { contractVersion: 1; count: number };
       },
+      async listComments(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        return (await ctx.runQuery(component.public.comments.listComments, {
+          scopeId,
+          postId: args.postId,
+          viewerAuthenticated: await viewerAuthenticated(options, ctx),
+          paginationOpts: args.paginationOpts ?? {
+            numItems: 50,
+            cursor: null,
+          },
+        })) as unknown as CommentPageDto;
+      },
     },
     participation: {
       async createPost(ctx, args) {
@@ -141,6 +155,23 @@ export function createClientWithScope(
           component.participation.votes.setVote,
           { scopeId, actor, postId: args.postId, desired: args.desired },
         )) as unknown as PostDto;
+      },
+      async addComment(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        const actor = await options.resolveActor(ctx);
+        if (!actor) throw new Error("AUTHENTICATION_REQUIRED");
+        return (await ctx.runMutation(
+          component.participation.comments.addComment,
+          {
+            scopeId,
+            actor,
+            postId: args.postId,
+            body: args.body,
+            ...(args.parentCommentId === undefined
+              ? {}
+              : { parentCommentId: args.parentCommentId }),
+          },
+        )) as unknown as CommentDto;
       },
     },
     admin: {

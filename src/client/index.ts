@@ -6,6 +6,9 @@ export type {
   AdminCapabilities,
   BoardDto,
   BoardId,
+  CommentDto,
+  CommentId,
+  CommentPageDto,
   ParticipationCapabilities,
   PaginationOptions,
   PostDto,
@@ -15,7 +18,9 @@ export type {
   VerifiedActor,
 } from "./contracts.js";
 export {
+  addCommentIntentValidator,
   boardListResultValidator,
+  commentPageResultValidator,
   configureInstallationIntentValidator,
   countPostsIntentValidator,
   countResultValidator,
@@ -24,10 +29,12 @@ export {
   getPostIntentValidator,
   installationResultValidator,
   listBoardsIntentValidator,
+  listCommentsIntentValidator,
   listPostsIntentValidator,
   postListResultValidator,
   postPageResultValidator,
   publicPostDtoValidator,
+  publicCommentDtoValidator,
   setVoteIntentValidator,
   withdrawPostIntentValidator,
 } from "./contracts.js";

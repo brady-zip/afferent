@@ -43,6 +43,30 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
       };
     };
     feedback: {
+      addComment: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          actor: {
+            avatarUrl?: string;
+            displayName?: string;
+            externalKey: string;
+          };
+          body: string;
+          parentCommentId?: string;
+          postId: string;
+          scopeId: string;
+        },
+        {
+          author: { avatarUrl?: string; displayName?: string; id: string };
+          body: string;
+          contractVersion: 1;
+          id: string;
+          parentCommentId?: string;
+          postId: string;
+        },
+        Name
+      >;
       configureInstallation: FunctionReference<
         "mutation",
         "internal",
@@ -152,6 +176,47 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         {
           boards: Array<{ id: string; name: string; slug: string }>;
           contractVersion: 1;
+        },
+        Name
+      >;
+      listComments: FunctionReference<
+        "query",
+        "internal",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          postId: string;
+          scopeId: string;
+          viewerAuthenticated: boolean;
+        },
+        {
+          comments: Array<{
+            author: { avatarUrl?: string; displayName?: string; id: string };
+            body: string;
+            contractVersion: 1;
+            id: string;
+            parentCommentId?: string;
+            postId: string;
+          }>;
+          continueCursor: string;
+          contractVersion: 1;
+          isDone: boolean;
+          page: Array<{
+            author: { avatarUrl?: string; displayName?: string; id: string };
+            body: string;
+            contractVersion: 1;
+            id: string;
+            parentCommentId?: string;
+            postId: string;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
         },
         Name
       >;
@@ -267,6 +332,32 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
       >;
     };
     participation: {
+      comments: {
+        addComment: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            actor: {
+              avatarUrl?: string;
+              displayName?: string;
+              externalKey: string;
+            };
+            body: string;
+            parentCommentId?: string;
+            postId: string;
+            scopeId: string;
+          },
+          {
+            author: { avatarUrl?: string; displayName?: string; id: string };
+            body: string;
+            contractVersion: 1;
+            id: string;
+            parentCommentId?: string;
+            postId: string;
+          },
+          Name
+        >;
+      };
       posts: {
         createPost: FunctionReference<
           "mutation",
@@ -398,6 +489,49 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           {
             boards: Array<{ id: string; name: string; slug: string }>;
             contractVersion: 1;
+          },
+          Name
+        >;
+      };
+      comments: {
+        listComments: FunctionReference<
+          "query",
+          "internal",
+          {
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+            postId: string;
+            scopeId: string;
+            viewerAuthenticated: boolean;
+          },
+          {
+            comments: Array<{
+              author: { avatarUrl?: string; displayName?: string; id: string };
+              body: string;
+              contractVersion: 1;
+              id: string;
+              parentCommentId?: string;
+              postId: string;
+            }>;
+            continueCursor: string;
+            contractVersion: 1;
+            isDone: boolean;
+            page: Array<{
+              author: { avatarUrl?: string; displayName?: string; id: string };
+              body: string;
+              contractVersion: 1;
+              id: string;
+              parentCommentId?: string;
+              postId: string;
+            }>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            splitCursor?: string | null;
           },
           Name
         >;

@@ -7,6 +7,7 @@ type BrandedId<Name extends string> = string & { readonly [idBrand]: Name };
 export type BoardId = BrandedId<"BoardId">;
 export type ActorId = BrandedId<"ActorId">;
 export type PostId = BrandedId<"PostId">;
+export type CommentId = BrandedId<"CommentId">;
 
 export type VerifiedActor = Readonly<{
   externalKey: string;
@@ -58,6 +59,25 @@ export type PostPageDto = Readonly<{
   pageStatus?: "SplitRecommended" | "SplitRequired" | null;
 }>;
 
+export type CommentDto = Readonly<{
+  contractVersion: 1;
+  id: CommentId;
+  postId: PostId;
+  body: string;
+  author: PostDto["author"];
+  parentCommentId?: CommentId;
+}>;
+
+export type CommentPageDto = Readonly<{
+  contractVersion: 1;
+  page: CommentDto[];
+  comments: CommentDto[];
+  isDone: boolean;
+  continueCursor: string;
+  splitCursor?: string | null;
+  pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+}>;
+
 export const configureInstallationIntentValidator = v.object({
   readPolicy: v.union(v.literal("public"), v.literal("authenticated")),
   boards: v.array(v.object({ slug: v.string(), name: v.string() })),
@@ -80,6 +100,17 @@ export const withdrawPostIntentValidator = v.object({ postId: v.string() });
 export const setVoteIntentValidator = v.object({
   postId: v.string(),
   desired: v.boolean(),
+});
+
+export const addCommentIntentValidator = v.object({
+  postId: v.string(),
+  body: v.string(),
+  parentCommentId: v.optional(v.string()),
+});
+
+export const listCommentsIntentValidator = v.object({
+  postId: v.string(),
+  paginationOpts: v.optional(paginationOptsValidator),
 });
 
 export const listPostsIntentValidator = v.object({
@@ -116,6 +147,35 @@ export const publicPostDtoValidator = v.object({
   commentCount: v.number(),
   totals: v.object({ votes: v.number(), comments: v.number() }),
   tags: v.array(v.string()),
+});
+
+export const publicCommentDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  id: v.string(),
+  postId: v.string(),
+  body: v.string(),
+  author: v.object({
+    id: v.string(),
+    displayName: v.optional(v.string()),
+    avatarUrl: v.optional(v.string()),
+  }),
+  parentCommentId: v.optional(v.string()),
+});
+
+export const commentPageResultValidator = v.object({
+  contractVersion: v.literal(1),
+  page: v.array(publicCommentDtoValidator),
+  comments: v.array(publicCommentDtoValidator),
+  isDone: v.boolean(),
+  continueCursor: v.string(),
+  splitCursor: v.optional(v.union(v.string(), v.null())),
+  pageStatus: v.optional(
+    v.union(
+      v.literal("SplitRecommended"),
+      v.literal("SplitRequired"),
+      v.null(),
+    ),
+  ),
 });
 
 export const installationResultValidator = v.object({
@@ -169,6 +229,10 @@ export interface ReadCapabilities<Context> {
     ctx: Context,
     args: { boardId: BoardId },
   ): Promise<{ contractVersion: 1; count: number }>;
+  listComments(
+    ctx: Context,
+    args: { postId: PostId; paginationOpts?: PaginationOptions },
+  ): Promise<CommentPageDto>;
 }
 
 export interface ParticipationCapabilities<Context> {
@@ -185,6 +249,10 @@ export interface ParticipationCapabilities<Context> {
     ctx: Context,
     args: { postId: PostId; desired: boolean },
   ): Promise<PostDto>;
+  addComment(
+    ctx: Context,
+    args: { postId: PostId; body: string; parentCommentId?: CommentId },
+  ): Promise<CommentDto>;
 }
 
 export interface AdminCapabilities<Context> {

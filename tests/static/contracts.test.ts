@@ -6,9 +6,11 @@ import { init, parse } from "es-module-lexer";
 import { describe, expect, test } from "vitest";
 
 import {
+  addCommentIntentValidator,
   createPostIntentValidator,
   editPostIntentValidator,
   publicPostDtoValidator,
+  publicCommentDtoValidator,
   setVoteIntentValidator,
   withdrawPostIntentValidator,
 } from "../../src/client/contracts.js";
@@ -45,6 +47,11 @@ describe("public contract privacy", () => {
       "desired",
       "postId",
     ]);
+    expect(Object.keys(addCommentIntentValidator.fields).sort()).toEqual([
+      "body",
+      "parentCommentId",
+      "postId",
+    ]);
   });
 
   test("freezes the exact versioned public post DTO shape", () => {
@@ -65,6 +72,21 @@ describe("public contract privacy", () => {
     expect(Object.keys(publicPostDtoValidator.fields.author.fields).sort()).toEqual(
       ["avatarUrl", "displayName", "id"],
     );
+  });
+
+  test("keeps comment DTOs flat and provider-neutral", () => {
+    expect(Object.keys(publicCommentDtoValidator.fields).sort()).toEqual([
+      "author",
+      "body",
+      "contractVersion",
+      "id",
+      "parentCommentId",
+      "postId",
+    ]);
+    expect(publicCommentDtoValidator.fields).not.toHaveProperty("replies");
+    expect(
+      Object.keys(publicCommentDtoValidator.fields.author.fields).sort(),
+    ).toEqual(["avatarUrl", "displayName", "id"]);
   });
 
   test("structurally audits imports, runtime exports, and DTO mapping", async () => {

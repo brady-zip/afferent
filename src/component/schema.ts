@@ -36,4 +36,11 @@ export default defineSchema({
     postId: v.id("posts"),
     actorId: v.id("actors"),
   }).index("by_scope_post_actor", ["scopeId", "postId", "actorId"]),
+  comments: defineTable({
+    scopeId: v.string(),
+    postId: v.id("posts"),
+    actorId: v.id("actors"),
+    body: v.string(),
+    parentCommentId: v.optional(v.id("comments")),
+  }).index("by_scope_post", ["scopeId", "postId"]),
 });

@@ -254,6 +254,7 @@ describe("authenticated participation", () => {
     expect(persisted.comments).toHaveLength(2);
     expect(persisted.rejectedActor).toBeNull();
 
+    actor = { externalKey: "fixture:commenter" };
     await client.participation.withdrawPost(ctx as never, {
       postId: firstPost.id,
     });

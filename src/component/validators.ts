@@ -34,6 +34,31 @@ export const actorDtoValidator = v.object({
   avatarUrl: v.optional(v.string()),
 });
 
+export const commentDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  id: v.string(),
+  postId: v.string(),
+  body: v.string(),
+  author: actorDtoValidator,
+  parentCommentId: v.optional(v.string()),
+});
+
+export const commentPageDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  page: v.array(commentDtoValidator),
+  comments: v.array(commentDtoValidator),
+  isDone: v.boolean(),
+  continueCursor: v.string(),
+  splitCursor: v.optional(v.union(v.string(), v.null())),
+  pageStatus: v.optional(
+    v.union(
+      v.literal("SplitRecommended"),
+      v.literal("SplitRequired"),
+      v.null(),
+    ),
+  ),
+});
+
 export const postDtoValidator = v.object({
   contractVersion: v.literal(1),
   id: v.string(),
