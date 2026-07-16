@@ -77,6 +77,7 @@ test("a packed Afferent artifact completes the external board/post walking skele
   const temporaryRoot = await mkdtemp(join(tmpdir(), "afferent-packed-consumer-"));
   t.after(() => rm(temporaryRoot, { force: true, recursive: true }));
 
+  const canonicalTemporaryRoot = await realpath(temporaryRoot);
   const sourceRoot = await realpath(repositoryRoot);
   const consumerRoot = join(temporaryRoot, "packed-vite-convex");
   await cp(fixtureTemplate, consumerRoot, { recursive: true, errorOnExist: true });
@@ -112,7 +113,11 @@ test("a packed Afferent artifact completes the external board/post walking skele
   assert.equal(transcript.artifact?.repositoryRelativeImports, false);
 
   const tarballPath = await realpath(transcript.artifact.tarballPath);
-  assert.equal(isWithin(temporaryRoot, tarballPath), true, "npm pack output must stay in the external temporary root");
+  assert.equal(
+    isWithin(canonicalTemporaryRoot, tarballPath),
+    true,
+    "npm pack output must stay in the external temporary root",
+  );
   assert.match(tarballPath, /\.tgz$/);
 
   const licensePath = await realpath(transcript.artifact.licensePath);

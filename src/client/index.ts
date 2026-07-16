@@ -28,7 +28,10 @@ export type {
 export {
   configureInstallationIntentValidator,
   createPostIntentValidator,
+  installationResultValidator,
   listPostsIntentValidator,
+  postListResultValidator,
+  publicPostDtoValidator,
 } from "./contracts.js";
 
 type ReadContext = Pick<GenericQueryCtx<GenericDataModel>, "auth" | "runQuery">;

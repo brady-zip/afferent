@@ -35,7 +35,7 @@ export type PostDto = Readonly<{
   voteCount: number;
   commentCount: number;
   totals: Readonly<{ votes: number; comments: number }>;
-  tags: readonly string[];
+  tags: string[];
 }>;
 
 export const configureInstallationIntentValidator = v.object({
@@ -51,6 +51,42 @@ export const createPostIntentValidator = v.object({
 
 export const listPostsIntentValidator = v.object({
   boardId: v.string(),
+});
+
+export const publicBoardDtoValidator = v.object({
+  id: v.string(),
+  slug: v.string(),
+  name: v.string(),
+});
+
+export const publicPostDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  id: v.string(),
+  boardId: v.string(),
+  board: publicBoardDtoValidator,
+  title: v.string(),
+  body: v.string(),
+  author: v.object({
+    id: v.string(),
+    displayName: v.optional(v.string()),
+    avatarUrl: v.optional(v.string()),
+  }),
+  status: v.object({ key: v.literal("open"), label: v.literal("Open") }),
+  voteCount: v.number(),
+  commentCount: v.number(),
+  totals: v.object({ votes: v.number(), comments: v.number() }),
+  tags: v.array(v.string()),
+});
+
+export const installationResultValidator = v.object({
+  contractVersion: v.literal(1),
+  readPolicy: v.union(v.literal("public"), v.literal("authenticated")),
+  boards: v.array(publicBoardDtoValidator),
+});
+
+export const postListResultValidator = v.object({
+  contractVersion: v.literal(1),
+  posts: v.array(publicPostDtoValidator),
 });
 
 export interface ReadCapabilities<Context> {

@@ -32,10 +32,10 @@
   "types": "./dist/client/index.d.ts",
   "module": "./dist/client/index.js",
   "scripts": {
-    "build": "tsc --project tsconfig.json",
+    "build": "rm -rf dist tsconfig.tsbuildinfo && tsc --project tsconfig.json && cp src/component/tsconfig.json dist/component/tsconfig.json",
     "codegen:component": "node scripts/codegen-component.mjs",
     "test": "vitest run",
-    "test:component": "vitest run",
+    "test:component": "vitest run tests/component",
     "test:package": "node --test tests/integration/walking-skeleton.test.mjs",
     "typecheck": "tsc --noEmit --project tsconfig.json",
     "prepare": "husky"
@@ -59,6 +59,7 @@
     "convex-helpers": "0.1.120",
     "convex-test": "0.0.54",
     "husky": "^9.1.7",
+    "lint-staged": "^17.0.8",
     "publint": "0.3.21",
     "react": "19.2.7",
     "react-dom": "19.2.7",
