@@ -34,7 +34,7 @@
   "scripts": {
     "build": "rm -rf dist tsconfig.tsbuildinfo && tsc --project tsconfig.json && cp src/component/tsconfig.json dist/component/tsconfig.json",
     "codegen:component": "node scripts/codegen-component.mjs",
-    "test": "vitest run",
+    "test": "npm run test:component && npm run test:package",
     "test:component": "vitest run tests/component",
     "test:package": "node --test tests/integration/walking-skeleton.test.mjs",
     "typecheck": "tsc --noEmit --project tsconfig.json",
