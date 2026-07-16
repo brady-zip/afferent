@@ -1,14 +1,70 @@
 {
   "name": "afferent",
-  "version": "1.0.0",
-  "private": true,
+  "version": "0.1.0",
+  "description": "A provider-neutral product feedback Convex component.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "keywords": [
+    "convex",
+    "component",
+    "feedback"
+  ],
+  "files": [
+    "dist",
+    "src",
+    "LICENSE"
+  ],
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/client/index.d.ts",
+      "default": "./dist/client/index.js"
+    },
+    "./convex.config.js": {
+      "types": "./dist/component/convex.config.d.ts",
+      "default": "./dist/component/convex.config.js"
+    },
+    "./_generated/component.js": {
+      "types": "./dist/component/_generated/component.d.ts"
+    },
+    "./test": "./src/test.ts"
+  },
+  "types": "./dist/client/index.d.ts",
+  "module": "./dist/client/index.js",
   "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "codegen:component": "convex codegen --component-dir ./src/component",
+    "test": "vitest run",
+    "test:component": "vitest run",
+    "test:package": "node --test tests/integration/walking-skeleton.test.mjs",
+    "typecheck": "tsc --noEmit --project tsconfig.json",
     "prepare": "husky"
   },
+  "peerDependencies": {
+    "convex": "^1.42.2",
+    "react": "^18.3.1 || ^19.0.0"
+  },
   "devDependencies": {
+    "@arethetypeswrong/cli": "0.18.5",
+    "@auth/core": "0.41.2",
+    "@clerk/react": "6.12.4",
     "@commitlint/cli": "^21.2.1",
     "@commitlint/config-conventional": "^21.2.0",
-    "husky": "^9.1.7"
+    "@convex-dev/auth": "0.0.94",
+    "@convex-dev/better-auth": "0.12.5",
+    "@edge-runtime/vm": "5.0.0",
+    "@vitejs/plugin-react": "6.0.3",
+    "better-auth": "1.6.23",
+    "convex": "1.42.2",
+    "convex-helpers": "0.1.120",
+    "convex-test": "0.0.54",
+    "husky": "^9.1.7",
+    "publint": "0.3.21",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "typescript": "6.0.3",
+    "vite": "8.1.4",
+    "vitest": "4.1.10"
   },
   "commitlint": {
     "extends": [
