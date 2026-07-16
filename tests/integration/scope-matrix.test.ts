@@ -152,5 +152,21 @@ describe("server-derived scope isolation", () => {
     expect(
       (await beta.read.listPosts(ctx as never, { boardId: betaBoard.id })).posts,
     ).toMatchObject([{ title: "Beta only" }]);
+
+    await expect(
+      beta.participation.editPost(ctx as never, {
+        postId: alphaPost.id,
+        title: "Cross-scope edit",
+      }),
+    ).rejects.toMatchObject({
+      data: { code: "NOT_FOUND", resource: "post" },
+    });
+    await expect(
+      beta.participation.withdrawPost(ctx as never, {
+        postId: alphaPost.id,
+      }),
+    ).rejects.toMatchObject({
+      data: { code: "NOT_FOUND", resource: "post" },
+    });
   });
 });
