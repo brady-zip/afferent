@@ -1,0 +1,13 @@
+# Build output and generated code
+dist
+**/_generated
+*.tsbuildinfo
+
+# Vendored tooling (GSD framework) — mirror upstream, don't reformat
+.codex
+
+# Generated research cache
+.planning/research/.cache
+
+# Dependencies
+node_modules

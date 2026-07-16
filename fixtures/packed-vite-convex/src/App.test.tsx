@@ -13,10 +13,13 @@ test("the form submit handler writes through the host wrapper and renders the pu
   const backend = convexTest(undefined, modules);
   register(backend, "afferent");
 
-  const configured = await backend.mutation(api.afferent.configureInstallation, {
-    readPolicy: "public",
-    boards: [{ slug: "feedback", name: "Product Feedback" }],
-  });
+  const configured = await backend.mutation(
+    api.afferent.configureInstallation,
+    {
+      readPolicy: "public",
+      boards: [{ slug: "feedback", name: "Product Feedback" }],
+    },
+  );
   const board = configured.boards[0];
   const browserArgs = {
     boardId: board.id,

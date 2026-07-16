@@ -47,10 +47,7 @@ export function App() {
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!boardId) return;
-    await submitFeedback(
-      { boardId, title, body },
-      { createPost },
-    );
+    await submitFeedback({ boardId, title, body }, { createPost });
     setTitle("");
     setBody("");
   }

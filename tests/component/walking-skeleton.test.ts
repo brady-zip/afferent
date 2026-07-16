@@ -22,14 +22,20 @@ describe("packed walking skeleton component", () => {
     });
     const ctx = {
       auth: { getUserIdentity: async () => null },
-      runMutation: (reference: Parameters<typeof backend.mutation>[0], args: object) =>
-        backend.mutation(reference, args),
-      runQuery: (reference: Parameters<typeof backend.query>[0], args: object) =>
-        backend.query(reference, args),
+      runMutation: (
+        reference: Parameters<typeof backend.mutation>[0],
+        args: object,
+      ) => backend.mutation(reference, args),
+      runQuery: (
+        reference: Parameters<typeof backend.query>[0],
+        args: object,
+      ) => backend.query(reference, args),
     };
 
     const configured = await client.admin.configureInstallation(
-      ctx as unknown as Parameters<typeof client.admin.configureInstallation>[0],
+      ctx as unknown as Parameters<
+        typeof client.admin.configureInstallation
+      >[0],
       {
         readPolicy: "public",
         boards: [{ slug: "feedback", name: "Product Feedback" }],
@@ -99,7 +105,8 @@ describe("packed walking skeleton component", () => {
   });
 
   test("keeps authority-shaped fields out of browser intent contracts", async () => {
-    const { createPostIntentValidator } = await import("../../src/client/contracts.js");
+    const { createPostIntentValidator } =
+      await import("../../src/client/contracts.js");
     expect(Object.keys(createPostIntentValidator.fields).sort()).toEqual([
       "boardId",
       "body",

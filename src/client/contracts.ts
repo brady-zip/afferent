@@ -90,7 +90,10 @@ export const postListResultValidator = v.object({
 });
 
 export interface ReadCapabilities<Context> {
-  listPosts(ctx: Context, args: { boardId: BoardId }): Promise<{
+  listPosts(
+    ctx: Context,
+    args: { boardId: BoardId },
+  ): Promise<{
     contractVersion: 1;
     posts: PostDto[];
   }>;

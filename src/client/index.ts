@@ -89,11 +89,14 @@ export function createAfferentClient(
         if (!(await options.authorizeAdmin(ctx))) {
           throw new Error("ADMIN_AUTHORIZATION_REQUIRED");
         }
-        return (await ctx.runMutation(component.feedback.configureInstallation, {
-          scopeId: fixedScope,
-          readPolicy: args.readPolicy,
-          boards: [...args.boards],
-        })) as unknown as {
+        return (await ctx.runMutation(
+          component.feedback.configureInstallation,
+          {
+            scopeId: fixedScope,
+            readPolicy: args.readPolicy,
+            boards: [...args.boards],
+          },
+        )) as unknown as {
           contractVersion: 1;
           readPolicy: "public" | "authenticated";
           boards: Array<{ id: BoardId; slug: string; name: string }>;

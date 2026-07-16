@@ -32,20 +32,24 @@ function boardDto(board: Doc<"boards">) {
 function actorDto(actor: Doc<"actors">) {
   return {
     id: String(actor._id),
-    ...(actor.displayName === undefined ? {} : { displayName: actor.displayName }),
+    ...(actor.displayName === undefined
+      ? {}
+      : { displayName: actor.displayName }),
     ...(actor.avatarUrl === undefined ? {} : { avatarUrl: actor.avatarUrl }),
   };
 }
 
-async function postDto(
-  ctx: QueryCtx | MutationCtx,
-  post: Doc<"posts">,
-) {
+async function postDto(ctx: QueryCtx | MutationCtx, post: Doc<"posts">) {
   const [board, actor] = await Promise.all([
     ctx.db.get(post.boardId),
     ctx.db.get(post.actorId),
   ]);
-  if (!board || board.scopeId !== post.scopeId || !actor || actor.scopeId !== post.scopeId) {
+  if (
+    !board ||
+    board.scopeId !== post.scopeId ||
+    !actor ||
+    actor.scopeId !== post.scopeId
+  ) {
     throw new ConvexError({ code: "INVARIANT_VIOLATION" });
   }
   return {
@@ -105,7 +109,9 @@ export const configureInstallation = mutation({
       .withIndex("by_scope", (q) => q.eq("scopeId", args.scopeId))
       .unique();
     if (existingInstallation) {
-      await ctx.db.patch(existingInstallation._id, { readPolicy: args.readPolicy });
+      await ctx.db.patch(existingInstallation._id, {
+        readPolicy: args.readPolicy,
+      });
     } else {
       await ctx.db.insert("installations", {
         scopeId: args.scopeId,
@@ -165,7 +171,8 @@ export const createPost = mutation({
   },
   returns: postDtoValidator,
   handler: async (ctx, args) => {
-    if (!args.scopeId || !args.actor.externalKey) invalidInput("trusted scope and actor are required");
+    if (!args.scopeId || !args.actor.externalKey)
+      invalidInput("trusted scope and actor are required");
     const title = args.title.trim();
     const body = args.body.trim();
     if (!title || title.length > MAX_TITLE_LENGTH) {
@@ -225,7 +232,10 @@ export const listPosts = query({
   handler: async (ctx, args) => {
     if (!args.scopeId) invalidInput("scopeId is required");
     const installation = await requireInstallation(ctx, args.scopeId);
-    if (installation.readPolicy === "authenticated" && !args.viewerAuthenticated) {
+    if (
+      installation.readPolicy === "authenticated" &&
+      !args.viewerAuthenticated
+    ) {
       throw new ConvexError({ code: "AUTHENTICATION_REQUIRED" });
     }
     const board = await ctx.db.get(args.boardId);
