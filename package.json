@@ -41,6 +41,9 @@
     "lint": "oxlint",
     "prepare": "husky"
   },
+  "dependencies": {
+    "convex-helpers": "^0.1.120"
+  },
   "peerDependencies": {
     "convex": "^1.42.2",
     "react": "^18.3.1 || ^19.0.0"
@@ -57,7 +60,6 @@
     "@vitejs/plugin-react": "6.0.3",
     "better-auth": "1.6.23",
     "convex": "1.42.2",
-    "convex-helpers": "0.1.120",
     "convex-test": "0.0.54",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.8",
