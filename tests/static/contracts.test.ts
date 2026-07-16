@@ -66,8 +66,8 @@ describe("public contract privacy", () => {
   test("keeps full provider-helper capabilities server-side", () => {
     const internalSource = fs.readFileSync("src/client/internal.ts", "utf8");
     expect(internalSource).not.toContain("Pick<");
-    expect(internalSource).toContain("GenericQueryCtx<GenericDataModel>");
-    expect(internalSource).toContain("GenericMutationCtx<GenericDataModel>");
+    expect(internalSource).toContain("GenericQueryCtx<any>");
+    expect(internalSource).toContain("GenericMutationCtx<any>");
   });
 
   test("keeps authority and provider records out of intent validators", () => {

@@ -1,8 +1,4 @@
-import type {
-  GenericDataModel,
-  GenericMutationCtx,
-  GenericQueryCtx,
-} from "convex/server";
+import type { GenericMutationCtx, GenericQueryCtx } from "convex/server";
 
 import type { ComponentApi } from "../component/_generated/component.js";
 import type {
@@ -18,8 +14,8 @@ import type {
   VerifiedActor,
 } from "./contracts.js";
 
-export type ReadContext = GenericQueryCtx<GenericDataModel>;
-export type MutationContext = GenericMutationCtx<GenericDataModel>;
+export type ReadContext = GenericQueryCtx<any>;
+export type MutationContext = GenericMutationCtx<any>;
 export type HostContext = ReadContext | MutationContext;
 
 export type ClientResolvers = Readonly<{
