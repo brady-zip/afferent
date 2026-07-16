@@ -21,8 +21,8 @@ function context(backend: ReturnType<typeof convexTest>) {
   };
 }
 
-function scopedClient(scopeId: string, backend: ReturnType<typeof convexTest>) {
-  const client = createScopedAfferentClient(api as unknown as ComponentApi, {
+function scopedClient(scopeId: string) {
+  return createScopedAfferentClient(api as unknown as ComponentApi, {
     resolveScope: async () => scopeId,
     resolveActor: async () => ({
       externalKey: `${scopeId}:editor`,
@@ -31,69 +31,43 @@ function scopedClient(scopeId: string, backend: ReturnType<typeof convexTest>) {
     authorizeAdmin: async () => true,
     isAuthenticated: async () => true,
   }) as any;
-  const actor = {
-    externalKey: `${scopeId}:editor`,
-    displayName: "Editor",
-  };
-  return {
-    ...client,
-    read: {
-      ...client.read,
-      listPublishedChangelog: (_ctx: unknown, args: object) =>
-        backend.query(api["public/changelog"].listPublishedChangelog, {
-          scopeId,
-          viewerAuthenticated: true,
-          ...args,
-        }),
-      getPublishedChangelogBySlug: (_ctx: unknown, args: object) =>
-        backend.query(api["public/changelog"].getPublishedChangelogBySlug, {
-          scopeId,
-          viewerAuthenticated: true,
-          ...args,
-        }),
-    },
-    admin: {
-      ...client.admin,
-      createChangelogDraft: (_ctx: unknown, args: object) =>
-        backend.mutation(api["admin/changelog"].createChangelogDraft, {
-          scopeId,
-          actor,
-          ...args,
-        }),
-      editChangelog: (_ctx: unknown, args: object) =>
-        backend.mutation(api["admin/changelog"].editChangelog, {
-          scopeId,
-          actor,
-          ...args,
-        }),
-      setChangelogLinks: (_ctx: unknown, args: object) =>
-        backend.mutation(api["admin/changelog"].setChangelogLinks, {
-          scopeId,
-          actor,
-          ...args,
-        }),
-      publishChangelog: (_ctx: unknown, args: object) =>
-        backend.mutation(api["admin/changelog"].publishChangelog, {
-          scopeId,
-          actor,
-          ...args,
-        }),
-      unpublishChangelog: (_ctx: unknown, args: object) =>
-        backend.mutation(api["admin/changelog"].unpublishChangelog, {
-          scopeId,
-          actor,
-          ...args,
-        }),
-    },
-  } as any;
 }
 
 describe("manual changelog lifecycle", () => {
+  test("re-authorizes every editorial mutation in the trusted host wrapper", async () => {
+    const backend = withRateLimiter(convexTest(schema, modules));
+    const ctx = context(backend) as never;
+    let allowed = true;
+    let checks = 0;
+    const client = createScopedAfferentClient(api as unknown as ComponentApi, {
+      resolveScope: async () => "scope:authority",
+      resolveActor: async () => ({ externalKey: "authority:editor" }),
+      authorizeAdmin: async () => {
+        checks += 1;
+        return allowed;
+      },
+      isAuthenticated: async () => true,
+    }) as any;
+    await client.admin.configureInstallation(ctx, {
+      readPolicy: "public",
+      boards: [{ slug: "feedback", name: "Feedback" }],
+    });
+    const draft = await client.admin.createChangelogDraft(ctx, {
+      title: "Authorized",
+      body: "Editorial body",
+    });
+    allowed = false;
+    await expect(
+      client.admin.publishChangelog(ctx, { entryId: draft.id }),
+    ).rejects.toThrow("ADMIN_AUTHORIZATION_REQUIRED");
+    expect(checks).toBe(3);
+  });
+
   test("locks first-publish identity, pages public entries, and keeps publication status-orthogonal", async () => {
     const backend = withRateLimiter(convexTest(schema, modules));
     const ctx = context(backend) as never;
-    const alpha = scopedClient("scope:alpha", backend);
-    const beta = scopedClient("scope:beta", backend);
+    const alpha = scopedClient("scope:alpha");
+    const beta = scopedClient("scope:beta");
     const alphaInstall = await alpha.admin.configureInstallation(ctx, {
       readPolicy: "public",
       boards: [{ slug: "feedback", name: "Feedback" }],
@@ -289,7 +263,7 @@ describe("manual changelog lifecycle", () => {
   test("projects merged links through the current visible canonical post", async () => {
     const backend = withRateLimiter(convexTest(schema, modules));
     const ctx = context(backend) as never;
-    const client = scopedClient("scope:merge", backend);
+    const client = scopedClient("scope:merge");
     const installation = await client.admin.configureInstallation(ctx, {
       readPolicy: "public",
       boards: [{ slug: "feedback", name: "Feedback" }],

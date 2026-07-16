@@ -3,9 +3,11 @@ import type { GenericMutationCtx, GenericQueryCtx } from "convex/server";
 import type { ComponentApi } from "../component/_generated/component.js";
 import type {
   AdminCapabilities,
+  AdminChangelogEntryDto,
   BoardDto,
   CommentDto,
   CommentPageDto,
+  ChangelogPageDto,
   FeedbackPageDto,
   ParticipationCapabilities,
   PostCountDto,
@@ -16,6 +18,7 @@ import type {
   SimilarPostResultDto,
   FeedbackPostDto,
   PostActivityPageDto,
+  PublishedChangelogLookupDto,
   RoadmapGroupPageDto,
   TagDeleteResultDto,
   TagDto,
@@ -105,6 +108,31 @@ export function createClientWithScope(
             cursor: null,
           },
         })) as unknown as RoadmapGroupPageDto;
+      },
+      async listPublishedChangelog(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        return (await ctx.runQuery(
+          component.public.changelog.listPublishedChangelog,
+          {
+            scopeId,
+            viewerAuthenticated: await viewerAuthenticated(options, ctx),
+            paginationOpts: args.paginationOpts ?? {
+              numItems: 20,
+              cursor: null,
+            },
+          },
+        )) as unknown as ChangelogPageDto;
+      },
+      async getPublishedChangelogBySlug(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        return (await ctx.runQuery(
+          component.public.changelog.getPublishedChangelogBySlug,
+          {
+            scopeId,
+            viewerAuthenticated: await viewerAuthenticated(options, ctx),
+            slug: args.slug,
+          },
+        )) as unknown as PublishedChangelogLookupDto;
       },
       async searchFeedback(ctx, args) {
         const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
@@ -383,6 +411,76 @@ export function createClientWithScope(
           actor,
           tagId: args.tagId,
         })) as unknown as TagDeleteResultDto;
+      },
+      async createChangelogDraft(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        if (!(await options.authorizeAdmin(ctx)))
+          throw new Error("ADMIN_AUTHORIZATION_REQUIRED");
+        const actor = await options.resolveActor(ctx);
+        if (!actor) throw new Error("AUTHENTICATION_REQUIRED");
+        return (await ctx.runMutation(
+          component.admin.changelog.createChangelogDraft,
+          {
+            scopeId,
+            actor,
+            title: args.title,
+            body: args.body,
+            ...(args.slug === undefined ? {} : { slug: args.slug }),
+          },
+        )) as unknown as AdminChangelogEntryDto;
+      },
+      async editChangelog(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        if (!(await options.authorizeAdmin(ctx)))
+          throw new Error("ADMIN_AUTHORIZATION_REQUIRED");
+        const actor = await options.resolveActor(ctx);
+        if (!actor) throw new Error("AUTHENTICATION_REQUIRED");
+        return (await ctx.runMutation(component.admin.changelog.editChangelog, {
+          scopeId,
+          actor,
+          entryId: args.entryId,
+          ...(args.title === undefined ? {} : { title: args.title }),
+          ...(args.body === undefined ? {} : { body: args.body }),
+          ...(args.slug === undefined ? {} : { slug: args.slug }),
+        })) as unknown as AdminChangelogEntryDto;
+      },
+      async setChangelogLinks(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        if (!(await options.authorizeAdmin(ctx)))
+          throw new Error("ADMIN_AUTHORIZATION_REQUIRED");
+        const actor = await options.resolveActor(ctx);
+        if (!actor) throw new Error("AUTHENTICATION_REQUIRED");
+        return (await ctx.runMutation(
+          component.admin.changelog.setChangelogLinks,
+          {
+            scopeId,
+            actor,
+            entryId: args.entryId,
+            postIds: args.postIds,
+          },
+        )) as unknown as AdminChangelogEntryDto;
+      },
+      async publishChangelog(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        if (!(await options.authorizeAdmin(ctx)))
+          throw new Error("ADMIN_AUTHORIZATION_REQUIRED");
+        const actor = await options.resolveActor(ctx);
+        if (!actor) throw new Error("AUTHENTICATION_REQUIRED");
+        return (await ctx.runMutation(
+          component.admin.changelog.publishChangelog,
+          { scopeId, actor, entryId: args.entryId },
+        )) as unknown as AdminChangelogEntryDto;
+      },
+      async unpublishChangelog(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        if (!(await options.authorizeAdmin(ctx)))
+          throw new Error("ADMIN_AUTHORIZATION_REQUIRED");
+        const actor = await options.resolveActor(ctx);
+        if (!actor) throw new Error("AUTHENTICATION_REQUIRED");
+        return (await ctx.runMutation(
+          component.admin.changelog.unpublishChangelog,
+          { scopeId, actor, entryId: args.entryId },
+        )) as unknown as AdminChangelogEntryDto;
       },
     },
   };

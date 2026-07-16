@@ -10,6 +10,7 @@ export type PostId = BrandedId<"PostId">;
 export type CommentId = BrandedId<"CommentId">;
 export type TagId = BrandedId<"TagId">;
 export type ActivityId = BrandedId<"ActivityId">;
+export type ChangelogId = BrandedId<"ChangelogId">;
 
 export type RoadmapStatusKey = "planned" | "in_progress" | "complete";
 
@@ -26,8 +27,17 @@ export type AfferentErrorDto =
     }>
   | Readonly<{
       contractVersion: 1;
-      code: "VALIDATION" | "NOT_FOUND" | "DISCUSSION_LOCKED" | "NOT_AUTHORIZED";
+      code:
+        | "AUTHENTICATION_REQUIRED"
+        | "VALIDATION"
+        | "NOT_FOUND"
+        | "DISCUSSION_LOCKED"
+        | "NOT_AUTHORIZED"
+        | "CONFLICT"
+        | "TRANSIENT"
+        | "UNKNOWN";
       message: string;
+      field?: string;
     }>;
 
 export type AfferentActionResult<T> =
@@ -186,6 +196,65 @@ export type RoadmapGroupPageDto = Readonly<{
   pageStatus?: "SplitRecommended" | "SplitRequired" | null;
 }>;
 
+export type ChangelogLinkedPostDto = Readonly<{
+  contractVersion: 1;
+  id: PostId;
+  title: string;
+  status: Readonly<{
+    key: PostStatusKey;
+    label:
+      | "Open"
+      | "Under Review"
+      | "Planned"
+      | "In Progress"
+      | "Complete"
+      | "Closed";
+  }>;
+}>;
+
+export type PublicChangelogEntryDto = Readonly<{
+  contractVersion: 1;
+  id: ChangelogId;
+  title: string;
+  body: string;
+  slug: string;
+  firstPublishedAt: number;
+  updatedAt: number;
+  links: ChangelogLinkedPostDto[];
+}>;
+
+export type ChangelogPageDto = Readonly<{
+  contractVersion: 1;
+  page: PublicChangelogEntryDto[];
+  entries: PublicChangelogEntryDto[];
+  isDone: boolean;
+  continueCursor: string;
+  splitCursor?: string | null;
+  pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+}>;
+
+export type PublishedChangelogLookupDto =
+  | Readonly<{ contractVersion: 1; status: "notFound" }>
+  | Readonly<{
+      contractVersion: 1;
+      status: "entry";
+      entry: PublicChangelogEntryDto;
+    }>;
+
+export type AdminChangelogEntryDto = Readonly<{
+  contractVersion: 1;
+  id: ChangelogId;
+  title: string;
+  body: string;
+  slug: string;
+  state: "draft" | "published" | "unpublished";
+  createdAt: number;
+  updatedAt: number;
+  firstPublishedAt?: number;
+  publishedAt?: number;
+  postIds: PostId[];
+}>;
+
 export type PostCountDto = Readonly<{
   contractVersion: 1;
   count: number;
@@ -237,6 +306,7 @@ export type PostActivityDto = Readonly<{
   fromBoardId?: BoardId;
   toBoardId?: BoardId;
   tagId?: TagId;
+  changelogEntryId?: ChangelogId;
 }>;
 
 export type PostActivityPageDto = Readonly<{
@@ -359,6 +429,40 @@ export const listRoadmapGroupIntentValidator = v.object({
   paginationOpts: v.optional(paginationOptsValidator),
 });
 
+export const listPublishedChangelogIntentValidator = v.object({
+  sessionGeneration: v.optional(v.string()),
+  paginationOpts: v.optional(paginationOptsValidator),
+});
+
+export const getPublishedChangelogBySlugIntentValidator = v.object({
+  slug: v.string(),
+  sessionGeneration: v.optional(v.string()),
+});
+
+export const createChangelogDraftIntentValidator = v.object({
+  title: v.string(),
+  body: v.string(),
+  slug: v.optional(v.string()),
+});
+
+export const editChangelogIntentValidator = v.object({
+  entryId: v.string(),
+  title: v.optional(v.string()),
+  body: v.optional(v.string()),
+  slug: v.optional(v.string()),
+});
+
+export const setChangelogLinksIntentValidator = v.object({
+  entryId: v.string(),
+  postIds: v.array(v.string()),
+});
+
+export const publishChangelogIntentValidator = v.object({
+  entryId: v.string(),
+});
+export const unpublishChangelogIntentValidator =
+  publishChangelogIntentValidator;
+
 export const searchFeedbackIntentValidator = v.object({
   query: v.string(),
   boardId: v.optional(v.string()),
@@ -428,12 +532,17 @@ export const publicAfferentErrorValidator = v.union(
   v.object({
     contractVersion: v.literal(1),
     code: v.union(
+      v.literal("AUTHENTICATION_REQUIRED"),
       v.literal("VALIDATION"),
       v.literal("NOT_FOUND"),
       v.literal("DISCUSSION_LOCKED"),
       v.literal("NOT_AUTHORIZED"),
+      v.literal("CONFLICT"),
+      v.literal("TRANSIENT"),
+      v.literal("UNKNOWN"),
     ),
     message: v.string(),
+    field: v.optional(v.string()),
   }),
 );
 
@@ -621,6 +730,84 @@ export const roadmapGroupPageResultValidator = v.object({
   ),
 });
 
+export const changelogLinkedPostResultValidator = v.object({
+  contractVersion: v.literal(1),
+  id: v.string(),
+  title: v.string(),
+  status: v.object({
+    key: v.union(
+      v.literal("open"),
+      v.literal("under_review"),
+      v.literal("planned"),
+      v.literal("in_progress"),
+      v.literal("complete"),
+      v.literal("closed"),
+    ),
+    label: v.union(
+      v.literal("Open"),
+      v.literal("Under Review"),
+      v.literal("Planned"),
+      v.literal("In Progress"),
+      v.literal("Complete"),
+      v.literal("Closed"),
+    ),
+  }),
+});
+
+export const publicChangelogEntryResultValidator = v.object({
+  contractVersion: v.literal(1),
+  id: v.string(),
+  title: v.string(),
+  body: v.string(),
+  slug: v.string(),
+  firstPublishedAt: v.number(),
+  updatedAt: v.number(),
+  links: v.array(changelogLinkedPostResultValidator),
+});
+
+export const changelogPageResultValidator = v.object({
+  contractVersion: v.literal(1),
+  page: v.array(publicChangelogEntryResultValidator),
+  entries: v.array(publicChangelogEntryResultValidator),
+  isDone: v.boolean(),
+  continueCursor: v.string(),
+  splitCursor: v.optional(v.union(v.string(), v.null())),
+  pageStatus: v.optional(
+    v.union(
+      v.literal("SplitRecommended"),
+      v.literal("SplitRequired"),
+      v.null(),
+    ),
+  ),
+});
+
+export const publishedChangelogLookupResultValidator = v.union(
+  v.object({ contractVersion: v.literal(1), status: v.literal("notFound") }),
+  v.object({
+    contractVersion: v.literal(1),
+    status: v.literal("entry"),
+    entry: publicChangelogEntryResultValidator,
+  }),
+);
+
+export const adminChangelogEntryResultValidator = v.object({
+  contractVersion: v.literal(1),
+  id: v.string(),
+  title: v.string(),
+  body: v.string(),
+  slug: v.string(),
+  state: v.union(
+    v.literal("draft"),
+    v.literal("published"),
+    v.literal("unpublished"),
+  ),
+  createdAt: v.number(),
+  updatedAt: v.number(),
+  firstPublishedAt: v.optional(v.number()),
+  publishedAt: v.optional(v.number()),
+  postIds: v.array(v.string()),
+});
+
 export const discoveryPostResultValidator = v.object({
   contractVersion: v.literal(1),
   id: v.string(),
@@ -697,6 +884,17 @@ export interface ReadCapabilities<Context> {
       paginationOpts?: PaginationOptions;
     },
   ): Promise<RoadmapGroupPageDto>;
+  listPublishedChangelog(
+    ctx: Context,
+    args: {
+      sessionGeneration?: string;
+      paginationOpts?: PaginationOptions;
+    },
+  ): Promise<ChangelogPageDto>;
+  getPublishedChangelogBySlug(
+    ctx: Context,
+    args: { slug: string; sessionGeneration?: string },
+  ): Promise<PublishedChangelogLookupDto>;
   searchFeedback(
     ctx: Context,
     args: {
@@ -795,4 +993,29 @@ export interface AdminCapabilities<
     ctx: MutationContext,
     args: { tagId: TagId },
   ): Promise<TagDeleteResultDto>;
+  createChangelogDraft(
+    ctx: MutationContext,
+    args: { title: string; body: string; slug?: string },
+  ): Promise<AdminChangelogEntryDto>;
+  editChangelog(
+    ctx: MutationContext,
+    args: {
+      entryId: ChangelogId;
+      title?: string;
+      body?: string;
+      slug?: string;
+    },
+  ): Promise<AdminChangelogEntryDto>;
+  setChangelogLinks(
+    ctx: MutationContext,
+    args: { entryId: ChangelogId; postIds: PostId[] },
+  ): Promise<AdminChangelogEntryDto>;
+  publishChangelog(
+    ctx: MutationContext,
+    args: { entryId: ChangelogId },
+  ): Promise<AdminChangelogEntryDto>;
+  unpublishChangelog(
+    ctx: MutationContext,
+    args: { entryId: ChangelogId },
+  ): Promise<AdminChangelogEntryDto>;
 }

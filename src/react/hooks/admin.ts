@@ -81,14 +81,22 @@ export function mapModerationError(error: unknown): ModerationError {
   }
   return {
     contractVersion: 1,
-    code:
-      value.code === "NOT_FOUND" ||
-      value.code === "DISCUSSION_LOCKED" ||
-      value.code === "NOT_AUTHORIZED" ||
-      value.code === "VALIDATION"
-        ? value.code
-        : "VALIDATION",
+    code: [
+      "AUTHENTICATION_REQUIRED",
+      "NOT_FOUND",
+      "DISCUSSION_LOCKED",
+      "NOT_AUTHORIZED",
+      "VALIDATION",
+      "CONFLICT",
+      "TRANSIENT",
+      "UNKNOWN",
+    ].includes(String(value.code))
+      ? (value.code as Exclude<AfferentErrorDto["code"], "RATE_LIMITED">)
+      : "UNKNOWN",
     message: value.message ?? "Moderation request failed",
+    ...("field" in value && typeof value.field === "string"
+      ? { field: value.field }
+      : {}),
   };
 }
 

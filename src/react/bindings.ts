@@ -2,6 +2,9 @@ import type { DefaultFunctionArgs, FunctionReference } from "convex/server";
 
 import type {
   BoardId,
+  AdminChangelogEntryDto,
+  ChangelogId,
+  ChangelogPageDto,
   FeedbackOrder,
   FeedbackPageDto,
   PaginationOptions,
@@ -12,6 +15,7 @@ import type {
   FeedbackPostDto,
   PostActivityPageDto,
   PostId,
+  PublishedChangelogLookupDto,
   RoadmapGroupPageDto,
   RoadmapStatusKey,
   TagDeleteResultDto,
@@ -73,6 +77,25 @@ export interface RoadmapBindings {
   listRoadmapGroup: RoadmapGroupQueryReference;
 }
 
+export type ChangelogFeedQueryReference = FunctionReference<
+  "query",
+  "public",
+  { sessionGeneration?: string; paginationOpts: PaginationOptions },
+  ChangelogPageDto
+>;
+
+export type ChangelogEntryQueryReference = FunctionReference<
+  "query",
+  "public",
+  { slug: string; sessionGeneration?: string },
+  PublishedChangelogLookupDto
+>;
+
+export interface ChangelogBindings {
+  listPublished: ChangelogFeedQueryReference;
+  getPublishedBySlug: ChangelogEntryQueryReference;
+}
+
 type AdminMutationReference<
   Args extends DefaultFunctionArgs,
   Result = FeedbackPostDto,
@@ -120,6 +143,31 @@ export interface AdminBindings {
     desired: boolean;
   }>;
   deleteTag: AdminMutationReference<{ tagId: TagId }, TagDeleteResultDto>;
+  createChangelogDraft?: AdminMutationReference<
+    { title: string; body: string; slug?: string },
+    AdminChangelogEntryDto
+  >;
+  editChangelog?: AdminMutationReference<
+    {
+      entryId: ChangelogId;
+      title?: string;
+      body?: string;
+      slug?: string;
+    },
+    AdminChangelogEntryDto
+  >;
+  setChangelogLinks?: AdminMutationReference<
+    { entryId: ChangelogId; postIds: PostId[] },
+    AdminChangelogEntryDto
+  >;
+  publishChangelog?: AdminMutationReference<
+    { entryId: ChangelogId },
+    AdminChangelogEntryDto
+  >;
+  unpublishChangelog?: AdminMutationReference<
+    { entryId: ChangelogId },
+    AdminChangelogEntryDto
+  >;
 }
 
 export interface AfferentBindings {
@@ -127,6 +175,6 @@ export interface AfferentBindings {
   participation?: Readonly<Record<string, unknown>>;
   notifications?: Readonly<Record<string, unknown>>;
   roadmap?: RoadmapBindings;
-  changelog?: Readonly<Record<string, unknown>>;
+  changelog?: ChangelogBindings;
   admin?: AdminBindings;
 }

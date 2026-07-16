@@ -36,10 +36,13 @@ const bindings = {
   },
 } as unknown as AfferentBindings;
 
+let editorProbe: ReturnType<typeof useChangelogEditor> | undefined;
+
 function Probe() {
   const feed = useChangelogFeed();
   const entry = useChangelogEntry("summer-release");
   const editor = useChangelogEditor();
+  editorProbe = editor;
   return (
     <output>
       {JSON.stringify({
@@ -56,6 +59,7 @@ describe("headless changelog hooks", () => {
     useMutation.mockReset();
     usePaginatedQuery.mockReset();
     useQuery.mockReset();
+    editorProbe = undefined;
     useMutation.mockReturnValue(vi.fn());
   });
 
@@ -79,10 +83,7 @@ describe("headless changelog hooks", () => {
       status: "loading",
     });
     expect(
-      mapChangelogEntryState(
-        { contractVersion: 1, status: "notFound" },
-        true,
-      ),
+      mapChangelogEntryState({ contractVersion: 1, status: "notFound" }, true),
     ).toMatchObject({ status: "notFound" });
   });
 
@@ -101,9 +102,9 @@ describe("headless changelog hooks", () => {
         <Probe />
       </AfferentProvider>,
     );
-    expect(markup).toContain('&quot;feed&quot;:&quot;empty&quot;');
-    expect(markup).toContain('&quot;entry&quot;:&quot;notFound&quot;');
-    expect(markup).toContain('&quot;editor&quot;:&quot;ready&quot;');
+    expect(markup).toContain("&quot;feed&quot;:&quot;empty&quot;");
+    expect(markup).toContain("&quot;entry&quot;:&quot;notFound&quot;");
+    expect(markup).toContain("&quot;editor&quot;:&quot;ready&quot;");
 
     const unsupported = renderToStaticMarkup(
       <AfferentProvider
@@ -113,8 +114,41 @@ describe("headless changelog hooks", () => {
         <Probe />
       </AfferentProvider>,
     );
-    expect(unsupported).toContain('&quot;feed&quot;:&quot;unsupported&quot;');
-    expect(unsupported).toContain('&quot;entry&quot;:&quot;unsupported&quot;');
-    expect(unsupported).toContain('&quot;editor&quot;:&quot;unsupported&quot;');
+    expect(unsupported).toContain("&quot;feed&quot;:&quot;unsupported&quot;");
+    expect(unsupported).toContain("&quot;entry&quot;:&quot;unsupported&quot;");
+    expect(unsupported).toContain("&quot;editor&quot;:&quot;unsupported&quot;");
+  });
+
+  test("guards duplicate editorial actions and waits for server truth", async () => {
+    let resolveMutation: ((value: object) => void) | undefined;
+    const mutation = vi.fn(
+      () =>
+        new Promise((resolve) => {
+          resolveMutation = resolve;
+        }),
+    );
+    useMutation.mockReturnValue(mutation);
+    usePaginatedQuery.mockReturnValue({
+      results: [],
+      status: "Exhausted",
+      loadMore: vi.fn(),
+    });
+    useQuery.mockReturnValue({ contractVersion: 1, status: "notFound" });
+    renderToStaticMarkup(
+      <AfferentProvider bindings={bindings} auth={{ status: "authenticated" }}>
+        <Probe />
+      </AfferentProvider>,
+    );
+    const first = editorProbe!.publish("entry-1" as never);
+    await expect(
+      editorProbe!.publish("entry-1" as never),
+    ).resolves.toMatchObject({ ok: false, error: { code: "VALIDATION" } });
+    resolveMutation?.({
+      contractVersion: 1,
+      id: "entry-1",
+      state: "published",
+    });
+    await expect(first).resolves.toMatchObject({ ok: true });
+    expect(mutation).toHaveBeenCalledTimes(1);
   });
 });

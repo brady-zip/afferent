@@ -1,6 +1,9 @@
 export type {
   AfferentBindings,
   AdminBindings,
+  ChangelogBindings,
+  ChangelogEntryQueryReference,
+  ChangelogFeedQueryReference,
   FeedbackFeedQueryReference,
   FeedbackSearchQueryReference,
   PublicBindings,
@@ -19,6 +22,14 @@ export {
   useSimilarPosts,
 } from "./hooks/feedback.js";
 export { mapRoadmapGroupState, useRoadmap } from "./hooks/roadmap.js";
+export {
+  changelogActionKey,
+  mapChangelogEntryState,
+  mapChangelogFeedState,
+  useChangelogEditor,
+  useChangelogEntry,
+  useChangelogFeed,
+} from "./hooks/changelog.js";
 export {
   mapAdminCapabilityState,
   mapModerationError,
@@ -39,6 +50,12 @@ export type {
   TagListState,
   TagManagementAction,
 } from "./hooks/admin.js";
+export type {
+  ChangelogEditorAction,
+  ChangelogEntryState,
+  ChangelogFeedState,
+  ChangelogPaginationState,
+} from "./hooks/changelog.js";
 export type {
   BoundedDiscoveryState,
   FeedbackFeedArgs,
