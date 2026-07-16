@@ -193,6 +193,16 @@ export function createClientWithScope(
           boards: BoardDto[];
         };
       },
+      async anonymizeActor(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        if (!(await options.authorizeAdmin(ctx))) {
+          throw new Error("ADMIN_AUTHORIZATION_REQUIRED");
+        }
+        return (await ctx.runMutation(component.admin.actors.anonymizeActor, {
+          scopeId,
+          actorId: args.actorId,
+        })) as unknown as PostDto["author"];
+      },
     },
   };
 }

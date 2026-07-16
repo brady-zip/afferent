@@ -11,7 +11,9 @@ export function invalidInput(message: string): never {
   throw new ConvexError({ code: "INVALID_INPUT", message });
 }
 
-export function notFound(resource: "board" | "post" | "comment"): never {
+export function notFound(
+  resource: "board" | "post" | "comment" | "actor",
+): never {
   throw new ConvexError({ code: "NOT_FOUND", resource });
 }
 

@@ -1,4 +1,5 @@
 export { configureInstallation } from "./admin/installation.js";
+export { anonymizeActor } from "./admin/actors.js";
 export {
   createPost,
   editPost,

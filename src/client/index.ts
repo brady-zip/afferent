@@ -19,6 +19,7 @@ export type {
 } from "./contracts.js";
 export {
   addCommentIntentValidator,
+  anonymizeActorIntentValidator,
   boardListResultValidator,
   commentPageResultValidator,
   configureInstallationIntentValidator,

@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as admin_actors from "../admin/actors.js";
 import type * as admin_installation from "../admin/installation.js";
 import type * as feedback from "../feedback.js";
 import type * as model_actors from "../model/actors.js";
@@ -32,6 +33,7 @@ import type {
 import { anyApi, componentsGeneric } from "convex/server";
 
 const fullApi: ApiFromModules<{
+  "admin/actors": typeof admin_actors;
   "admin/installation": typeof admin_installation;
   feedback: typeof feedback;
   "model/actors": typeof model_actors;

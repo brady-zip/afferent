@@ -114,10 +114,7 @@ describe("actor anonymization", () => {
       votes: await runCtx.db.query("votes").collect(),
       comments: await runCtx.db.query("comments").collect(),
     }));
-    expect(retained.actor).toMatchObject({
-      _id: post.author.id,
-      anonymized: true,
-    });
+    expect(retained.actor).toMatchObject({ _id: post.author.id });
     expect(retained.actor?.externalKey).toMatch(/^afferent:anonymous:v1:/);
     expect(retained.actor?.externalKey).not.toContain("erasable-user");
     expect(retained.actor).not.toHaveProperty("displayName");

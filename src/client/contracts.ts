@@ -83,6 +83,8 @@ export const configureInstallationIntentValidator = v.object({
   boards: v.array(v.object({ slug: v.string(), name: v.string() })),
 });
 
+export const anonymizeActorIntentValidator = v.object({ actorId: v.string() });
+
 export const createPostIntentValidator = v.object({
   boardId: v.string(),
   title: v.string(),
@@ -267,4 +269,8 @@ export interface AdminCapabilities<Context> {
     readPolicy: "public" | "authenticated";
     boards: BoardDto[];
   }>;
+  anonymizeActor(
+    ctx: Context,
+    args: { actorId: ActorId },
+  ): Promise<PostDto["author"]>;
 }

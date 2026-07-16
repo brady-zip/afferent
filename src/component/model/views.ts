@@ -2,12 +2,19 @@ import { ConvexError } from "convex/values";
 
 import type { Doc } from "../_generated/dataModel.js";
 import type { MutationCtx, QueryCtx } from "../_generated/server.js";
+import {
+  ANONYMIZED_AUTHOR_LABEL,
+  isAnonymizedExternalKey,
+} from "./actors.js";
 
 export function toBoardDto(board: Doc<"boards">) {
   return { id: String(board._id), slug: board.slug, name: board.name };
 }
 
 export function toActorDto(actor: Doc<"actors">) {
+  if (isAnonymizedExternalKey(actor.externalKey)) {
+    return { id: String(actor._id), displayName: ANONYMIZED_AUTHOR_LABEL };
+  }
   return {
     id: String(actor._id),
     ...(actor.displayName === undefined

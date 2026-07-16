@@ -7,6 +7,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   addCommentIntentValidator,
+  anonymizeActorIntentValidator,
   createPostIntentValidator,
   editPostIntentValidator,
   publicPostDtoValidator,
@@ -51,6 +52,9 @@ describe("public contract privacy", () => {
       "body",
       "parentCommentId",
       "postId",
+    ]);
+    expect(Object.keys(anonymizeActorIntentValidator.fields)).toEqual([
+      "actorId",
     ]);
   });
 

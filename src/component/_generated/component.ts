@@ -24,6 +24,15 @@ import type { FunctionReference } from "convex/server";
 export type ComponentApi<Name extends string | undefined = string | undefined> =
   {
     admin: {
+      actors: {
+        anonymizeActor: FunctionReference<
+          "mutation",
+          "internal",
+          { actorId: string; scopeId: string },
+          { avatarUrl?: string; displayName?: string; id: string },
+          Name
+        >;
+      };
       installation: {
         configureInstallation: FunctionReference<
           "mutation",
@@ -65,6 +74,13 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           parentCommentId?: string;
           postId: string;
         },
+        Name
+      >;
+      anonymizeActor: FunctionReference<
+        "mutation",
+        "internal",
+        { actorId: string; scopeId: string },
+        { avatarUrl?: string; displayName?: string; id: string },
         Name
       >;
       configureInstallation: FunctionReference<
