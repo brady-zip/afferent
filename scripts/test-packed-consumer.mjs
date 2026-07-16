@@ -179,7 +179,7 @@ const smoke = [
   "afferent/adapters/better-auth.js",
   "afferent/convex.config.js",
 ];
-const resolutionOnly = ["afferent/_generated/component.js", "afferent/test"];
+const resolutionOnly = ["afferent/test"];
 await run(
   process.execPath,
   [

@@ -12,9 +12,11 @@ const repositoryRoot = resolve(
 
 function run(command, args) {
   return new Promise((resolveRun, rejectRun) => {
+    const environment = { ...process.env, npm_config_workspaces: "false" };
+    delete environment.NODE_TEST_CONTEXT;
     const child = spawn(command, args, {
       cwd: repositoryRoot,
-      env: { ...process.env, npm_config_workspaces: "false" },
+      env: environment,
       stdio: ["ignore", "pipe", "pipe"],
     });
     let stdout = "";
