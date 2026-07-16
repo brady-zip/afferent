@@ -15,23 +15,23 @@ describe("ranked feedback scoring", () => {
   test("freezes the additive transactional trending formula", () => {
     expect(VOTE_SCORE_WEIGHT).toBe(DAY / 2);
     expect(COMMENT_SCORE_WEIGHT).toBe(DAY / 4);
-    expect(computeTrendingScore(1_000, 3, 2)).toBe(
-      1_000 + 3 * 43_200_000 + 2 * 21_600_000,
+    expect(computeTrendingScore(1000, 3, 2)).toBe(
+      1000 + 3 * 43_200_000 + 2 * 21_600_000,
     );
   });
 
   test("defines stable descending total orders through the opaque post id", () => {
     const older = {
       id: "post-a",
-      createdAt: 1_000,
+      createdAt: 1000,
       voteCount: 2,
-      trendingScore: computeTrendingScore(1_000, 2, 0),
+      trendingScore: computeTrendingScore(1000, 2, 0),
     };
     const newer = {
       id: "post-b",
-      createdAt: 2_000,
+      createdAt: 2000,
       voteCount: 1,
-      trendingScore: computeTrendingScore(2_000, 1, 0),
+      trendingScore: computeTrendingScore(2000, 1, 0),
     };
 
     expect([older, newer].sort(compareNewest).map(({ id }) => id)).toEqual([

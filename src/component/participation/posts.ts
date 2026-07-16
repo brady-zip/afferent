@@ -9,6 +9,11 @@ import {
   requireScope,
 } from "../model/scope.js";
 import { toPostDto } from "../model/views.js";
+import { computeTrendingScore, patchPostRanking } from "../model/scoring.js";
+import {
+  HIDDEN_POST_VISIBILITY,
+  PUBLIC_POST_VISIBILITY,
+} from "../model/visibility.js";
 import { postDtoValidator, verifiedActorValidator } from "../validators.js";
 
 const MAX_TITLE_LENGTH = 160;
@@ -45,6 +50,7 @@ export const createPost = mutation({
     const body = validatedBody(args.body);
     const board = await requireBoardInScope(ctx, args.scopeId, args.boardId);
     const actorId = await upsertActor(ctx, args.scopeId, args.actor);
+    const createdAt = Date.now();
     const postId = await ctx.db.insert("posts", {
       scopeId: args.scopeId,
       boardId: board._id,
@@ -55,7 +61,12 @@ export const createPost = mutation({
       statusKey: "open",
       voteCount: 0,
       commentCount: 0,
+      createdAt,
+      currentStatusSince: createdAt,
+      trendingScore: computeTrendingScore(createdAt, 0, 0),
+      visibilityKey: PUBLIC_POST_VISIBILITY,
     });
+    await ctx.db.patch(postId, { orderId: String(postId) });
     const post = await ctx.db.get(postId);
     if (!post) throw new ConvexError({ code: "INVARIANT_VIOLATION" });
     return await toPostDto(ctx, post);
@@ -83,7 +94,9 @@ export const editPost = mutation({
       invalidInput("withdrawn posts cannot be edited");
     }
     const patch = {
-      ...(args.title === undefined ? {} : { title: validatedTitle(args.title) }),
+      ...(args.title === undefined
+        ? {}
+        : { title: validatedTitle(args.title) }),
       ...(args.body === undefined ? {} : { body: validatedBody(args.body) }),
     };
     await ctx.db.patch(post._id, patch);
@@ -104,8 +117,15 @@ export const withdrawPost = mutation({
     const post = await requirePostInScope(ctx, args.scopeId, args.postId);
     if (post.actorId !== actorId) notOwner();
     if (post.lifecycleState !== "withdrawn") {
-      await ctx.db.patch(post._id, { lifecycleState: "withdrawn" });
+      await patchPostRanking(ctx, post, {
+        lifecycleState: "withdrawn",
+        visibilityKey: HIDDEN_POST_VISIBILITY,
+      });
     }
-    return await toPostDto(ctx, { ...post, lifecycleState: "withdrawn" });
+    return await toPostDto(ctx, {
+      ...post,
+      lifecycleState: "withdrawn",
+      visibilityKey: HIDDEN_POST_VISIBILITY,
+    });
   },
 });

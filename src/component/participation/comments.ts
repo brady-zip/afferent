@@ -10,6 +10,7 @@ import {
 import { invalidInput } from "../model/errors.js";
 import { requirePostInScope, requireScope } from "../model/scope.js";
 import { commentDtoValidator, verifiedActorValidator } from "../validators.js";
+import { patchPostRanking } from "../model/scoring.js";
 
 export const addComment = mutation({
   args: {
@@ -43,7 +44,9 @@ export const addComment = mutation({
       body,
       ...(parent === undefined ? {} : { parentCommentId: parent._id }),
     });
-    await ctx.db.patch(post._id, { commentCount: post.commentCount + 1 });
+    await patchPostRanking(ctx, post, {
+      commentCount: post.commentCount + 1,
+    });
     const comment = await ctx.db.get(commentId);
     if (!comment) throw new Error("COMMENT_INSERT_INVARIANT");
     return await toCommentDto(ctx, comment);

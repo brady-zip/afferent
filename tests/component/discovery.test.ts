@@ -108,7 +108,7 @@ describe("ranked public feedback discovery", () => {
         boardId: alphaInstall.boards[0].id,
         actorId: alphaActor,
         title: "Newest",
-        createdAt: 3_000,
+        createdAt: 3000,
         voteCount: 0,
         commentCount: 0,
       });
@@ -117,7 +117,7 @@ describe("ranked public feedback discovery", () => {
         boardId: alphaInstall.boards[0].id,
         actorId: alphaActor,
         title: "Top",
-        createdAt: 1_000,
+        createdAt: 1000,
         voteCount: 5,
         commentCount: 0,
         statusKey: "planned",
@@ -127,7 +127,7 @@ describe("ranked public feedback discovery", () => {
         boardId: alphaInstall.boards[1].id,
         actorId: alphaActor,
         title: "Discussed",
-        createdAt: 2_000,
+        createdAt: 2000,
         voteCount: 0,
         commentCount: 9,
       });
@@ -137,7 +137,7 @@ describe("ranked public feedback discovery", () => {
           boardId: alphaInstall.boards[0].id,
           actorId: alphaActor,
           title: "Withdrawn",
-          createdAt: 9_000,
+          createdAt: 9000,
           voteCount: 99,
           commentCount: 99,
           lifecycleState: "withdrawn",
@@ -147,17 +147,17 @@ describe("ranked public feedback discovery", () => {
           boardId: alphaInstall.boards[0].id,
           actorId: alphaActor,
           title: "Archived",
-          createdAt: 8_000,
+          createdAt: 8000,
           voteCount: 99,
           commentCount: 99,
-          archivedAt: 8_001,
+          archivedAt: 8001,
         }),
         insertPost({
           scopeId: "scope:alpha",
           boardId: alphaInstall.boards[0].id,
           actorId: alphaActor,
           title: "Merged source",
-          createdAt: 7_000,
+          createdAt: 7000,
           voteCount: 99,
           commentCount: 99,
           mergedIntoPostId: String(top),
@@ -202,16 +202,19 @@ describe("ranked public feedback discovery", () => {
     expect(newestTail.page.map(({ id }) => id)).toEqual([String(seeded.top)]);
     expect(newestTail.isDone).toBe(true);
 
-    expect((await list("top")).page.map(({ id }) => id)).toEqual([
+    const topPage = await list("top");
+    expect(topPage.page.map(({ id }) => id)).toEqual([
       String(seeded.top),
       String(seeded.newest),
     ]);
-    expect((await list("trending")).page.map(({ id }) => id)).toEqual([
-      String(seeded.discussed),
+    const trendingPage = await list("trending");
+    expect(trendingPage.page.map(({ id }) => id)).toEqual([
       String(seeded.top),
+      String(seeded.discussed),
     ]);
 
-    const visibleIds = [...(await list("newest")).page, ...newestTail.page].map(
+    const repeatedNewestPage = await list("newest");
+    const visibleIds = [...repeatedNewestPage.page, ...newestTail.page].map(
       ({ id }) => id,
     );
     for (const hiddenId of [...seeded.hiddenIds, seeded.betaOnly]) {
@@ -257,9 +260,9 @@ describe("ranked public feedback discovery", () => {
           statusKey,
           voteCount: 0,
           commentCount: 0,
-          createdAt: 1_000,
-          currentStatusSince: 1_000,
-          trendingScore: 1_000,
+          createdAt: 1000,
+          currentStatusSince: 1000,
+          trendingScore: 1000,
           visibilityKey: "visible",
         });
         await runCtx.db.patch(postId, { orderId: String(postId) });
@@ -283,9 +286,9 @@ describe("ranked public feedback discovery", () => {
         boardId: installation.boards[0].id as never,
         statusKey: "planned",
         visibilityKey: "visible",
-        createdAt: 1_000,
+        createdAt: 1000,
         voteCount: 0,
-        trendingScore: 1_000,
+        trendingScore: 1000,
         orderId: String(idea),
       });
       return { idea, bug, tagId };
@@ -301,21 +304,15 @@ describe("ranked public feedback discovery", () => {
         ...filter,
         paginationOpts: { numItems: 10, cursor: null },
       });
-    expect(
-      (await page({ boardId: installation.boards[0].id })).page.map(
-        ({ id }) => id,
-      ),
-    ).toEqual([String(seeded.idea)]);
-    expect(
-      (await page({ status: "planned" })).page.map(({ id }) => id),
-    ).toEqual([String(seeded.idea)]);
-    expect(
-      (await page({ tagId: String(seeded.tagId) })).page.map(({ id }) => id),
-    ).toEqual([String(seeded.idea)]);
-    expect(
-      (await page({ boardId: installation.boards[1].id })).page.map(
-        ({ id }) => id,
-      ),
-    ).toEqual([String(seeded.bug)]);
+    const ideaBoardPage = await page({ boardId: installation.boards[0].id });
+    expect(ideaBoardPage.page.map(({ id }) => id)).toEqual([
+      String(seeded.idea),
+    ]);
+    const plannedPage = await page({ status: "planned" });
+    expect(plannedPage.page.map(({ id }) => id)).toEqual([String(seeded.idea)]);
+    const tagPage = await page({ tagId: String(seeded.tagId) });
+    expect(tagPage.page.map(({ id }) => id)).toEqual([String(seeded.idea)]);
+    const bugBoardPage = await page({ boardId: installation.boards[1].id });
+    expect(bugBoardPage.page.map(({ id }) => id)).toEqual([String(seeded.bug)]);
   });
 });

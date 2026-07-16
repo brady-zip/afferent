@@ -8,6 +8,11 @@ export type BoardId = BrandedId<"BoardId">;
 export type ActorId = BrandedId<"ActorId">;
 export type PostId = BrandedId<"PostId">;
 export type CommentId = BrandedId<"CommentId">;
+export type TagId = BrandedId<"TagId">;
+
+export type PostStatusKey =
+  "open" | "under_review" | "planned" | "in_progress" | "complete" | "closed";
+export type FeedbackOrder = "newest" | "top" | "trending";
 
 export type VerifiedActor = Readonly<{
   externalKey: string;
@@ -40,6 +45,32 @@ export type PostDto = Readonly<{
   tags: string[];
 }>;
 
+export type TagDto = Readonly<{ id: TagId; name: string }>;
+
+export type FeedbackPostDto = Readonly<{
+  contractVersion: 2;
+  id: PostId;
+  boardId: BoardId;
+  board: BoardDto;
+  title: string;
+  body: string;
+  author: PostDto["author"];
+  status: Readonly<{
+    key: PostStatusKey;
+    label:
+      | "Open"
+      | "Under Review"
+      | "Planned"
+      | "In Progress"
+      | "Complete"
+      | "Closed";
+  }>;
+  voteCount: number;
+  commentCount: number;
+  totals: Readonly<{ votes: number; comments: number }>;
+  tags: TagDto[];
+}>;
+
 export type PaginationOptions = Readonly<{
   numItems: number;
   cursor: string | null;
@@ -53,6 +84,16 @@ export type PostPageDto = Readonly<{
   contractVersion: 1;
   page: PostDto[];
   posts: PostDto[];
+  isDone: boolean;
+  continueCursor: string;
+  splitCursor?: string | null;
+  pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+}>;
+
+export type FeedbackPageDto = Readonly<{
+  contractVersion: 2;
+  page: FeedbackPostDto[];
+  posts: FeedbackPostDto[];
   isDone: boolean;
   continueCursor: string;
   splitCursor?: string | null;
@@ -126,6 +167,23 @@ export const listPostsIntentValidator = v.object({
   paginationOpts: v.optional(paginationOptsValidator),
 });
 
+export const listFeedbackIntentValidator = v.object({
+  order: v.union(v.literal("newest"), v.literal("top"), v.literal("trending")),
+  boardId: v.optional(v.string()),
+  status: v.optional(
+    v.union(
+      v.literal("open"),
+      v.literal("under_review"),
+      v.literal("planned"),
+      v.literal("in_progress"),
+      v.literal("complete"),
+      v.literal("closed"),
+    ),
+  ),
+  tagId: v.optional(v.string()),
+  paginationOpts: v.optional(paginationOptsValidator),
+});
+
 export const listBoardsIntentValidator = v.object({});
 
 export const getPostIntentValidator = v.object({ postId: v.string() });
@@ -155,6 +213,42 @@ export const publicPostDtoValidator = v.object({
   commentCount: v.number(),
   totals: v.object({ votes: v.number(), comments: v.number() }),
   tags: v.array(v.string()),
+});
+
+export const publicFeedbackPostDtoValidator = v.object({
+  contractVersion: v.literal(2),
+  id: v.string(),
+  boardId: v.string(),
+  board: publicBoardDtoValidator,
+  title: v.string(),
+  body: v.string(),
+  author: v.object({
+    id: v.string(),
+    displayName: v.optional(v.string()),
+    avatarUrl: v.optional(v.string()),
+  }),
+  status: v.object({
+    key: v.union(
+      v.literal("open"),
+      v.literal("under_review"),
+      v.literal("planned"),
+      v.literal("in_progress"),
+      v.literal("complete"),
+      v.literal("closed"),
+    ),
+    label: v.union(
+      v.literal("Open"),
+      v.literal("Under Review"),
+      v.literal("Planned"),
+      v.literal("In Progress"),
+      v.literal("Complete"),
+      v.literal("Closed"),
+    ),
+  }),
+  voteCount: v.number(),
+  commentCount: v.number(),
+  totals: v.object({ votes: v.number(), comments: v.number() }),
+  tags: v.array(v.object({ id: v.string(), name: v.string() })),
 });
 
 export const publicCommentDtoValidator = v.object({
@@ -213,6 +307,22 @@ export const postPageResultValidator = v.object({
   ),
 });
 
+export const feedbackPageResultValidator = v.object({
+  contractVersion: v.literal(2),
+  page: v.array(publicFeedbackPostDtoValidator),
+  posts: v.array(publicFeedbackPostDtoValidator),
+  isDone: v.boolean(),
+  continueCursor: v.string(),
+  splitCursor: v.optional(v.union(v.string(), v.null())),
+  pageStatus: v.optional(
+    v.union(
+      v.literal("SplitRecommended"),
+      v.literal("SplitRequired"),
+      v.null(),
+    ),
+  ),
+});
+
 export const boardListResultValidator = v.object({
   contractVersion: v.literal(1),
   boards: v.array(publicBoardDtoValidator),
@@ -233,6 +343,16 @@ export interface ReadCapabilities<Context> {
     ctx: Context,
     args: { boardId: BoardId; paginationOpts?: PaginationOptions },
   ): Promise<PostPageDto>;
+  listFeedback(
+    ctx: Context,
+    args: {
+      order: FeedbackOrder;
+      boardId?: BoardId;
+      status?: PostStatusKey;
+      tagId?: TagId;
+      paginationOpts?: PaginationOptions;
+    },
+  ): Promise<FeedbackPageDto>;
   getPost(ctx: Context, args: { postId: PostId }): Promise<PostDto>;
   countPosts(ctx: Context, args: { boardId: BoardId }): Promise<PostCountDto>;
   listComments(

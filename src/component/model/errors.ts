@@ -12,7 +12,7 @@ export function invalidInput(message: string): never {
 }
 
 export function notFound(
-  resource: "board" | "post" | "comment" | "actor",
+  resource: "board" | "post" | "comment" | "actor" | "tag",
 ): never {
   throw new ConvexError({ code: "NOT_FOUND", resource });
 }

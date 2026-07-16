@@ -6,6 +6,7 @@ import type {
   BoardDto,
   CommentDto,
   CommentPageDto,
+  FeedbackPageDto,
   ParticipationCapabilities,
   PostCountDto,
   PostDto,
@@ -68,6 +69,21 @@ export function createClientWithScope(
             cursor: null,
           },
         })) as unknown as PostPageDto;
+      },
+      async listFeedback(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        return (await ctx.runQuery(component.public.feeds.listFeedback, {
+          scopeId,
+          order: args.order,
+          viewerAuthenticated: await viewerAuthenticated(options, ctx),
+          ...(args.boardId === undefined ? {} : { boardId: args.boardId }),
+          ...(args.status === undefined ? {} : { status: args.status }),
+          ...(args.tagId === undefined ? {} : { tagId: args.tagId }),
+          paginationOpts: args.paginationOpts ?? {
+            numItems: 20,
+            cursor: null,
+          },
+        })) as unknown as FeedbackPageDto;
       },
       async getPost(ctx, args) {
         const scopeId = await resolveRequiredScope(options.resolveScope, ctx);

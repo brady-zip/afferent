@@ -7,6 +7,7 @@ import { requirePostInScope, requireScope } from "../model/scope.js";
 import { findVoteMembership, projectVoteState } from "../model/votes.js";
 import { toPostDto } from "../model/views.js";
 import { postDtoValidator, verifiedActorValidator } from "../validators.js";
+import { patchPostRanking } from "../model/scoring.js";
 
 export const setVote = mutation({
   args: {
@@ -24,10 +25,11 @@ export const setVote = mutation({
     }
 
     const actorId = await upsertActor(ctx, args.scopeId, args.actor);
-    const membership = await findVoteMembership(
-      ctx,
-      { scopeId: args.scopeId, postId: post._id, actorId },
-    );
+    const membership = await findVoteMembership(ctx, {
+      scopeId: args.scopeId,
+      postId: post._id,
+      actorId,
+    });
     const projection = projectVoteState(
       membership !== null,
       args.desired,
@@ -44,10 +46,9 @@ export const setVote = mutation({
     } else if (membership) {
       await ctx.db.delete(membership._id);
     }
-    await ctx.db.patch(post._id, { voteCount: projection.voteCount });
-    return await toPostDto(ctx, {
-      ...post,
+    const updated = await patchPostRanking(ctx, post, {
       voteCount: projection.voteCount,
     });
+    return await toPostDto(ctx, updated);
   },
 });
