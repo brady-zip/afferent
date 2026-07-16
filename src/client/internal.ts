@@ -17,14 +17,8 @@ import type {
   VerifiedActor,
 } from "./contracts.js";
 
-export type ReadContext = Pick<
-  GenericQueryCtx<GenericDataModel>,
-  "auth" | "runQuery"
->;
-export type MutationContext = Pick<
-  GenericMutationCtx<GenericDataModel>,
-  "auth" | "runMutation"
->;
+export type ReadContext = GenericQueryCtx<GenericDataModel>;
+export type MutationContext = GenericMutationCtx<GenericDataModel>;
 export type HostContext = ReadContext | MutationContext;
 
 export type ClientResolvers = Readonly<{
@@ -49,10 +43,7 @@ async function resolveRequiredScope(
   return scopeId;
 }
 
-async function viewerAuthenticated(
-  options: ClientResolvers,
-  ctx: ReadContext,
-) {
+async function viewerAuthenticated(options: ClientResolvers, ctx: ReadContext) {
   return options.isAuthenticated ? await options.isAuthenticated(ctx) : false;
 }
 
@@ -151,10 +142,12 @@ export function createClientWithScope(
         const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
         const actor = await options.resolveActor(ctx);
         if (!actor) throw new Error("AUTHENTICATION_REQUIRED");
-        return (await ctx.runMutation(
-          component.participation.votes.setVote,
-          { scopeId, actor, postId: args.postId, desired: args.desired },
-        )) as unknown as PostDto;
+        return (await ctx.runMutation(component.participation.votes.setVote, {
+          scopeId,
+          actor,
+          postId: args.postId,
+          desired: args.desired,
+        })) as unknown as PostDto;
       },
       async addComment(ctx, args) {
         const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
