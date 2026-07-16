@@ -1,5 +1,11 @@
 import { v } from "convex/values";
 
+export type VerifiedActorValue = {
+  externalKey: string;
+  displayName?: string;
+  avatarUrl?: string;
+};
+
 export const readPolicyValidator = v.union(
   v.literal("public"),
   v.literal("authenticated"),
@@ -58,4 +64,14 @@ export const installationDtoValidator = v.object({
 export const postListDtoValidator = v.object({
   contractVersion: v.literal(1),
   posts: v.array(postDtoValidator),
+});
+
+export const boardListDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  boards: v.array(boardDtoValidator),
+});
+
+export const countDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  count: v.number(),
 });

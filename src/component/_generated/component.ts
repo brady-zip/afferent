@@ -23,6 +23,25 @@ import type { FunctionReference } from "convex/server";
  */
 export type ComponentApi<Name extends string | undefined = string | undefined> =
   {
+    admin: {
+      installation: {
+        configureInstallation: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            boards: Array<{ name: string; slug: string }>;
+            readPolicy: "public" | "authenticated";
+            scopeId: string;
+          },
+          {
+            boards: Array<{ id: string; name: string; slug: string }>;
+            contractVersion: 1;
+            readPolicy: "public" | "authenticated";
+          },
+          Name
+        >;
+      };
+    };
     feedback: {
       configureInstallation: FunctionReference<
         "mutation",
@@ -37,6 +56,13 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           contractVersion: 1;
           readPolicy: "public" | "authenticated";
         },
+        Name
+      >;
+      countPosts: FunctionReference<
+        "query",
+        "internal",
+        { boardId: string; scopeId: string; viewerAuthenticated: boolean },
+        { contractVersion: 1; count: number },
         Name
       >;
       createPost: FunctionReference<
@@ -69,6 +95,36 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         },
         Name
       >;
+      getPost: FunctionReference<
+        "query",
+        "internal",
+        { postId: string; scopeId: string; viewerAuthenticated: boolean },
+        {
+          author: { avatarUrl?: string; displayName?: string; id: string };
+          board: { id: string; name: string; slug: string };
+          boardId: string;
+          body: string;
+          commentCount: number;
+          contractVersion: 1;
+          id: string;
+          status: { key: "open"; label: "Open" };
+          tags: Array<string>;
+          title: string;
+          totals: { comments: number; votes: number };
+          voteCount: number;
+        },
+        Name
+      >;
+      listBoards: FunctionReference<
+        "query",
+        "internal",
+        { scopeId: string; viewerAuthenticated: boolean },
+        {
+          boards: Array<{ id: string; name: string; slug: string }>;
+          contractVersion: 1;
+        },
+        Name
+      >;
       listPosts: FunctionReference<
         "query",
         "internal",
@@ -92,5 +148,105 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         },
         Name
       >;
+    };
+    participation: {
+      posts: {
+        createPost: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            actor: {
+              avatarUrl?: string;
+              displayName?: string;
+              externalKey: string;
+            };
+            boardId: string;
+            body: string;
+            scopeId: string;
+            title: string;
+          },
+          {
+            author: { avatarUrl?: string; displayName?: string; id: string };
+            board: { id: string; name: string; slug: string };
+            boardId: string;
+            body: string;
+            commentCount: number;
+            contractVersion: 1;
+            id: string;
+            status: { key: "open"; label: "Open" };
+            tags: Array<string>;
+            title: string;
+            totals: { comments: number; votes: number };
+            voteCount: number;
+          },
+          Name
+        >;
+      };
+    };
+    public: {
+      boards: {
+        listBoards: FunctionReference<
+          "query",
+          "internal",
+          { scopeId: string; viewerAuthenticated: boolean },
+          {
+            boards: Array<{ id: string; name: string; slug: string }>;
+            contractVersion: 1;
+          },
+          Name
+        >;
+      };
+      posts: {
+        countPosts: FunctionReference<
+          "query",
+          "internal",
+          { boardId: string; scopeId: string; viewerAuthenticated: boolean },
+          { contractVersion: 1; count: number },
+          Name
+        >;
+        getPost: FunctionReference<
+          "query",
+          "internal",
+          { postId: string; scopeId: string; viewerAuthenticated: boolean },
+          {
+            author: { avatarUrl?: string; displayName?: string; id: string };
+            board: { id: string; name: string; slug: string };
+            boardId: string;
+            body: string;
+            commentCount: number;
+            contractVersion: 1;
+            id: string;
+            status: { key: "open"; label: "Open" };
+            tags: Array<string>;
+            title: string;
+            totals: { comments: number; votes: number };
+            voteCount: number;
+          },
+          Name
+        >;
+        listPosts: FunctionReference<
+          "query",
+          "internal",
+          { boardId: string; scopeId: string; viewerAuthenticated: boolean },
+          {
+            contractVersion: 1;
+            posts: Array<{
+              author: { avatarUrl?: string; displayName?: string; id: string };
+              board: { id: string; name: string; slug: string };
+              boardId: string;
+              body: string;
+              commentCount: number;
+              contractVersion: 1;
+              id: string;
+              status: { key: "open"; label: "Open" };
+              tags: Array<string>;
+              title: string;
+              totals: { comments: number; votes: number };
+              voteCount: number;
+            }>;
+          },
+          Name
+        >;
+      };
     };
   };

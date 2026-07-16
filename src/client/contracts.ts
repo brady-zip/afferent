@@ -53,6 +53,12 @@ export const listPostsIntentValidator = v.object({
   boardId: v.string(),
 });
 
+export const listBoardsIntentValidator = v.object({});
+
+export const getPostIntentValidator = v.object({ postId: v.string() });
+
+export const countPostsIntentValidator = v.object({ boardId: v.string() });
+
 export const publicBoardDtoValidator = v.object({
   id: v.string(),
   slug: v.string(),
@@ -89,7 +95,21 @@ export const postListResultValidator = v.object({
   posts: v.array(publicPostDtoValidator),
 });
 
+export const boardListResultValidator = v.object({
+  contractVersion: v.literal(1),
+  boards: v.array(publicBoardDtoValidator),
+});
+
+export const countResultValidator = v.object({
+  contractVersion: v.literal(1),
+  count: v.number(),
+});
+
 export interface ReadCapabilities<Context> {
+  listBoards(
+    ctx: Context,
+    args: Record<string, never>,
+  ): Promise<{ contractVersion: 1; boards: BoardDto[] }>;
   listPosts(
     ctx: Context,
     args: { boardId: BoardId },
@@ -97,6 +117,11 @@ export interface ReadCapabilities<Context> {
     contractVersion: 1;
     posts: PostDto[];
   }>;
+  getPost(ctx: Context, args: { postId: PostId }): Promise<PostDto>;
+  countPosts(
+    ctx: Context,
+    args: { boardId: BoardId },
+  ): Promise<{ contractVersion: 1; count: number }>;
 }
 
 export interface ParticipationCapabilities<Context> {
