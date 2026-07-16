@@ -140,3 +140,20 @@ config_file = "/Users/bradywatkinson/dev/afferent/.codex/agents/gsd-user-profile
 description = "Verifies phase goal achievement through goal-backward analysis. Checks codebase delivers what phase promised, not just that tasks completed. Creates VERIFICATION.md report."
 config_file = "/Users/bradywatkinson/dev/afferent/.codex/agents/gsd-verifier.toml"
 
+[[hooks.SessionStart]]
+
+[[hooks.SessionStart.hooks]]
+command = "h5i hook codex prelude"
+type = "command"
+
+[[hooks.PostToolUse]]
+
+[[hooks.PostToolUse.hooks]]
+command = "h5i hook codex sync"
+type = "command"
+
+[[hooks.Stop]]
+
+[[hooks.Stop.hooks]]
+command = "h5i hook codex finish --quiet"
+type = "command"
