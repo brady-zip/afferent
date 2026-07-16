@@ -90,15 +90,7 @@ const scenario = {
     };
   },
   createClient: createBetterAuthAfferentFixture,
-} satisfies ProviderFactoryScenario & {
-  registerBackend: (backend: Parameters<typeof betterAuthTest.register>[0]) => void;
-  prepareIdentity: (
-    backend: Parameters<typeof betterAuthTest.register>[0],
-  ) => Promise<{
-    identity: ProviderFactoryScenario["identity"];
-    invalidIdentities: ProviderFactoryScenario["identity"][];
-  }>;
-};
+} satisfies ProviderFactoryScenario;
 
 runFactoryAuthorityConformance(scenario);
 
