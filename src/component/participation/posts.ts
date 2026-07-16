@@ -15,24 +15,10 @@ import {
   PUBLIC_POST_VISIBILITY,
 } from "../model/visibility.js";
 import { postDtoValidator, verifiedActorValidator } from "../validators.js";
+import { normalizePlainText, validateSafeMarkdown } from "../model/content.js";
 
-const MAX_TITLE_LENGTH = 160;
-const MAX_BODY_LENGTH = 10_000;
-
-function validatedTitle(value: string) {
-  const title = value.trim();
-  if (!title || title.length > MAX_TITLE_LENGTH) {
-    invalidInput(`title must contain 1 to ${MAX_TITLE_LENGTH} characters`);
-  }
-  return title;
-}
-
-function validatedBody(value: string) {
-  const body = value.trim();
-  if (!body || body.length > MAX_BODY_LENGTH) {
-    invalidInput(`body must contain 1 to ${MAX_BODY_LENGTH} characters`);
-  }
-  return body;
+function postSearchText(title: string, body: string) {
+  return `${title}\n${body}`;
 }
 
 export const createPost = mutation({
@@ -46,8 +32,8 @@ export const createPost = mutation({
   returns: postDtoValidator,
   handler: async (ctx, args) => {
     requireScope(args.scopeId);
-    const title = validatedTitle(args.title);
-    const body = validatedBody(args.body);
+    const title = normalizePlainText(args.title, "title");
+    const body = validateSafeMarkdown(args.body, "body");
     const board = await requireBoardInScope(ctx, args.scopeId, args.boardId);
     const actorId = await upsertActor(ctx, args.scopeId, args.actor);
     const createdAt = Date.now();
@@ -57,6 +43,7 @@ export const createPost = mutation({
       actorId,
       title,
       body,
+      searchText: postSearchText(title, body),
       lifecycleState: "active",
       statusKey: "open",
       voteCount: 0,
@@ -93,13 +80,32 @@ export const editPost = mutation({
     if (post.lifecycleState !== "active") {
       invalidInput("withdrawn posts cannot be edited");
     }
+    const title =
+      args.title === undefined
+        ? post.title
+        : normalizePlainText(args.title, "title");
+    const body =
+      args.body === undefined
+        ? post.body
+        : validateSafeMarkdown(args.body, "body");
     const patch = {
-      ...(args.title === undefined
-        ? {}
-        : { title: validatedTitle(args.title) }),
-      ...(args.body === undefined ? {} : { body: validatedBody(args.body) }),
+      ...(args.title === undefined ? {} : { title }),
+      ...(args.body === undefined ? {} : { body }),
+      searchText: postSearchText(title, body),
     };
     await ctx.db.patch(post._id, patch);
+    const projections = await ctx.db
+      .query("postTagSearches")
+      .withIndex("by_scope_post", (query) =>
+        query.eq("scopeId", args.scopeId).eq("postId", post._id),
+      )
+      .take(21);
+    if (projections.length > 20) invalidInput("posts may have at most 20 tags");
+    await Promise.all(
+      projections.map((projection) =>
+        ctx.db.patch(projection._id, { searchText: patch.searchText }),
+      ),
+    );
     return await toPostDto(ctx, { ...post, ...patch });
   },
 });

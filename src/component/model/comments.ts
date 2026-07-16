@@ -5,16 +5,13 @@ import type { MutationCtx, QueryCtx } from "../_generated/server.js";
 import { invalidInput, notFound } from "./errors.js";
 import { requireScope } from "./scope.js";
 import { toActorDto } from "./views.js";
+import { validateSafeMarkdown } from "./content.js";
 
 const MAX_COMMENT_LENGTH = 10_000;
 type DatabaseContext = Pick<QueryCtx | MutationCtx, "db">;
 
 export function normalizeCommentBody(value: string) {
-  const body = value.trim();
-  if (!body || body.length > MAX_COMMENT_LENGTH) {
-    invalidInput(`comment must contain 1 to ${MAX_COMMENT_LENGTH} characters`);
-  }
-  return body;
+  return validateSafeMarkdown(value, "comment", MAX_COMMENT_LENGTH);
 }
 
 export async function requireRootParent(

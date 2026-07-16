@@ -66,7 +66,8 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "convex-helpers": "^0.1.120"
+    "convex-helpers": "^0.1.120",
+    "mdast-util-from-markdown": "2.0.3"
   },
   "peerDependencies": {
     "convex": "^1.42.2",

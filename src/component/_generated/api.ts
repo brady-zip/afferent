@@ -13,9 +13,11 @@ import type * as admin_installation from "../admin/installation.js";
 import type * as feedback from "../feedback.js";
 import type * as model_actors from "../model/actors.js";
 import type * as model_comments from "../model/comments.js";
+import type * as model_content from "../model/content.js";
 import type * as model_errors from "../model/errors.js";
 import type * as model_scope from "../model/scope.js";
 import type * as model_scoring from "../model/scoring.js";
+import type * as model_similarity from "../model/similarity.js";
 import type * as model_views from "../model/views.js";
 import type * as model_visibility from "../model/visibility.js";
 import type * as model_votes from "../model/votes.js";
@@ -26,6 +28,7 @@ import type * as public_boards from "../public/boards.js";
 import type * as public_comments from "../public/comments.js";
 import type * as public_feeds from "../public/feeds.js";
 import type * as public_posts from "../public/posts.js";
+import type * as public_search from "../public/search.js";
 import type * as validators from "../validators.js";
 
 import type {
@@ -41,9 +44,11 @@ const fullApi: ApiFromModules<{
   feedback: typeof feedback;
   "model/actors": typeof model_actors;
   "model/comments": typeof model_comments;
+  "model/content": typeof model_content;
   "model/errors": typeof model_errors;
   "model/scope": typeof model_scope;
   "model/scoring": typeof model_scoring;
+  "model/similarity": typeof model_similarity;
   "model/views": typeof model_views;
   "model/visibility": typeof model_visibility;
   "model/votes": typeof model_votes;
@@ -54,6 +59,7 @@ const fullApi: ApiFromModules<{
   "public/comments": typeof public_comments;
   "public/feeds": typeof public_feeds;
   "public/posts": typeof public_posts;
+  "public/search": typeof public_search;
   validators: typeof validators;
 }> = anyApi as any;
 

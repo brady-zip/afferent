@@ -106,5 +106,24 @@ export async function patchPostRanking(
     ),
   );
 
+  const searchProjections = await ctx.db
+    .query("postTagSearches")
+    .withIndex("by_scope_post", (query) =>
+      query.eq("scopeId", post.scopeId).eq("postId", post._id),
+    )
+    .take(MAX_TAGS_PER_POST + 1);
+  if (searchProjections.length > MAX_TAGS_PER_POST) {
+    invalidInput(`posts may have at most ${MAX_TAGS_PER_POST} tags`);
+  }
+  await Promise.all(
+    searchProjections.map((projection) =>
+      ctx.db.patch(projection._id, {
+        boardId: patch.boardId ?? post.boardId,
+        statusKey: patch.statusKey ?? post.statusKey,
+        visibilityKey: patch.visibilityKey ?? post.visibilityKey ?? "visible",
+      }),
+    ),
+  );
+
   return { ...post, ...rankingPatch };
 }

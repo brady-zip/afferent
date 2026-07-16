@@ -381,6 +381,51 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         },
         Name
       >;
+      searchFeedback: FunctionReference<
+        "query",
+        "internal",
+        {
+          boardId?: string;
+          query: string;
+          scopeId: string;
+          status?:
+            | "open"
+            | "under_review"
+            | "planned"
+            | "in_progress"
+            | "complete"
+            | "closed";
+          tagId?: string;
+          viewerAuthenticated: boolean;
+        },
+        {
+          contractVersion: 1;
+          hasMore: boolean;
+          items: Array<{
+            board: { id: string; name: string; slug: string };
+            contractVersion: 1;
+            id: string;
+            status: {
+              key:
+                | "open"
+                | "under_review"
+                | "planned"
+                | "in_progress"
+                | "complete"
+                | "closed";
+              label:
+                | "Open"
+                | "Under Review"
+                | "Planned"
+                | "In Progress"
+                | "Complete"
+                | "Closed";
+            };
+            title: string;
+          }>;
+        },
+        Name
+      >;
       setVote: FunctionReference<
         "mutation",
         "internal",
@@ -407,6 +452,44 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           title: string;
           totals: { comments: number; votes: number };
           voteCount: number;
+        },
+        Name
+      >;
+      suggestSimilarPosts: FunctionReference<
+        "query",
+        "internal",
+        {
+          body?: string;
+          limit?: number;
+          scopeId: string;
+          title: string;
+          viewerAuthenticated: boolean;
+        },
+        {
+          contractVersion: 1;
+          hasMore: boolean;
+          items: Array<{
+            board: { id: string; name: string; slug: string };
+            contractVersion: 1;
+            id: string;
+            status: {
+              key:
+                | "open"
+                | "under_review"
+                | "planned"
+                | "in_progress"
+                | "complete"
+                | "closed";
+              label:
+                | "Open"
+                | "Under Review"
+                | "Planned"
+                | "In Progress"
+                | "Complete"
+                | "Closed";
+            };
+            title: string;
+          }>;
         },
         Name
       >;
@@ -816,6 +899,91 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               voteCount: number;
             }>;
             splitCursor?: string | null;
+          },
+          Name
+        >;
+      };
+      search: {
+        searchFeedback: FunctionReference<
+          "query",
+          "internal",
+          {
+            boardId?: string;
+            query: string;
+            scopeId: string;
+            status?:
+              | "open"
+              | "under_review"
+              | "planned"
+              | "in_progress"
+              | "complete"
+              | "closed";
+            tagId?: string;
+            viewerAuthenticated: boolean;
+          },
+          {
+            contractVersion: 1;
+            hasMore: boolean;
+            items: Array<{
+              board: { id: string; name: string; slug: string };
+              contractVersion: 1;
+              id: string;
+              status: {
+                key:
+                  | "open"
+                  | "under_review"
+                  | "planned"
+                  | "in_progress"
+                  | "complete"
+                  | "closed";
+                label:
+                  | "Open"
+                  | "Under Review"
+                  | "Planned"
+                  | "In Progress"
+                  | "Complete"
+                  | "Closed";
+              };
+              title: string;
+            }>;
+          },
+          Name
+        >;
+        suggestSimilarPosts: FunctionReference<
+          "query",
+          "internal",
+          {
+            body?: string;
+            limit?: number;
+            scopeId: string;
+            title: string;
+            viewerAuthenticated: boolean;
+          },
+          {
+            contractVersion: 1;
+            hasMore: boolean;
+            items: Array<{
+              board: { id: string; name: string; slug: string };
+              contractVersion: 1;
+              id: string;
+              status: {
+                key:
+                  | "open"
+                  | "under_review"
+                  | "planned"
+                  | "in_progress"
+                  | "complete"
+                  | "closed";
+                label:
+                  | "Open"
+                  | "Under Review"
+                  | "Planned"
+                  | "In Progress"
+                  | "Complete"
+                  | "Closed";
+              };
+              title: string;
+            }>;
           },
           Name
         >;

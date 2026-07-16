@@ -165,6 +165,36 @@ export const feedbackPageDtoValidator = v.object({
   ),
 });
 
+export const discoveryPostDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  id: v.string(),
+  title: v.string(),
+  board: boardDtoValidator,
+  status: v.object({
+    key: postStatusKeyValidator,
+    label: v.union(
+      v.literal("Open"),
+      v.literal("Under Review"),
+      v.literal("Planned"),
+      v.literal("In Progress"),
+      v.literal("Complete"),
+      v.literal("Closed"),
+    ),
+  }),
+});
+
+export const searchResultDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  items: v.array(discoveryPostDtoValidator),
+  hasMore: v.boolean(),
+});
+
+export const similarPostResultDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  items: v.array(discoveryPostDtoValidator),
+  hasMore: v.boolean(),
+});
+
 export const boardListDtoValidator = v.object({
   contractVersion: v.literal(1),
   boards: v.array(boardDtoValidator),

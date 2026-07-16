@@ -2,11 +2,8 @@ import { v } from "convex/values";
 
 import { mutation } from "../_generated/server.js";
 import { upsertActor } from "../model/actors.js";
-import {
-  normalizeCommentBody,
-  requireRootParent,
-  toCommentDto,
-} from "../model/comments.js";
+import { requireRootParent, toCommentDto } from "../model/comments.js";
+import { validateSafeMarkdown } from "../model/content.js";
 import { invalidInput } from "../model/errors.js";
 import { requirePostInScope, requireScope } from "../model/scope.js";
 import { commentDtoValidator, verifiedActorValidator } from "../validators.js";
@@ -27,7 +24,7 @@ export const addComment = mutation({
     if (post.lifecycleState !== "active") {
       invalidInput("withdrawn posts cannot be commented on");
     }
-    const body = normalizeCommentBody(args.body);
+    const body = validateSafeMarkdown(args.body, "comment");
     const parent =
       args.parentCommentId === undefined
         ? undefined

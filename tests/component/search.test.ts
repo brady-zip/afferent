@@ -13,7 +13,8 @@ function backendContext(backend: ReturnType<typeof convexTest>) {
     auth: { getUserIdentity: async () => null },
     runMutation: (reference: never, args: object) =>
       backend.mutation(reference, args),
-    runQuery: (reference: never, args: object) => backend.query(reference, args),
+    runQuery: (reference: never, args: object) =>
+      backend.query(reference, args),
   };
 }
 
@@ -62,7 +63,9 @@ describe("bounded feedback search", () => {
       body: "Download results as CSV",
     });
 
-    const result = await alpha.read.searchFeedback(ctx as never, {
+    const result = await backend.query(api["public/search"].searchFeedback, {
+      scopeId: "scope:alpha",
+      viewerAuthenticated: false,
       query: "export feedback",
     });
     expect(result).toMatchObject({ contractVersion: 1, hasMore: true });
@@ -73,10 +76,47 @@ describe("bounded feedback search", () => {
       true,
     );
 
-    const boardResult = await alpha.read.searchFeedback(ctx as never, {
-      query: "export feedback",
-      boardId: alphaInstall.boards[1].id,
+    const tagged = await backend.run(async (runCtx) => {
+      const postId = runCtx.db.normalizeId("posts", result.items[0].id)!;
+      const post = await runCtx.db.get(postId);
+      if (!post) throw new Error("SEARCH_TEST_POST_MISSING");
+      const tagId = await runCtx.db.insert("tags", {
+        scopeId: "scope:alpha",
+        name: "Reporting",
+      });
+      await runCtx.db.insert("postTags", {
+        scopeId: "scope:alpha",
+        postId,
+        tagId,
+      });
+      await runCtx.db.insert("postTagSearches", {
+        scopeId: "scope:alpha",
+        postId,
+        tagId,
+        boardId: post.boardId,
+        statusKey: post.statusKey,
+        visibilityKey: "visible",
+        searchText: post.searchText!,
+      });
+      return { postId: String(postId), tagId: String(tagId) };
     });
+    const tagResult = await backend.query(api["public/search"].searchFeedback, {
+      scopeId: "scope:alpha",
+      viewerAuthenticated: false,
+      query: "export feedback",
+      tagId: tagged.tagId,
+    });
+    expect(tagResult.items.map(({ id }) => id)).toEqual([tagged.postId]);
+
+    const boardResult = await backend.query(
+      api["public/search"].searchFeedback,
+      {
+        scopeId: "scope:alpha",
+        viewerAuthenticated: false,
+        query: "export feedback",
+        boardId: alphaInstall.boards[1].id,
+      },
+    );
     expect(
       boardResult.items.every(
         (item) => item.board.id === alphaInstall.boards[1].id,
@@ -107,10 +147,15 @@ describe("bounded feedback search", () => {
       });
     }
 
-    const result = await alpha.read.suggestSimilarPosts(ctx as never, {
-      title: "Export feedback CSV",
-      body: "Download reports",
-    });
+    const result = await backend.query(
+      api["public/search"].suggestSimilarPosts,
+      {
+        scopeId: "scope:similar",
+        viewerAuthenticated: false,
+        title: "Export feedback CSV",
+        body: "Download reports",
+      },
+    );
     expect(result.items.map(({ title }) => title)).toEqual([
       "CSV feedback export",
       "Export feedback reports",

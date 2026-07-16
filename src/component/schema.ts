@@ -26,6 +26,7 @@ export default defineSchema({
     actorId: v.id("actors"),
     title: v.string(),
     body: v.string(),
+    searchText: v.optional(v.string()),
     lifecycleState: v.union(v.literal("active"), v.literal("withdrawn")),
     statusKey: v.union(
       v.literal("open"),
@@ -139,7 +140,11 @@ export default defineSchema({
       "trendingScore",
       "createdAt",
       "orderId",
-    ]),
+    ])
+    .searchIndex("search_posts", {
+      searchField: "searchText",
+      filterFields: ["scopeId", "visibilityKey", "boardId", "statusKey"],
+    }),
   tags: defineTable({
     scopeId: v.string(),
     name: v.string(),
@@ -220,6 +225,34 @@ export default defineSchema({
       "createdAt",
       "orderId",
     ]),
+  postTagSearches: defineTable({
+    scopeId: v.string(),
+    postId: v.id("posts"),
+    tagId: v.id("tags"),
+    boardId: v.id("boards"),
+    statusKey: v.union(
+      v.literal("open"),
+      v.literal("under_review"),
+      v.literal("planned"),
+      v.literal("in_progress"),
+      v.literal("complete"),
+      v.literal("closed"),
+    ),
+    visibilityKey: v.union(v.literal("visible"), v.literal("hidden")),
+    searchText: v.string(),
+  })
+    .index("by_scope_post", ["scopeId", "postId"])
+    .index("by_scope_post_tag", ["scopeId", "postId", "tagId"])
+    .searchIndex("search_tagged_posts", {
+      searchField: "searchText",
+      filterFields: [
+        "scopeId",
+        "visibilityKey",
+        "tagId",
+        "boardId",
+        "statusKey",
+      ],
+    }),
   votes: defineTable({
     scopeId: v.string(),
     postId: v.id("posts"),
