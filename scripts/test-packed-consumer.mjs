@@ -24,7 +24,7 @@ function run(command, args, options = {}) {
   return new Promise((resolveRun, rejectRun) => {
     const child = spawn(command, args, {
       cwd: options.cwd,
-      env: { ...process.env, ...options.env },
+      env: sanitizedEnvironment(options.env),
       stdio: ["ignore", "pipe", "pipe"],
     });
     let stdout = "";
@@ -45,6 +45,21 @@ function run(command, args, options = {}) {
       }
     });
   });
+}
+
+function sanitizedEnvironment(overrides = {}) {
+  const blocked = new Set([
+    "INIT_CWD",
+    "npm_config_local_prefix",
+    "npm_config_workspace",
+    "npm_config_workspaces",
+    "npm_package_json",
+  ]);
+  return Object.fromEntries(
+    Object.entries({ ...process.env, ...overrides }).filter(
+      ([name, value]) => !blocked.has(name) && value !== undefined,
+    ),
+  );
 }
 
 async function listFiles(root) {
@@ -75,7 +90,18 @@ for (const file of fixtureFiles) {
   }
 }
 
+for (const suite of [
+  "test:static",
+  "test:model",
+  "test:component",
+  "test:auth-conformance",
+  "test:scope",
+  "test:backend",
+]) {
+  await run("npm", ["run", suite], { cwd: repositoryRoot });
+}
 await run("npm", ["run", "codegen:component"], { cwd: repositoryRoot });
+await run("npm", ["run", "typecheck"], { cwd: repositoryRoot });
 await run("npm", ["run", "build"], { cwd: repositoryRoot });
 
 const artifactRoot = dirname(materializedConsumer);
@@ -91,10 +117,20 @@ const tarballPath = await realpath(join(artifactRoot, packed.filename));
 const packedPaths = new Set(packed.files.map((file) => file.path));
 for (const required of [
   "LICENSE",
+  "package.json",
   "dist/client/index.js",
   "dist/client/index.d.ts",
+  "dist/client/server.js",
+  "dist/client/server.d.ts",
+  "dist/client/adapters/convex-auth.js",
+  "dist/client/adapters/convex-auth.d.ts",
+  "dist/client/adapters/clerk.js",
+  "dist/client/adapters/clerk.d.ts",
+  "dist/client/adapters/better-auth.js",
+  "dist/client/adapters/better-auth.d.ts",
   "dist/component/convex.config.js",
   "dist/component/_generated/component.d.ts",
+  "dist/component/tsconfig.json",
   "src/test.ts",
 ]) {
   if (!packedPaths.has(required)) throw new Error(`tarball is missing ${required}`);
@@ -104,13 +140,11 @@ await rm(join(materializedConsumer, "node_modules"), { force: true, recursive: t
 await rm(join(materializedConsumer, "package-lock.json"), { force: true });
 await run("npm", ["install", "--ignore-scripts", "--save-exact", tarballPath], {
   cwd: materializedConsumer,
-  env: { npm_config_workspaces: "false" },
 });
 
 const convex = join(materializedConsumer, "node_modules/.bin/convex");
 const anonymousEnv = {
   CONVEX_AGENT_MODE: "anonymous",
-  npm_config_workspaces: "false",
 };
 await run(
   convex,
@@ -130,6 +164,25 @@ await run(convex, ["codegen", "--typecheck", "enable"], {
   env: anonymousEnv,
 });
 
+const smoke = [
+  "afferent",
+  "afferent/server.js",
+  "afferent/adapters/convex-auth.js",
+  "afferent/adapters/clerk.js",
+  "afferent/adapters/better-auth.js",
+  "afferent/convex.config.js",
+];
+const resolutionOnly = ["afferent/_generated/component.js", "afferent/test"];
+await run(
+  process.execPath,
+  [
+    "--input-type=module",
+    "--eval",
+    `for (const name of ${JSON.stringify(smoke)}) await import(name); for (const name of ${JSON.stringify(resolutionOnly)}) import.meta.resolve(name);`,
+  ],
+  { cwd: materializedConsumer },
+);
+
 const interactionPath = join(artifactRoot, "afferent-interaction.json");
 await run("npm", ["test"], {
   cwd: materializedConsumer,
@@ -138,9 +191,11 @@ await run("npm", ["test"], {
 await run("npm", ["run", "typecheck"], { cwd: materializedConsumer });
 await run("npm", ["run", "build"], { cwd: materializedConsumer });
 
-await run(join(repositoryRoot, "node_modules/.bin/publint"), ["run", tarballPath], {
-  cwd: repositoryRoot,
-});
+await run(
+  join(repositoryRoot, "node_modules/.bin/publint"),
+  ["run", "--strict", tarballPath],
+  { cwd: repositoryRoot },
+);
 await run(
   join(repositoryRoot, "node_modules/.bin/attw"),
   ["--profile", "esm-only", "--quiet", tarballPath],
@@ -148,12 +203,50 @@ await run(
 );
 
 const installedPackage = join(materializedConsumer, "node_modules/afferent");
+const installedManifest = JSON.parse(
+  await readFile(join(installedPackage, "package.json"), "utf8"),
+);
+if (installedManifest.license !== "Apache-2.0" || installedManifest.type !== "module") {
+  throw new Error("packed package metadata must declare Apache-2.0 ESM");
+}
+const expectedExports = [
+  ".",
+  "./server.js",
+  "./adapters/convex-auth.js",
+  "./adapters/clerk.js",
+  "./adapters/better-auth.js",
+  "./convex.config.js",
+  "./_generated/component.js",
+  "./test",
+  "./package.json",
+];
+for (const exported of expectedExports) {
+  if (!(exported in installedManifest.exports)) {
+    throw new Error(`packed package is missing export ${exported}`);
+  }
+}
+if (
+  Object.keys(installedManifest.exports).some((exported) =>
+    /(?:dataModel|_generated\/api|schema)/.test(exported),
+  )
+) {
+  throw new Error("private data-model export detected in packed package");
+}
 const resolvedPaths = await Promise.all(
   [
     "dist/client/index.js",
     "dist/client/index.d.ts",
+    "dist/client/server.js",
+    "dist/client/server.d.ts",
+    "dist/client/adapters/convex-auth.js",
+    "dist/client/adapters/convex-auth.d.ts",
+    "dist/client/adapters/clerk.js",
+    "dist/client/adapters/clerk.d.ts",
+    "dist/client/adapters/better-auth.js",
+    "dist/client/adapters/better-auth.d.ts",
     "dist/component/convex.config.js",
     "dist/component/_generated/component.d.ts",
+    "dist/component/tsconfig.json",
     "src/test.ts",
     "package.json",
   ].map((path) => realpath(join(installedPackage, path))),
@@ -161,6 +254,14 @@ const resolvedPaths = await Promise.all(
 for (const resolvedPath of resolvedPaths) {
   if (!isWithin(materializedConsumer, resolvedPath) || isWithin(sourceRoot, resolvedPath)) {
     throw new Error(`installed export escaped the clean consumer: ${resolvedPath}`);
+  }
+}
+
+for (const file of await listFiles(join(installedPackage, "dist"))) {
+  if (!/\.(?:js|d\.ts)$/.test(file)) continue;
+  const builtSource = await readFile(file, "utf8");
+  if (builtSource.includes(sourceRoot)) {
+    throw new Error(`packed declaration or module contains source-root path: ${file}`);
   }
 }
 
@@ -177,6 +278,7 @@ const transcript = {
     tarballPath,
     licensePath,
     resolvedPaths,
+    exports: expectedExports,
   },
   interaction,
 };
