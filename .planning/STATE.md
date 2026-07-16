@@ -5,16 +5,16 @@ milestone_name: milestone
 current_phase: 2
 current_phase_name: Complete Feedback-to-Changelog Workflow
 status: executing
-stopped_at: Completed 02-07-PLAN.md
-last_updated: "2026-07-16T23:26:22.137Z"
+stopped_at: Completed 02-08-PLAN.md
+last_updated: "2026-07-16T23:46:48.544Z"
 last_activity: 2026-07-16
 last_activity_desc: Completed stable manual changelog lifecycle and headless editorial hooks
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 18
-  completed_plans: 14
-  percent: 78
+  completed_plans: 15
+  percent: 25
 ---
 
 # Project State
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 ## Current Position
 
 Phase: 2 (Complete Feedback-to-Changelog Workflow) — EXECUTING
-Plan: 7 of 10
+Plan: 8 of 10
 Status: Ready to execute
 Last activity: 2026-07-16 — Completed stable manual changelog lifecycle and headless editorial hooks
 
@@ -75,6 +75,7 @@ _Updated after each plan completion_
 | Phase 02 P04 | 15min    | 3 tasks | 26 files |
 | Phase 02 P06 | 8min     | 3 tasks | 14 files |
 | Phase 02 P07 | 13min    | 3 tasks | 20 files |
+| Phase 02 P08 | 13min | 3 tasks | 29 files |
 
 ## Accumulated Context
 
@@ -128,6 +129,10 @@ Recent decisions affecting current work:
 - [Phase 02]: Resolve ordered changelog links through current canonical visibility without deleting hidden editorial relationships.
 - [Phase 02]: Keep linked-post DTOs compact enough for the documented 50-entry by 50-link bounded query ceiling.
 - [Phase 02]: Persist once-per-entry/post changelog publication guards before notification fan-out is implemented.
+- [Phase 02]: Snapshot eligible recipients before inbox materialization — Retries and later subscription changes cannot alter an accepted event.
+- [Phase 02]: Fan out ten or fewer recipients inline and use one 50-row continuation chain for larger events — This keeps scheduler work bounded and retry-safe.
+- [Phase 02]: Cap each actor inbox at 500 rows with an exact unread projection — Inbox signals stay bounded without discarding immutable event truth.
+- [Phase 02]: Use sessionGeneration only as browser query identity — Account switches reset helper pages and optimism without conferring authority.
 
 ### Pending Todos
 
@@ -149,6 +154,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-16T23:26:09.913Z
-Stopped at: Completed 02-07-PLAN.md
+Last session: 2026-07-16T23:46:48.537Z
+Stopped at: Completed 02-08-PLAN.md
 Resume file: None

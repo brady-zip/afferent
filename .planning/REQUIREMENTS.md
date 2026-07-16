@@ -68,13 +68,13 @@ Requirements for the first production-ready public release. Roadmap creation wil
 
 ### Notifications
 
-- [ ] **NOTF-01**: An authenticated user can subscribe or unsubscribe from updates to a feedback post.
-- [ ] **NOTF-02**: A subscribed user receives an in-app notification when a feedback post changes status.
-- [ ] **NOTF-03**: A subscribed user receives an in-app notification when an admin replies to the feedback post.
-- [ ] **NOTF-04**: An authenticated user receives an in-app notification when another comment replies to or mentions them.
-- [ ] **NOTF-05**: A subscribed user receives an in-app notification when a linked changelog entry is published.
+- [x] **NOTF-01**: An authenticated user can subscribe or unsubscribe from updates to a feedback post.
+- [x] **NOTF-02**: A subscribed user receives an in-app notification when a feedback post changes status.
+- [x] **NOTF-03**: A subscribed user receives an in-app notification when an admin replies to the feedback post.
+- [x] **NOTF-04**: An authenticated user receives an in-app notification when another comment replies to or mentions them.
+- [x] **NOTF-05**: A subscribed user receives an in-app notification when a linked changelog entry is published.
 - [ ] **NOTF-06**: A host application can consume typed delivery events for supported notification events without adopting a built-in email or push vendor.
-- [ ] **NOTF-07**: A user can mark individual in-app notifications as read.
+- [x] **NOTF-07**: A user can mark individual in-app notifications as read.
 
 ### Component and Auth Integration
 
@@ -218,13 +218,13 @@ Every v1 requirement maps to exactly one roadmap phase.
 | CHLG-04     | Phase 2 | Complete |
 | CHLG-05     | Phase 2 | Complete |
 | CHLG-06     | Phase 2 | Complete |
-| NOTF-01     | Phase 2 | Pending  |
-| NOTF-02     | Phase 2 | Pending  |
-| NOTF-03     | Phase 2 | Pending  |
-| NOTF-04     | Phase 2 | Pending  |
-| NOTF-05     | Phase 2 | Pending  |
+| NOTF-01     | Phase 2 | Complete |
+| NOTF-02     | Phase 2 | Complete |
+| NOTF-03     | Phase 2 | Complete |
+| NOTF-04     | Phase 2 | Complete |
+| NOTF-05     | Phase 2 | Complete |
 | NOTF-06     | Phase 2 | Pending  |
-| NOTF-07     | Phase 2 | Pending  |
+| NOTF-07     | Phase 2 | Complete |
 | COMP-01     | Phase 4 | Pending  |
 | COMP-02     | Phase 1 | Complete |
 | COMP-03     | Phase 1 | Complete |
