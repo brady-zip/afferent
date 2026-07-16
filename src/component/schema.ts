@@ -319,7 +319,44 @@ export default defineSchema({
     fromBoardId: v.optional(v.id("boards")),
     toBoardId: v.optional(v.id("boards")),
     tagId: v.optional(v.id("tags")),
+    changelogEntryId: v.optional(v.id("changelogEntries")),
   }).index("by_scope_post_occurred", ["scopeId", "postId", "occurredAt"]),
+  changelogEntries: defineTable({
+    scopeId: v.string(),
+    title: v.string(),
+    body: v.string(),
+    slug: v.string(),
+    publishedKey: v.union(v.literal("published"), v.literal("hidden")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    firstPublishedAt: v.optional(v.number()),
+    publishedAt: v.optional(v.number()),
+    orderId: v.string(),
+  })
+    .index("by_scope_slug", ["scopeId", "slug"])
+    .index("by_scope_published_first", [
+      "scopeId",
+      "publishedKey",
+      "firstPublishedAt",
+      "orderId",
+    ]),
+  changelogPostLinks: defineTable({
+    scopeId: v.string(),
+    entryId: v.id("changelogEntries"),
+    postId: v.id("posts"),
+    sortOrder: v.number(),
+  })
+    .index("by_scope_entry_order", ["scopeId", "entryId", "sortOrder"])
+    .index("by_scope_entry_post", ["scopeId", "entryId", "postId"])
+    .index("by_scope_post_entry", ["scopeId", "postId", "entryId"]),
+  changelogNotificationGuards: defineTable({
+    scopeId: v.string(),
+    entryId: v.id("changelogEntries"),
+    postId: v.id("posts"),
+    createdAt: v.number(),
+  })
+    .index("by_scope_entry_post", ["scopeId", "entryId", "postId"])
+    .index("by_scope_post_entry", ["scopeId", "postId", "entryId"]),
   tagCleanupJobs: defineTable({
     scopeId: v.string(),
     tagId: v.id("tags"),

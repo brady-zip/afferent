@@ -7,6 +7,7 @@ export type PublicErrorCode =
   | "NOT_FOUND"
   | "NOT_OWNER"
   | "DISCUSSION_LOCKED"
+  | "CONFLICT"
   | "RATE_LIMITED";
 
 export type ParticipationOperation =
@@ -42,9 +43,13 @@ export function invalidInput(message: string): never {
 }
 
 export function notFound(
-  resource: "board" | "post" | "comment" | "actor" | "tag",
+  resource: "board" | "post" | "comment" | "actor" | "tag" | "changelog",
 ): never {
   throw new ConvexError({ code: "NOT_FOUND", resource });
+}
+
+export function conflict(field: string, message: string): never {
+  throw new ConvexError({ code: "CONFLICT", field, message });
 }
 
 export function authenticationRequired(): never {

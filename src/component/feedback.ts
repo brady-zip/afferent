@@ -8,6 +8,10 @@ export { countPosts, getPost, listPosts } from "./public/posts.js";
 export { listFeedback } from "./public/feeds.js";
 export { searchFeedback, suggestSimilarPosts } from "./public/search.js";
 export { listRoadmapGroup } from "./public/roadmap.js";
+export {
+  getPublishedChangelogBySlug,
+  listPublishedChangelog,
+} from "./public/changelog.js";
 export { listComments } from "./public/comments.js";
 export {
   editPost as adminEditPost,
@@ -17,6 +21,13 @@ export {
   setPostStatus,
 } from "./admin/posts.js";
 export { listPostActivity } from "./admin/activity.js";
+export {
+  createChangelogDraft,
+  editChangelog,
+  publishChangelog,
+  setChangelogLinks,
+  unpublishChangelog,
+} from "./admin/changelog.js";
 export {
   createTag,
   deleteTag,

@@ -47,6 +47,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             page: Array<{
               actor?: { avatarUrl?: string; displayName?: string; id: string };
               changedFields?: Array<string>;
+              changelogEntryId?: string;
               contractVersion: 1;
               fromBoardId?: string;
               fromStatus?:
@@ -95,6 +96,149 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           "internal",
           { actorId: string; scopeId: string },
           { avatarUrl?: string; displayName?: string; id: string },
+          Name
+        >;
+      };
+      changelog: {
+        createChangelogDraft: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            actor: {
+              avatarUrl?: string;
+              displayName?: string;
+              externalKey: string;
+            };
+            body: string;
+            scopeId: string;
+            slug?: string;
+            title: string;
+          },
+          {
+            body: string;
+            contractVersion: 1;
+            createdAt: number;
+            firstPublishedAt?: number;
+            id: string;
+            postIds: Array<string>;
+            publishedAt?: number;
+            slug: string;
+            state: "draft" | "published" | "unpublished";
+            title: string;
+            updatedAt: number;
+          },
+          Name
+        >;
+        editChangelog: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            actor: {
+              avatarUrl?: string;
+              displayName?: string;
+              externalKey: string;
+            };
+            body?: string;
+            entryId: string;
+            scopeId: string;
+            slug?: string;
+            title?: string;
+          },
+          {
+            body: string;
+            contractVersion: 1;
+            createdAt: number;
+            firstPublishedAt?: number;
+            id: string;
+            postIds: Array<string>;
+            publishedAt?: number;
+            slug: string;
+            state: "draft" | "published" | "unpublished";
+            title: string;
+            updatedAt: number;
+          },
+          Name
+        >;
+        publishChangelog: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            actor: {
+              avatarUrl?: string;
+              displayName?: string;
+              externalKey: string;
+            };
+            entryId: string;
+            scopeId: string;
+          },
+          {
+            body: string;
+            contractVersion: 1;
+            createdAt: number;
+            firstPublishedAt?: number;
+            id: string;
+            postIds: Array<string>;
+            publishedAt?: number;
+            slug: string;
+            state: "draft" | "published" | "unpublished";
+            title: string;
+            updatedAt: number;
+          },
+          Name
+        >;
+        setChangelogLinks: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            actor: {
+              avatarUrl?: string;
+              displayName?: string;
+              externalKey: string;
+            };
+            entryId: string;
+            postIds: Array<string>;
+            scopeId: string;
+          },
+          {
+            body: string;
+            contractVersion: 1;
+            createdAt: number;
+            firstPublishedAt?: number;
+            id: string;
+            postIds: Array<string>;
+            publishedAt?: number;
+            slug: string;
+            state: "draft" | "published" | "unpublished";
+            title: string;
+            updatedAt: number;
+          },
+          Name
+        >;
+        unpublishChangelog: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            actor: {
+              avatarUrl?: string;
+              displayName?: string;
+              externalKey: string;
+            };
+            entryId: string;
+            scopeId: string;
+          },
+          {
+            body: string;
+            contractVersion: 1;
+            createdAt: number;
+            firstPublishedAt?: number;
+            id: string;
+            postIds: Array<string>;
+            publishedAt?: number;
+            slug: string;
+            state: "draft" | "published" | "unpublished";
+            title: string;
+            updatedAt: number;
+          },
           Name
         >;
       };
@@ -555,6 +699,35 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         { contractVersion: 1; count: number; hasMore: boolean },
         Name
       >;
+      createChangelogDraft: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          actor: {
+            avatarUrl?: string;
+            displayName?: string;
+            externalKey: string;
+          };
+          body: string;
+          scopeId: string;
+          slug?: string;
+          title: string;
+        },
+        {
+          body: string;
+          contractVersion: 1;
+          createdAt: number;
+          firstPublishedAt?: number;
+          id: string;
+          postIds: Array<string>;
+          publishedAt?: number;
+          slug: string;
+          state: "draft" | "published" | "unpublished";
+          title: string;
+          updatedAt: number;
+        },
+        Name
+      >;
       createPost: FunctionReference<
         "mutation",
         "internal",
@@ -631,6 +804,36 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         { contractVersion: 1; status: "pending" | "deleted"; tagId: string },
         Name
       >;
+      editChangelog: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          actor: {
+            avatarUrl?: string;
+            displayName?: string;
+            externalKey: string;
+          };
+          body?: string;
+          entryId: string;
+          scopeId: string;
+          slug?: string;
+          title?: string;
+        },
+        {
+          body: string;
+          contractVersion: 1;
+          createdAt: number;
+          firstPublishedAt?: number;
+          id: string;
+          postIds: Array<string>;
+          publishedAt?: number;
+          slug: string;
+          state: "draft" | "published" | "unpublished";
+          title: string;
+          updatedAt: number;
+        },
+        Name
+      >;
       editPost: FunctionReference<
         "mutation",
         "internal",
@@ -703,6 +906,47 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           totals: { comments: number; votes: number };
           voteCount: number;
         },
+        Name
+      >;
+      getPublishedChangelogBySlug: FunctionReference<
+        "query",
+        "internal",
+        { scopeId: string; slug: string; viewerAuthenticated: boolean },
+        | { contractVersion: 1; status: "notFound" }
+        | {
+            contractVersion: 1;
+            entry: {
+              body: string;
+              contractVersion: 1;
+              firstPublishedAt: number;
+              id: string;
+              links: Array<{
+                contractVersion: 1;
+                id: string;
+                status: {
+                  key:
+                    | "open"
+                    | "under_review"
+                    | "planned"
+                    | "in_progress"
+                    | "complete"
+                    | "closed";
+                  label:
+                    | "Open"
+                    | "Under Review"
+                    | "Planned"
+                    | "In Progress"
+                    | "Complete"
+                    | "Closed";
+                };
+                title: string;
+              }>;
+              slug: string;
+              title: string;
+              updatedAt: number;
+            };
+            status: "entry";
+          },
         Name
       >;
       listBoards: FunctionReference<
@@ -870,6 +1114,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           page: Array<{
             actor?: { avatarUrl?: string; displayName?: string; id: string };
             changedFields?: Array<string>;
+            changelogEntryId?: string;
             contractVersion: 1;
             fromBoardId?: string;
             fromStatus?:
@@ -960,6 +1205,90 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             totals: { comments: number; votes: number };
             voteCount: number;
           }>;
+          splitCursor?: string | null;
+        },
+        Name
+      >;
+      listPublishedChangelog: FunctionReference<
+        "query",
+        "internal",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          scopeId: string;
+          viewerAuthenticated: boolean;
+        },
+        {
+          continueCursor: string;
+          contractVersion: 1;
+          entries: Array<{
+            body: string;
+            contractVersion: 1;
+            firstPublishedAt: number;
+            id: string;
+            links: Array<{
+              contractVersion: 1;
+              id: string;
+              status: {
+                key:
+                  | "open"
+                  | "under_review"
+                  | "planned"
+                  | "in_progress"
+                  | "complete"
+                  | "closed";
+                label:
+                  | "Open"
+                  | "Under Review"
+                  | "Planned"
+                  | "In Progress"
+                  | "Complete"
+                  | "Closed";
+              };
+              title: string;
+            }>;
+            slug: string;
+            title: string;
+            updatedAt: number;
+          }>;
+          isDone: boolean;
+          page: Array<{
+            body: string;
+            contractVersion: 1;
+            firstPublishedAt: number;
+            id: string;
+            links: Array<{
+              contractVersion: 1;
+              id: string;
+              status: {
+                key:
+                  | "open"
+                  | "under_review"
+                  | "planned"
+                  | "in_progress"
+                  | "complete"
+                  | "closed";
+                label:
+                  | "Open"
+                  | "Under Review"
+                  | "Planned"
+                  | "In Progress"
+                  | "Complete"
+                  | "Closed";
+              };
+              title: string;
+            }>;
+            slug: string;
+            title: string;
+            updatedAt: number;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
         },
         Name
@@ -1074,6 +1403,33 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         },
         Name
       >;
+      publishChangelog: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          actor: {
+            avatarUrl?: string;
+            displayName?: string;
+            externalKey: string;
+          };
+          entryId: string;
+          scopeId: string;
+        },
+        {
+          body: string;
+          contractVersion: 1;
+          createdAt: number;
+          firstPublishedAt?: number;
+          id: string;
+          postIds: Array<string>;
+          publishedAt?: number;
+          slug: string;
+          state: "draft" | "published" | "unpublished";
+          title: string;
+          updatedAt: number;
+        },
+        Name
+      >;
       renameTag: FunctionReference<
         "mutation",
         "internal",
@@ -1167,6 +1523,34 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           title: string;
           totals: { comments: number; votes: number };
           voteCount: number;
+        },
+        Name
+      >;
+      setChangelogLinks: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          actor: {
+            avatarUrl?: string;
+            displayName?: string;
+            externalKey: string;
+          };
+          entryId: string;
+          postIds: Array<string>;
+          scopeId: string;
+        },
+        {
+          body: string;
+          contractVersion: 1;
+          createdAt: number;
+          firstPublishedAt?: number;
+          id: string;
+          postIds: Array<string>;
+          publishedAt?: number;
+          slug: string;
+          state: "draft" | "published" | "unpublished";
+          title: string;
+          updatedAt: number;
         },
         Name
       >;
@@ -1397,6 +1781,33 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             };
             title: string;
           }>;
+        },
+        Name
+      >;
+      unpublishChangelog: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          actor: {
+            avatarUrl?: string;
+            displayName?: string;
+            externalKey: string;
+          };
+          entryId: string;
+          scopeId: string;
+        },
+        {
+          body: string;
+          contractVersion: 1;
+          createdAt: number;
+          firstPublishedAt?: number;
+          id: string;
+          postIds: Array<string>;
+          publishedAt?: number;
+          slug: string;
+          state: "draft" | "published" | "unpublished";
+          title: string;
+          updatedAt: number;
         },
         Name
       >;
@@ -1684,6 +2095,133 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           {
             boards: Array<{ id: string; name: string; slug: string }>;
             contractVersion: 1;
+          },
+          Name
+        >;
+      };
+      changelog: {
+        getPublishedChangelogBySlug: FunctionReference<
+          "query",
+          "internal",
+          { scopeId: string; slug: string; viewerAuthenticated: boolean },
+          | { contractVersion: 1; status: "notFound" }
+          | {
+              contractVersion: 1;
+              entry: {
+                body: string;
+                contractVersion: 1;
+                firstPublishedAt: number;
+                id: string;
+                links: Array<{
+                  contractVersion: 1;
+                  id: string;
+                  status: {
+                    key:
+                      | "open"
+                      | "under_review"
+                      | "planned"
+                      | "in_progress"
+                      | "complete"
+                      | "closed";
+                    label:
+                      | "Open"
+                      | "Under Review"
+                      | "Planned"
+                      | "In Progress"
+                      | "Complete"
+                      | "Closed";
+                  };
+                  title: string;
+                }>;
+                slug: string;
+                title: string;
+                updatedAt: number;
+              };
+              status: "entry";
+            },
+          Name
+        >;
+        listPublishedChangelog: FunctionReference<
+          "query",
+          "internal",
+          {
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+            scopeId: string;
+            viewerAuthenticated: boolean;
+          },
+          {
+            continueCursor: string;
+            contractVersion: 1;
+            entries: Array<{
+              body: string;
+              contractVersion: 1;
+              firstPublishedAt: number;
+              id: string;
+              links: Array<{
+                contractVersion: 1;
+                id: string;
+                status: {
+                  key:
+                    | "open"
+                    | "under_review"
+                    | "planned"
+                    | "in_progress"
+                    | "complete"
+                    | "closed";
+                  label:
+                    | "Open"
+                    | "Under Review"
+                    | "Planned"
+                    | "In Progress"
+                    | "Complete"
+                    | "Closed";
+                };
+                title: string;
+              }>;
+              slug: string;
+              title: string;
+              updatedAt: number;
+            }>;
+            isDone: boolean;
+            page: Array<{
+              body: string;
+              contractVersion: 1;
+              firstPublishedAt: number;
+              id: string;
+              links: Array<{
+                contractVersion: 1;
+                id: string;
+                status: {
+                  key:
+                    | "open"
+                    | "under_review"
+                    | "planned"
+                    | "in_progress"
+                    | "complete"
+                    | "closed";
+                  label:
+                    | "Open"
+                    | "Under Review"
+                    | "Planned"
+                    | "In Progress"
+                    | "Complete"
+                    | "Closed";
+                };
+                title: string;
+              }>;
+              slug: string;
+              title: string;
+              updatedAt: number;
+            }>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            splitCursor?: string | null;
           },
           Name
         >;

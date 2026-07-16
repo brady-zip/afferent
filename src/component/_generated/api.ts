@@ -10,6 +10,7 @@
 
 import type * as admin_activity from "../admin/activity.js";
 import type * as admin_actors from "../admin/actors.js";
+import type * as admin_changelog from "../admin/changelog.js";
 import type * as admin_installation from "../admin/installation.js";
 import type * as admin_posts from "../admin/posts.js";
 import type * as admin_tags from "../admin/tags.js";
@@ -17,6 +18,7 @@ import type * as feedback from "../feedback.js";
 import type * as jobs_tag_cleanup from "../jobs/tag_cleanup.js";
 import type * as model_activity from "../model/activity.js";
 import type * as model_actors from "../model/actors.js";
+import type * as model_changelog from "../model/changelog.js";
 import type * as model_comments from "../model/comments.js";
 import type * as model_content from "../model/content.js";
 import type * as model_errors from "../model/errors.js";
@@ -32,6 +34,7 @@ import type * as participation_comments from "../participation/comments.js";
 import type * as participation_posts from "../participation/posts.js";
 import type * as participation_votes from "../participation/votes.js";
 import type * as public_boards from "../public/boards.js";
+import type * as public_changelog from "../public/changelog.js";
 import type * as public_comments from "../public/comments.js";
 import type * as public_feeds from "../public/feeds.js";
 import type * as public_posts from "../public/posts.js";
@@ -49,6 +52,7 @@ import { anyApi, componentsGeneric } from "convex/server";
 const fullApi: ApiFromModules<{
   "admin/activity": typeof admin_activity;
   "admin/actors": typeof admin_actors;
+  "admin/changelog": typeof admin_changelog;
   "admin/installation": typeof admin_installation;
   "admin/posts": typeof admin_posts;
   "admin/tags": typeof admin_tags;
@@ -56,6 +60,7 @@ const fullApi: ApiFromModules<{
   "jobs/tag_cleanup": typeof jobs_tag_cleanup;
   "model/activity": typeof model_activity;
   "model/actors": typeof model_actors;
+  "model/changelog": typeof model_changelog;
   "model/comments": typeof model_comments;
   "model/content": typeof model_content;
   "model/errors": typeof model_errors;
@@ -71,6 +76,7 @@ const fullApi: ApiFromModules<{
   "participation/posts": typeof participation_posts;
   "participation/votes": typeof participation_votes;
   "public/boards": typeof public_boards;
+  "public/changelog": typeof public_changelog;
   "public/comments": typeof public_comments;
   "public/feeds": typeof public_feeds;
   "public/posts": typeof public_posts;

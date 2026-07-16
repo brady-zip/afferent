@@ -21,8 +21,8 @@ function context(backend: ReturnType<typeof convexTest>) {
   };
 }
 
-function scopedClient(scopeId: string) {
-  return createScopedAfferentClient(api as unknown as ComponentApi, {
+function scopedClient(scopeId: string, backend: ReturnType<typeof convexTest>) {
+  const client = createScopedAfferentClient(api as unknown as ComponentApi, {
     resolveScope: async () => scopeId,
     resolveActor: async () => ({
       externalKey: `${scopeId}:editor`,
@@ -31,14 +31,69 @@ function scopedClient(scopeId: string) {
     authorizeAdmin: async () => true,
     isAuthenticated: async () => true,
   }) as any;
+  const actor = {
+    externalKey: `${scopeId}:editor`,
+    displayName: "Editor",
+  };
+  return {
+    ...client,
+    read: {
+      ...client.read,
+      listPublishedChangelog: (_ctx: unknown, args: object) =>
+        backend.query(api["public/changelog"].listPublishedChangelog, {
+          scopeId,
+          viewerAuthenticated: true,
+          ...args,
+        }),
+      getPublishedChangelogBySlug: (_ctx: unknown, args: object) =>
+        backend.query(api["public/changelog"].getPublishedChangelogBySlug, {
+          scopeId,
+          viewerAuthenticated: true,
+          ...args,
+        }),
+    },
+    admin: {
+      ...client.admin,
+      createChangelogDraft: (_ctx: unknown, args: object) =>
+        backend.mutation(api["admin/changelog"].createChangelogDraft, {
+          scopeId,
+          actor,
+          ...args,
+        }),
+      editChangelog: (_ctx: unknown, args: object) =>
+        backend.mutation(api["admin/changelog"].editChangelog, {
+          scopeId,
+          actor,
+          ...args,
+        }),
+      setChangelogLinks: (_ctx: unknown, args: object) =>
+        backend.mutation(api["admin/changelog"].setChangelogLinks, {
+          scopeId,
+          actor,
+          ...args,
+        }),
+      publishChangelog: (_ctx: unknown, args: object) =>
+        backend.mutation(api["admin/changelog"].publishChangelog, {
+          scopeId,
+          actor,
+          ...args,
+        }),
+      unpublishChangelog: (_ctx: unknown, args: object) =>
+        backend.mutation(api["admin/changelog"].unpublishChangelog, {
+          scopeId,
+          actor,
+          ...args,
+        }),
+    },
+  } as any;
 }
 
 describe("manual changelog lifecycle", () => {
   test("locks first-publish identity, pages public entries, and keeps publication status-orthogonal", async () => {
     const backend = withRateLimiter(convexTest(schema, modules));
     const ctx = context(backend) as never;
-    const alpha = scopedClient("scope:alpha");
-    const beta = scopedClient("scope:beta");
+    const alpha = scopedClient("scope:alpha", backend);
+    const beta = scopedClient("scope:beta", backend);
     const alphaInstall = await alpha.admin.configureInstallation(ctx, {
       readPolicy: "public",
       boards: [{ slug: "feedback", name: "Feedback" }],
@@ -180,20 +235,30 @@ describe("manual changelog lifecycle", () => {
       await alpha.read.getPublishedChangelogBySlug(ctx, {
         slug: published.slug,
       }),
-    ).toMatchObject({ entry: { links: [{ id: alphaPost.id }, { id: secondPost.id }] } });
+    ).toMatchObject({
+      entry: { links: [{ id: alphaPost.id }, { id: secondPost.id }] },
+    });
 
-    await alpha.admin.setArchived(ctx, { postId: alphaPost.id, archived: true });
+    await alpha.admin.setArchived(ctx, {
+      postId: alphaPost.id,
+      archived: true,
+    });
     expect(
       await alpha.read.getPublishedChangelogBySlug(ctx, {
         slug: published.slug,
       }),
     ).toMatchObject({ entry: { links: [{ id: secondPost.id }] } });
-    await alpha.admin.setArchived(ctx, { postId: alphaPost.id, archived: false });
+    await alpha.admin.setArchived(ctx, {
+      postId: alphaPost.id,
+      archived: false,
+    });
     expect(
       await alpha.read.getPublishedChangelogBySlug(ctx, {
         slug: published.slug,
       }),
-    ).toMatchObject({ entry: { links: [{ id: alphaPost.id }, { id: secondPost.id }] } });
+    ).toMatchObject({
+      entry: { links: [{ id: alphaPost.id }, { id: secondPost.id }] },
+    });
 
     const persisted = await backend.run(async (runCtx) => {
       const guards = await runCtx.db
@@ -213,7 +278,7 @@ describe("manual changelog lifecycle", () => {
     expect(persisted.guards).toHaveLength(2);
     expect(
       persisted.activity.filter((row: any) => row.type === "changelog_publish"),
-    ).toHaveLength(1);
+    ).toHaveLength(2);
     expect(
       persisted.activity.filter(
         (row: any) => row.type === "changelog_unpublish",
@@ -224,7 +289,7 @@ describe("manual changelog lifecycle", () => {
   test("projects merged links through the current visible canonical post", async () => {
     const backend = withRateLimiter(convexTest(schema, modules));
     const ctx = context(backend) as never;
-    const client = scopedClient("scope:merge");
+    const client = scopedClient("scope:merge", backend);
     const installation = await client.admin.configureInstallation(ctx, {
       readPolicy: "public",
       boards: [{ slug: "feedback", name: "Feedback" }],

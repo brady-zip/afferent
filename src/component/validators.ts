@@ -222,6 +222,77 @@ export const roadmapGroupPageDtoValidator = v.object({
   ),
 });
 
+export const changelogLinkedPostDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  id: v.string(),
+  title: v.string(),
+  status: v.object({
+    key: postStatusKeyValidator,
+    label: v.union(
+      v.literal("Open"),
+      v.literal("Under Review"),
+      v.literal("Planned"),
+      v.literal("In Progress"),
+      v.literal("Complete"),
+      v.literal("Closed"),
+    ),
+  }),
+});
+
+export const publicChangelogEntryDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  id: v.string(),
+  title: v.string(),
+  body: v.string(),
+  slug: v.string(),
+  firstPublishedAt: v.number(),
+  updatedAt: v.number(),
+  links: v.array(changelogLinkedPostDtoValidator),
+});
+
+export const changelogPageDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  page: v.array(publicChangelogEntryDtoValidator),
+  entries: v.array(publicChangelogEntryDtoValidator),
+  isDone: v.boolean(),
+  continueCursor: v.string(),
+  splitCursor: v.optional(v.union(v.string(), v.null())),
+  pageStatus: v.optional(
+    v.union(
+      v.literal("SplitRecommended"),
+      v.literal("SplitRequired"),
+      v.null(),
+    ),
+  ),
+});
+
+export const publishedChangelogLookupDtoValidator = v.union(
+  v.object({ contractVersion: v.literal(1), status: v.literal("notFound") }),
+  v.object({
+    contractVersion: v.literal(1),
+    status: v.literal("entry"),
+    entry: publicChangelogEntryDtoValidator,
+  }),
+);
+
+export const adminChangelogEntryDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  id: v.string(),
+  title: v.string(),
+  body: v.string(),
+  slug: v.string(),
+  state: v.union(
+    v.literal("draft"),
+    v.literal("published"),
+    v.literal("unpublished"),
+  ),
+  createdAt: v.number(),
+  updatedAt: v.number(),
+  firstPublishedAt: v.optional(v.number()),
+  publishedAt: v.optional(v.number()),
+  postIds: v.array(v.string()),
+});
+
 export const discoveryPostDtoValidator = v.object({
   contractVersion: v.literal(1),
   id: v.string(),
@@ -319,6 +390,7 @@ export const postActivityDtoValidator = v.object({
   fromBoardId: v.optional(v.string()),
   toBoardId: v.optional(v.string()),
   tagId: v.optional(v.string()),
+  changelogEntryId: v.optional(v.string()),
 });
 
 export const postActivityPageDtoValidator = v.object({

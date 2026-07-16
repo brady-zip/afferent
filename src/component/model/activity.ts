@@ -19,6 +19,7 @@ export async function appendPostActivity(
     fromBoardId?: Doc<"boards">["_id"];
     toBoardId?: Doc<"boards">["_id"];
     tagId?: Doc<"tags">["_id"];
+    changelogEntryId?: Doc<"changelogEntries">["_id"];
   },
 ) {
   return await ctx.db.insert("postActivity", {
@@ -59,5 +60,8 @@ export async function toPostActivityDto(
       ? {}
       : { toBoardId: String(activity.toBoardId) }),
     ...(activity.tagId === undefined ? {} : { tagId: String(activity.tagId) }),
+    ...(activity.changelogEntryId === undefined
+      ? {}
+      : { changelogEntryId: String(activity.changelogEntryId) }),
   };
 }
