@@ -295,18 +295,22 @@ describe("server-derived scope isolation", () => {
       isAuthenticated: async () => true,
     });
 
-    const fixedBoard = (
-      await fixed.admin.configureInstallation(ctx as never, {
+    const fixedConfiguration = await fixed.admin.configureInstallation(
+      ctx as never,
+      {
         readPolicy: "authenticated",
         boards: [{ slug: "feedback", name: "Feedback" }],
-      })
-    ).boards[0];
-    const scopedBoard = (
-      await scoped.admin.configureInstallation(ctx as never, {
+      },
+    );
+    const fixedBoard = fixedConfiguration.boards[0];
+    const scopedConfiguration = await scoped.admin.configureInstallation(
+      ctx as never,
+      {
         readPolicy: "authenticated",
         boards: [{ slug: "feedback", name: "Feedback" }],
-      })
-    ).boards[0];
+      },
+    );
+    const scopedBoard = scopedConfiguration.boards[0];
     const fixedPost = await fixed.participation.createPost(ctx as never, {
       boardId: fixedBoard.id,
       title: "Fixed",
