@@ -34,6 +34,26 @@ export const configureInstallation = mutation({
       slugs.add(slug);
     }
 
+    const existingBoards = await ctx.db
+      .query("boards")
+      .withIndex("by_scope_order", (q) => q.eq("scopeId", args.scopeId))
+      .order("asc")
+      .take(MAX_BOARDS + 1);
+    if (existingBoards.length > MAX_BOARDS) {
+      invalidInput(`installation cannot contain more than ${MAX_BOARDS} boards`);
+    }
+    const existingBySlug = new Map(
+      existingBoards.map((board) => [board.slug, board]),
+    );
+    const newBoardCount = args.boards.reduce(
+      (count, board) =>
+        count + (existingBySlug.has(board.slug.trim()) ? 0 : 1),
+      0,
+    );
+    if (existingBoards.length + newBoardCount > MAX_BOARDS) {
+      invalidInput(`installation cannot contain more than ${MAX_BOARDS} boards`);
+    }
+
     const installation = await ctx.db
       .query("installations")
       .withIndex("by_scope", (q) => q.eq("scopeId", args.scopeId))
@@ -47,29 +67,31 @@ export const configureInstallation = mutation({
       });
     }
 
-    const configured: Doc<"boards">[] = [];
-    for (const [sortOrder, input] of args.boards.entries()) {
+    const configured: Doc<"boards">[] = [...existingBoards];
+    let nextSortOrder =
+      existingBoards.reduce(
+        (maximum, board) => Math.max(maximum, board.sortOrder),
+        -1,
+      ) + 1;
+    for (const input of args.boards) {
       const slug = input.slug.trim();
       const name = input.name.trim();
-      const existing = await ctx.db
-        .query("boards")
-        .withIndex("by_scope_slug", (q) =>
-          q.eq("scopeId", args.scopeId).eq("slug", slug),
-        )
-        .unique();
+      const existing = existingBySlug.get(slug);
       if (existing) {
-        await ctx.db.patch(existing._id, { name, sortOrder });
-        configured.push({ ...existing, name, sortOrder });
+        await ctx.db.patch(existing._id, { name });
+        const index = configured.findIndex((board) => board._id === existing._id);
+        configured[index] = { ...existing, name };
       } else {
         const id = await ctx.db.insert("boards", {
           scopeId: args.scopeId,
           slug,
           name,
-          sortOrder,
+          sortOrder: nextSortOrder++,
         });
         const board = await ctx.db.get(id);
         if (!board) throw new ConvexError({ code: "INVARIANT_VIOLATION" });
         configured.push(board);
+        existingBySlug.set(slug, board);
       }
     }
     return {
