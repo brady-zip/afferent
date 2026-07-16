@@ -238,6 +238,6 @@ describe("provider fixture projects", () => {
       "utf8",
     );
     expect(fixtureSource).toContain("createClient(components.betterAuth)");
-    expect(fixtureSource).toMatch(/\.(getAuthUser|safeGetAuthUser)\(ctx\)/);
+    expect(fixtureSource).toMatch(/\.(?:getAuthUser|safeGetAuthUser)\(ctx\)/);
   });
 });
