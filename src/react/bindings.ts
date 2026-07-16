@@ -15,6 +15,12 @@ import type {
   FeedbackPostDto,
   PostActivityPageDto,
   PostId,
+  NotificationDto,
+  NotificationId,
+  NotificationPageDto,
+  PostSubscriptionDto,
+  UnreadNotificationCountDto,
+  AfferentActionResult,
   PublishedChangelogLookupDto,
   RoadmapGroupPageDto,
   RoadmapStatusKey,
@@ -96,6 +102,39 @@ export interface ChangelogBindings {
   getPublishedBySlug: ChangelogEntryQueryReference;
 }
 
+export interface NotificationBindings {
+  getPostSubscription: FunctionReference<
+    "query",
+    "public",
+    { postId: PostId; sessionGeneration?: string },
+    PostSubscriptionDto
+  >;
+  setPostSubscription: FunctionReference<
+    "mutation",
+    "public",
+    { postId: PostId; desired: boolean },
+    AfferentActionResult<PostSubscriptionDto>
+  >;
+  listNotifications: FunctionReference<
+    "query",
+    "public",
+    { sessionGeneration?: string; paginationOpts: PaginationOptions },
+    NotificationPageDto
+  >;
+  getUnreadCount: FunctionReference<
+    "query",
+    "public",
+    { sessionGeneration?: string },
+    UnreadNotificationCountDto
+  >;
+  markNotificationRead: FunctionReference<
+    "mutation",
+    "public",
+    { notificationId: NotificationId },
+    NotificationDto
+  >;
+}
+
 type AdminMutationReference<
   Args extends DefaultFunctionArgs,
   Result = FeedbackPostDto,
@@ -173,7 +212,7 @@ export interface AdminBindings {
 export interface AfferentBindings {
   public: PublicBindings;
   participation?: Readonly<Record<string, unknown>>;
-  notifications?: Readonly<Record<string, unknown>>;
+  notifications?: NotificationBindings;
   roadmap?: RoadmapBindings;
   changelog?: ChangelogBindings;
   admin?: AdminBindings;

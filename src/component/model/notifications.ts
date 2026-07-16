@@ -10,7 +10,7 @@ export type NotificationEventType = (typeof NOTIFICATION_EVENT_TYPES)[number];
 
 export const FANOUT_BATCH_SIZE = 50;
 export const FANOUT_INLINE_LIMIT = 10;
-export const MAX_EVENT_RECIPIENTS = 1_000;
+export const MAX_EVENT_RECIPIENTS = 1000;
 export const INBOX_RETENTION_CAP = 500;
 
 export function dedupeNotificationRecipients(args: {

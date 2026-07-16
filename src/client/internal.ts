@@ -9,6 +9,11 @@ import type {
   CommentPageDto,
   ChangelogPageDto,
   FeedbackPageDto,
+  NotificationCapabilities,
+  NotificationDto,
+  NotificationPageDto,
+  PostSubscriptionDto,
+  UnreadNotificationCountDto,
   ParticipationCapabilities,
   PostCountDto,
   PostDto,
@@ -40,6 +45,7 @@ export type ClientResolvers = Readonly<{
 export type AfferentClient = Readonly<{
   read: ReadCapabilities<ReadContext>;
   participation: ParticipationCapabilities<MutationContext>;
+  notifications: NotificationCapabilities<ReadContext, MutationContext>;
   admin: AdminCapabilities<ReadContext, MutationContext>;
 }>;
 
@@ -190,7 +196,7 @@ export function createClientWithScope(
     participation: {
       async createPost(ctx, args) {
         const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
-        const actor = await options.resolveActor(ctx);
+        const actor = await options.resolveActor(ctx as MutationContext);
         if (!actor) throw new Error("AUTHENTICATION_REQUIRED");
         return (await ctx.runMutation(
           component.participation.posts.createPost,
@@ -205,7 +211,7 @@ export function createClientWithScope(
       },
       async editPost(ctx, args) {
         const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
-        const actor = await options.resolveActor(ctx);
+        const actor = await options.resolveActor(ctx as MutationContext);
         if (!actor) throw new Error("AUTHENTICATION_REQUIRED");
         return (await ctx.runMutation(component.participation.posts.editPost, {
           scopeId,
@@ -217,7 +223,7 @@ export function createClientWithScope(
       },
       async withdrawPost(ctx, args) {
         const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
-        const actor = await options.resolveActor(ctx);
+        const actor = await options.resolveActor(ctx as MutationContext);
         if (!actor) throw new Error("AUTHENTICATION_REQUIRED");
         return (await ctx.runMutation(
           component.participation.posts.withdrawPost,
@@ -252,6 +258,60 @@ export function createClientWithScope(
               : { parentCommentId: args.parentCommentId }),
           },
         )) as unknown as CommentDto;
+      },
+    },
+    notifications: {
+      async getPostSubscription(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        const actor = await options.resolveActor(ctx as MutationContext);
+        if (!actor) throw new Error("AUTHENTICATION_REQUIRED");
+        return (await ctx.runQuery(
+          component.participation.subscriptions.getPostSubscription,
+          { scopeId, actor, postId: args.postId },
+        )) as unknown as PostSubscriptionDto;
+      },
+      async setPostSubscription(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        const actor = await options.resolveActor(ctx);
+        if (!actor) throw new Error("AUTHENTICATION_REQUIRED");
+        return (await ctx.runMutation(
+          component.participation.subscriptions.setSubscription,
+          { scopeId, actor, postId: args.postId, desired: args.desired },
+        )) as unknown as PostSubscriptionDto;
+      },
+      async listNotifications(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        const actor = await options.resolveActor(ctx as MutationContext);
+        if (!actor) throw new Error("AUTHENTICATION_REQUIRED");
+        return (await ctx.runQuery(
+          component.notifications.inbox.listNotifications,
+          {
+            scopeId,
+            actor,
+            paginationOpts: args.paginationOpts ?? {
+              numItems: 20,
+              cursor: null,
+            },
+          },
+        )) as unknown as NotificationPageDto;
+      },
+      async getUnreadCount(ctx) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        const actor = await options.resolveActor(ctx as MutationContext);
+        if (!actor) throw new Error("AUTHENTICATION_REQUIRED");
+        return (await ctx.runQuery(
+          component.notifications.inbox.getUnreadCount,
+          { scopeId, actor },
+        )) as unknown as UnreadNotificationCountDto;
+      },
+      async markNotificationRead(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        const actor = await options.resolveActor(ctx);
+        if (!actor) throw new Error("AUTHENTICATION_REQUIRED");
+        return (await ctx.runMutation(
+          component.notifications.inbox.markNotificationRead,
+          { scopeId, actor, notificationId: args.notificationId },
+        )) as unknown as NotificationDto;
       },
     },
     admin: {

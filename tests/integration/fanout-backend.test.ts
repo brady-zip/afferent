@@ -1,7 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, test, vi } from "vitest";
 
-import { api, internal } from "../../src/component/_generated/api.js";
+import { internal } from "../../src/component/_generated/api.js";
 import { FANOUT_BATCH_SIZE } from "../../src/component/model/notifications.js";
 import schema from "../../src/component/schema.js";
 import { withRateLimiter } from "../helpers/rate-limiter.js";

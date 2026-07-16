@@ -11,6 +11,7 @@ export type CommentId = BrandedId<"CommentId">;
 export type TagId = BrandedId<"TagId">;
 export type ActivityId = BrandedId<"ActivityId">;
 export type ChangelogId = BrandedId<"ChangelogId">;
+export type NotificationId = BrandedId<"NotificationId">;
 
 export type RoadmapStatusKey = "planned" | "in_progress" | "complete";
 
@@ -255,6 +256,46 @@ export type AdminChangelogEntryDto = Readonly<{
   postIds: PostId[];
 }>;
 
+export type NotificationEventType =
+  | "status_changed"
+  | "admin_replied"
+  | "comment_replied"
+  | "mentioned"
+  | "changelog_published";
+
+export type PostSubscriptionDto = Readonly<{
+  contractVersion: 1;
+  postId: PostId;
+  subscribed: boolean;
+  explicitOptOut: boolean;
+}>;
+
+export type NotificationDto = Readonly<{
+  contractVersion: 1;
+  id: NotificationId;
+  eventId: string;
+  type: NotificationEventType;
+  entityId: string;
+  occurredAt: number;
+  read: boolean;
+  initiator: PostDto["author"];
+}>;
+
+export type NotificationPageDto = Readonly<{
+  contractVersion: 1;
+  page: NotificationDto[];
+  notifications: NotificationDto[];
+  isDone: boolean;
+  continueCursor: string;
+  splitCursor?: string | null;
+  pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+}>;
+
+export type UnreadNotificationCountDto = Readonly<{
+  contractVersion: 1;
+  count: number;
+}>;
+
 export type PostCountDto = Readonly<{
   contractVersion: 1;
   count: number;
@@ -348,6 +389,25 @@ export const addCommentIntentValidator = v.object({
   postId: v.string(),
   body: v.string(),
   parentCommentId: v.optional(v.string()),
+});
+
+export const getPostSubscriptionIntentValidator = v.object({
+  postId: v.string(),
+  sessionGeneration: v.optional(v.string()),
+});
+export const setPostSubscriptionIntentValidator = v.object({
+  postId: v.string(),
+  desired: v.boolean(),
+});
+export const listNotificationsIntentValidator = v.object({
+  sessionGeneration: v.optional(v.string()),
+  paginationOpts: v.optional(paginationOptsValidator),
+});
+export const getUnreadNotificationCountIntentValidator = v.object({
+  sessionGeneration: v.optional(v.string()),
+});
+export const markNotificationReadIntentValidator = v.object({
+  notificationId: v.string(),
 });
 
 export const adminEditPostIntentValidator = editPostIntentValidator;
@@ -630,6 +690,57 @@ export const publicCommentActionResultValidator = v.union(
   publicCommentDtoValidator,
   publicParticipationFailureValidator,
 );
+
+export const postSubscriptionResultValidator = v.object({
+  contractVersion: v.literal(1),
+  postId: v.string(),
+  subscribed: v.boolean(),
+  explicitOptOut: v.boolean(),
+});
+
+export const notificationEventTypeResultValidator = v.union(
+  v.literal("status_changed"),
+  v.literal("admin_replied"),
+  v.literal("comment_replied"),
+  v.literal("mentioned"),
+  v.literal("changelog_published"),
+);
+
+export const notificationResultValidator = v.object({
+  contractVersion: v.literal(1),
+  id: v.string(),
+  eventId: v.string(),
+  type: notificationEventTypeResultValidator,
+  entityId: v.string(),
+  occurredAt: v.number(),
+  read: v.boolean(),
+  initiator: v.object({
+    id: v.string(),
+    displayName: v.optional(v.string()),
+    avatarUrl: v.optional(v.string()),
+  }),
+});
+
+export const notificationPageResultValidator = v.object({
+  contractVersion: v.literal(1),
+  page: v.array(notificationResultValidator),
+  notifications: v.array(notificationResultValidator),
+  isDone: v.boolean(),
+  continueCursor: v.string(),
+  splitCursor: v.optional(v.union(v.string(), v.null())),
+  pageStatus: v.optional(
+    v.union(
+      v.literal("SplitRecommended"),
+      v.literal("SplitRequired"),
+      v.null(),
+    ),
+  ),
+});
+
+export const unreadNotificationCountResultValidator = v.object({
+  contractVersion: v.literal(1),
+  count: v.number(),
+});
 
 export const commentPageResultValidator = v.object({
   contractVersion: v.literal(1),
@@ -934,6 +1045,32 @@ export interface ParticipationCapabilities<Context> {
     ctx: Context,
     args: { postId: PostId; body: string; parentCommentId?: CommentId },
   ): Promise<AfferentActionResult<CommentDto>>;
+}
+
+export interface NotificationCapabilities<
+  QueryContext,
+  MutationContext = QueryContext,
+> {
+  getPostSubscription(
+    ctx: QueryContext,
+    args: { postId: PostId; sessionGeneration?: string },
+  ): Promise<PostSubscriptionDto>;
+  setPostSubscription(
+    ctx: MutationContext,
+    args: { postId: PostId; desired: boolean },
+  ): Promise<AfferentActionResult<PostSubscriptionDto>>;
+  listNotifications(
+    ctx: QueryContext,
+    args: { sessionGeneration?: string; paginationOpts?: PaginationOptions },
+  ): Promise<NotificationPageDto>;
+  getUnreadCount(
+    ctx: QueryContext,
+    args: { sessionGeneration?: string },
+  ): Promise<UnreadNotificationCountDto>;
+  markNotificationRead(
+    ctx: MutationContext,
+    args: { notificationId: NotificationId },
+  ): Promise<NotificationDto>;
 }
 
 export interface AdminCapabilities<

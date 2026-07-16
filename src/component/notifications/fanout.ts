@@ -17,20 +17,18 @@ async function loadUnreadCounter(
 
 async function adjustUnreadCount(
   ctx: MutationCtx,
-  scopeId: string,
-  actorId: Id<"actors">,
-  delta: number,
+  args: { scopeId: string; actorId: Id<"actors">; delta: number },
 ) {
-  const counter = await loadUnreadCounter(ctx, scopeId, actorId);
+  const counter = await loadUnreadCounter(ctx, args.scopeId, args.actorId);
   if (counter) {
     await ctx.db.patch(counter._id, {
-      count: Math.max(0, counter.count + delta),
+      count: Math.max(0, counter.count + args.delta),
     });
   } else {
     await ctx.db.insert("notificationUnreadCounts", {
-      scopeId,
-      actorId,
-      count: Math.max(0, delta),
+      scopeId: args.scopeId,
+      actorId: args.actorId,
+      count: Math.max(0, args.delta),
     });
   }
 }
@@ -81,7 +79,7 @@ export async function enforceActorInboxRetention(
   for (const row of rows.slice(0, excess)) {
     await ctx.db.delete(row._id);
     if (row.unreadKey === "unread") {
-      await adjustUnreadCount(ctx, scopeId, actorId, -1);
+      await adjustUnreadCount(ctx, { scopeId, actorId, delta: -1 });
     }
   }
 }
@@ -114,7 +112,11 @@ export async function materializeInboxRecipient(
     unreadKey: "unread",
   });
   await ctx.db.patch(rowId, { orderId: String(rowId) });
-  await adjustUnreadCount(ctx, event.scopeId, actorId, 1);
+  await adjustUnreadCount(ctx, {
+    scopeId: event.scopeId,
+    actorId,
+    delta: 1,
+  });
   await enforceActorInboxRetention(ctx, event.scopeId, actorId);
 }
 

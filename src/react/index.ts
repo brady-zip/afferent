@@ -8,6 +8,7 @@ export type {
   FeedbackSearchQueryReference,
   PublicBindings,
   RoadmapBindings,
+  NotificationBindings,
   RoadmapGroupQueryReference,
   SimilarPostsQueryReference,
 } from "./bindings.js";
@@ -70,3 +71,13 @@ export type {
   RoadmapPaginationState,
   RoadmapState,
 } from "./hooks/roadmap.js";
+export {
+  mapNotificationFeedState,
+  useNotifications,
+  usePostSubscription,
+  useUnreadNotificationCount,
+} from "./hooks/notifications.js";
+export type {
+  NotificationFeedState,
+  NotificationPaginationState,
+} from "./hooks/notifications.js";

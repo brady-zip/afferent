@@ -3,12 +3,12 @@ import type { MutationCtx } from "../_generated/server.js";
 import { isAnonymizedExternalKey } from "./actors.js";
 
 const MAX_MENTIONS_PER_COMMENT = 20;
-const MENTION_PATTERN = /@\[\{([^}\]]+)\}\]/gu;
+const MENTION_PATTERN = /@\[\{(?<actorId>[^}\]]+)\}\]/gu;
 
 export function parseMentionActorIds(body: string) {
   const ids = new Set<string>();
   for (const match of body.matchAll(MENTION_PATTERN)) {
-    ids.add(match[1]);
+    ids.add(match.groups?.actorId ?? "");
     if (ids.size > MAX_MENTIONS_PER_COMMENT) {
       throw new Error("TOO_MANY_MENTIONS");
     }
