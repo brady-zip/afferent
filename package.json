@@ -33,7 +33,7 @@
   "module": "./dist/client/index.js",
   "scripts": {
     "build": "tsc --project tsconfig.json",
-    "codegen:component": "convex codegen --component-dir ./src/component",
+    "codegen:component": "node scripts/codegen-component.mjs",
     "test": "vitest run",
     "test:component": "vitest run",
     "test:package": "node --test tests/integration/walking-skeleton.test.mjs",
