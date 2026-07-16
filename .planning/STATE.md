@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 2
 current_phase_name: Complete Feedback-to-Changelog Workflow
 status: executing
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-07-16T21:49:45.751Z"
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-07-16T22:08:54.399Z"
 last_activity: 2026-07-16
 last_activity_desc: Completed ranked feedback discovery and headless feed hooks
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 18
-  completed_plans: 9
+  completed_plans: 10
   percent: 25
 ---
 
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 ## Current Position
 
 Phase: 2 (Complete Feedback-to-Changelog Workflow) — EXECUTING
-Plan: 2 of 10
+Plan: 3 of 10
 Status: Ready to execute
 Last activity: 2026-07-16 — Completed ranked feedback discovery and headless feed hooks
 
@@ -69,6 +69,7 @@ _Updated after each plan completion_
 | Phase 01 P07 | 5 min    | 2 tasks | 6 files  |
 | Phase 01 P08 | 10 min   | 3 tasks | 13 files |
 | Phase 02 P01 | 12 min   | 3 tasks | 24 files |
+| Phase 02 P02 | 14 min   | 3 tasks | 26 files |
 
 ## Accumulated Context
 
@@ -106,6 +107,9 @@ Recent decisions affecting current work:
 - [Phase 02]: Use a contractVersion 2 feedback-page DTO while preserving the closed contractVersion 1 direct post and board-page contracts. — Discovery needs six statuses and tag DTOs without silently widening the shipped v1 union.
 - [Phase 02]: Materialize one bounded postTagFeeds row per tag membership. — Single-tag feeds stay scope-first and rank-indexed without scan or page filtering.
 - [Phase 02]: Treat convex-helpers usePaginatedQuery results as the canonical accumulated feed. — A second page cache would retain stale hidden rows and mask pagination gaps.
+- [Phase 02]: Search remains a bounded non-cursor contract with a cap-plus-one hasMore sentinel; cursor pagination is reserved for ordinary indexed feeds. — Native and helper cursor pagination both remain unsupported for component full-text search.
+- [Phase 02]: Safe Markdown uses mdast-util-from-markdown 2.0.3 with a closed node and absolute HTTP(S)/mailto URL allowlist. — Parser-backed validation rejects executable and ambiguous constructs before storage.
+- [Phase 02]: Similar-post suggestions rerank at most 30 search candidates with library-owned lexical scoring and stable tie breaks. — Convex does not expose a stable public relevance score contract.
 
 ### Pending Todos
 
@@ -127,6 +131,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-16T21:48:47.382Z
-Stopped at: Completed 02-01-PLAN.md
+Last session: 2026-07-16T22:08:54.393Z
+Stopped at: Completed 02-02-PLAN.md
 Resume file: None

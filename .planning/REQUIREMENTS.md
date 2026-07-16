@@ -32,9 +32,9 @@ Requirements for the first production-ready public release. Roadmap creation wil
 - [x] **DISC-01**: A visitor can browse visible feedback ordered by newest activity.
 - [x] **DISC-02**: A visitor can browse visible feedback ordered by vote total.
 - [x] **DISC-03**: A visitor can browse visible feedback using a documented trending order.
-- [ ] **DISC-04**: A visitor can search visible feedback by text relevance.
+- [x] **DISC-04**: A visitor can search visible feedback by text relevance.
 - [x] **DISC-05**: A visitor can filter visible feedback by board, status, and admin-assigned tag.
-- [ ] **DISC-06**: A user composing a new post can see deterministic similar-post suggestions before submission.
+- [x] **DISC-06**: A user composing a new post can see deterministic similar-post suggestions before submission.
 - [ ] **DISC-07**: An authorized admin can merge a duplicate post into a canonical post while preserving actors, votes, comments, and activity history.
 - [ ] **DISC-08**: A request for a merged post resolves to a durable tombstone or redirect that identifies the canonical post.
 
@@ -48,7 +48,7 @@ Requirements for the first production-ready public release. Roadmap creation wil
 - [ ] **ADMN-06**: An authorized admin can lock or unlock discussion on a feedback post.
 - [ ] **ADMN-07**: An authorized admin can archive and restore a feedback post.
 - [ ] **ADMN-08**: Participation mutations enforce documented rate limits and return actionable errors when a limit is reached.
-- [ ] **ADMN-09**: Afferent accepts and returns user-authored content through a documented safe-content contract that prevents stored script execution in conforming consumers.
+- [x] **ADMN-09**: Afferent accepts and returns user-authored content through a documented safe-content contract that prevents stored script execution in conforming consumers.
 - [ ] **ADMN-10**: A post exposes append-only activity entries for creation, edits, status changes, board moves, tag changes, locks, archive or restore, merges, and linked changelog publication.
 
 ### Roadmap
@@ -194,9 +194,9 @@ Every v1 requirement maps to exactly one roadmap phase.
 | DISC-01     | Phase 2 | Complete |
 | DISC-02     | Phase 2 | Complete |
 | DISC-03     | Phase 2 | Complete |
-| DISC-04     | Phase 2 | Pending  |
+| DISC-04     | Phase 2 | Complete |
 | DISC-05     | Phase 2 | Complete |
-| DISC-06     | Phase 2 | Pending  |
+| DISC-06     | Phase 2 | Complete |
 | DISC-07     | Phase 2 | Pending  |
 | DISC-08     | Phase 2 | Pending  |
 | ADMN-01     | Phase 2 | Pending  |
@@ -207,7 +207,7 @@ Every v1 requirement maps to exactly one roadmap phase.
 | ADMN-06     | Phase 2 | Pending  |
 | ADMN-07     | Phase 2 | Pending  |
 | ADMN-08     | Phase 2 | Pending  |
-| ADMN-09     | Phase 2 | Pending  |
+| ADMN-09     | Phase 2 | Complete |
 | ADMN-10     | Phase 2 | Pending  |
 | RMAP-01     | Phase 2 | Pending  |
 | RMAP-02     | Phase 2 | Pending  |
