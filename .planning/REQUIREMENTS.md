@@ -81,9 +81,9 @@ Requirements for the first production-ready public release. Roadmap creation wil
 - [ ] **COMP-01**: A developer can install Afferent from a published npm package as a reusable Convex component.
 - [x] **COMP-02**: A developer can mount typed public-read, authenticated-participation, and authorized-admin wrapper APIs in the host Convex application.
 - [x] **COMP-03**: Public component contracts use stable provider-neutral DTOs and opaque string identifiers rather than exposing component-internal documents or provider records.
-- [ ] **COMP-04**: A developer can integrate Afferent with Convex Auth using a documented adapter or recipe verified by an integration fixture.
-- [ ] **COMP-05**: A developer can integrate Afferent with Clerk using a documented adapter or recipe verified by an integration fixture.
-- [ ] **COMP-06**: A developer can integrate Afferent with the Convex Better Auth component using a documented adapter or recipe verified by an integration fixture.
+- [x] **COMP-04**: A developer can integrate Afferent with Convex Auth using a documented adapter or recipe verified by an integration fixture.
+- [x] **COMP-05**: A developer can integrate Afferent with Clerk using a documented adapter or recipe verified by an integration fixture.
+- [x] **COMP-06**: A developer can integrate Afferent with the Convex Better Auth component using a documented adapter or recipe verified by an integration fixture.
 - [x] **COMP-07**: Auth integration code derives actor identity and admin permission inside trusted host functions rather than accepting `userId`, `isAdmin`, or demo scope from browser arguments.
 
 ### React and Source-Owned UI
@@ -109,7 +109,7 @@ Requirements for the first production-ready public release. Roadmap creation wil
 ### Release Quality
 
 - [ ] **QUAL-01**: Automated component tests verify domain invariants, authorization boundaries, visibility rules, voting idempotency, merges, status projections, changelog publication, and notifications.
-- [ ] **QUAL-02**: Auth-conformance tests verify equivalent identity and authorization behavior for Convex Auth, Clerk, and Better Auth fixtures.
+- [x] **QUAL-02**: Auth-conformance tests verify equivalent identity and authorization behavior for Convex Auth, Clerk, and Better Auth fixtures.
 - [x] **QUAL-03**: A clean consumer fixture can install the packed npm artifact, run Convex code generation, typecheck, and build without source-relative workspace imports.
 - [ ] **QUAL-04**: A clean consumer fixture can install registry components and build them against the supported package version range.
 - [ ] **QUAL-05**: Browser tests verify the public feedback, roadmap, changelog, notification, and admin workflows against a real Convex deployment.
@@ -228,9 +228,9 @@ Every v1 requirement maps to exactly one roadmap phase.
 | COMP-01 | Phase 4 | Pending |
 | COMP-02 | Phase 1 | Complete |
 | COMP-03 | Phase 1 | Complete |
-| COMP-04 | Phase 1 | Pending |
-| COMP-05 | Phase 1 | Pending |
-| COMP-06 | Phase 1 | Pending |
+| COMP-04 | Phase 1 | Complete |
+| COMP-05 | Phase 1 | Complete |
+| COMP-06 | Phase 1 | Complete |
 | COMP-07 | Phase 1 | Complete |
 | UI-01 | Phase 2 | Pending |
 | UI-02 | Phase 2 | Pending |
@@ -247,7 +247,7 @@ Every v1 requirement maps to exactly one roadmap phase.
 | DEMO-06 | Phase 4 | Pending |
 | DEMO-07 | Phase 4 | Pending |
 | QUAL-01 | Phase 2 | Pending |
-| QUAL-02 | Phase 1 | Pending |
+| QUAL-02 | Phase 1 | Complete |
 | QUAL-03 | Phase 1 | Complete |
 | QUAL-04 | Phase 3 | Pending |
 | QUAL-05 | Phase 4 | Pending |

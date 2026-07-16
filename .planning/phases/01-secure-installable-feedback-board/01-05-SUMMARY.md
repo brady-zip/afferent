@@ -107,6 +107,7 @@ status: complete
 ### Auto-fixed Issues
 
 **1. [Rule 1 - Bug] Prevented nested Node release tests from false-fast success**
+
 - **Found during:** Task 3 clean-worktree verification
 - **Issue:** A nested `node --test` inherited `NODE_TEST_CONTEXT` and returned success without running the 19-second packed consumer gate.
 - **Fix:** Removed that internal test-runner variable from the child environment and directly verified the walking skeleton before accepting the result.
@@ -115,6 +116,7 @@ status: complete
 - **Committed in:** `6affa84`
 
 **2. [Rule 1 - Bug] Treated ComponentApi as its declared types-only export**
+
 - **Found during:** Task 3 clean packed import smoke test
 - **Issue:** Node correctly refused to runtime-resolve `./_generated/component.js`, whose export map intentionally supplies only a `types` condition.
 - **Fix:** Kept runtime smoke coverage for executable exports and verified ComponentApi via the installed manifest, declaration path, consumer component codegen/typechecking, and ATTW.
@@ -123,6 +125,7 @@ status: complete
 - **Committed in:** `6affa84`
 
 **3. [Rule 3 - Blocking] Closed release lint failures in new proof code**
+
 - **Found during:** Final explicit command matrix
 - **Issue:** New helper/test expressions violated the repository's oxlint policy.
 - **Fix:** Simplified optional normalization, removed nested ternaries and await-member access, and used direct string coverage assertions.
@@ -172,5 +175,6 @@ None - all provider packages are fixture-only and no external credentials are ne
 - No new threat surface exists beyond the plan's auth-provider, browser-wrapper, and package-consumer boundaries.
 
 ---
-*Phase: 01-secure-installable-feedback-board*
-*Completed: 2026-07-16*
+
+_Phase: 01-secure-installable-feedback-board_
+_Completed: 2026-07-16_
