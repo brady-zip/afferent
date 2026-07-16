@@ -5,16 +5,16 @@ milestone_name: milestone
 current_phase: 2
 current_phase_name: Complete Feedback-to-Changelog Workflow
 status: executing
-stopped_at: Completed 02-04-PLAN.md
-last_updated: "2026-07-16T22:58:36.491Z"
+stopped_at: Completed 02-06-PLAN.md
+last_updated: "2026-07-16T23:10:18.348Z"
 last_activity: 2026-07-16
-last_activity_desc: Completed stable tag administration, bounded cleanup, and headless tag controls
+last_activity_desc: Completed scope-safe status-derived roadmap and independent grouped headless pagination
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 18
-  completed_plans: 12
-  percent: 67
+  completed_plans: 13
+  percent: 72
 ---
 
 # Project State
@@ -29,30 +29,30 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 ## Current Position
 
 Phase: 2 (Complete Feedback-to-Changelog Workflow) — EXECUTING
-Plan: 5 of 10
+Plan: 6 of 10
 Status: Ready to execute
-Last activity: 2026-07-16 — Completed stable tag administration, bounded cleanup, and headless tag controls
+Last activity: 2026-07-16 — Completed scope-safe status-derived roadmap and independent grouped headless pagination
 
-Progress: [███████░░░] 67%
+Progress: [███████░░░] 72%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 12
-- Average duration: 31 min
-- Total execution time: 366 min
+- Total plans completed: 13
+- Average duration: 29 min
+- Total execution time: 374 min
 
 **By Phase:**
 
 | Phase    | Plans | Total   | Avg/Plan |
 | -------- | ----- | ------- | -------- |
 | Phase 01 | 8     | 299 min | 37 min   |
-| Phase 02 | 4     | 67 min  | 17 min   |
+| Phase 02 | 5     | 75 min  | 15 min   |
 
 **Recent Trend:**
 
-- Last 5 plans: 10 min, 12 min, 14 min, 26 min, 15 min
+- Last 5 plans: 12 min, 14 min, 26 min, 15 min, 8 min
 - Trend: Phase 2 is building the complete feedback lifecycle in bounded vertical slices
 
 _Updated after each plan completion_
@@ -73,6 +73,7 @@ _Updated after each plan completion_
 | Phase 02 P02 | 14 min   | 3 tasks | 26 files |
 | Phase 02 P03 | 26 min   | 3 tasks | 45 files |
 | Phase 02 P04 | 15min    | 3 tasks | 26 files |
+| Phase 02 P06 | 8min     | 3 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -119,6 +120,9 @@ Recent decisions affecting current work:
 - [Phase 02]: Use an active/deleting/deleted tag lifecycle so public projections hide a tag atomically before bounded cleanup. — Prevents partial multi-transaction cleanup from leaking through public DTOs, feeds, or search.
 - [Phase 02]: Drain tag memberships, feed rows, and search rows in separate 50-row scheduled continuation batches. — Keeps every transaction bounded with headroom and makes retries idempotent.
 - [Phase 02]: Version TagDto at contractVersion 1 and key tag mutation state by entity and action. — Preserves additive public contracts and explicit headless async state.
+- [Phase 02]: Use a fixed 90-day currentStatusSince range for Complete while Planned and In Progress remain independently paginated status projections. — The roadmap remains current without hiding older completed feedback from discovery or changelog history.
+- [Phase 02]: Use optional non-authoritative sessionGeneration only to reset host and headless roadmap pagination across account changes. — It changes helper query identity but is discarded before the component call and never confers actor authority.
+- [Phase 02]: Expose a dedicated minimal RoadmapItemDto and no independent roadmap entity. — Roadmap is a current-status projection with stable versioned fields and no separate writes or manual order.
 
 ### Pending Todos
 
@@ -140,6 +144,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-16T22:58:22.849Z
-Stopped at: Completed 02-04-PLAN.md
+Last session: 2026-07-16T23:09:55.775Z
+Stopped at: Completed 02-06-PLAN.md
 Resume file: None

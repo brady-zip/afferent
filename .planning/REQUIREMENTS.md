@@ -53,9 +53,9 @@ Requirements for the first production-ready public release. Roadmap creation wil
 
 ### Roadmap
 
-- [ ] **RMAP-01**: A visitor can view a public roadmap derived from posts in the Planned, In Progress, and Complete statuses.
-- [ ] **RMAP-02**: A visitor can filter the public roadmap by feedback board.
-- [ ] **RMAP-03**: The roadmap applies the same visibility and moderation rules as direct post browsing and search.
+- [x] **RMAP-01**: A visitor can view a public roadmap derived from posts in the Planned, In Progress, and Complete statuses.
+- [x] **RMAP-02**: A visitor can filter the public roadmap by feedback board.
+- [x] **RMAP-03**: The roadmap applies the same visibility and moderation rules as direct post browsing and search.
 
 ### Changelog
 
@@ -209,9 +209,9 @@ Every v1 requirement maps to exactly one roadmap phase.
 | ADMN-08     | Phase 2 | Complete |
 | ADMN-09     | Phase 2 | Complete |
 | ADMN-10     | Phase 2 | Complete |
-| RMAP-01     | Phase 2 | Pending  |
-| RMAP-02     | Phase 2 | Pending  |
-| RMAP-03     | Phase 2 | Pending  |
+| RMAP-01     | Phase 2 | Complete |
+| RMAP-02     | Phase 2 | Complete |
+| RMAP-03     | Phase 2 | Complete |
 | CHLG-01     | Phase 2 | Pending  |
 | CHLG-02     | Phase 2 | Pending  |
 | CHLG-03     | Phase 2 | Pending  |
