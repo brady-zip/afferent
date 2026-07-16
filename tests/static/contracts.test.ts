@@ -15,6 +15,7 @@ import {
   setVoteIntentValidator,
   withdrawPostIntentValidator,
 } from "../../src/client/contracts.js";
+import { normalizeBetterAuthUser } from "../../src/client/adapters/better-auth.js";
 import { toActorDto, toBoardDto } from "../../src/component/model/views.js";
 
 const CLIENT_FILES = [
@@ -40,6 +41,34 @@ function sourceFilesBelow(directory: string): string[] {
 }
 
 describe("public contract privacy", () => {
+  test("normalizes the session-validated Better Auth component user document", () => {
+    expect(
+      normalizeBetterAuthUser({
+        _id: "better-auth-user-document-id",
+        name: "  Example User  ",
+        image: "  https://example.com/avatar.png  ",
+        email: "private@example.com",
+        role: "admin",
+        session: { token: "private" },
+      } as never),
+    ).toEqual({
+      externalKey: "better-auth:better-auth-user-document-id",
+      displayName: "Example User",
+      avatarUrl: "https://example.com/avatar.png",
+    });
+
+    expect(() =>
+      normalizeBetterAuthUser({ _id: "   ", name: "Ignored" } as never),
+    ).toThrow("AUTHENTICATION_REQUIRED");
+  });
+
+  test("keeps full provider-helper capabilities server-side", () => {
+    const internalSource = fs.readFileSync("src/client/internal.ts", "utf8");
+    expect(internalSource).not.toContain("Pick<");
+    expect(internalSource).toContain("GenericQueryCtx<GenericDataModel>");
+    expect(internalSource).toContain("GenericMutationCtx<GenericDataModel>");
+  });
+
   test("keeps authority and provider records out of intent validators", () => {
     expect(Object.keys(createPostIntentValidator.fields).sort()).toEqual([
       "boardId",
