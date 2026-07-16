@@ -49,14 +49,13 @@ function run(command, args, options = {}) {
 
 async function listFiles(root) {
   const entries = await readdir(root, { withFileTypes: true });
-  return (
-    await Promise.all(
-      entries.map(async (entry) => {
-        const path = join(root, entry.name);
-        return entry.isDirectory() ? await listFiles(path) : [path];
-      }),
-    )
-  ).flat();
+  const nested = await Promise.all(
+    entries.map(async (entry) => {
+      const path = join(root, entry.name);
+      return entry.isDirectory() ? await listFiles(path) : [path];
+    }),
+  );
+  return nested.flat();
 }
 
 const sourceRoot = await realpath(

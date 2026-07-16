@@ -111,7 +111,7 @@ export interface AdminCapabilities<Context> {
     ctx: Context,
     args: {
       readPolicy: "public" | "authenticated";
-      boards: ReadonlyArray<{ slug: string; name: string }>;
+      boards: readonly { slug: string; name: string }[];
     },
   ): Promise<{
     contractVersion: 1;

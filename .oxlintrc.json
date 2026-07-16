@@ -1,0 +1,24 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "categories": { "correctness": "error", "style": "error" },
+  "ignorePatterns": [".codex", "dist", "**/_generated"],
+  "rules": {
+    "sort-keys": "off",
+    "sort-imports": "off",
+    "no-duplicate-imports": "off",
+    "no-magic-numbers": "off",
+    "no-ternary": "off",
+    "id-length": "off",
+    "func-style": "off",
+    "no-continue": "off",
+    "curly": "off",
+    "max-statements": "off",
+    "init-declarations": "off",
+    "prefer-destructuring": "off",
+    "typescript/method-signature-style": "off",
+    "unicorn/prefer-ternary": "off",
+    "unicorn/no-null": "off",
+    "unicorn/filename-case": "off",
+    "unicorn/max-nested-calls": "off"
+  }
+}

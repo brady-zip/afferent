@@ -99,7 +99,7 @@ export function createAfferentClient(
         )) as unknown as {
           contractVersion: 1;
           readPolicy: "public" | "authenticated";
-          boards: Array<{ id: BoardId; slug: string; name: string }>;
+          boards: { id: BoardId; slug: string; name: string }[];
         };
       },
     },
