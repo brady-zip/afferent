@@ -1,10 +1,10 @@
 import { v } from "convex/values";
 
-export type VerifiedActorValue = {
+export interface VerifiedActorValue {
   externalKey: string;
   displayName?: string;
   avatarUrl?: string;
-};
+}
 
 export const readPolicyValidator = v.union(
   v.literal("public"),

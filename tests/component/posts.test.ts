@@ -87,9 +87,8 @@ describe("author-owned post lifecycle", () => {
       author: { id: created.author.id },
       totals: { votes: 0, comments: 0 },
     });
-    expect((await client.read.listPosts(ctx as never, { boardId })).posts).toEqual(
-      [],
-    );
+    const activePosts = await client.read.listPosts(ctx as never, { boardId });
+    expect(activePosts.posts).toEqual([]);
     expect(await client.read.getPost(ctx as never, { postId: created.id })).toMatchObject(
       { id: created.id, title: "Edited title" },
     );

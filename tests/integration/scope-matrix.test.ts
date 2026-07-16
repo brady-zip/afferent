@@ -90,24 +90,28 @@ describe("server-derived scope isolation", () => {
     const alpha = makeClient("scope-alpha", "fixture:alpha");
     const beta = makeClient("scope-beta", "fixture:beta");
 
-    const alphaBoard = (
-      await alpha.admin.configureInstallation(ctx as never, {
+    const alphaConfiguration = await alpha.admin.configureInstallation(
+      ctx as never,
+      {
         readPolicy: "public",
         boards: [
           { slug: "feedback", name: "Feedback" },
           { slug: "bugs", name: "Bugs" },
         ],
-      })
-    ).boards[0];
-    const betaBoard = (
-      await beta.admin.configureInstallation(ctx as never, {
+      },
+    );
+    const alphaBoard = alphaConfiguration.boards[0];
+    const betaConfiguration = await beta.admin.configureInstallation(
+      ctx as never,
+      {
         readPolicy: "public",
         boards: [
           { slug: "feedback", name: "Feedback" },
           { slug: "bugs", name: "Bugs" },
         ],
-      })
-    ).boards[0];
+      },
+    );
+    const betaBoard = betaConfiguration.boards[0];
 
     const alphaPost = await alpha.participation.createPost(ctx as never, {
       boardId: alphaBoard.id,
@@ -120,13 +124,12 @@ describe("server-derived scope isolation", () => {
       body: "beta",
     });
 
-    expect((await alpha.read.listBoards(ctx as never, {})).boards).toHaveLength(
-      2,
-    );
-    expect(
-      (await alpha.read.listPosts(ctx as never, { boardId: alphaBoard.id }))
-        .posts,
-    ).toMatchObject([{ title: "Alpha only" }]);
+    const alphaBoards = await alpha.read.listBoards(ctx as never, {});
+    expect(alphaBoards.boards).toHaveLength(2);
+    const alphaPosts = await alpha.read.listPosts(ctx as never, {
+      boardId: alphaBoard.id,
+    });
+    expect(alphaPosts.posts).toMatchObject([{ title: "Alpha only" }]);
     expect(
       await alpha.read.countPosts(ctx as never, { boardId: alphaBoard.id }),
     ).toEqual({ contractVersion: 1, count: 1 });
@@ -149,9 +152,10 @@ describe("server-derived scope isolation", () => {
       title: "Reactive alpha",
       body: "alpha",
     });
-    expect(
-      (await beta.read.listPosts(ctx as never, { boardId: betaBoard.id })).posts,
-    ).toMatchObject([{ title: "Beta only" }]);
+    const betaPosts = await beta.read.listPosts(ctx as never, {
+      boardId: betaBoard.id,
+    });
+    expect(betaPosts.posts).toMatchObject([{ title: "Beta only" }]);
 
     await expect(
       beta.participation.editPost(ctx as never, {

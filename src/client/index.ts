@@ -1,11 +1,5 @@
-import type { ComponentApi } from "../component/_generated/component.js";
-import type { VerifiedActor } from "./contracts.js";
-import {
-  createClientWithScope,
-  type AfferentClient,
-  type MutationContext,
-  type ReadContext,
-} from "./internal.js";
+import { createClientWithScope } from "./internal.js";
+import type { ClientResolvers } from "./internal.js";
 
 export type {
   ActorId,
@@ -39,18 +33,14 @@ export {
 
 const FIXED_SCOPE = "afferent:single-product:v1";
 
-export type AfferentClientOptions = Readonly<{
-  resolveActor: (ctx: MutationContext) => Promise<VerifiedActor | null>;
-  authorizeAdmin: (ctx: MutationContext) => Promise<boolean>;
-  isAuthenticated?: (ctx: ReadContext) => Promise<boolean>;
-}>;
+export type AfferentClientOptions = Omit<ClientResolvers, "resolveScope">;
 
-export type { AfferentClient };
+export type { AfferentClient } from "./internal.js";
 
 export function createAfferentClient(
-  component: ComponentApi,
+  component: Parameters<typeof createClientWithScope>[0],
   options: AfferentClientOptions,
-): AfferentClient {
+): ReturnType<typeof createClientWithScope> {
   return createClientWithScope(component, {
     ...options,
     resolveScope: async () => FIXED_SCOPE,

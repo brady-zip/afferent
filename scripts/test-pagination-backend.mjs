@@ -71,7 +71,7 @@ async function stopDevelopmentProcess() {
   developmentProcess.kill("SIGINT");
   await Promise.race([
     new Promise((resolve) => developmentProcess.once("close", resolve)),
-    new Promise((resolve) => setTimeout(resolve, 3_000)),
+    new Promise((resolve) => setTimeout(resolve, 3000)),
   ]);
   if (developmentProcess.exitCode === null) developmentProcess.kill("SIGTERM");
 }
@@ -112,9 +112,9 @@ async function startBackend() {
 }
 
 function deploymentUrl(envFile) {
-  const match = /^CONVEX_URL=(.+)$/mu.exec(envFile);
+  const match = /^CONVEX_URL=(?<url>.+)$/mu.exec(envFile);
   if (!match) throw new Error("Convex local deployment did not write CONVEX_URL");
-  return match[1].trim();
+  return match.groups.url.trim();
 }
 
 async function rejectedData(promise) {
