@@ -95,6 +95,36 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         },
         Name
       >;
+      editPost: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          actor: {
+            avatarUrl?: string;
+            displayName?: string;
+            externalKey: string;
+          };
+          body?: string;
+          postId: string;
+          scopeId: string;
+          title?: string;
+        },
+        {
+          author: { avatarUrl?: string; displayName?: string; id: string };
+          board: { id: string; name: string; slug: string };
+          boardId: string;
+          body: string;
+          commentCount: number;
+          contractVersion: 1;
+          id: string;
+          status: { key: "open"; label: "Open" };
+          tags: Array<string>;
+          title: string;
+          totals: { comments: number; votes: number };
+          voteCount: number;
+        },
+        Name
+      >;
       getPost: FunctionReference<
         "query",
         "internal",
@@ -148,6 +178,34 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         },
         Name
       >;
+      withdrawPost: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          actor: {
+            avatarUrl?: string;
+            displayName?: string;
+            externalKey: string;
+          };
+          postId: string;
+          scopeId: string;
+        },
+        {
+          author: { avatarUrl?: string; displayName?: string; id: string };
+          board: { id: string; name: string; slug: string };
+          boardId: string;
+          body: string;
+          commentCount: number;
+          contractVersion: 1;
+          id: string;
+          status: { key: "open"; label: "Open" };
+          tags: Array<string>;
+          title: string;
+          totals: { comments: number; votes: number };
+          voteCount: number;
+        },
+        Name
+      >;
     };
     participation: {
       posts: {
@@ -164,6 +222,64 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             body: string;
             scopeId: string;
             title: string;
+          },
+          {
+            author: { avatarUrl?: string; displayName?: string; id: string };
+            board: { id: string; name: string; slug: string };
+            boardId: string;
+            body: string;
+            commentCount: number;
+            contractVersion: 1;
+            id: string;
+            status: { key: "open"; label: "Open" };
+            tags: Array<string>;
+            title: string;
+            totals: { comments: number; votes: number };
+            voteCount: number;
+          },
+          Name
+        >;
+        editPost: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            actor: {
+              avatarUrl?: string;
+              displayName?: string;
+              externalKey: string;
+            };
+            body?: string;
+            postId: string;
+            scopeId: string;
+            title?: string;
+          },
+          {
+            author: { avatarUrl?: string; displayName?: string; id: string };
+            board: { id: string; name: string; slug: string };
+            boardId: string;
+            body: string;
+            commentCount: number;
+            contractVersion: 1;
+            id: string;
+            status: { key: "open"; label: "Open" };
+            tags: Array<string>;
+            title: string;
+            totals: { comments: number; votes: number };
+            voteCount: number;
+          },
+          Name
+        >;
+        withdrawPost: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            actor: {
+              avatarUrl?: string;
+              displayName?: string;
+              externalKey: string;
+            };
+            postId: string;
+            scopeId: string;
           },
           {
             author: { avatarUrl?: string; displayName?: string; id: string };

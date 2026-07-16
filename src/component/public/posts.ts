@@ -31,20 +31,20 @@ async function requireReadPolicy(
 export const listPosts = query({
   args: {
     scopeId: v.string(),
-    boardId: v.id("boards"),
+    boardId: v.string(),
     viewerAuthenticated: v.boolean(),
   },
   returns: postListDtoValidator,
   handler: async (ctx, args) => {
     requireScope(args.scopeId);
     await requireReadPolicy(ctx, args.scopeId, args.viewerAuthenticated);
-    await requireBoardInScope(ctx, args.scopeId, args.boardId);
+    const board = await requireBoardInScope(ctx, args.scopeId, args.boardId);
     const posts = await ctx.db
       .query("posts")
       .withIndex("by_scope_board_state", (q) =>
         q
           .eq("scopeId", args.scopeId)
-          .eq("boardId", args.boardId)
+          .eq("boardId", board._id)
           .eq("lifecycleState", "active"),
       )
       .order("desc")
@@ -59,7 +59,7 @@ export const listPosts = query({
 export const getPost = query({
   args: {
     scopeId: v.string(),
-    postId: v.id("posts"),
+    postId: v.string(),
     viewerAuthenticated: v.boolean(),
   },
   returns: postDtoValidator,
@@ -74,20 +74,20 @@ export const getPost = query({
 export const countPosts = query({
   args: {
     scopeId: v.string(),
-    boardId: v.id("boards"),
+    boardId: v.string(),
     viewerAuthenticated: v.boolean(),
   },
   returns: countDtoValidator,
   handler: async (ctx, args) => {
     requireScope(args.scopeId);
     await requireReadPolicy(ctx, args.scopeId, args.viewerAuthenticated);
-    await requireBoardInScope(ctx, args.scopeId, args.boardId);
+    const board = await requireBoardInScope(ctx, args.scopeId, args.boardId);
     const posts = await ctx.db
       .query("posts")
       .withIndex("by_scope_board_state", (q) =>
         q
           .eq("scopeId", args.scopeId)
-          .eq("boardId", args.boardId)
+          .eq("boardId", board._id)
           .eq("lifecycleState", "active"),
       )
       .take(MAX_POSTS + 1);

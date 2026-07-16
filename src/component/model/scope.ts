@@ -25,10 +25,12 @@ export async function requireInstallation(
 export async function requireBoardInScope(
   ctx: DatabaseContext,
   scopeId: string,
-  boardId: Id<"boards">,
+  boardId: string | Id<"boards">,
 ) {
   requireScope(scopeId);
-  const board = await ctx.db.get(boardId);
+  const normalized = ctx.db.normalizeId("boards", String(boardId));
+  if (!normalized) notFound("board");
+  const board = await ctx.db.get(normalized);
   if (!board || board.scopeId !== scopeId) notFound("board");
   return board;
 }
@@ -36,10 +38,12 @@ export async function requireBoardInScope(
 export async function requirePostInScope(
   ctx: DatabaseContext,
   scopeId: string,
-  postId: Id<"posts">,
+  postId: string | Id<"posts">,
 ) {
   requireScope(scopeId);
-  const post = await ctx.db.get(postId);
+  const normalized = ctx.db.normalizeId("posts", String(postId));
+  if (!normalized) notFound("post");
+  const post = await ctx.db.get(normalized);
   if (!post || post.scopeId !== scopeId) notFound("post");
   return post;
 }

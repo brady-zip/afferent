@@ -19,6 +19,10 @@ export function authenticationRequired(): never {
   throw new ConvexError({ code: "AUTHENTICATION_REQUIRED" });
 }
 
+export function notOwner(): never {
+  throw new ConvexError({ code: "NOT_OWNER" });
+}
+
 export function installationNotConfigured(): never {
   throw new ConvexError({ code: "INSTALLATION_NOT_CONFIGURED" });
 }

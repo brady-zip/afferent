@@ -107,6 +107,27 @@ export function createClientWithScope(
           },
         )) as unknown as PostDto;
       },
+      async editPost(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        const actor = await options.resolveActor(ctx);
+        if (!actor) throw new Error("AUTHENTICATION_REQUIRED");
+        return (await ctx.runMutation(component.participation.posts.editPost, {
+          scopeId,
+          actor,
+          postId: args.postId,
+          ...(args.title === undefined ? {} : { title: args.title }),
+          ...(args.body === undefined ? {} : { body: args.body }),
+        })) as unknown as PostDto;
+      },
+      async withdrawPost(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        const actor = await options.resolveActor(ctx);
+        if (!actor) throw new Error("AUTHENTICATION_REQUIRED");
+        return (await ctx.runMutation(
+          component.participation.posts.withdrawPost,
+          { scopeId, actor, postId: args.postId },
+        )) as unknown as PostDto;
+      },
     },
     admin: {
       async configureInstallation(ctx, args) {

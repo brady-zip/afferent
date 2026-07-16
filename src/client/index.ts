@@ -24,12 +24,14 @@ export {
   countPostsIntentValidator,
   countResultValidator,
   createPostIntentValidator,
+  editPostIntentValidator,
   getPostIntentValidator,
   installationResultValidator,
   listBoardsIntentValidator,
   listPostsIntentValidator,
   postListResultValidator,
   publicPostDtoValidator,
+  withdrawPostIntentValidator,
 } from "./contracts.js";
 
 const FIXED_SCOPE = "afferent:single-product:v1";

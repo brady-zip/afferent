@@ -49,6 +49,14 @@ export const createPostIntentValidator = v.object({
   body: v.string(),
 });
 
+export const editPostIntentValidator = v.object({
+  postId: v.string(),
+  title: v.optional(v.string()),
+  body: v.optional(v.string()),
+});
+
+export const withdrawPostIntentValidator = v.object({ postId: v.string() });
+
 export const listPostsIntentValidator = v.object({
   boardId: v.string(),
 });
@@ -129,6 +137,11 @@ export interface ParticipationCapabilities<Context> {
     ctx: Context,
     args: { boardId: BoardId; title: string; body: string },
   ): Promise<PostDto>;
+  editPost(
+    ctx: Context,
+    args: { postId: PostId; title?: string; body?: string },
+  ): Promise<PostDto>;
+  withdrawPost(ctx: Context, args: { postId: PostId }): Promise<PostDto>;
 }
 
 export interface AdminCapabilities<Context> {

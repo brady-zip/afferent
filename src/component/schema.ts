@@ -26,7 +26,7 @@ export default defineSchema({
     actorId: v.id("actors"),
     title: v.string(),
     body: v.string(),
-    lifecycleState: v.literal("active"),
+    lifecycleState: v.union(v.literal("active"), v.literal("withdrawn")),
     statusKey: v.literal("open"),
     voteCount: v.number(),
     commentCount: v.number(),
