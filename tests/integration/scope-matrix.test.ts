@@ -280,7 +280,7 @@ describe("server-derived scope isolation", () => {
       name: "Clerk Before",
     });
     const betterActor = normalizeBetterAuthUser({
-      id: "same-raw-id",
+      _id: "same-raw-id",
       name: "Better User",
     });
     const fixed = createAfferentClient(component, {
