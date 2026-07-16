@@ -5,16 +5,16 @@ milestone_name: milestone
 current_phase: 2
 current_phase_name: Complete Feedback-to-Changelog Workflow
 status: executing
-stopped_at: Completed 02-06-PLAN.md
-last_updated: "2026-07-16T23:10:18.348Z"
+stopped_at: Completed 02-07-PLAN.md
+last_updated: "2026-07-16T23:26:22.137Z"
 last_activity: 2026-07-16
-last_activity_desc: Completed scope-safe status-derived roadmap and independent grouped headless pagination
+last_activity_desc: Completed stable manual changelog lifecycle and headless editorial hooks
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 18
-  completed_plans: 13
-  percent: 72
+  completed_plans: 14
+  percent: 78
 ---
 
 # Project State
@@ -29,30 +29,30 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 ## Current Position
 
 Phase: 2 (Complete Feedback-to-Changelog Workflow) — EXECUTING
-Plan: 6 of 10
+Plan: 7 of 10
 Status: Ready to execute
-Last activity: 2026-07-16 — Completed scope-safe status-derived roadmap and independent grouped headless pagination
+Last activity: 2026-07-16 — Completed stable manual changelog lifecycle and headless editorial hooks
 
-Progress: [███████░░░] 72%
+Progress: [████████░░] 78%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 13
-- Average duration: 29 min
-- Total execution time: 374 min
+- Total plans completed: 14
+- Average duration: 28 min
+- Total execution time: 387 min
 
 **By Phase:**
 
 | Phase    | Plans | Total   | Avg/Plan |
 | -------- | ----- | ------- | -------- |
 | Phase 01 | 8     | 299 min | 37 min   |
-| Phase 02 | 5     | 75 min  | 15 min   |
+| Phase 02 | 6     | 88 min  | 15 min   |
 
 **Recent Trend:**
 
-- Last 5 plans: 12 min, 14 min, 26 min, 15 min, 8 min
+- Last 5 plans: 14 min, 26 min, 15 min, 8 min, 13 min
 - Trend: Phase 2 is building the complete feedback lifecycle in bounded vertical slices
 
 _Updated after each plan completion_
@@ -74,6 +74,7 @@ _Updated after each plan completion_
 | Phase 02 P03 | 26 min   | 3 tasks | 45 files |
 | Phase 02 P04 | 15min    | 3 tasks | 26 files |
 | Phase 02 P06 | 8min     | 3 tasks | 14 files |
+| Phase 02 P07 | 13min    | 3 tasks | 20 files |
 
 ## Accumulated Context
 
@@ -123,6 +124,10 @@ Recent decisions affecting current work:
 - [Phase 02]: Use a fixed 90-day currentStatusSince range for Complete while Planned and In Progress remain independently paginated status projections. — The roadmap remains current without hiding older completed feedback from discovery or changelog history.
 - [Phase 02]: Use optional non-authoritative sessionGeneration only to reset host and headless roadmap pagination across account changes. — It changes helper query identity but is discarded before the component call and never confers actor authority.
 - [Phase 02]: Expose a dedicated minimal RoadmapItemDto and no independent roadmap entity. — Roadmap is a current-status projection with stable versioned fields and no separate writes or manual order.
+- [Phase 02]: Separate immutable firstPublishedAt from current publishedAt so republish preserves the original changelog URL and order.
+- [Phase 02]: Resolve ordered changelog links through current canonical visibility without deleting hidden editorial relationships.
+- [Phase 02]: Keep linked-post DTOs compact enough for the documented 50-entry by 50-link bounded query ceiling.
+- [Phase 02]: Persist once-per-entry/post changelog publication guards before notification fan-out is implemented.
 
 ### Pending Todos
 
@@ -144,6 +149,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-16T23:09:55.775Z
-Stopped at: Completed 02-06-PLAN.md
+Last session: 2026-07-16T23:26:09.913Z
+Stopped at: Completed 02-07-PLAN.md
 Resume file: None

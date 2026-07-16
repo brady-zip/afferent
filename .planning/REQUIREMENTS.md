@@ -59,12 +59,12 @@ Requirements for the first production-ready public release. Roadmap creation wil
 
 ### Changelog
 
-- [ ] **CHLG-01**: An authorized admin can create and edit a changelog draft.
-- [ ] **CHLG-02**: An authorized admin can publish and unpublish a changelog entry explicitly.
-- [ ] **CHLG-03**: An authorized admin can link a changelog entry to one or more feedback posts.
-- [ ] **CHLG-04**: A visitor can browse published changelog entries.
-- [ ] **CHLG-05**: A visitor can open a published changelog entry at a stable URL.
-- [ ] **CHLG-06**: Changelog publication never occurs automatically from a feedback status change.
+- [x] **CHLG-01**: An authorized admin can create and edit a changelog draft.
+- [x] **CHLG-02**: An authorized admin can publish and unpublish a changelog entry explicitly.
+- [x] **CHLG-03**: An authorized admin can link a changelog entry to one or more feedback posts.
+- [x] **CHLG-04**: A visitor can browse published changelog entries.
+- [x] **CHLG-05**: A visitor can open a published changelog entry at a stable URL.
+- [x] **CHLG-06**: Changelog publication never occurs automatically from a feedback status change.
 
 ### Notifications
 
@@ -212,12 +212,12 @@ Every v1 requirement maps to exactly one roadmap phase.
 | RMAP-01     | Phase 2 | Complete |
 | RMAP-02     | Phase 2 | Complete |
 | RMAP-03     | Phase 2 | Complete |
-| CHLG-01     | Phase 2 | Pending  |
-| CHLG-02     | Phase 2 | Pending  |
-| CHLG-03     | Phase 2 | Pending  |
-| CHLG-04     | Phase 2 | Pending  |
-| CHLG-05     | Phase 2 | Pending  |
-| CHLG-06     | Phase 2 | Pending  |
+| CHLG-01     | Phase 2 | Complete |
+| CHLG-02     | Phase 2 | Complete |
+| CHLG-03     | Phase 2 | Complete |
+| CHLG-04     | Phase 2 | Complete |
+| CHLG-05     | Phase 2 | Complete |
+| CHLG-06     | Phase 2 | Complete |
 | NOTF-01     | Phase 2 | Pending  |
 | NOTF-02     | Phase 2 | Pending  |
 | NOTF-03     | Phase 2 | Pending  |
