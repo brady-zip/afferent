@@ -5,16 +5,16 @@ milestone_name: milestone
 current_phase: 01
 current_phase_name: Secure Installable Feedback Board
 status: executing
-stopped_at: Completed 01-07-PLAN.md
-last_updated: "2026-07-16T18:48:32.315Z"
+stopped_at: Completed 01-08-PLAN.md
+last_updated: "2026-07-16T19:02:55.181Z"
 last_activity: 2026-07-16
 last_activity_desc: Completed Plan 01-07 real provider factory conformance
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 8
-  completed_plans: 7
-  percent: 0
+  completed_plans: 8
+  percent: 25
 ---
 
 # Project State
@@ -28,12 +28,12 @@ See: .planning/PROJECT.md (updated 2026-07-14)
 
 ## Current Position
 
-Phase: 01 (Secure Installable Feedback Board) — EXECUTING
+Phase: 01 (Secure Installable Feedback Board) — COMPLETE
 Plan: 8 of 8
-Status: Ready to execute Plan 01-08
-Last activity: 2026-07-16 — Completed Plan 01-07 real provider factory conformance
+Status: Ready for Phase 1 verification
+Last activity: 2026-07-16 — Completed Plan 01-08 additive installation, honest counts, and release gates
 
-Progress: [█████████░] 88%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -65,7 +65,8 @@ _Updated after each plan completion_
 | Phase 01 P04 | 90 min   | 3 tasks | 23 files |
 | Phase 01 P05 | 13m      | 3 tasks | 16 files |
 | Phase 01 P06 | 4 min    | 2 tasks | 8 files  |
-| Phase 01 P07 | 5 min | 2 tasks | 6 files |
+| Phase 01 P07 | 5 min    | 2 tasks | 6 files  |
+| Phase 01 P08 | 10 min   | 3 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,10 @@ Recent decisions affecting current work:
 - [Phase 01]: Commit generated-style Better Auth component references for offline fixture compilation. — Provider fixture typechecks must not require live credentials or deployment codegen.
 - [Phase 01]: Expose a narrow injectable Convex Auth helper seam while retaining the official helper as the production default. — Tests can drive the provider-shaped trusted helper without accepting actor facts or browser authority.
 - [Phase 01]: Give each provider scenario responsibility for registering and seeding its trusted backend prerequisites. — The observable authority matrix stays shared while provider internals remain isolated to setup.
+- [Phase 01]: Preserve existing board order and append only genuinely new slugs. — Repeated installation configuration is additive and never deletes, hides, or reorders omitted boards.
+- [Phase 01]: Expose bounded post counts with an explicit hasMore signal. — A cap-plus-one sentinel distinguishes exact totals through 50 from capped lower bounds.
+- [Phase 01]: Build declarations before Phase 1 fixture and package release checks. — Clean self-referencing fixture projects require emitted Afferent declarations before independent compilation.
+- [Phase 01]: Parameterize full trusted Convex host contexts with any data model. — Generated schema and schema-less Convex handlers remain assignable without weakening runtime authority boundaries.
 
 ### Pending Todos
 
@@ -117,6 +122,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-16T18:48:32.310Z
-Stopped at: Completed 01-07-PLAN.md
+Last session: 2026-07-16T19:02:20.243Z
+Stopped at: Completed 01-08-PLAN.md
 Resume file: None

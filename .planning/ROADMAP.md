@@ -11,7 +11,7 @@ Afferent reaches its first public release through four coarse vertical slices. T
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 1: Secure Installable Feedback Board** - A clean consumer can install the packed artifact, connect any supported auth provider, and run the core multi-board feedback loop safely.
+- [x] **Phase 1: Secure Installable Feedback Board** - A clean consumer can install the packed artifact, connect any supported auth provider, and run the core multi-board feedback loop safely. (completed 2026-07-16)
 - [ ] **Phase 2: Complete Feedback-to-Changelog Workflow** - Users and admins can complete discovery, moderation, roadmap, changelog, and notification workflows through tested headless React APIs.
 - [ ] **Phase 3: Source-Owned Product Interface** - Consumers can install accessible, responsive public and admin shadcn interfaces from one canonical source.
 - [ ] **Phase 4: Hosted Production Release** - The published package, registry, documentation, and isolated public demo work together against real Convex.
@@ -32,7 +32,7 @@ Afferent reaches its first public release through four coarse vertical slices. T
 4. A visitor can browse every permitted board under the installation-wide policy while an authenticated user can create, edit, withdraw, vote on, and discuss feedback with stable attribution and totals.
 5. Repeated vote operations remain one membership per actor, and comment replies identify one parent without creating nested discussion trees.
 
-**Plans:** 7/8 plans executed
+**Plans:** 8/8 plans complete
 
 - [x] 01-01-PLAN.md
 - [x] 01-02-PLAN.md
@@ -41,7 +41,7 @@ Afferent reaches its first public release through four coarse vertical slices. T
 - [x] 01-05-PLAN.md
 - [x] 01-06-PLAN.md
 - [x] 01-07-PLAN.md
-- [ ] 01-08-PLAN.md
+- [x] 01-08-PLAN.md
 
 **Wave 1**
 
@@ -132,12 +132,12 @@ Afferent reaches its first public release through four coarse vertical slices. T
 **Execution Order:**
 Phases execute sequentially: 1 -> 2 -> 3 -> 4
 
-| Phase                                      | Plans Complete | Status      | Completed |
-| ------------------------------------------ | -------------- | ----------- | --------- |
-| 1. Secure Installable Feedback Board       | 7/8 | In Progress|  |
-| 2. Complete Feedback-to-Changelog Workflow | 0/TBD          | Not started | -         |
-| 3. Source-Owned Product Interface          | 0/TBD          | Not started | -         |
-| 4. Hosted Production Release               | 0/TBD          | Not started | -         |
+| Phase                                      | Plans Complete | Status      | Completed  |
+| ------------------------------------------ | -------------- | ----------- | ---------- |
+| 1. Secure Installable Feedback Board       | 8/8            | Complete    | 2026-07-16 |
+| 2. Complete Feedback-to-Changelog Workflow | 0/TBD          | Not started | -          |
+| 3. Source-Owned Product Interface          | 0/TBD          | Not started | -          |
+| 4. Hosted Production Release               | 0/TBD          | Not started | -          |
 
 ---
 
