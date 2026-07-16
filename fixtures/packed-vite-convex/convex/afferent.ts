@@ -4,7 +4,7 @@ import {
   createPostIntentValidator,
   installationResultValidator,
   listPostsIntentValidator,
-  postListResultValidator,
+  postPageResultValidator,
   publicPostDtoValidator,
 } from "afferent";
 import type { BoardId } from "afferent";
@@ -41,7 +41,10 @@ export const createPost = mutation({
 
 export const listPosts = query({
   args: listPostsIntentValidator.fields,
-  returns: postListResultValidator,
+  returns: postPageResultValidator,
   handler: (ctx, args) =>
-    client.read.listPosts(ctx, { boardId: args.boardId as BoardId }),
+    client.read.listPosts(ctx, {
+      boardId: args.boardId as BoardId,
+      paginationOpts: args.paginationOpts,
+    }),
 });
