@@ -11,7 +11,7 @@ Afferent reaches its first public release through four coarse vertical slices. T
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-- [x] **Phase 1: Secure Installable Feedback Board** - A clean consumer can install the packed artifact, connect any supported auth provider, and run the core multi-board feedback loop safely. (completed 2026-07-16)
+- [ ] **Phase 1: Secure Installable Feedback Board** - A clean consumer can install the packed artifact, connect any supported auth provider, and run the core multi-board feedback loop safely.
 - [ ] **Phase 2: Complete Feedback-to-Changelog Workflow** - Users and admins can complete discovery, moderation, roadmap, changelog, and notification workflows through tested headless React APIs.
 - [ ] **Phase 3: Source-Owned Product Interface** - Consumers can install accessible, responsive public and admin shadcn interfaces from one canonical source.
 - [ ] **Phase 4: Hosted Production Release** - The published package, registry, documentation, and isolated public demo work together against real Convex.
@@ -32,33 +32,39 @@ Afferent reaches its first public release through four coarse vertical slices. T
   4. A visitor can browse every permitted board under the installation-wide policy while an authenticated user can create, edit, withdraw, vote on, and discuss feedback with stable attribution and totals.
   5. Repeated vote operations remain one membership per actor, and comment replies identify one parent without creating nested discussion trees.
 
-**Plans:** 5/5 plans complete
-
-- [x] 01-01-PLAN.md
-- [x] 01-02-PLAN.md
-- [x] 01-03-PLAN.md
-- [x] 01-04-PLAN.md
-- [x] 01-05-PLAN.md
+**Plans:** 5/8 plans executed
 
 **Wave 1**
 
-- [ ] `01-01-PLAN.md` — Define the failing packed-consumer acceptance test and approve the dependency matrix.
+- [x] `01-01-PLAN.md` — Define the failing packed-consumer acceptance test and approve the dependency matrix.
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] `01-02-PLAN.md` — Ship the packed Walking Skeleton with a real scoped component write/read and fixture interaction.
+- [x] `01-02-PLAN.md` — Ship the packed Walking Skeleton with a real scoped component write/read and fixture interaction.
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] `01-03-PLAN.md` — Add secure multi-board lifecycle, scope isolation, DTO privacy, and real-backend pagination.
+- [x] `01-03-PLAN.md` — Add secure multi-board lifecycle, scope isolation, DTO privacy, and real-backend pagination.
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] `01-04-PLAN.md` — Add idempotent voting, flat replies, and privacy-preserving actor anonymization.
+- [x] `01-04-PLAN.md` — Add idempotent voting, flat replies, and privacy-preserving actor anonymization.
 
 **Wave 5** *(blocked on Wave 4 completion)*
 
-- [ ] `01-05-PLAN.md` — Prove three-provider conformance, reject forged authority, and close packed-artifact quality gates.
+- [x] `01-05-PLAN.md` — Prove three-provider conformance, reject forged authority, and close packed-artifact quality gates.
+
+**Wave 6** *(blocked on Wave 5 completion)*
+
+- [ ] `01-06-PLAN.md` — Make all auth fixtures independently compilable and repair the Better Auth helper boundary.
+
+**Wave 7** *(blocked on Wave 6 completion)*
+
+- [ ] `01-07-PLAN.md` — Execute the three real provider factories through one convex-test authority-conformance matrix.
+
+**Wave 8** *(blocked on Wave 7 completion)*
+
+- [ ] `01-08-PLAN.md` — Lock additive board configuration, honest bounded counts, and required Phase 1 release gates.
 
 **UI hint**: yes
 

@@ -31,6 +31,11 @@ This phase establishes the scope-complete schema and host-client capability need
 - **D-11:** Host-user erasure is an explicit host-invoked `anonymizeActor` intent operation because the isolated component cannot observe host deletions. It clears display PII, replaces `externalKey` with an irreversible tombstone, and retains the actor row, authored content, comments, and vote memberships so attribution history and totals remain coherent. Anonymized authors render with a generic non-identifying label; erasure never hard-deletes content.
 - **D-12:** Re-registration after anonymization creates a new actor. Cross-provider account linking, actor merging, and automatic relinking after a provider or subject change are not v1 capabilities.
 
+### Gap-Closure Verification Boundaries
+- **D-13:** Phase 1 auth acceptance runs the actual Convex Auth, Clerk, and Better Auth fixture factories under `convex-test`, with provider-shaped verified-identity seams and independent fixture typechecks. Better Auth must install and execute its component-backed session-validating lookup. Live provider credentials and a live Convex deployment belong to Phase 4 and are not required for this closure.
+- **D-14:** `configureInstallation` is additive and idempotent in Phase 1. Repeated slugs identify the same board and may update mutable display fields; omitted boards are preserved without deletion, archival, hiding, detachment, or data loss; a changed slug creates a new board. Board reconciliation, archival, and post moves remain Phase 2 administration work.
+- **D-15:** Per-post vote and comment totals remain exact. Board/list-level post counting uses a stable bounded DTO `{ count, hasMore }`: read at most `cap + 1`, return `{ count: cap, hasMore: true }` above the cap, and never present a capped value as exact. Exact unbounded aggregate counting is deferred unless a later measured need justifies it.
+
 ### Planner Discretion
 - Choose the exact names and types for the host-client factories, branded IDs, fixed default scope, one-way sandbox scope derivation, anonymization tombstones, generic anonymized-author label, and structured errors while preserving the invariants above.
 - Choose how to organize provider adapter subpaths and conformance fixtures. Provider-specific records and helper types must remain outside component storage and public DTOs.
@@ -89,6 +94,8 @@ This phase establishes the scope-complete schema and host-client capability need
 - Email or other contact PII in component actor records — excluded from v1; notification delivery remains host-owned.
 - Sandbox seed, reset, quota, expiry, and cleanup implementation — Phase 4; Phase 1 freezes only the scope-complete schema and resolver capability.
 - Rate limiting, moderation state, and the safe-content contract — Phase 2 according to the roadmap.
+- Board reconciliation, archival, and moving posts between boards — Phase 2 administration; Phase 1 configuration is additive and non-destructive per D-14.
+- Exact unbounded board/list aggregate counts — defer until measured scale requires an aggregate-counter design; Phase 1 exposes the honest bounded shape in D-15.
 
 </deferred>
 
