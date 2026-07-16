@@ -31,6 +31,17 @@ const FORBIDDEN_MODULES = [
   "_generated/dataModel",
 ];
 
+function sourceFilesBelow(directory: string): string[] {
+  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const child = path.join(directory, entry.name);
+    return entry.isDirectory()
+      ? sourceFilesBelow(child)
+      : entry.name.endsWith(".ts")
+        ? [child]
+        : [];
+  });
+}
+
 describe("public contract privacy", () => {
   test("keeps authority and provider records out of intent validators", () => {
     expect(Object.keys(createPostIntentValidator.fields).sort()).toEqual([
@@ -108,6 +119,32 @@ describe("public contract privacy", () => {
       }
     }
     expect(violations).toEqual([]);
+
+    const componentText = sourceFilesBelow("src/component")
+      .map((file) => fs.readFileSync(file, "utf8"))
+      .join("\n");
+    for (const providerShape of [
+      "@convex-dev/auth",
+      "@convex-dev/better-auth",
+      "@clerk/",
+      "better-auth",
+      "providerRecord",
+    ]) {
+      expect(componentText).not.toContain(providerShape);
+    }
+
+    const manifest = JSON.parse(fs.readFileSync("package.json", "utf8")) as {
+      dependencies?: Record<string, string>;
+      peerDependencies?: Record<string, string>;
+    };
+    const runtimePackages = {
+      ...manifest.dependencies,
+      ...manifest.peerDependencies,
+    };
+    expect(runtimePackages).not.toHaveProperty("@convex-dev/auth");
+    expect(runtimePackages).not.toHaveProperty("@convex-dev/better-auth");
+    expect(runtimePackages).not.toHaveProperty("@clerk/react");
+    expect(runtimePackages).not.toHaveProperty("better-auth");
 
     expect(
       toBoardDto({
