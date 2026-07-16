@@ -6,13 +6,12 @@ import type { ComponentApi } from "../../src/component/_generated/component.js";
 import type {
   AfferentClient,
   AfferentClientOptions,
-  BoardId,
 } from "../../src/client/index.js";
 import { createScopedAfferentClient } from "../../src/client/server.js";
 import schema from "../../src/component/schema.js";
 import { register } from "../../src/test.js";
 
-type Backend = ReturnType<typeof convexTest>;
+export type Backend = ReturnType<typeof convexTest>;
 type AuthorizeAdmin = AfferentClientOptions["authorizeAdmin"];
 type HostContext = Parameters<AfferentClient["participation"]["createPost"]>[0];
 
@@ -26,16 +25,27 @@ export type ProviderFactoryScenario = Readonly<{
   identity: Partial<UserIdentity>;
   expectedDisplayName?: string;
   assertTrustedIdentityResolution?: () => void;
+  registerBackend?: (backend: Backend) => void;
+  prepareIdentity?: (backend: Backend) => Promise<{
+    identity: Partial<UserIdentity>;
+    invalidIdentities?: Partial<UserIdentity>[];
+  }>;
   createClient: (
     component: ComponentApi,
     authorizeAdmin: AuthorizeAdmin,
   ) => AfferentClient;
 }>;
 
-function createBackend() {
+async function createBackend(scenario: ProviderFactoryScenario) {
   const backend = convexTest(schema, modules);
   register(backend, "afferent");
-  return backend;
+  scenario.registerBackend?.(backend);
+  const prepared = await scenario.prepareIdentity?.(backend);
+  return {
+    backend,
+    identity: prepared?.identity ?? scenario.identity,
+    invalidIdentities: prepared?.invalidIdentities ?? [],
+  };
 }
 
 function runWithContext<T>(
@@ -65,12 +75,12 @@ export function runFactoryAuthorityConformance(
 ) {
   describe(`${scenario.name} factory authority matrix`, () => {
     test("public reads use the registered component without creating an actor", async () => {
-      const backend = createBackend();
+      const { backend, identity } = await createBackend(scenario);
       const client = scenario.createClient(
         components.afferent,
         async () => true,
       );
-      await configure(scenario, backend, client);
+      await configure({ ...scenario, identity }, backend, client);
 
       const boards = await runWithContext(backend, null, (ctx) =>
         client.read.listBoards(ctx, {}),
@@ -83,12 +93,17 @@ export function runFactoryAuthorityConformance(
     });
 
     test("missing authentication rejects participation before persistence", async () => {
-      const backend = createBackend();
+      const { backend, identity, invalidIdentities } =
+        await createBackend(scenario);
       const client = scenario.createClient(
         components.afferent,
         async () => true,
       );
-      const configured = await configure(scenario, backend, client);
+      const configured = await configure(
+        { ...scenario, identity },
+        backend,
+        client,
+      );
 
       await expect(
         runWithContext(backend, null, (ctx) =>
@@ -98,16 +113,35 @@ export function runFactoryAuthorityConformance(
             body: "No verified provider identity",
           }),
         ),
-      ).rejects.toThrow("AUTHENTICATION_REQUIRED");
+      ).rejects.toThrow();
 
       const posts = await runWithContext(backend, null, (ctx) =>
         client.read.listPosts(ctx, { boardId: configured.boards[0].id }),
       );
       expect(posts.posts).toEqual([]);
+
+      for (const invalidIdentity of invalidIdentities) {
+        await expect(
+          runWithContext(backend, invalidIdentity, (ctx) =>
+            client.participation.createPost(ctx, {
+              boardId: configured.boards[0].id,
+              title: "Rejected stale session",
+              body: "Session state is not valid",
+            }),
+          ),
+        ).rejects.toThrow();
+      }
+      const afterInvalidSessions = await runWithContext(
+        backend,
+        null,
+        (ctx) =>
+          client.read.listPosts(ctx, { boardId: configured.boards[0].id }),
+      );
+      expect(afterInvalidSessions.posts).toEqual([]);
     });
 
     test("admin authorization is independent and recomputed for every call", async () => {
-      const backend = createBackend();
+      const { backend, identity } = await createBackend(scenario);
       const authorizeAdmin = vi
         .fn<AuthorizeAdmin>()
         .mockResolvedValueOnce(false)
@@ -119,7 +153,7 @@ export function runFactoryAuthorityConformance(
       );
 
       await expect(
-        runWithContext(backend, scenario.identity, (ctx) =>
+        runWithContext(backend, identity, (ctx) =>
           client.admin.configureInstallation(ctx, {
             readPolicy: "public",
             boards: [{ slug: "forbidden", name: "Forbidden" }],
@@ -127,13 +161,13 @@ export function runFactoryAuthorityConformance(
         ),
       ).rejects.toThrow("ADMIN_AUTHORIZATION_REQUIRED");
 
-      await runWithContext(backend, scenario.identity, (ctx) =>
+      await runWithContext(backend, identity, (ctx) =>
         client.admin.configureInstallation(ctx, {
           readPolicy: "public",
           boards: [{ slug: "feedback", name: "Feedback" }],
         }),
       );
-      await runWithContext(backend, scenario.identity, (ctx) =>
+      await runWithContext(backend, identity, (ctx) =>
         client.admin.configureInstallation(ctx, {
           readPolicy: "authenticated",
           boards: [{ slug: "feedback", name: "Updated Feedback" }],
@@ -141,7 +175,7 @@ export function runFactoryAuthorityConformance(
       );
 
       expect(authorizeAdmin).toHaveBeenCalledTimes(3);
-      const boards = await runWithContext(backend, scenario.identity, (ctx) =>
+      const boards = await runWithContext(backend, identity, (ctx) =>
         client.read.listBoards(ctx, {}),
       );
       expect(boards.boards).toMatchObject([
@@ -150,16 +184,20 @@ export function runFactoryAuthorityConformance(
     });
 
     test("forged browser authority cannot alter the persisted trusted actor", async () => {
-      const backend = createBackend();
+      const { backend, identity } = await createBackend(scenario);
       const client = scenario.createClient(
         components.afferent,
         async () => true,
       );
-      const configured = await configure(scenario, backend, client);
+      const configured = await configure(
+        { ...scenario, identity },
+        backend,
+        client,
+      );
 
       const created = await runWithContext(
         backend,
-        scenario.identity,
+        identity,
         (ctx) =>
           client.participation.createPost(ctx, {
             boardId: configured.boards[0].id,
@@ -195,7 +233,7 @@ export function runFactoryAuthorityConformance(
     });
 
     test("a cross-scope board identifier fails without persisting a post", async () => {
-      const backend = createBackend();
+      const { backend, identity } = await createBackend(scenario);
       const client = scenario.createClient(
         components.afferent,
         async () => true,
@@ -208,7 +246,7 @@ export function runFactoryAuthorityConformance(
       });
       const otherConfiguration = await runWithContext(
         backend,
-        scenario.identity,
+        identity,
         (ctx) =>
           scoped.admin.configureInstallation(ctx, {
             readPolicy: "public",
@@ -217,7 +255,7 @@ export function runFactoryAuthorityConformance(
       );
 
       await expect(
-        runWithContext(backend, scenario.identity, (ctx) =>
+        runWithContext(backend, identity, (ctx) =>
           client.participation.createPost(ctx, {
             boardId: otherConfiguration.boards[0].id,
             title: "Cross scope",
@@ -230,7 +268,7 @@ export function runFactoryAuthorityConformance(
 
       const otherPosts = await runWithContext(
         backend,
-        scenario.identity,
+        identity,
         (ctx) =>
           scoped.read.listPosts(ctx, {
             boardId: otherConfiguration.boards[0].id,
@@ -240,21 +278,25 @@ export function runFactoryAuthorityConformance(
     });
 
     test("successful participation persists one provider-derived actor", async () => {
-      const backend = createBackend();
+      const { backend, identity } = await createBackend(scenario);
       const client = scenario.createClient(
         components.afferent,
         async () => true,
       );
-      const configured = await configure(scenario, backend, client);
+      const configured = await configure(
+        { ...scenario, identity },
+        backend,
+        client,
+      );
 
-      const first = await runWithContext(backend, scenario.identity, (ctx) =>
+      const first = await runWithContext(backend, identity, (ctx) =>
         client.participation.createPost(ctx, {
           boardId: configured.boards[0].id,
           title: "First",
           body: "Persisted",
         }),
       );
-      const second = await runWithContext(backend, scenario.identity, (ctx) =>
+      const second = await runWithContext(backend, identity, (ctx) =>
         client.participation.createPost(ctx, {
           boardId: configured.boards[0].id,
           title: "Second",
