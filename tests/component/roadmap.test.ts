@@ -110,8 +110,8 @@ describe("status-derived public roadmap", () => {
         actorId: alphaActor,
         title: "Planned older",
         statusKey: "planned",
-        createdAt: now - 5_000,
-        currentStatusSince: now - 2_000,
+        createdAt: now - 5000,
+        currentStatusSince: now - 2000,
       });
       const plannedNewer = await insert({
         scopeId: "scope:alpha",
@@ -120,7 +120,7 @@ describe("status-derived public roadmap", () => {
         title: "Planned newer",
         statusKey: "planned",
         createdAt: now - 10_000,
-        currentStatusSince: now - 1_000,
+        currentStatusSince: now - 1000,
       });
       const inProgress = await insert({
         scopeId: "scope:alpha",

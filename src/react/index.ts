@@ -4,6 +4,8 @@ export type {
   FeedbackFeedQueryReference,
   FeedbackSearchQueryReference,
   PublicBindings,
+  RoadmapBindings,
+  RoadmapGroupQueryReference,
   SimilarPostsQueryReference,
 } from "./bindings.js";
 export { AfferentProvider, useAfferentContext } from "./provider.js";
@@ -16,6 +18,7 @@ export {
   useFeedbackSearch,
   useSimilarPosts,
 } from "./hooks/feedback.js";
+export { mapRoadmapGroupState, useRoadmap } from "./hooks/roadmap.js";
 export {
   mapAdminCapabilityState,
   mapModerationError,
@@ -44,3 +47,9 @@ export type {
   FeedbackSearchArgs,
   SimilarPostsArgs,
 } from "./hooks/feedback.js";
+export type {
+  RoadmapArgs,
+  RoadmapGroupState,
+  RoadmapPaginationState,
+  RoadmapState,
+} from "./hooks/roadmap.js";

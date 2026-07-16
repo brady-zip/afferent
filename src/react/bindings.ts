@@ -12,6 +12,8 @@ import type {
   FeedbackPostDto,
   PostActivityPageDto,
   PostId,
+  RoadmapGroupPageDto,
+  RoadmapStatusKey,
   TagDeleteResultDto,
   TagDto,
   TagListDto,
@@ -53,6 +55,22 @@ export interface PublicBindings {
   listFeedback: FeedbackFeedQueryReference;
   searchFeedback?: FeedbackSearchQueryReference;
   suggestSimilarPosts?: SimilarPostsQueryReference;
+}
+
+export type RoadmapGroupQueryReference = FunctionReference<
+  "query",
+  "public",
+  {
+    status: RoadmapStatusKey;
+    boardId?: BoardId;
+    sessionGeneration?: string;
+    paginationOpts: PaginationOptions;
+  },
+  RoadmapGroupPageDto
+>;
+
+export interface RoadmapBindings {
+  listRoadmapGroup: RoadmapGroupQueryReference;
 }
 
 type AdminMutationReference<
@@ -108,7 +126,7 @@ export interface AfferentBindings {
   public: PublicBindings;
   participation?: Readonly<Record<string, unknown>>;
   notifications?: Readonly<Record<string, unknown>>;
-  roadmap?: Readonly<Record<string, unknown>>;
+  roadmap?: RoadmapBindings;
   changelog?: Readonly<Record<string, unknown>>;
   admin?: AdminBindings;
 }

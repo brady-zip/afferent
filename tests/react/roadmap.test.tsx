@@ -76,16 +76,17 @@ describe("headless grouped roadmap", () => {
 
   test("runs and pages Planned, In Progress, and Complete independently", () => {
     usePaginatedQuery.mockImplementation(
-      (_reference: unknown, args: { status: string }) => {
+      (_reference: unknown, args?: { status: string }) => {
         const loadMore = vi.fn();
+        if (args === undefined) {
+          return { results: [], status: "LoadingFirstPage", loadMore };
+        }
+        let status = "Exhausted";
+        if (args.status === "planned") status = "CanLoadMore";
+        if (args.status === "in_progress") status = "LoadingFirstPage";
         return {
           results: args.status === "planned" ? [{ id: "planned-1" }] : [],
-          status:
-            args.status === "planned"
-              ? "CanLoadMore"
-              : args.status === "in_progress"
-                ? "LoadingFirstPage"
-                : "Exhausted",
+          status,
           loadMore,
         };
       },
