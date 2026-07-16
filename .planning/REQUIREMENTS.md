@@ -40,16 +40,16 @@ Requirements for the first production-ready public release. Roadmap creation wil
 
 ### Administration and Moderation
 
-- [ ] **ADMN-01**: An authorized admin can edit a feedback post.
-- [ ] **ADMN-02**: An authorized admin can move a feedback post between boards.
+- [x] **ADMN-01**: An authorized admin can edit a feedback post.
+- [x] **ADMN-02**: An authorized admin can move a feedback post between boards.
 - [ ] **ADMN-03**: An authorized admin can create and manage internal tags.
 - [ ] **ADMN-04**: An authorized admin can assign and remove internal tags on feedback posts.
-- [ ] **ADMN-05**: An authorized admin can move a feedback post among the built-in Open, Under Review, Planned, In Progress, Complete, and Closed statuses.
-- [ ] **ADMN-06**: An authorized admin can lock or unlock discussion on a feedback post.
-- [ ] **ADMN-07**: An authorized admin can archive and restore a feedback post.
-- [ ] **ADMN-08**: Participation mutations enforce documented rate limits and return actionable errors when a limit is reached.
+- [x] **ADMN-05**: An authorized admin can move a feedback post among the built-in Open, Under Review, Planned, In Progress, Complete, and Closed statuses.
+- [x] **ADMN-06**: An authorized admin can lock or unlock discussion on a feedback post.
+- [x] **ADMN-07**: An authorized admin can archive and restore a feedback post.
+- [x] **ADMN-08**: Participation mutations enforce documented rate limits and return actionable errors when a limit is reached.
 - [x] **ADMN-09**: Afferent accepts and returns user-authored content through a documented safe-content contract that prevents stored script execution in conforming consumers.
-- [ ] **ADMN-10**: A post exposes append-only activity entries for creation, edits, status changes, board moves, tag changes, locks, archive or restore, merges, and linked changelog publication.
+- [x] **ADMN-10**: A post exposes append-only activity entries for creation, edits, status changes, board moves, tag changes, locks, archive or restore, merges, and linked changelog publication.
 
 ### Roadmap
 
@@ -199,16 +199,16 @@ Every v1 requirement maps to exactly one roadmap phase.
 | DISC-06     | Phase 2 | Complete |
 | DISC-07     | Phase 2 | Pending  |
 | DISC-08     | Phase 2 | Pending  |
-| ADMN-01     | Phase 2 | Pending  |
-| ADMN-02     | Phase 2 | Pending  |
+| ADMN-01     | Phase 2 | Complete |
+| ADMN-02     | Phase 2 | Complete |
 | ADMN-03     | Phase 2 | Pending  |
 | ADMN-04     | Phase 2 | Pending  |
-| ADMN-05     | Phase 2 | Pending  |
-| ADMN-06     | Phase 2 | Pending  |
-| ADMN-07     | Phase 2 | Pending  |
-| ADMN-08     | Phase 2 | Pending  |
+| ADMN-05     | Phase 2 | Complete |
+| ADMN-06     | Phase 2 | Complete |
+| ADMN-07     | Phase 2 | Complete |
+| ADMN-08     | Phase 2 | Complete |
 | ADMN-09     | Phase 2 | Complete |
-| ADMN-10     | Phase 2 | Pending  |
+| ADMN-10     | Phase 2 | Complete |
 | RMAP-01     | Phase 2 | Pending  |
 | RMAP-02     | Phase 2 | Pending  |
 | RMAP-03     | Phase 2 | Pending  |
