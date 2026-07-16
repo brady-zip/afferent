@@ -32,7 +32,7 @@ Afferent reaches its first public release through four coarse vertical slices. T
 4. A visitor can browse every permitted board under the installation-wide policy while an authenticated user can create, edit, withdraw, vote on, and discuss feedback with stable attribution and totals.
 5. Repeated vote operations remain one membership per actor, and comment replies identify one parent without creating nested discussion trees.
 
-**Plans:** 6/8 plans executed
+**Plans:** 7/8 plans executed
 
 - [x] 01-01-PLAN.md
 - [x] 01-02-PLAN.md
@@ -40,7 +40,7 @@ Afferent reaches its first public release through four coarse vertical slices. T
 - [x] 01-04-PLAN.md
 - [x] 01-05-PLAN.md
 - [x] 01-06-PLAN.md
-- [ ] 01-07-PLAN.md
+- [x] 01-07-PLAN.md
 - [ ] 01-08-PLAN.md
 
 **Wave 1**
@@ -69,7 +69,7 @@ Afferent reaches its first public release through four coarse vertical slices. T
 
 **Wave 7** _(blocked on Wave 6 completion)_
 
-- [ ] `01-07-PLAN.md` — Execute the three real provider factories through one convex-test authority-conformance matrix.
+- [x] `01-07-PLAN.md` — Execute the three real provider factories through one convex-test authority-conformance matrix.
 
 **Wave 8** _(blocked on Wave 7 completion)_
 
@@ -134,7 +134,7 @@ Phases execute sequentially: 1 -> 2 -> 3 -> 4
 
 | Phase                                      | Plans Complete | Status      | Completed |
 | ------------------------------------------ | -------------- | ----------- | --------- |
-| 1. Secure Installable Feedback Board       | 6/8            | In Progress |           |
+| 1. Secure Installable Feedback Board       | 7/8 | In Progress|  |
 | 2. Complete Feedback-to-Changelog Workflow | 0/TBD          | Not started | -         |
 | 3. Source-Owned Product Interface          | 0/TBD          | Not started | -         |
 | 4. Hosted Production Release               | 0/TBD          | Not started | -         |

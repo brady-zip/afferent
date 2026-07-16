@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 01
 current_phase_name: Secure Installable Feedback Board
 status: executing
-stopped_at: Completed 01-06-PLAN.md
-last_updated: "2026-07-16T18:38:11.390Z"
+stopped_at: Completed 01-07-PLAN.md
+last_updated: "2026-07-16T18:48:32.315Z"
 last_activity: 2026-07-16
-last_activity_desc: Completed Plan 01-06 auth fixture compilation
+last_activity_desc: Completed Plan 01-07 real provider factory conformance
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 8
-  completed_plans: 6
+  completed_plans: 7
   percent: 0
 ---
 
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-07-14)
 ## Current Position
 
 Phase: 01 (Secure Installable Feedback Board) — EXECUTING
-Plan: 7 of 8
-Status: Ready to execute Plan 01-07
-Last activity: 2026-07-16 — Completed Plan 01-06 auth fixture compilation
+Plan: 8 of 8
+Status: Ready to execute Plan 01-08
+Last activity: 2026-07-16 — Completed Plan 01-07 real provider factory conformance
 
-Progress: [████████░░] 75%
+Progress: [█████████░] 88%
 
 ## Performance Metrics
 
@@ -65,6 +65,7 @@ _Updated after each plan completion_
 | Phase 01 P04 | 90 min   | 3 tasks | 23 files |
 | Phase 01 P05 | 13m      | 3 tasks | 16 files |
 | Phase 01 P06 | 4 min    | 2 tasks | 8 files  |
+| Phase 01 P07 | 5 min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -93,6 +94,8 @@ Recent decisions affecting current work:
 - [Phase 01]: Normalize Better Auth users from the session-validated component document _id, never private provider or session fields. — The component user document ID is stable and already session-validated by the trusted host helper.
 - [Phase 01]: Expose full Convex query and mutation contexts only to trusted host resolvers. — Current provider helpers require real server capabilities while browser intent validators remain authority-free.
 - [Phase 01]: Commit generated-style Better Auth component references for offline fixture compilation. — Provider fixture typechecks must not require live credentials or deployment codegen.
+- [Phase 01]: Expose a narrow injectable Convex Auth helper seam while retaining the official helper as the production default. — Tests can drive the provider-shaped trusted helper without accepting actor facts or browser authority.
+- [Phase 01]: Give each provider scenario responsibility for registering and seeding its trusted backend prerequisites. — The observable authority matrix stays shared while provider internals remain isolated to setup.
 
 ### Pending Todos
 
@@ -114,6 +117,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-16T18:37:54.031Z
-Stopped at: Completed 01-06-PLAN.md
+Last session: 2026-07-16T18:48:32.310Z
+Stopped at: Completed 01-07-PLAN.md
 Resume file: None
