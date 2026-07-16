@@ -19,16 +19,22 @@ export {
 export {
   mapAdminCapabilityState,
   mapModerationError,
+  mapTagListState,
   moderationActionKey,
+  tagActionKey,
   useAdminCapability,
   usePostActivity,
   usePostModeration,
+  useTagManagement,
+  useTags,
 } from "./hooks/admin.js";
 export type {
   AdminCapabilityState,
   ModerationAction,
   ModerationError,
   PostActivityState,
+  TagListState,
+  TagManagementAction,
 } from "./hooks/admin.js";
 export type {
   BoundedDiscoveryState,

@@ -12,6 +12,9 @@ import type {
   FeedbackPostDto,
   PostActivityPageDto,
   PostId,
+  TagDeleteResultDto,
+  TagDto,
+  TagListDto,
 } from "../client/contracts.js";
 
 export type FeedbackFeedQueryReference = FunctionReference<
@@ -52,8 +55,10 @@ export interface PublicBindings {
   suggestSimilarPosts?: SimilarPostsQueryReference;
 }
 
-type AdminMutationReference<Args extends DefaultFunctionArgs> =
-  FunctionReference<"mutation", "public", Args, FeedbackPostDto>;
+type AdminMutationReference<
+  Args extends DefaultFunctionArgs,
+  Result = FeedbackPostDto,
+> = FunctionReference<"mutation", "public", Args, Result>;
 
 export interface AdminBindings {
   capability: FunctionReference<
@@ -83,6 +88,20 @@ export interface AdminBindings {
     { postId: PostId; paginationOpts: PaginationOptions },
     PostActivityPageDto
   >;
+  listTags: FunctionReference<
+    "query",
+    "public",
+    Record<string, never>,
+    TagListDto
+  >;
+  createTag: AdminMutationReference<{ name: string }, TagDto>;
+  renameTag: AdminMutationReference<{ tagId: TagId; name: string }, TagDto>;
+  setPostTag: AdminMutationReference<{
+    postId: PostId;
+    tagId: TagId;
+    desired: boolean;
+  }>;
+  deleteTag: AdminMutationReference<{ tagId: TagId }, TagDeleteResultDto>;
 }
 
 export interface AfferentBindings {

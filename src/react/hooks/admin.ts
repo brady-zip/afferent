@@ -11,6 +11,10 @@ import type {
   PostActivityDto,
   PostId,
   PostStatusKey,
+  TagDeleteResultDto,
+  TagDto,
+  TagId,
+  TagListDto,
 } from "../../client/contracts.js";
 import type { AdminBindings } from "../bindings.js";
 import { useAfferentContext } from "../provider.js";
@@ -23,6 +27,9 @@ const UNCONFIGURED_ADMIN_MUTATION = makeFunctionReference<"mutation">(
 );
 const UNCONFIGURED_ACTIVITY_QUERY = makeFunctionReference<"query">(
   "__afferent:unconfiguredPostActivity",
+);
+const UNCONFIGURED_TAG_QUERY = makeFunctionReference<"query">(
+  "__afferent:unconfiguredTags",
 );
 
 export type AdminCapabilityState =
@@ -250,4 +257,157 @@ export function usePostActivity(postId: PostId): PostActivityState {
     canLoadMore: page.status === "CanLoadMore" || page.status === "LoadingMore",
     loadMore,
   };
+}
+
+export type TagListState = Readonly<{
+  status: "unsupported" | "loading" | "not-authorized" | "empty" | "ready";
+  items: TagDto[];
+}>;
+
+export function mapTagListState(
+  value: TagListDto | undefined,
+  configured: boolean,
+): TagListState {
+  if (!configured) return { status: "unsupported", items: [] };
+  if (value === undefined) return { status: "loading", items: [] };
+  if (value.tags.length === 0) return { status: "empty", items: [] };
+  return { status: "ready", items: value.tags };
+}
+
+export function useTags(): TagListState {
+  const { bindings, auth } = useAfferentContext();
+  const binding = bindings.admin?.listTags;
+  const value = useQuery(
+    binding ?? UNCONFIGURED_TAG_QUERY,
+    binding && auth.status === "authenticated" ? {} : "skip",
+  ) as TagListDto | undefined;
+  if (!binding) return { status: "unsupported", items: [] };
+  if (auth.status === "loading") return { status: "loading", items: [] };
+  if (auth.status === "unauthenticated") {
+    return { status: "not-authorized", items: [] };
+  }
+  return mapTagListState(value, true);
+}
+
+export type TagManagementAction =
+  "create" | "rename" | "assign" | "remove" | "delete";
+
+export function tagActionKey(entityId: string, action: TagManagementAction) {
+  return `${entityId}:${action}`;
+}
+
+type TagManagementResult<T> =
+  | Readonly<{ ok: true; data: T }>
+  | Readonly<{ ok: false; error: ModerationError }>;
+
+export function useTagManagement() {
+  const { bindings } = useAfferentContext();
+  const admin = bindings.admin;
+  const createTag = useMutation(
+    (admin?.createTag ??
+      UNCONFIGURED_ADMIN_MUTATION) as AdminBindings["createTag"],
+  );
+  const renameTag = useMutation(
+    (admin?.renameTag ??
+      UNCONFIGURED_ADMIN_MUTATION) as AdminBindings["renameTag"],
+  );
+  const setPostTag = useMutation(
+    (admin?.setPostTag ??
+      UNCONFIGURED_ADMIN_MUTATION) as AdminBindings["setPostTag"],
+  );
+  const deleteTag = useMutation(
+    (admin?.deleteTag ??
+      UNCONFIGURED_ADMIN_MUTATION) as AdminBindings["deleteTag"],
+  );
+  const [pending, setPending] = useState({} as Record<string, boolean>);
+  const [errors, setErrors] = useState(
+    {} as Record<string, ModerationError | undefined>,
+  );
+  const inFlight = useRef(new Set<string>());
+
+  async function run<T>(
+    key: string,
+    invoke: () => Promise<T>,
+  ): Promise<TagManagementResult<T>> {
+    if (inFlight.current.has(key)) {
+      return {
+        ok: false,
+        error: {
+          contractVersion: 1,
+          code: "VALIDATION",
+          message: "Request already pending",
+        },
+      };
+    }
+    if (admin === undefined) {
+      return {
+        ok: false,
+        error: {
+          contractVersion: 1,
+          code: "NOT_AUTHORIZED",
+          message: "Admin capabilities are not configured",
+        },
+      };
+    }
+    inFlight.current.add(key);
+    setPending((current: Record<string, boolean>) => ({
+      ...current,
+      [key]: true,
+    }));
+    setErrors((current: Record<string, ModerationError | undefined>) => ({
+      ...current,
+      [key]: undefined,
+    }));
+    try {
+      return { ok: true, data: await invoke() };
+    } catch (error) {
+      const mappedError = mapModerationError(
+        (error as { data?: unknown }).data ?? error,
+      );
+      setErrors((current: Record<string, ModerationError | undefined>) => ({
+        ...current,
+        [key]: mappedError,
+      }));
+      return { ok: false, error: mappedError };
+    } finally {
+      inFlight.current.delete(key);
+      setPending((current: Record<string, boolean>) => ({
+        ...current,
+        [key]: false,
+      }));
+    }
+  }
+
+  return useMemo(
+    () => ({
+      status:
+        admin === undefined ? ("unsupported" as const) : ("ready" as const),
+      pending,
+      errors,
+      reset(entityId: string, action: TagManagementAction) {
+        const key = tagActionKey(entityId, action);
+        setErrors((current: Record<string, ModerationError | undefined>) => ({
+          ...current,
+          [key]: undefined,
+        }));
+      },
+      createTag: (args: { name: string }) =>
+        run<TagDto>(tagActionKey("tag", "create"), () => createTag(args)),
+      renameTag: (args: { tagId: TagId; name: string }) =>
+        run<TagDto>(tagActionKey(args.tagId, "rename"), () => renameTag(args)),
+      setPostTag: (args: { postId: PostId; tagId: TagId; desired: boolean }) =>
+        run<FeedbackPostDto>(
+          tagActionKey(
+            `${args.postId}:${args.tagId}`,
+            args.desired ? "assign" : "remove",
+          ),
+          () => setPostTag(args),
+        ),
+      deleteTag: (args: { tagId: TagId }) =>
+        run<TagDeleteResultDto>(tagActionKey(args.tagId, "delete"), () =>
+          deleteTag(args),
+        ),
+    }),
+    [admin, createTag, deleteTag, errors, pending, renameTag, setPostTag],
+  );
 }
