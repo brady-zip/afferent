@@ -192,3 +192,52 @@ describe("public contract privacy", () => {
     ).toEqual({ id: "actor", displayName: "Safe" });
   });
 });
+
+describe("provider fixture projects", () => {
+  test.each(["auth-convex-auth", "auth-clerk", "auth-better-auth"])(
+    "%s has an independent strict no-emit TypeScript project",
+    (fixture) => {
+      const configPath = `fixtures/${fixture}/tsconfig.json`;
+      expect(fs.existsSync(configPath)).toBe(true);
+      const config = JSON.parse(fs.readFileSync(configPath, "utf8")) as {
+        compilerOptions?: Record<string, unknown>;
+        include?: string[];
+      };
+      expect(config.compilerOptions).toMatchObject({
+        strict: true,
+        noEmit: true,
+        moduleResolution: "Bundler",
+      });
+      expect(config.compilerOptions).not.toHaveProperty("paths");
+      expect(config.include).toContain("./convex/**/*.ts");
+    },
+  );
+
+  test("commits typed Better Auth and Afferent component registration", () => {
+    const configSource = fs.readFileSync(
+      "fixtures/auth-better-auth/convex/convex.config.ts",
+      "utf8",
+    );
+    expect(configSource).toContain('from "afferent/convex.config.js"');
+    expect(configSource).toContain(
+      'from "@convex-dev/better-auth/convex.config.js"',
+    );
+    expect(configSource.match(/app\.use\(/g)).toHaveLength(2);
+
+    const generatedApiSource = fs.readFileSync(
+      "fixtures/auth-better-auth/convex/_generated/api.ts",
+      "utf8",
+    );
+    expect(generatedApiSource).toContain("AfferentComponentApi");
+    expect(generatedApiSource).toContain("BetterAuthComponentApi");
+    expect(generatedApiSource).toContain("betterAuth: BetterAuthComponentApi");
+    expect(generatedApiSource).toContain("afferent: AfferentComponentApi");
+
+    const fixtureSource = fs.readFileSync(
+      "fixtures/auth-better-auth/convex/afferent.ts",
+      "utf8",
+    );
+    expect(fixtureSource).toContain("createClient(components.betterAuth)");
+    expect(fixtureSource).toMatch(/\.(getAuthUser|safeGetAuthUser)\(ctx\)/);
+  });
+});
