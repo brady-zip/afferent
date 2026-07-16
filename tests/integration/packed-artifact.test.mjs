@@ -5,7 +5,10 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
-const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+const repositoryRoot = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  "../..",
+);
 
 function run(command, args) {
   return new Promise((resolveRun, rejectRun) => {
@@ -26,7 +29,9 @@ function run(command, args) {
 }
 
 test("the release gate covers every suite and every supported packed export", async () => {
-  const manifest = JSON.parse(await readFile(join(repositoryRoot, "package.json"), "utf8"));
+  const manifest = JSON.parse(
+    await readFile(join(repositoryRoot, "package.json"), "utf8"),
+  );
   assert.equal(
     manifest.scripts["test:package"],
     "node --test tests/integration/packed-artifact.test.mjs",

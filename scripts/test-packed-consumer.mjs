@@ -78,7 +78,9 @@ const sourceRoot = await realpath(
 );
 const materializedConsumer = await realpath(consumerDir);
 if (isWithin(sourceRoot, materializedConsumer)) {
-  throw new Error("consumer directory must be outside the Afferent source repository");
+  throw new Error(
+    "consumer directory must be outside the Afferent source repository",
+  );
 }
 
 const fixtureFiles = await listFiles(materializedConsumer);
@@ -111,7 +113,8 @@ const packResult = await run(
   { cwd: repositoryRoot },
 );
 const packJsonStart = packResult.stdout.indexOf("[");
-if (packJsonStart === -1) throw new Error(`npm pack did not return JSON: ${packResult.stdout}`);
+if (packJsonStart === -1)
+  throw new Error(`npm pack did not return JSON: ${packResult.stdout}`);
 const [packed] = JSON.parse(packResult.stdout.slice(packJsonStart));
 const tarballPath = await realpath(join(artifactRoot, packed.filename));
 const packedPaths = new Set(packed.files.map((file) => file.path));
@@ -133,10 +136,14 @@ for (const required of [
   "dist/component/tsconfig.json",
   "src/test.ts",
 ]) {
-  if (!packedPaths.has(required)) throw new Error(`tarball is missing ${required}`);
+  if (!packedPaths.has(required))
+    throw new Error(`tarball is missing ${required}`);
 }
 
-await rm(join(materializedConsumer, "node_modules"), { force: true, recursive: true });
+await rm(join(materializedConsumer, "node_modules"), {
+  force: true,
+  recursive: true,
+});
 await rm(join(materializedConsumer, "package-lock.json"), { force: true });
 await run("npm", ["install", "--ignore-scripts", "--save-exact", tarballPath], {
   cwd: materializedConsumer,
@@ -206,7 +213,10 @@ const installedPackage = join(materializedConsumer, "node_modules/afferent");
 const installedManifest = JSON.parse(
   await readFile(join(installedPackage, "package.json"), "utf8"),
 );
-if (installedManifest.license !== "Apache-2.0" || installedManifest.type !== "module") {
+if (
+  installedManifest.license !== "Apache-2.0" ||
+  installedManifest.type !== "module"
+) {
   throw new Error("packed package metadata must declare Apache-2.0 ESM");
 }
 const expectedExports = [
@@ -252,8 +262,13 @@ const resolvedPaths = await Promise.all(
   ].map((path) => realpath(join(installedPackage, path))),
 );
 for (const resolvedPath of resolvedPaths) {
-  if (!isWithin(materializedConsumer, resolvedPath) || isWithin(sourceRoot, resolvedPath)) {
-    throw new Error(`installed export escaped the clean consumer: ${resolvedPath}`);
+  if (
+    !isWithin(materializedConsumer, resolvedPath) ||
+    isWithin(sourceRoot, resolvedPath)
+  ) {
+    throw new Error(
+      `installed export escaped the clean consumer: ${resolvedPath}`,
+    );
   }
 }
 
@@ -261,7 +276,9 @@ for (const file of await listFiles(join(installedPackage, "dist"))) {
   if (!/\.(?:js|d\.ts)$/.test(file)) continue;
   const builtSource = await readFile(file, "utf8");
   if (builtSource.includes(sourceRoot)) {
-    throw new Error(`packed declaration or module contains source-root path: ${file}`);
+    throw new Error(
+      `packed declaration or module contains source-root path: ${file}`,
+    );
   }
 }
 
