@@ -2,6 +2,7 @@ import type { DefaultFunctionArgs, FunctionReference } from "convex/server";
 
 import type {
   BoardId,
+  CommentDto,
   AdminChangelogEntryDto,
   ChangelogId,
   ChangelogPageDto,
@@ -13,6 +14,7 @@ import type {
   SearchResultDto,
   SimilarPostResultDto,
   FeedbackPostDto,
+  PostDto,
   PostActivityPageDto,
   PostId,
   NotificationDto,
@@ -65,9 +67,47 @@ export type SimilarPostsQueryReference = FunctionReference<
 
 export interface PublicBindings {
   listFeedback: FeedbackFeedQueryReference;
-  getPost?: FunctionReference<"query", "public", { postId: PostId }, PostLookupResult>;
+  getPost?: FunctionReference<
+    "query",
+    "public",
+    { postId: PostId },
+    PostLookupResult
+  >;
   searchFeedback?: FeedbackSearchQueryReference;
   suggestSimilarPosts?: SimilarPostsQueryReference;
+}
+
+export interface ParticipationBindings {
+  createPost: FunctionReference<
+    "mutation",
+    "public",
+    { boardId: BoardId; title: string; body: string },
+    AfferentActionResult<PostDto>
+  >;
+  editPost: FunctionReference<
+    "mutation",
+    "public",
+    { postId: PostId; title?: string; body?: string },
+    AfferentActionResult<PostDto>
+  >;
+  withdrawPost: FunctionReference<
+    "mutation",
+    "public",
+    { postId: PostId },
+    PostDto
+  >;
+  setVote: FunctionReference<
+    "mutation",
+    "public",
+    { postId: PostId; desired: boolean },
+    AfferentActionResult<PostDto>
+  >;
+  addComment: FunctionReference<
+    "mutation",
+    "public",
+    { postId: PostId; body: string; parentCommentId?: CommentDto["id"] },
+    AfferentActionResult<CommentDto>
+  >;
 }
 
 export type RoadmapGroupQueryReference = FunctionReference<
@@ -147,7 +187,7 @@ export interface AdminBindings {
   capability: FunctionReference<
     "query",
     "public",
-    Record<string, never>,
+    { sessionGeneration?: string },
     boolean
   >;
   editPost: AdminMutationReference<{
@@ -168,13 +208,17 @@ export interface AdminBindings {
   listPostActivity: FunctionReference<
     "query",
     "public",
-    { postId: PostId; paginationOpts: PaginationOptions },
+    {
+      postId: PostId;
+      sessionGeneration?: string;
+      paginationOpts: PaginationOptions;
+    },
     PostActivityPageDto
   >;
   listTags: FunctionReference<
     "query",
     "public",
-    Record<string, never>,
+    { sessionGeneration?: string },
     TagListDto
   >;
   createTag: AdminMutationReference<{ name: string }, TagDto>;
@@ -218,7 +262,7 @@ export interface AdminBindings {
 
 export interface AfferentBindings {
   public: PublicBindings;
-  participation?: Readonly<Record<string, unknown>>;
+  participation?: ParticipationBindings;
   notifications?: NotificationBindings;
   roadmap?: RoadmapBindings;
   changelog?: ChangelogBindings;

@@ -30,10 +30,10 @@ describe("shared headless mutation contract", () => {
           contractVersion: 1,
           code: "RATE_LIMITED",
           operation: "comment",
-          retryAfterMs: 1_500,
+          retryAfterMs: 1500,
         },
       }),
-    ).toMatchObject({ code: "RATE_LIMITED", retryAfterMs: 1_500 });
+    ).toMatchObject({ code: "RATE_LIMITED", retryAfterMs: 1500 });
     expect(mapAfferentError(new TypeError("fetch failed"))).toMatchObject({
       code: "TRANSIENT",
     });
@@ -60,10 +60,10 @@ describe("shared headless mutation contract", () => {
     const limited = mapAfferentError({
       code: "RATE_LIMITED",
       operation: "vote",
-      retryAfterMs: 2_000,
+      retryAfterMs: 2000,
     });
     expect(isRetryableAfferentError(limited)).toBe(true);
-    expect(retryDelayMs(limited)).toBe(2_000);
+    expect(retryDelayMs(limited)).toBe(2000);
     expect(
       isRetryableAfferentError(
         mapAfferentError({ code: "VALIDATION", message: "invalid" }),
@@ -84,7 +84,7 @@ describe("shared headless mutation contract", () => {
       .map((file) => readFileSync(file, "utf8"))
       .join("\n");
     expect(feedback).toContain("withOptimisticUpdate");
-    expect(notifications.match(/withOptimisticUpdate/g)).toHaveLength(2);
+    expect(notifications.match(/function apply\w+Optimism/g)).toHaveLength(2);
     expect(authorityHooks).not.toContain("withOptimisticUpdate");
   });
 });

@@ -11,7 +11,10 @@ const { usePaginatedQuery, useQuery } = vi.hoisted(() => ({
 }));
 
 vi.mock("convex-helpers/react", () => ({ usePaginatedQuery }));
-vi.mock("convex/react", () => ({ useQuery, useMutation: vi.fn(() => vi.fn()) }));
+vi.mock("convex/react", () => ({
+  useQuery,
+  useMutation: vi.fn(() => vi.fn()),
+}));
 
 import {
   AfferentProvider,

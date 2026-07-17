@@ -1,11 +1,14 @@
 import { usePaginatedQuery } from "convex-helpers/react";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { makeFunctionReference } from "convex/server";
 // @ts-expect-error React declarations are supplied by strict consumer fixtures.
 import { useEffect, useState } from "react";
 
 import type {
+  AfferentError,
   BoardId,
+  CommentDto,
+  CommentId,
   DiscoveryPostDto,
   FeedbackOrder,
   FeedbackPostDto,
@@ -15,12 +18,16 @@ import type {
   TagId,
   PostId,
   PostLookupResult,
+  PostDto,
 } from "../../client/contracts.js";
 import type {
+  FeedbackFeedQueryReference,
   FeedbackSearchQueryReference,
   SimilarPostsQueryReference,
+  ParticipationBindings,
 } from "../bindings.js";
 import { useAfferentContext } from "../provider.js";
+import { useMutationController } from "./mutations.js";
 
 const DEFAULT_PAGE_SIZE = 20;
 export const DEFAULT_SEARCH_DEBOUNCE_MS = 250;
@@ -33,6 +40,9 @@ const UNCONFIGURED_SIMILAR_REFERENCE = makeFunctionReference<"query">(
 ) as SimilarPostsQueryReference;
 const UNCONFIGURED_POST_REFERENCE = makeFunctionReference<"query">(
   "__afferent:unconfiguredPost",
+);
+const UNCONFIGURED_PARTICIPATION_MUTATION = makeFunctionReference<"mutation">(
+  "__afferent:unconfiguredParticipationMutation",
 );
 
 export type PostLookupState =
@@ -64,7 +74,10 @@ export function mapPostLookupState(
 export function usePost(postId: PostId): PostLookupState {
   const { bindings } = useAfferentContext();
   const binding = bindings.public.getPost;
-  const result = useQuery(binding ?? UNCONFIGURED_POST_REFERENCE, binding ? { postId } : "skip") as PostLookupResult | undefined;
+  const result = useQuery(
+    binding ?? UNCONFIGURED_POST_REFERENCE,
+    binding ? { postId } : "skip",
+  ) as PostLookupResult | undefined;
   return mapPostLookupState(result, binding !== undefined);
 }
 
@@ -279,4 +292,149 @@ export function useSimilarPosts(args: SimilarPostsArgs): BoundedDiscoveryState {
   if (binding === undefined) return mapBoundedDiscoveryState(undefined, true);
   if (!enabled) return { status: "empty", items: [], hasMore: false };
   return mapBoundedDiscoveryState(result);
+}
+
+export type FeedbackMutationAction =
+  "create" | "edit" | "withdraw" | "vote" | "comment";
+
+export function feedbackMutationKey(
+  entityId: string,
+  action: FeedbackMutationAction,
+) {
+  return `${entityId}:${action}`;
+}
+
+function participationUnavailable(
+  configured: boolean,
+  authenticated: boolean,
+): AfferentError | undefined {
+  if (!configured) {
+    return {
+      contractVersion: 1,
+      code: "NOT_AUTHORIZED",
+      message: "Participation capabilities are not configured",
+    };
+  }
+  if (!authenticated) {
+    return {
+      contractVersion: 1,
+      code: "AUTHENTICATION_REQUIRED",
+      message: "Participation requires an authenticated actor",
+    };
+  }
+  return undefined;
+}
+
+function applyVoteOptimism(
+  mutation: ReturnType<typeof useMutation>,
+  binding: ParticipationBindings["setVote"] | undefined,
+  feedBinding: FeedbackFeedQueryReference,
+) {
+  const candidate = mutation as typeof mutation & {
+    withOptimisticUpdate?: (
+      handler: (store: any, args: { postId: PostId; desired: boolean }) => void,
+    ) => typeof mutation;
+  };
+  if (!candidate.withOptimisticUpdate || !binding) return mutation;
+  return candidate.withOptimisticUpdate((store, args) => {
+    for (const query of store.getAllQueries(feedBinding)) {
+      if (!query.value) continue;
+      const update = (post: FeedbackPostDto) => {
+        if (post.id !== args.postId) return post;
+        const delta = args.desired ? 1 : -1;
+        const voteCount = Math.max(0, post.voteCount + delta);
+        return {
+          ...post,
+          voteCount,
+          totals: { ...post.totals, votes: voteCount },
+        };
+      };
+      store.setQuery(feedBinding, query.args, {
+        ...query.value,
+        page: query.value.page.map(update),
+        posts: query.value.posts.map(update),
+      });
+    }
+  });
+}
+
+export function useFeedbackMutations() {
+  const { bindings, auth, sessionKey } = useAfferentContext();
+  const participation = bindings.participation;
+  const createPost = useMutation(
+    (participation?.createPost ??
+      UNCONFIGURED_PARTICIPATION_MUTATION) as ParticipationBindings["createPost"],
+  );
+  const editPost = useMutation(
+    (participation?.editPost ??
+      UNCONFIGURED_PARTICIPATION_MUTATION) as ParticipationBindings["editPost"],
+  );
+  const withdrawPost = useMutation(
+    (participation?.withdrawPost ??
+      UNCONFIGURED_PARTICIPATION_MUTATION) as ParticipationBindings["withdrawPost"],
+  );
+  const rawVote = useMutation(
+    (participation?.setVote ??
+      UNCONFIGURED_PARTICIPATION_MUTATION) as ParticipationBindings["setVote"],
+  );
+  const setVote = applyVoteOptimism(
+    rawVote,
+    participation?.setVote,
+    bindings.public.listFeedback,
+  );
+  const addComment = useMutation(
+    (participation?.addComment ??
+      UNCONFIGURED_PARTICIPATION_MUTATION) as ParticipationBindings["addComment"],
+  );
+  const controller = useMutationController(sessionKey);
+  const unavailable = participationUnavailable(
+    participation !== undefined,
+    auth.status === "authenticated",
+  );
+  let status: "unsupported" | "loading" | "unauthenticated" | "ready" = "ready";
+  if (participation === undefined) status = "unsupported";
+  else if (auth.status === "loading") status = "loading";
+  else if (auth.status === "unauthenticated") status = "unauthenticated";
+
+  return {
+    status,
+    pending: controller.pending,
+    errors: controller.errors,
+    reset: controller.reset,
+    retry: controller.retry,
+    createPost: (args: { boardId: BoardId; title: string; body: string }) =>
+      controller.run<PostDto>(
+        feedbackMutationKey("post", "create"),
+        () => createPost(args),
+        unavailable,
+      ),
+    editPost: (args: { postId: PostId; title?: string; body?: string }) =>
+      controller.run<PostDto>(
+        feedbackMutationKey(args.postId, "edit"),
+        () => editPost(args),
+        unavailable,
+      ),
+    withdrawPost: (postId: PostId) =>
+      controller.run<PostDto>(
+        feedbackMutationKey(postId, "withdraw"),
+        () => withdrawPost({ postId }),
+        unavailable,
+      ),
+    setVote: (postId: PostId, desired: boolean) =>
+      controller.run<PostDto>(
+        feedbackMutationKey(postId, "vote"),
+        () => setVote({ postId, desired }),
+        unavailable,
+      ),
+    addComment: (args: {
+      postId: PostId;
+      body: string;
+      parentCommentId?: CommentId;
+    }) =>
+      controller.run<CommentDto>(
+        feedbackMutationKey(args.postId, "comment"),
+        () => addComment(args),
+        unavailable,
+      ),
+  };
 }

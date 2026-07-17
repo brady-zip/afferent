@@ -44,7 +44,7 @@ describe("Phase 2 package and React exports", () => {
     ]) {
       expect(reactIndex).toContain(exported);
     }
-    expect(reactIndex).not.toMatch(/useAfferent(Query|Mutation)/);
+    expect(reactIndex).not.toMatch(/useAfferent(?:Query|Mutation)/);
   });
 
   test("has no auth-provider router toast design-system or source-root coupling", () => {

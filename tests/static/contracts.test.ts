@@ -56,7 +56,7 @@ describe("public contract privacy", () => {
       "TRANSIENT",
       "UNKNOWN",
     ]) {
-      expect(contractsSource).toContain(`\"${code}\"`);
+      expect(contractsSource).toContain(`"${code}"`);
     }
   });
 

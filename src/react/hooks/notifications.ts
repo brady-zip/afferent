@@ -27,11 +27,7 @@ const UNCONFIGURED_NOTIFICATION_MUTATION = makeFunctionReference<"mutation">(
 export interface NotificationPaginationState {
   results: NotificationDto[];
   status:
-    | "LoadingFirstPage"
-    | "CanLoadMore"
-    | "LoadingMore"
-    | "Exhausted"
-    | "Error";
+    "LoadingFirstPage" | "CanLoadMore" | "LoadingMore" | "Exhausted" | "Error";
   error?: Error;
   loadMore: (count: number) => void;
 }
@@ -137,14 +133,15 @@ function applySubscriptionOptimism(
   sessionGeneration: string,
 ) {
   const candidate = mutation as typeof mutation & {
-    withOptimisticUpdate?: (handler: (store: any, args: any) => void) => typeof mutation;
+    withOptimisticUpdate?: (
+      handler: (store: any, args: any) => void,
+    ) => typeof mutation;
   };
   if (!candidate.withOptimisticUpdate || !queryBinding) return mutation;
   return candidate.withOptimisticUpdate((store, args) => {
     const queryArgs = { postId: args.postId, sessionGeneration };
     const current = store.getQuery(queryBinding, queryArgs) as
-      | PostSubscriptionDto
-      | undefined;
+      PostSubscriptionDto | undefined;
     if (!current) return;
     store.setQuery(queryBinding, queryArgs, {
       ...current,
@@ -155,12 +152,9 @@ function applySubscriptionOptimism(
 }
 
 export function usePostSubscription(postId: PostId) {
-  const { bindings, auth } = useAfferentContext();
+  const { bindings, auth, sessionKey } = useAfferentContext();
   const configured = bindings.notifications !== undefined;
-  const sessionGeneration =
-    auth.status === "authenticated"
-      ? (auth.sessionGeneration ?? "authenticated")
-      : auth.status;
+  const sessionGeneration = sessionKey;
   const value = useQuery(
     bindings.notifications?.getPostSubscription ??
       UNCONFIGURED_NOTIFICATION_QUERY,
@@ -188,7 +182,8 @@ export function usePostSubscription(postId: PostId) {
   }, [sessionGeneration]);
 
   async function setSubscribed(desired: boolean) {
-    if (inFlight.current) return { ok: false as const, error: duplicateRequestError() };
+    if (inFlight.current)
+      return { ok: false as const, error: duplicateRequestError() };
     if (!configured || auth.status !== "authenticated") {
       return { ok: false as const, error: unavailableError() };
     }
@@ -250,8 +245,7 @@ function applyMarkReadOptimism(
   return candidate.withOptimisticUpdate((store) => {
     const args = { sessionGeneration };
     const current = store.getQuery(binding, args) as
-      | UnreadNotificationCountDto
-      | undefined;
+      UnreadNotificationCountDto | undefined;
     if (current) {
       store.setQuery(binding, args, {
         ...current,
@@ -262,12 +256,9 @@ function applyMarkReadOptimism(
 }
 
 export function useNotifications() {
-  const { bindings, auth } = useAfferentContext();
+  const { bindings, auth, sessionKey } = useAfferentContext();
   const configured = bindings.notifications !== undefined;
-  const sessionGeneration =
-    auth.status === "authenticated"
-      ? (auth.sessionGeneration ?? "authenticated")
-      : auth.status;
+  const sessionGeneration = sessionKey;
   const pagination = usePaginatedQuery(
     bindings.notifications?.listNotifications ??
       UNCONFIGURED_NOTIFICATION_QUERY,
@@ -306,7 +297,10 @@ export function useNotifications() {
       return { ok: false as const, error: unavailableError() };
     }
     inFlight.current.add(key);
-    setPending((current: Record<string, boolean>) => ({ ...current, [key]: true }));
+    setPending((current: Record<string, boolean>) => ({
+      ...current,
+      [key]: true,
+    }));
     setErrors((current: Record<string, AfferentErrorDto | undefined>) => ({
       ...current,
       [key]: undefined,
@@ -324,7 +318,10 @@ export function useNotifications() {
       return { ok: false as const, error: mapped };
     } finally {
       inFlight.current.delete(key);
-      setPending((current: Record<string, boolean>) => ({ ...current, [key]: false }));
+      setPending((current: Record<string, boolean>) => ({
+        ...current,
+        [key]: false,
+      }));
     }
   }
 
@@ -352,12 +349,9 @@ export function useNotifications() {
 }
 
 export function useUnreadNotificationCount() {
-  const { bindings, auth } = useAfferentContext();
+  const { bindings, auth, sessionKey } = useAfferentContext();
   const configured = bindings.notifications !== undefined;
-  const sessionGeneration =
-    auth.status === "authenticated"
-      ? (auth.sessionGeneration ?? "authenticated")
-      : auth.status;
+  const sessionGeneration = sessionKey;
   const value = useQuery(
     bindings.notifications?.getUnreadCount ?? UNCONFIGURED_NOTIFICATION_QUERY,
     configured && auth.status === "authenticated"

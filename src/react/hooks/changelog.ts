@@ -2,7 +2,7 @@ import { usePaginatedQuery } from "convex-helpers/react";
 import { useMutation, useQuery } from "convex/react";
 import { makeFunctionReference } from "convex/server";
 // @ts-expect-error React declarations are supplied by strict consumer fixtures.
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import type {
   AdminChangelogEntryDto,
@@ -188,7 +188,7 @@ function changelogEditorStatus(
 }
 
 export function useChangelogEditor() {
-  const { bindings, auth } = useAfferentContext();
+  const { bindings, auth, sessionKey } = useAfferentContext();
   const admin = bindings.admin;
   const configured =
     admin?.createChangelogDraft !== undefined &&
@@ -229,6 +229,12 @@ export function useChangelogEditor() {
     {} as Record<string, AfferentErrorDto | undefined>,
   );
   const inFlight = useRef(new Set<string>());
+
+  useEffect(() => {
+    inFlight.current.clear();
+    setPending({});
+    setErrors({});
+  }, [sessionKey]);
 
   async function run(
     key: string,

@@ -2,7 +2,7 @@ import { usePaginatedQuery } from "convex-helpers/react";
 import { useMutation, useQuery } from "convex/react";
 import { makeFunctionReference } from "convex/server";
 // @ts-expect-error React declarations are supplied by strict consumer fixtures.
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import type {
   AfferentErrorDto,
@@ -19,6 +19,7 @@ import type {
 } from "../../client/contracts.js";
 import type { AdminBindings } from "../bindings.js";
 import { useAfferentContext } from "../provider.js";
+import { mapAfferentError } from "./mutations.js";
 
 const UNCONFIGURED_ADMIN_QUERY = makeFunctionReference<"query">(
   "__afferent:unconfiguredAdminCapability",
@@ -52,7 +53,7 @@ export function useAdminCapability(): AdminCapabilityState {
   const enabled = configured && auth.status === "authenticated";
   const value = useQuery(
     bindings.admin?.capability ?? UNCONFIGURED_ADMIN_QUERY,
-    enabled ? {} : "skip",
+    enabled ? { sessionGeneration: auth.sessionGeneration } : "skip",
   );
   if (!configured) return { status: "unsupported" };
   if (auth.status === "loading") return { status: "loading" };
@@ -60,7 +61,8 @@ export function useAdminCapability(): AdminCapabilityState {
   return mapAdminCapabilityState(value, true);
 }
 
-export type ModerationAction = "edit" | "move" | "status" | "lock" | "archive" | "merge";
+export type ModerationAction =
+  "edit" | "move" | "status" | "lock" | "archive" | "merge";
 
 export function moderationActionKey(postId: string, action: ModerationAction) {
   return `${postId}:${action}`;
@@ -69,36 +71,7 @@ export function moderationActionKey(postId: string, action: ModerationAction) {
 export type ModerationError = AfferentErrorDto & { retryAt?: number };
 
 export function mapModerationError(error: unknown): ModerationError {
-  const value = error as Partial<AfferentErrorDto> & { message?: string };
-  if (value.code === "RATE_LIMITED") {
-    const retryAfterMs = Math.max(0, Number(value.retryAfterMs ?? 0));
-    return {
-      contractVersion: 1,
-      code: "RATE_LIMITED",
-      operation: value.operation ?? "edit_post",
-      retryAfterMs,
-      retryAt: Date.now() + retryAfterMs,
-    };
-  }
-  return {
-    contractVersion: 1,
-    code: [
-      "AUTHENTICATION_REQUIRED",
-      "NOT_FOUND",
-      "DISCUSSION_LOCKED",
-      "NOT_AUTHORIZED",
-      "VALIDATION",
-      "CONFLICT",
-      "TRANSIENT",
-      "UNKNOWN",
-    ].includes(String(value.code))
-      ? (value.code as Exclude<AfferentErrorDto["code"], "RATE_LIMITED">)
-      : "UNKNOWN",
-    message: value.message ?? "Moderation request failed",
-    ...("field" in value && typeof value.field === "string"
-      ? { field: value.field }
-      : {}),
-  };
+  return mapAfferentError(error);
 }
 
 type ModerationResult =
@@ -106,7 +79,7 @@ type ModerationResult =
   | Readonly<{ ok: false; error: ModerationError }>;
 
 export function usePostModeration() {
-  const { bindings } = useAfferentContext();
+  const { bindings, sessionKey } = useAfferentContext();
   const admin = bindings.admin;
   const edit = useMutation(
     (admin?.editPost ??
@@ -133,6 +106,12 @@ export function usePostModeration() {
     {} as Record<string, ModerationError | undefined>,
   );
   const inFlight = useRef(new Set<string>());
+
+  useEffect(() => {
+    inFlight.current.clear();
+    setPending({});
+    setErrors({});
+  }, [sessionKey]);
 
   async function run(
     postId: PostId,
@@ -231,7 +210,9 @@ export function usePostActivity(postId: PostId): PostActivityState {
   const page = usePaginatedQuery(
     (binding ??
       UNCONFIGURED_ACTIVITY_QUERY) as AdminBindings["listPostActivity"],
-    binding && auth.status === "authenticated" ? { postId } : "skip",
+    binding && auth.status === "authenticated"
+      ? { postId, sessionGeneration: auth.sessionGeneration }
+      : "skip",
     { initialNumItems: 20 },
   );
   const loadMore = () => page.loadMore(20);
@@ -288,7 +269,9 @@ export function useTags(): TagListState {
   const binding = bindings.admin?.listTags;
   const value = useQuery(
     binding ?? UNCONFIGURED_TAG_QUERY,
-    binding && auth.status === "authenticated" ? {} : "skip",
+    binding && auth.status === "authenticated"
+      ? { sessionGeneration: auth.sessionGeneration }
+      : "skip",
   ) as TagListDto | undefined;
   if (!binding) return { status: "unsupported", items: [] };
   if (auth.status === "loading") return { status: "loading", items: [] };
@@ -310,7 +293,7 @@ type TagManagementResult<T> =
   | Readonly<{ ok: false; error: ModerationError }>;
 
 export function useTagManagement() {
-  const { bindings } = useAfferentContext();
+  const { bindings, sessionKey } = useAfferentContext();
   const admin = bindings.admin;
   const createTag = useMutation(
     (admin?.createTag ??
@@ -333,6 +316,12 @@ export function useTagManagement() {
     {} as Record<string, ModerationError | undefined>,
   );
   const inFlight = useRef(new Set<string>());
+
+  useEffect(() => {
+    inFlight.current.clear();
+    setPending({});
+    setErrors({});
+  }, [sessionKey]);
 
   async function run<T>(
     key: string,
@@ -426,35 +415,79 @@ type MergeActionResult =
   | Readonly<{ ok: false; error: ModerationError }>;
 
 export function useMergePost() {
-  const { bindings } = useAfferentContext();
+  const { bindings, sessionKey } = useAfferentContext();
   const binding = bindings.admin?.mergePost;
   const mutate = useMutation(
-    (binding ?? UNCONFIGURED_ADMIN_MUTATION) as NonNullable<AdminBindings["mergePost"]>,
+    (binding ?? UNCONFIGURED_ADMIN_MUTATION) as NonNullable<
+      AdminBindings["mergePost"]
+    >,
   );
   const [pending, setPending] = useState({} as Record<string, boolean>);
-  const [errors, setErrors] = useState({} as Record<string, ModerationError | undefined>);
+  const [errors, setErrors] = useState(
+    {} as Record<string, ModerationError | undefined>,
+  );
   const inFlight = useRef(new Set<string>());
 
-  async function merge(args: { sourcePostId: PostId; canonicalPostId: PostId }): Promise<MergeActionResult> {
-    const key = moderationActionKey(args.sourcePostId, "merge" as ModerationAction);
+  useEffect(() => {
+    inFlight.current.clear();
+    setPending({});
+    setErrors({});
+  }, [sessionKey]);
+
+  async function merge(args: {
+    sourcePostId: PostId;
+    canonicalPostId: PostId;
+  }): Promise<MergeActionResult> {
+    const key = moderationActionKey(
+      args.sourcePostId,
+      "merge" as ModerationAction,
+    );
     if (inFlight.current.has(key)) {
-      return { ok: false, error: { contractVersion: 1, code: "CONFLICT", message: "Merge already pending" } };
+      return {
+        ok: false,
+        error: {
+          contractVersion: 1,
+          code: "CONFLICT",
+          message: "Merge already pending",
+        },
+      };
     }
     if (!binding) {
-      return { ok: false, error: { contractVersion: 1, code: "NOT_AUTHORIZED", message: "Merge capability is not configured" } };
+      return {
+        ok: false,
+        error: {
+          contractVersion: 1,
+          code: "NOT_AUTHORIZED",
+          message: "Merge capability is not configured",
+        },
+      };
     }
     inFlight.current.add(key);
-    setPending((current: Record<string, boolean>) => ({ ...current, [key]: true }));
-    setErrors((current: Record<string, ModerationError | undefined>) => ({ ...current, [key]: undefined }));
+    setPending((current: Record<string, boolean>) => ({
+      ...current,
+      [key]: true,
+    }));
+    setErrors((current: Record<string, ModerationError | undefined>) => ({
+      ...current,
+      [key]: undefined,
+    }));
     try {
       return { ok: true, data: await mutate(args) };
     } catch (error) {
-      const mapped = mapModerationError((error as { data?: unknown }).data ?? error);
-      setErrors((current: Record<string, ModerationError | undefined>) => ({ ...current, [key]: mapped }));
+      const mapped = mapModerationError(
+        (error as { data?: unknown }).data ?? error,
+      );
+      setErrors((current: Record<string, ModerationError | undefined>) => ({
+        ...current,
+        [key]: mapped,
+      }));
       return { ok: false, error: mapped };
     } finally {
       inFlight.current.delete(key);
-      setPending((current: Record<string, boolean>) => ({ ...current, [key]: false }));
+      setPending((current: Record<string, boolean>) => ({
+        ...current,
+        [key]: false,
+      }));
     }
   }
 
@@ -464,8 +497,14 @@ export function useMergePost() {
     errors,
     merge,
     reset(sourcePostId: PostId) {
-      const key = moderationActionKey(sourcePostId, "merge" as ModerationAction);
-      setErrors((current: Record<string, ModerationError | undefined>) => ({ ...current, [key]: undefined }));
+      const key = moderationActionKey(
+        sourcePostId,
+        "merge" as ModerationAction,
+      );
+      setErrors((current: Record<string, ModerationError | undefined>) => ({
+        ...current,
+        [key]: undefined,
+      }));
     },
   };
 }

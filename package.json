@@ -20,6 +20,10 @@
       "types": "./dist/client/index.d.ts",
       "default": "./dist/client/index.js"
     },
+    "./react.js": {
+      "types": "./dist/react/index.d.ts",
+      "default": "./dist/react/index.js"
+    },
     "./server.js": {
       "types": "./dist/client/server.d.ts",
       "default": "./dist/client/server.js"
@@ -58,7 +62,10 @@
     "test:fixtures": "tsc --project fixtures/auth-convex-auth/tsconfig.json && tsc --project fixtures/auth-clerk/tsconfig.json && tsc --project fixtures/auth-better-auth/tsconfig.json",
     "test:model": "vitest run tests/model",
     "test:package": "node --test tests/integration/packed-artifact.test.mjs",
+    "test:react": "vitest run tests/react",
+    "test:backend:phase2": "npm run test:backend:real && node scripts/test-search-backend.mjs && node scripts/test-rate-limiter-backend.mjs && node scripts/test-tag-cleanup-backend.mjs && node scripts/test-fanout-backend.mjs && node scripts/test-outbox-backend.mjs && node scripts/test-merge-backend.mjs",
     "test:phase1": "npm run build && npm run test:fixtures && npm run test:auth-conformance && npm run test:scope && npm run test:component && npm run test:static && npm run test:backend:real && npm run test:package",
+    "test:phase2": "npm run build && npm run test:model && npm run test:component && npm run test:backend && npm run test:backend:phase2 && npm run test:static && npm run test:react && npm run test:auth-conformance && npm run test:scope && npm run typecheck && npm run lint && npm run test:package",
     "test:scope": "vitest run --config vitest.scope.config.ts tests/integration/scope-matrix.test.ts",
     "test:static": "vitest run tests/static",
     "typecheck": "tsc --noEmit --project tsconfig.json",

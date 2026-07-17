@@ -42,6 +42,12 @@ export type AfferentErrorDto =
       field?: string;
     }>;
 
+export type AfferentError = AfferentErrorDto & Readonly<{ retryAt?: number }>;
+
+export type AfferentResult<T> =
+  | Readonly<{ ok: true; data: T }>
+  | Readonly<{ ok: false; error: AfferentError }>;
+
 export type AfferentActionResult<T> =
   T | Readonly<{ ok: false; error: AfferentErrorDto }>;
 
@@ -916,8 +922,17 @@ export const feedbackPageResultValidator = v.object({
 });
 
 export const postLookupResultValidator = v.union(
-  v.object({ contractVersion: v.literal(1), status: v.literal("post"), post: publicFeedbackPostDtoValidator }),
-  v.object({ contractVersion: v.literal(1), status: v.literal("merged"), requestedPostId: v.string(), canonicalPostId: v.string() }),
+  v.object({
+    contractVersion: v.literal(1),
+    status: v.literal("post"),
+    post: publicFeedbackPostDtoValidator,
+  }),
+  v.object({
+    contractVersion: v.literal(1),
+    status: v.literal("merged"),
+    requestedPostId: v.string(),
+    canonicalPostId: v.string(),
+  }),
   v.object({ contractVersion: v.literal(1), status: v.literal("notFound") }),
 );
 
@@ -1147,7 +1162,10 @@ export interface ReadCapabilities<Context> {
     args: { title: string; body?: string; limit?: number },
   ): Promise<SimilarPostResultDto>;
   getPost(ctx: Context, args: { postId: PostId }): Promise<PostDto>;
-  resolvePost(ctx: Context, args: { postId: PostId }): Promise<PostLookupResult>;
+  resolvePost(
+    ctx: Context,
+    args: { postId: PostId },
+  ): Promise<PostLookupResult>;
   countPosts(ctx: Context, args: { boardId: BoardId }): Promise<PostCountDto>;
   listComments(
     ctx: Context,

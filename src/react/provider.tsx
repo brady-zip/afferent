@@ -16,6 +16,12 @@ export type AfferentAuthState =
 export interface AfferentContextValue {
   bindings: AfferentBindings;
   auth: AfferentAuthState;
+  sessionKey: string;
+}
+
+export function getAfferentSessionKey(auth: AfferentAuthState): string {
+  if (auth.status !== "authenticated") return auth.status;
+  return `authenticated:${auth.sessionGeneration ?? "default"}`;
 }
 
 const AfferentContext = createContext(undefined) as {
@@ -31,9 +37,10 @@ export function AfferentProvider({
   auth: AfferentAuthState;
   children: ReactNode;
 }>) {
+  const sessionKey = getAfferentSessionKey(auth);
   return createElement(
     AfferentContext.Provider,
-    { value: { bindings, auth } },
+    { value: { bindings, auth, sessionKey } },
     children,
   );
 }
