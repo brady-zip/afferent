@@ -89,6 +89,11 @@ test(
         /from ["'](?:convex|react-router|next\/|@clerk|sonner|toast)/,
       );
       assert.doesNotMatch(installed, /\.\.\/\.\.\/|\/Users\//);
+      const app = await readFile(join(consumer, "src/App.tsx"), "utf8");
+      assert.match(app, /AfferentProvider/);
+      assert.match(app, /AfferentBoardScreen/);
+      assert.match(app, /watchQuery/);
+      assert.doesNotMatch(app, /AfferentBoardView/);
     } finally {
       await rm(temporaryRoot, { recursive: true, force: true });
     }

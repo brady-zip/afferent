@@ -1,48 +1,65 @@
 import type { ComponentProps } from "react";
 
-import { AfferentBoardView } from "@/components/afferent/board/board-screen";
+import { AfferentProvider } from "afferent/react.js";
+
+import { AfferentBoardScreen } from "@/components/afferent/board/board-screen";
 import { AfferentUiProvider } from "@/components/afferent/core/afferent-ui-provider";
 
-type Feed = ComponentProps<typeof AfferentBoardView>["feed"];
+const fixturePost = {
+  id: "feedback_fixture",
+  contractVersion: 2,
+  title: "Ship source-owned feedback",
+  body: "Install this screen through the local registry.",
+  status: { key: "planned", label: "Planned" },
+  boardId: "board_fixture",
+  board: { id: "board_fixture", slug: "feedback", name: "Feedback" },
+  author: { id: "actor_fixture", displayName: "Example user" },
+  voteCount: 7,
+  commentCount: 2,
+  totals: { votes: 7, comments: 2 },
+  tags: [],
+};
 
-const readyFeed = {
-  status: "ready",
-  items: [
-    {
-      id: "feedback_fixture",
-      contractVersion: 2,
-      title: "Ship source-owned feedback",
-      body: "Install this screen through the local registry.",
-      status: { key: "planned", label: "Planned" },
-      boardId: "board_fixture",
-      board: {
-        id: "board_fixture",
-        slug: "feedback",
-        name: "Feedback",
+const bindings = {
+  public: { listFeedback: {} },
+} as unknown as ComponentProps<typeof AfferentProvider>["bindings"];
+
+const client = {
+  watchQuery() {
+    return {
+      onUpdate() {
+        return () => {};
       },
-      author: { id: "actor_fixture", displayName: "Example user" },
-      voteCount: 7,
-      commentCount: 2,
-      totals: { votes: 7, comments: 2 },
-      tags: [],
-    },
-  ],
-  canLoadMore: false,
-  isLoadingMore: false,
-  loadMore() {},
-} as unknown as Feed;
+      localQueryResult() {
+        return {
+          contractVersion: 2,
+          page: [fixturePost],
+          posts: [fixturePost],
+          isDone: true,
+          continueCursor: "",
+        };
+      },
+    };
+  },
+} as unknown as ComponentProps<typeof AfferentProvider>["client"];
 
 export function App() {
   return (
-    <AfferentUiProvider
-      href={{
-        post: (id) => `/feedback/${id}`,
-        roadmap: () => "/roadmap",
-        changelog: (slug) => `/changelog/${slug}`,
-      }}
-      currentLocation="/feedback"
+    <AfferentProvider
+      bindings={bindings}
+      auth={{ status: "authenticated", identityToken: "fixture-actor" }}
+      client={client}
     >
-      <AfferentBoardView feed={readyFeed} />
-    </AfferentUiProvider>
+      <AfferentUiProvider
+        href={{
+          post: (id) => `/feedback/${id}`,
+          roadmap: () => "/roadmap",
+          changelog: (slug) => `/changelog/${slug}`,
+        }}
+        currentLocation="/feedback"
+      >
+        <AfferentBoardScreen />
+      </AfferentUiProvider>
+    </AfferentProvider>
   );
 }
