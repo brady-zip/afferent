@@ -14,7 +14,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { ConvexHttpClient } from "convex/browser";
 import { ConvexReactClient } from "convex/react";
-import { makeFunctionReference } from "convex/server";
+import { getFunctionName, makeFunctionReference } from "convex/server";
 
 const repositoryRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const temporaryRoot = await mkdtemp(
@@ -29,8 +29,10 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
-  controls: defineTable({ key: v.string(), mode: v.string() }).index("by_key", ["key"]),
-  items: defineTable({ position: v.number(), label: v.string(), padding: v.string() }).index("by_position", ["position"]),
+  controls: defineTable({ key: v.string(), mode: v.optional(v.string()), revision: v.optional(v.number()) }).index("by_key", ["key"]),
+  items: defineTable({ position: v.number(), label: v.string(), padding: v.string() })
+    .index("by_position", ["position"])
+    .index("by_label", ["label"]),
 });
 `;
 
@@ -41,6 +43,18 @@ import { ConvexError, v } from "convex/values";
 
 async function mode(ctx) {
   return (await ctx.db.query("controls").withIndex("by_key", q => q.eq("key", "fault")).unique())?.mode ?? "none";
+}
+
+async function revision(ctx) {
+  return (await ctx.db.query("controls").withIndex("by_key", q => q.eq("key", "revision")).unique())?.revision ?? 0;
+}
+
+async function bumpRevision(ctx) {
+  const row = await ctx.db.query("controls").withIndex("by_key", q => q.eq("key", "revision")).unique();
+  const next = (row?.revision ?? 0) + 1;
+  if (row) await ctx.db.patch(row._id, { revision: next });
+  else await ctx.db.insert("controls", { key: "revision", revision: next });
+  return next;
 }
 
 export const setMode = mutation({
@@ -54,20 +68,61 @@ export const setMode = mutation({
   },
 });
 
-export const replaceItems = mutation({
+export const seedItems = mutation({
   args: { labels: v.array(v.string()) },
   returns: v.null(),
   handler: async (ctx, args) => {
     for (const item of await ctx.db.query("items").collect()) await ctx.db.delete(item._id);
     for (let index = 0; index < args.labels.length; index += 1) {
       await ctx.db.insert("items", {
-        position: index,
+        position: (index + 1) * 10,
         label: args.labels[index],
         padding: "x".repeat(1024),
       });
     }
+    await bumpRevision(ctx);
     return null;
   },
+});
+
+export const insertItem = mutation({
+  args: { label: v.string(), position: v.number() },
+  returns: v.number(),
+  handler: async (ctx, args) => {
+    await ctx.db.insert("items", { position: args.position, label: args.label, padding: "x".repeat(1024) });
+    return await bumpRevision(ctx);
+  },
+});
+
+export const deleteItem = mutation({
+  args: { label: v.string() },
+  returns: v.number(),
+  handler: async (ctx, args) => {
+    const target = await ctx.db.query("items").withIndex("by_label", q => q.eq("label", args.label)).unique();
+    if (!target) throw new Error("missing label " + args.label);
+    await ctx.db.delete(target._id);
+    return await bumpRevision(ctx);
+  },
+});
+
+export const moveItem = mutation({
+  args: { label: v.string(), position: v.number() },
+  returns: v.number(),
+  handler: async (ctx, args) => {
+    const target = await ctx.db.query("items").withIndex("by_label", q => q.eq("label", args.label)).unique();
+    if (!target) throw new Error("missing label " + args.label);
+    await ctx.db.patch(target._id, { position: args.position });
+    return await bumpRevision(ctx);
+  },
+});
+
+export const canonical = query({
+  args: {},
+  returns: v.any(),
+  handler: async (ctx) => ({
+    revision: await revision(ctx),
+    labels: (await ctx.db.query("items").withIndex("by_position").collect()).map(item => item.label),
+  }),
 });
 
 export const direct = query({
@@ -93,12 +148,23 @@ export const list = query({
     if (currentMode === "later" && args.paginationOpts.cursor !== null) {
       throw new ConvexError({ code: "TRANSIENT", message: "later page fault" });
     }
-    const paginationOpts = currentMode === "split"
-      ? { ...args.paginationOpts, maximumBytesRead: 2300 }
-      : args.paginationOpts;
+    if (currentMode === "middle" && args.paginationOpts.cursor !== null && args.paginationOpts.endCursor !== undefined) {
+      throw new ConvexError({ code: "TRANSIENT", message: "middle page fault" });
+    }
+    if (currentMode === "tail" && args.paginationOpts.cursor !== null && args.paginationOpts.endCursor === undefined) {
+      throw new ConvexError({ code: "TRANSIENT", message: "tail page fault" });
+    }
+    const paginationOpts = currentMode === "recommended"
+      ? { ...args.paginationOpts, maximumBytesRead: 8000 }
+      : currentMode === "required"
+        ? { ...args.paginationOpts, maximumBytesRead: 4300 }
+        : currentMode === "required_no_cursor"
+          ? { ...args.paginationOpts, maximumBytesRead: 1200 }
+        : args.paginationOpts;
     const result = await ctx.db.query("items").withIndex("by_position").paginate(paginationOpts);
     return {
       ...result,
+      revision: await revision(ctx),
       page: result.page.map(item => ({ id: String(item._id), label: item.label })),
     };
   },
@@ -184,6 +250,111 @@ function deploymentUrl(source) {
   return match.groups.url.trim();
 }
 
+class TrackingWatchClient {
+  records = [];
+
+  constructor(client) {
+    this.client = client;
+  }
+
+  watchQuery(reference, args = {}) {
+    const underlying = this.client.watchQuery(reference, args);
+    const record = {
+      name: getFunctionName(reference),
+      args,
+      active: 0,
+      disposeCount: 0,
+      result: undefined,
+      error: undefined,
+    };
+    this.records.push(record);
+    const read = () => {
+      try {
+        record.result = underlying.localQueryResult();
+        record.error = undefined;
+        return record.result;
+      } catch (error) {
+        record.error = error;
+        throw error;
+      }
+    };
+    return {
+      onUpdate: (listener) => {
+        record.active += 1;
+        const stop = underlying.onUpdate(listener);
+        return () => {
+          if (record.active > 0) {
+            record.active -= 1;
+            record.disposeCount += 1;
+          }
+          stop();
+        };
+      },
+      localQueryResult: read,
+      localQueryLogs: () => underlying.localQueryLogs(),
+      journal: () => underlying.journal(),
+    };
+  }
+
+  activePages() {
+    return this.records.filter(
+      (record) => record.active > 0 && record.args.paginationOpts,
+    );
+  }
+}
+
+function assertActiveBoundaries(tracker) {
+  const active = tracker.activePages();
+  assert.ok(active.length > 0, "expected at least one active page watch");
+  const ordered = [];
+  let cursor = null;
+  while (ordered.length < active.length) {
+    const matches = active.filter(
+      (record) =>
+        !ordered.includes(record) &&
+        record.args.paginationOpts.cursor === cursor,
+    );
+    assert.equal(
+      matches.length,
+      1,
+      `expected one active page at cursor ${String(cursor)}: ${JSON.stringify(active.map(record => record.args.paginationOpts))}`,
+    );
+    const current = matches[0];
+    ordered.push(current);
+    cursor = current.args.paginationOpts.endCursor;
+    if (cursor === undefined) break;
+  }
+  assert.equal(ordered.length, active.length, "active pages must form one chain");
+  for (let index = 0; index < ordered.length - 1; index += 1) {
+    assert.equal(
+      ordered[index].args.paginationOpts.endCursor,
+      ordered[index + 1].args.paginationOpts.cursor,
+      `adjacent page boundary ${index} must be identical`,
+    );
+  }
+  assert.equal(
+    ordered.at(-1).args.paginationOpts.endCursor,
+    undefined,
+    "the committed chain must have one unbounded tail",
+  );
+  return ordered;
+}
+
+async function assertCanonicalWindow(...args) {
+  const [http, canonical, tracker, snapshot, expected] = args;
+  const labels = snapshot.results.map((item) => item.label);
+  assert.deepEqual(labels, expected);
+  const truth = await http.query(canonical, {});
+  const terminal = labels.at(-1);
+  const terminalIndex = terminal === undefined ? -1 : truth.labels.indexOf(terminal);
+  assert.deepEqual(
+    labels,
+    terminalIndex === -1 ? [] : truth.labels.slice(0, terminalIndex + 1),
+    `revision ${truth.revision} must equal canonical truth through the active tail`,
+  );
+  assertActiveBoundaries(tracker);
+}
+
 async function waitFor(store, predicate, label) {
   const current = store.getSnapshot();
   if (predicate(current)) return current;
@@ -232,18 +403,23 @@ try {
   );
   const http = new ConvexHttpClient(url);
   const react = new ConvexReactClient(url, { unsavedChangesWarning: false });
+  const tracking = new TrackingWatchClient(react);
   assert.equal(typeof react.watchQuery, "function");
   const setMode = reference("setMode");
-  const replaceItems = reference("replaceItems");
+  const seedItems = reference("seedItems");
+  const insertItem = reference("insertItem");
+  const deleteItem = reference("deleteItem");
+  const moveItem = reference("moveItem");
+  const canonical = reference("canonical");
   const direct = reference("direct");
   const list = reference("list");
-  await http.mutation(replaceItems, { labels: ["a", "b", "c", "d", "e", "f"] });
+  await http.mutation(seedItems, { labels: ["a", "b", "c", "d", "e", "f"] });
   setupComplete = true;
 
   try {
     await http.mutation(setMode, { mode: "direct" });
     const directStore = queryModule.createDirectWatchStore({
-      client: react,
+      client: tracking,
       query: direct,
       args: {},
       generation: 1,
@@ -274,7 +450,7 @@ try {
     );
 
     const pageStore = queryModule.createPaginatedWatchStore({
-      client: react,
+      client: tracking,
       query: list,
       args: {},
       generation: 1,
@@ -286,10 +462,7 @@ try {
       (snapshot) => snapshot.status === "CanLoadMore",
       "first page",
     );
-    assert.deepEqual(
-      first.results.map((item) => item.label),
-      ["a", "b"],
-    );
+    await assertCanonicalWindow(http, canonical, tracking, first, ["a", "b"]);
     await http.mutation(setMode, { mode: "later" });
     pageStore.loadMore(2);
     const laterFailure = await waitFor(
@@ -308,59 +481,298 @@ try {
         snapshot.results.length === 4 && snapshot.status !== "Error",
       "later-page recovery",
     );
-    assert.deepEqual(
-      recovered.results.map((item) => item.label),
-      ["a", "b", "c", "d"],
-    );
+    await assertCanonicalWindow(http, canonical, tracking, recovered, [
+      "a",
+      "b",
+      "c",
+      "d",
+    ]);
 
-    await http.mutation(replaceItems, {
-      labels: ["zero", "a", "b", "c", "d", "e", "f"],
-    });
+    pageStore.loadMore(2);
+    const threeWindows = await waitFor(
+      pageStore,
+      (snapshot) =>
+        JSON.stringify(snapshot.results.map((item) => item.label)) ===
+          JSON.stringify(["a", "b", "c", "d", "e", "f"]) &&
+        snapshot.status !== "LoadingMore",
+      "three loaded windows",
+    );
+    await assertCanonicalWindow(http, canonical, tracking, threeWindows, [
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "f",
+    ]);
+
+    await http.mutation(insertItem, { label: "zero", position: 5 });
     const grown = await waitFor(
       pageStore,
       (snapshot) =>
         JSON.stringify(snapshot.results.map((item) => item.label)) ===
-        JSON.stringify(["zero", "a", "b", "c", "d"]),
-      "reactive growth",
+        JSON.stringify(["zero", "a", "b", "c", "d", "e", "f"]),
+      "front insertion growth",
     );
-    assert.deepEqual(
-      grown.results.map((item) => item.label),
-      ["zero", "a", "b", "c", "d"],
-    );
-    await http.mutation(replaceItems, { labels: ["a", "b", "c"] });
-    const shrunk = await waitFor(
-      pageStore,
-      (snapshot) =>
-        JSON.stringify(snapshot.results.map((item) => item.label)) ===
-        JSON.stringify(["a", "b", "c"]),
-      "reactive shrink",
-    );
-    assert.deepEqual(
-      shrunk.results.map((item) => item.label),
-      ["a", "b", "c"],
-    );
+    await assertCanonicalWindow(http, canonical, tracking, grown, [
+      "zero",
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "f",
+    ]);
 
-    await http.mutation(replaceItems, {
-      labels: ["a", "b", "c", "d", "e", "f"],
-    });
-    await http.mutation(setMode, { mode: "split" });
-    const split = await waitFor(
+    await http.mutation(insertItem, { label: "middle", position: 35 });
+    const middleGrown = await waitFor(
       pageStore,
       (snapshot) =>
         JSON.stringify(snapshot.results.map((item) => item.label)) ===
-        JSON.stringify(["a", "b", "c", "d"]),
-      "reactive split",
+        JSON.stringify(["zero", "a", "b", "c", "middle", "d", "e", "f"]),
+      "middle insertion growth",
     );
-    assert.deepEqual(
-      split.results.map((item) => item.label),
-      ["a", "b", "c", "d"],
+    await assertCanonicalWindow(http, canonical, tracking, middleGrown, [
+      "zero",
+      "a",
+      "b",
+      "c",
+      "middle",
+      "d",
+      "e",
+      "f",
+    ]);
+
+    await http.mutation(insertItem, { label: "back", position: 55 });
+    const backInserted = await waitFor(
+      pageStore,
+      (snapshot) =>
+        JSON.stringify(snapshot.results.map((item) => item.label)) ===
+        JSON.stringify(["zero", "a", "b", "c", "middle", "d", "e", "back", "f"]),
+      "back insertion",
     );
+    await assertCanonicalWindow(http, canonical, tracking, backInserted, [
+      "zero",
+      "a",
+      "b",
+      "c",
+      "middle",
+      "d",
+      "e",
+      "back",
+      "f",
+    ]);
+
+    await http.mutation(deleteItem, { label: "zero" });
+    const frontDeleted = await waitFor(
+      pageStore,
+      (snapshot) =>
+        JSON.stringify(snapshot.results.map((item) => item.label)) ===
+        JSON.stringify(["a", "b", "c", "middle", "d", "e", "back", "f"]),
+      "front deletion",
+    );
+    await assertCanonicalWindow(http, canonical, tracking, frontDeleted, [
+      "a",
+      "b",
+      "c",
+      "middle",
+      "d",
+      "e",
+      "back",
+      "f",
+    ]);
+
+    await http.mutation(deleteItem, { label: "middle" });
+    const middleDeleted = await waitFor(
+      pageStore,
+      (snapshot) =>
+        JSON.stringify(snapshot.results.map((item) => item.label)) ===
+        JSON.stringify(["a", "b", "c", "d", "e", "back", "f"]),
+      "middle deletion",
+    );
+    await assertCanonicalWindow(http, canonical, tracking, middleDeleted, [
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "back",
+      "f",
+    ]);
+
+    await http.mutation(deleteItem, { label: "c" });
+    await http.mutation(deleteItem, { label: "d" });
+    const collapsed = await waitFor(
+      pageStore,
+      (snapshot) =>
+        JSON.stringify(snapshot.results.map((item) => item.label)) ===
+          JSON.stringify(["a", "b", "e", "back", "f"]) &&
+        snapshot.status !== "LoadingMore" &&
+        tracking.activePages().some(
+          (record) =>
+            record.args.paginationOpts.cursor === null &&
+            record.args.paginationOpts.numItems === 4,
+        ),
+      "empty middle-window collapse",
+    );
+    await assertCanonicalWindow(http, canonical, tracking, collapsed, [
+      "a",
+      "b",
+      "e",
+      "back",
+      "f",
+    ]);
+
+    await http.mutation(moveItem, { label: "e", position: 5 });
+    const reordered = await waitFor(
+      pageStore,
+      (snapshot) =>
+        JSON.stringify(snapshot.results.map((item) => item.label)) ===
+        JSON.stringify(["e", "a", "b", "back", "f"]),
+      "sort-key movement",
+    );
+    await assertCanonicalWindow(http, canonical, tracking, reordered, [
+      "e",
+      "a",
+      "b",
+      "back",
+      "f",
+    ]);
+
+    const thresholdExpectations = [
+      [1200, "SplitRequired", false],
+      [1800, "SplitRequired", false],
+      [2300, "SplitRequired", true],
+      [2800, "SplitRequired", true],
+      [4300, "SplitRequired", true],
+      [8000, null, true],
+    ];
+    for (const [maximumBytesRead, pageStatus, hasSplitCursor] of thresholdExpectations) {
+      const probe = await http.query(list, {
+        paginationOpts: { numItems: 10, cursor: null, maximumBytesRead },
+      });
+      assert.equal(probe.pageStatus, pageStatus);
+      assert.equal(Boolean(probe.splitCursor), hasSplitCursor);
+    }
+
+    stopPages();
+    pageStore.dispose();
+    await http.mutation(seedItems, {
+      labels: ["s1", "s2", "s3", "s4", "s5", "s6"],
+    });
+    await http.mutation(setMode, { mode: "recommended" });
+    const opportunisticStore = queryModule.createPaginatedWatchStore({
+      client: tracking,
+      query: list,
+      args: {},
+      generation: 2,
+      initialNumItems: 2,
+    });
+    const stopOpportunistic = opportunisticStore.subscribe(() => {});
+    await waitFor(
+      opportunisticStore,
+      (snapshot) => snapshot.results.length === 2,
+      "opportunistic split seed",
+    );
+    await http.mutation(insertItem, { label: "r1", position: 7 });
+    await http.mutation(insertItem, { label: "r2", position: 8 });
+    await http.mutation(insertItem, { label: "r3", position: 9 });
+    const split = await waitFor(
+      opportunisticStore,
+      (snapshot) =>
+        tracking.records.some(
+          (record) =>
+            record.result?.pageStatus == null &&
+            record.result?.splitCursor &&
+            record.result.page.length > 4,
+        ) &&
+        !tracking
+          .activePages()
+          .some((record) => record.result?.page.length > 4) &&
+        snapshot.status !== "LoadingMore",
+      "real null-status splitCursor opportunistic split",
+    );
+    await assertCanonicalWindow(
+      http,
+      canonical,
+      tracking,
+      split,
+      ["r1", "r2", "r3", "s1", "s2"],
+    );
+    stopOpportunistic();
+    opportunisticStore.dispose();
+
+    await http.mutation(seedItems, {
+      labels: ["q1", "q2", "q3", "q4", "q5", "q6"],
+    });
+    await http.mutation(setMode, { mode: "required" });
+    const requiredStore = queryModule.createPaginatedWatchStore({
+      client: tracking,
+      query: list,
+      args: {},
+      generation: 3,
+      initialNumItems: 6,
+    });
+    const stopRequired = requiredStore.subscribe(() => {});
+    const requiredSplit = await waitFor(
+      requiredStore,
+      (snapshot) =>
+        tracking.records.some(
+          (record) =>
+            record.result?.pageStatus === "SplitRequired" &&
+            Boolean(record.result.splitCursor),
+        ) &&
+        (snapshot.status === "CanLoadMore" || snapshot.status === "Exhausted"),
+      "native required split with cursor",
+    );
+    await assertCanonicalWindow(http, canonical, tracking, requiredSplit, [
+      "q1",
+      "q2",
+      "q3",
+      "q4",
+      "q5",
+      "q6",
+    ]);
+    stopRequired();
+    requiredStore.dispose();
+
+    await http.mutation(setMode, { mode: "required_no_cursor" });
+    const missingCursorStore = queryModule.createPaginatedWatchStore({
+      client: tracking,
+      query: list,
+      args: {},
+      generation: 4,
+      initialNumItems: 6,
+    });
+    const stopMissingCursor = missingCursorStore.subscribe(() => {});
+    const missingCursor = await waitFor(
+      missingCursorStore,
+      (snapshot) => snapshot.status === "Error",
+      "native required split without cursor",
+    );
+    assert.deepEqual(missingCursor.results, []);
+    assert.equal(missingCursor.error?.code, "UNKNOWN");
     await http.mutation(setMode, { mode: "none" });
+    const missingCursorRecovered = await waitFor(
+      missingCursorStore,
+      (snapshot) =>
+        snapshot.status !== "Error" &&
+        JSON.stringify(snapshot.results.map((item) => item.label)) ===
+          JSON.stringify(["q1", "q2"]),
+      "required split missing-cursor recovery",
+    );
+    await assertCanonicalWindow(
+      http,
+      canonical,
+      tracking,
+      missingCursorRecovered,
+      ["q1", "q2"],
+    );
+    stopMissingCursor();
+    missingCursorStore.dispose();
 
     stopDirect();
-    stopPages();
     directStore.dispose();
-    pageStore.dispose();
     await react.close();
     console.log("Real Convex headless watch matrix passed");
   } catch (error) {

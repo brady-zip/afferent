@@ -169,14 +169,20 @@ interface PageDescriptor<T> {
   numItems: number;
   epoch: number;
   result?: PageResult<T>;
+  splitResult?: PageResult<T>;
   error?: AfferentError;
   watch?: Watch<PageResult<T>>;
   stop?: () => void;
-  split?: {
-    signature: string;
-    left: PageDescriptor<T>;
-    right: PageDescriptor<T>;
-  };
+}
+
+type StructuralOperationKind = "append" | "split" | "collapse";
+
+interface StructuralOperation<T> {
+  epoch: number;
+  kind: StructuralOperationKind;
+  originals: PageDescriptor<T>[];
+  replacements: PageDescriptor<T>[];
+  error?: AfferentError;
 }
 
 interface PaginatedStoreOptions<
@@ -197,7 +203,6 @@ export function createPaginatedWatchStore<
   Query extends FunctionReference<"query", "public", any, PageResult<Item>>,
 >(options: PaginatedStoreOptions<Item, Query>): PaginatedWatchStore<Item> {
   const listeners = new Set<() => void>();
-  const loadedCursors = new Set<string>();
   const loadMore = (count: number) => requestMore(count);
   const retry = () => restart(true);
   let snapshot: PaginatedWatchSnapshot<Item> = {
@@ -213,6 +218,8 @@ export function createPaginatedWatchStore<
   let storeEpoch = 0;
   let nextPageKey = 0;
   let sessionId = 0;
+  let operation: StructuralOperation<Item> | undefined;
+  let structuralScanQueued = false;
 
   function publish(next: PaginatedWatchSnapshot<Item>) {
     if (disposed) return;
@@ -220,75 +227,74 @@ export function createPaginatedWatchStore<
     for (const listener of listeners) listener();
   }
 
-  function stopTree(page: PageDescriptor<Item>) {
+  function stopPage(page: PageDescriptor<Item>) {
     page.stop?.();
     page.stop = undefined;
     page.watch = undefined;
-    if (page.split) {
-      stopTree(page.split.left);
-      stopTree(page.split.right);
-      page.split = undefined;
+  }
+
+  function invariantError(message: string): AfferentError {
+    return {
+      contractVersion: 1,
+      code: "UNKNOWN",
+      message: `Pagination invariant failed: ${message}`,
+    };
+  }
+
+  function sameBoundary(
+    left: string | null | undefined,
+    right: string | null | undefined,
+  ) {
+    return left === right;
+  }
+
+  function chainError(chain: PageDescriptor<Item>[]): AfferentError | undefined {
+    for (let index = 0; index < chain.length - 1; index += 1) {
+      const current = chain[index];
+      const next = chain[index + 1];
+      if (current.endCursor === undefined) {
+        return invariantError(`non-tail window ${current.key} is unbounded`);
+      }
+      if (!sameBoundary(current.endCursor, next.cursor)) {
+        return invariantError(
+          `window ${current.key} ends at ${String(current.endCursor)} but window ${next.key} starts at ${String(next.cursor)}`,
+        );
+      }
     }
+    return undefined;
   }
 
-  function firstTreeError(
-    page: PageDescriptor<Item>,
-  ): AfferentError | undefined {
-    if (page.error) return page.error;
-    if (!page.split) return undefined;
-    return firstTreeError(page.split.left) ?? firstTreeError(page.split.right);
-  }
-
-  function replacementPages(
-    page: PageDescriptor<Item>,
-  ): PageDescriptor<Item>[] | undefined {
-    if (page.error) return undefined;
-    if (page.split) {
-      const left = replacementPages(page.split.left);
-      const right = replacementPages(page.split.right);
-      return left && right ? [...left, ...right] : undefined;
+  function coherentPrefix() {
+    const results: Item[] = [];
+    const boundaryError = chainError(pages);
+    if (boundaryError) return { results, error: boundaryError, pending: false };
+    for (const page of pages) {
+      if (page.error) {
+        return { results, error: page.error, pending: false };
+      }
+      if (!page.result || page.result.pageStatus === "SplitRequired") {
+        return { results, pending: true };
+      }
+      results.push(...page.result.page);
     }
-    return page.result ? [page] : undefined;
-  }
-
-  function treePending(page: PageDescriptor<Item>): boolean {
-    if (page.error) return false;
-    if (page.split) return replacementPages(page) === undefined;
-    return page.result === undefined;
-  }
-
-  function reconcileSplits() {
-    let changed = false;
-    for (let index = 0; index < pages.length; index += 1) {
-      const original = pages[index];
-      if (!original.split) continue;
-      const replacements = replacementPages(original);
-      if (!replacements) continue;
-      original.stop?.();
-      original.stop = undefined;
-      original.watch = undefined;
-      original.split = undefined;
-      pages.splice(index, 1, ...replacements);
-      index += replacements.length - 1;
-      changed = true;
-    }
-    return changed;
+    return { results, pending: false };
   }
 
   function visibleResults() {
-    const visible = pages.flatMap((page) => page.result?.page ?? []);
-    return visible.length > 0 || pages[0]?.result !== undefined
-      ? visible
+    const coherent = coherentPrefix();
+    return coherent.results.length > 0 || pages[0]?.result !== undefined
+      ? coherent.results
       : retainedResults;
   }
 
   function refreshSnapshot() {
     if (disposed) return;
-    reconcileSplits();
-    const results = visibleResults();
-    const error = pages
-      .map(firstTreeError)
-      .find((candidate): candidate is AfferentError => candidate !== undefined);
+    const coherent = coherentPrefix();
+    const results =
+      coherent.results.length > 0 || pages[0]?.result !== undefined
+        ? coherent.results
+        : retainedResults;
+    const error = coherent.error ?? operation?.error;
     if (error) {
       publish({ results, status: "Error", error, loadMore, retry });
       return;
@@ -303,11 +309,11 @@ export function createPaginatedWatchStore<
       });
       return;
     }
-    retainedResults = [];
-    if (pages.some(treePending)) {
+    if (coherent.pending || operation) {
       publish({ results, status: "LoadingMore", loadMore, retry });
       return;
     }
+    retainedResults = [];
     const last = pages.at(-1)?.result;
     publish({
       results,
@@ -317,37 +323,98 @@ export function createPaginatedWatchStore<
     });
   }
 
-  function cancelSplit(page: PageDescriptor<Item>) {
-    if (!page.split) return;
-    stopTree(page.split.left);
-    stopTree(page.split.right);
-    page.split = undefined;
+  function splitDescriptors(page: PageDescriptor<Item>, splitCursor: string) {
+    return [
+      descriptor({
+        cursor: page.cursor,
+        endCursor: splitCursor,
+        numItems: page.numItems,
+        epoch: page.epoch,
+      }),
+      descriptor({
+        cursor: splitCursor,
+        ...(page.endCursor === undefined
+          ? {}
+          : { endCursor: page.endCursor }),
+        numItems: page.numItems,
+        epoch: page.epoch,
+      }),
+    ];
   }
 
-  function beginSplit(page: PageDescriptor<Item>, result: PageResult<Item>) {
-    const splitCursor = result.splitCursor;
-    if (!splitCursor) return;
-    const signature = `${page.cursor ?? ""}:${splitCursor}:${result.continueCursor}`;
-    if (page.split?.signature === signature) return;
-    cancelSplit(page);
-    const left = descriptor({
-      cursor: page.cursor,
-      endCursor: splitCursor,
-      numItems: page.numItems,
-      epoch: page.epoch,
-    });
-    const right = descriptor({
-      cursor: splitCursor,
-      endCursor: result.continueCursor,
-      numItems: page.numItems,
-      epoch: page.epoch,
-    });
-    page.split = { signature, left, right };
-    attach(left);
-    attach(right);
+  function stopOperation() {
+    if (!operation) return;
+    for (const replacement of operation.replacements) stopPage(replacement);
+    operation = undefined;
   }
 
-  function read(page: PageDescriptor<Item>) {
+  function validateReplacement(current: StructuralOperation<Item>) {
+    const firstOriginal = current.originals[0];
+    const lastOriginal = current.originals.at(-1);
+    const firstReplacement = current.replacements[0];
+    const lastReplacement = current.replacements.at(-1);
+    if (!firstOriginal || !lastOriginal || !firstReplacement || !lastReplacement) {
+      return invariantError(`${current.kind} replacement is empty`);
+    }
+    if (!sameBoundary(firstOriginal.cursor, firstReplacement.cursor)) {
+      return invariantError(`${current.kind} replacement changed its start`);
+    }
+    if (!sameBoundary(lastOriginal.endCursor, lastReplacement.endCursor)) {
+      return invariantError(`${current.kind} replacement changed its end`);
+    }
+    return chainError(current.replacements);
+  }
+
+  function commitOperation(current: StructuralOperation<Item>) {
+    if (
+      disposed ||
+      operation !== current ||
+      current.epoch !== storeEpoch ||
+      current.error ||
+      current.replacements.some((page) => !page.result || page.error)
+    ) {
+      return;
+    }
+    const validationError = validateReplacement(current);
+    if (validationError) {
+      current.error = validationError;
+      refreshSnapshot();
+      return;
+    }
+    const firstIndex = pages.indexOf(current.originals[0]);
+    if (
+      firstIndex === -1 ||
+      current.originals.some(
+        (page, offset) => pages[firstIndex + offset] !== page,
+      )
+    ) {
+      return;
+    }
+    for (const original of current.originals) stopPage(original);
+    pages.splice(
+      firstIndex,
+      current.originals.length,
+      ...current.replacements,
+    );
+    operation = undefined;
+    refreshSnapshot();
+    queueStructuralScan();
+  }
+
+  function replaceCandidate(
+    current: StructuralOperation<Item>,
+    page: PageDescriptor<Item>,
+    splitCursor: string,
+  ) {
+    const index = current.replacements.indexOf(page);
+    if (index === -1) return;
+    const children = splitDescriptors(page, splitCursor);
+    stopPage(page);
+    current.replacements.splice(index, 1, ...children);
+    for (const child of children) attach(child, true);
+  }
+
+  function read(page: PageDescriptor<Item>, candidate = false) {
     if (disposed || page.epoch !== storeEpoch || page.watch === undefined) {
       return;
     }
@@ -355,15 +422,40 @@ export function createPaginatedWatchStore<
       const result = page.watch.localQueryResult();
       if (result === undefined) return;
       page.error = undefined;
-      const needsSplit =
-        result.splitCursor !== undefined &&
-        result.splitCursor !== null &&
-        (result.pageStatus === "SplitRecommended" ||
-          result.pageStatus === "SplitRequired" ||
-          result.page.length > options.initialNumItems * 2);
-      if (result.pageStatus !== "SplitRequired") page.result = result;
-      if (needsSplit) beginSplit(page, result);
-      else cancelSplit(page);
+      const splitRequested =
+        result.pageStatus === "SplitRecommended" ||
+        result.pageStatus === "SplitRequired" ||
+        result.page.length > options.initialNumItems * 2;
+      if (result.pageStatus === "SplitRequired" && !result.splitCursor) {
+        const error = invariantError("SplitRequired omitted splitCursor");
+        if (candidate && operation) operation.error = error;
+        else page.error = error;
+        refreshSnapshot();
+        return;
+      }
+      const pendingCandidate =
+        candidate && operation?.replacements.includes(page) === true;
+      if (candidate && !pendingCandidate && !pages.includes(page)) return;
+      if (pendingCandidate) {
+        if (splitRequested && result.splitCursor) {
+          replaceCandidate(operation!, page, result.splitCursor);
+          refreshSnapshot();
+          return;
+        }
+        page.result = result;
+        operation!.error = operation!.replacements
+          .map((replacement) => replacement.error)
+          .find((error): error is AfferentError => error !== undefined);
+        commitOperation(operation!);
+        refreshSnapshot();
+        return;
+      }
+      if (result.pageStatus === "SplitRequired") page.splitResult = result;
+      else {
+        page.result = result;
+        page.splitResult = undefined;
+      }
+      if (splitRequested && result.splitCursor) queueStructuralScan();
     } catch (error) {
       if (isInvalidCursorError(error)) {
         const capturedEpoch = storeEpoch;
@@ -372,9 +464,16 @@ export function createPaginatedWatchStore<
         });
         return;
       }
-      page.error = mapAfferentError(error);
+      const mapped = mapAfferentError(error);
+      if (candidate && operation?.replacements.includes(page)) {
+        page.error = mapped;
+        operation.error = mapped;
+      } else {
+        page.error = mapped;
+      }
     }
     refreshSnapshot();
+    queueStructuralScan();
   }
 
   function descriptor(input: {
@@ -392,7 +491,7 @@ export function createPaginatedWatchStore<
     };
   }
 
-  function attach(page: PageDescriptor<Item>) {
+  function attach(page: PageDescriptor<Item>, candidate = false) {
     if (disposed || page.epoch !== storeEpoch || page.watch) return;
     const paginationOpts = {
       numItems: page.numItems,
@@ -404,8 +503,102 @@ export function createPaginatedWatchStore<
       ...options.args,
       paginationOpts,
     } as Query["_args"]) as unknown as Watch<PageResult<Item>>;
-    page.stop = page.watch.onUpdate(() => read(page));
-    read(page);
+    page.stop = page.watch.onUpdate(() => read(page, candidate));
+    read(page, candidate);
+  }
+
+  function beginOperation(
+    kind: StructuralOperationKind,
+    originals: PageDescriptor<Item>[],
+    replacements: PageDescriptor<Item>[],
+  ) {
+    if (disposed || operation || originals.length === 0) return false;
+    const current: StructuralOperation<Item> = {
+      epoch: storeEpoch,
+      kind,
+      originals,
+      replacements,
+    };
+    operation = current;
+    refreshSnapshot();
+    for (const replacement of replacements) attach(replacement, true);
+    commitOperation(current);
+    return true;
+  }
+
+  function queueStructuralScan() {
+    if (disposed || structuralScanQueued) return;
+    structuralScanQueued = true;
+    const capturedEpoch = storeEpoch;
+    queueMicrotask(() => {
+      structuralScanQueued = false;
+      if (disposed || capturedEpoch !== storeEpoch || operation) return;
+      scanStructuralWork();
+    });
+  }
+
+  function scanStructuralWork() {
+    if (disposed || operation) return;
+    const splitPage = pages.find((page) => {
+      const result = page.splitResult ?? page.result;
+      return (
+        result !== undefined &&
+        result.splitCursor !== undefined &&
+        result.splitCursor !== null &&
+        (result.pageStatus === "SplitRecommended" ||
+          result.pageStatus === "SplitRequired" ||
+          result.page.length > options.initialNumItems * 2)
+      );
+    });
+    const splitResult = splitPage?.splitResult ?? splitPage?.result;
+    if (splitPage && splitResult?.splitCursor) {
+      beginOperation(
+        "split",
+        [splitPage],
+        splitDescriptors(splitPage, splitResult.splitCursor),
+      );
+      return;
+    }
+
+    const emptyIndex = pages.findIndex(
+      (page) => page.result !== undefined && page.result.page.length === 0,
+    );
+    if (emptyIndex === -1 || pages.length === 1) return;
+    if (emptyIndex > 0) {
+      const left = pages[emptyIndex - 1];
+      const empty = pages[emptyIndex];
+      beginOperation(
+        "collapse",
+        [left, empty],
+        [
+          descriptor({
+            cursor: left.cursor,
+            ...(empty.endCursor === undefined
+              ? {}
+              : { endCursor: empty.endCursor }),
+            numItems: left.numItems + empty.numItems,
+            epoch: storeEpoch,
+          }),
+        ],
+      );
+      return;
+    }
+    const empty = pages[0];
+    const right = pages[1];
+    beginOperation(
+      "collapse",
+      [empty, right],
+      [
+        descriptor({
+          cursor: null,
+          ...(right.endCursor === undefined
+            ? {}
+            : { endCursor: right.endCursor }),
+          numItems: empty.numItems + right.numItems,
+          epoch: storeEpoch,
+        }),
+      ],
+    );
   }
 
   function start() {
@@ -422,29 +615,31 @@ export function createPaginatedWatchStore<
   }
 
   function requestMore(count: number) {
-    if (disposed || snapshot.status !== "CanLoadMore") return;
+    if (disposed || operation || snapshot.status !== "CanLoadMore") return;
     const last = pages.at(-1);
     const result = last?.result;
-    if (!result || result.isDone || last?.split) return;
+    if (!last || !result || result.isDone) return;
     const cursor = result.continueCursor;
-    if (loadedCursors.has(cursor)) return;
-    loadedCursors.add(cursor);
+    const pinned = descriptor({
+      cursor: last.cursor,
+      endCursor: cursor,
+      numItems: last.numItems,
+      epoch: storeEpoch,
+    });
     const next = descriptor({
       cursor,
       numItems: Math.max(1, count),
       epoch: storeEpoch,
     });
-    pages.push(next);
-    attach(next);
-    refreshSnapshot();
+    beginOperation("append", [last], [pinned, next]);
   }
 
   function restart(retain: boolean) {
     if (disposed) return;
     if (retain) retainedResults = visibleResults();
-    for (const page of pages) stopTree(page);
+    for (const page of pages) stopPage(page);
+    stopOperation();
     pages = [];
-    loadedCursors.clear();
     storeEpoch += 1;
     publish({
       results: retainedResults,
@@ -463,8 +658,10 @@ export function createPaginatedWatchStore<
       return () => {
         listeners.delete(listener);
         if (listeners.size === 0) {
-          for (const page of pages) stopTree(page);
+          for (const page of pages) stopPage(page);
+          stopOperation();
           pages = [];
+          storeEpoch += 1;
         }
       };
     },
@@ -476,7 +673,8 @@ export function createPaginatedWatchStore<
       if (disposed) return;
       disposed = true;
       storeEpoch += 1;
-      for (const page of pages) stopTree(page);
+      for (const page of pages) stopPage(page);
+      stopOperation();
       pages = [];
       listeners.clear();
     },

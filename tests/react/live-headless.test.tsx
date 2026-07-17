@@ -604,7 +604,7 @@ describe("mounted ordered pagination", () => {
           cursor: string | null;
           endCursor?: string;
         };
-        if (options.endCursor === undefined)
+        if (options.cursor === null && options.endCursor === undefined)
           return page([{ id: "one" }, { id: "two" }], {
             continueCursor: "end",
             isDone: true,
@@ -771,6 +771,91 @@ describe("mounted ordered pagination", () => {
     expect(state(mounted.container)).toMatchObject({
       feed: "ready",
       feedItems: ["a", "b", "c"],
+    });
+    mounted.unmount();
+  });
+
+  test("collapses an empty bounded window through one atomic adjacent merge", async () => {
+    const client = new ControlledWatchClient();
+    let initial = true;
+    client.resolver = (name, args) => {
+      if (name !== "headless:feed") return defaultQueryValue(name, args);
+      const options = args.paginationOpts as {
+        cursor: string | null;
+        endCursor?: string;
+      };
+      if (
+        initial &&
+        options.cursor === null &&
+        options.endCursor === undefined
+      ) {
+        initial = false;
+        return page([{ id: "a" }, { id: "b" }], {
+          isDone: false,
+          continueCursor: "after-b",
+        });
+      }
+      return undefined;
+    };
+    const mounted = renderHarness(client, {
+      status: "authenticated",
+      identityToken: "actor-a",
+    } as never);
+    await act(async () => {});
+    act(() => feedProbe!.loadMore());
+    act(() => {
+      client.update(
+        "headless:feed",
+        (args) =>
+          (args.paginationOpts as { endCursor?: string }).endCursor ===
+          "after-b",
+        page([{ id: "a" }, { id: "b" }], {
+          continueCursor: "after-b",
+        }),
+      );
+      client.update(
+        "headless:feed",
+        (args) => {
+          const options = args.paginationOpts as {
+            cursor: string | null;
+            endCursor?: string;
+          };
+          return options.cursor === "after-b" && options.endCursor === undefined;
+        },
+        page([{ id: "c" }, { id: "d" }]),
+      );
+    });
+    expect(state(mounted.container).feedItems).toEqual(["a", "b", "c", "d"]);
+
+    act(() =>
+      client.update(
+        "headless:feed",
+        (args) =>
+          (args.paginationOpts as { endCursor?: string }).endCursor ===
+          "after-b",
+        page([], { continueCursor: "after-b" }),
+      ),
+    );
+    await act(async () => {});
+    expect(state(mounted.container).feedItems).toEqual(["c", "d"]);
+    const merged = client.active("headless:feed").filter((record) => {
+      const options = record.args.paginationOpts as {
+        cursor: string | null;
+        endCursor?: string;
+      };
+      return options.cursor === null && options.endCursor === undefined;
+    });
+    expect(merged).toHaveLength(1);
+    act(() =>
+      client.update(
+        "headless:feed",
+        (args) => args === merged[0].args,
+        page([{ id: "c" }, { id: "d" }]),
+      ),
+    );
+    expect(state(mounted.container)).toMatchObject({
+      feed: "ready",
+      feedItems: ["c", "d"],
     });
     mounted.unmount();
   });
