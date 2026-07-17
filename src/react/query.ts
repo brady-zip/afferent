@@ -248,16 +248,22 @@ export function createPaginatedWatchStore<
     return left === right;
   }
 
-  function chainError(chain: PageDescriptor<Item>[]): AfferentError | undefined {
+  function chainError(
+    chain: PageDescriptor<Item>[],
+    operationKind?: StructuralOperationKind,
+  ): AfferentError | undefined {
+    const context = operationKind ? `${operationKind} ` : "";
     for (let index = 0; index < chain.length - 1; index += 1) {
       const current = chain[index];
       const next = chain[index + 1];
       if (current.endCursor === undefined) {
-        return invariantError(`non-tail window ${current.key} is unbounded`);
+        return invariantError(
+          `${context}boundary ${current.key}->${next.key}: non-tail window is unbounded`,
+        );
       }
       if (!sameBoundary(current.endCursor, next.cursor)) {
         return invariantError(
-          `window ${current.key} ends at ${String(current.endCursor)} but window ${next.key} starts at ${String(next.cursor)}`,
+          `${context}boundary ${current.key}->${next.key}: ${String(current.endCursor)} != ${String(next.cursor)}`,
         );
       }
     }
@@ -362,7 +368,7 @@ export function createPaginatedWatchStore<
     if (!sameBoundary(lastOriginal.endCursor, lastReplacement.endCursor)) {
       return invariantError(`${current.kind} replacement changed its end`);
     }
-    return chainError(current.replacements);
+    return chainError(current.replacements, current.kind);
   }
 
   function commitOperation(current: StructuralOperation<Item>) {

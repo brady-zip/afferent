@@ -340,6 +340,21 @@ function assertActiveBoundaries(tracker) {
   return ordered;
 }
 
+function assertAllWatchesDisposedOnce(tracker) {
+  assert.deepEqual(
+    tracker.records
+      .filter((record) => record.active !== 0 || record.disposeCount !== 1)
+      .map((record) => ({
+        name: record.name,
+        paginationOpts: record.args.paginationOpts,
+        active: record.active,
+        disposeCount: record.disposeCount,
+      })),
+    [],
+    "every attached watch must be inactive and disposed exactly once",
+  );
+}
+
 async function assertCanonicalWindow(...args) {
   const [http, canonical, tracker, snapshot, expected] = args;
   const labels = snapshot.results.map((item) => item.label);
@@ -773,6 +788,7 @@ try {
 
     stopDirect();
     directStore.dispose();
+    assertAllWatchesDisposedOnce(tracking);
     await react.close();
     console.log("Real Convex headless watch matrix passed");
   } catch (error) {

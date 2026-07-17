@@ -859,6 +859,92 @@ describe("mounted ordered pagination", () => {
     });
     mounted.unmount();
   });
+
+  test.each([1, 2, 3])(
+    "fences and disposes a pending append across an auth generation change (run %i)",
+    async () => {
+      const client = new ControlledWatchClient();
+      let serveOldGeneration = true;
+      client.resolver = (name, args) => {
+        if (name !== "headless:feed") return defaultQueryValue(name, args);
+        const options = args.paginationOpts as {
+          cursor: string | null;
+          endCursor?: string;
+        };
+        if (
+          serveOldGeneration &&
+          options.cursor === null &&
+          options.endCursor === undefined
+        ) {
+          return page([{ id: "old-a" }, { id: "old-b" }], {
+            isDone: false,
+            continueCursor: "old-boundary",
+          });
+        }
+        return undefined;
+      };
+      const mounted = renderHarness(client, {
+        status: "authenticated",
+        identityToken: "actor-a",
+      } as never);
+      await act(async () => {});
+      const oldGeneration = client.matching("headless:feed")[0].args
+        .sessionGeneration;
+
+      act(() => feedProbe!.loadMore());
+      const staleRecords = client.matching(
+        "headless:feed",
+        (args) => args.sessionGeneration === oldGeneration,
+      );
+      expect(staleRecords).toHaveLength(3);
+      expect(staleRecords.every((record) => record.listeners.size === 1)).toBe(
+        true,
+      );
+
+      serveOldGeneration = false;
+      mounted.rerender({
+        status: "authenticated",
+        identityToken: "actor-b",
+      } as never);
+      expect(state(mounted.container)).toMatchObject({
+        feed: "loading",
+        feedItems: [],
+      });
+      for (const record of staleRecords) {
+        expect(record.listeners.size).toBe(0);
+        expect(record.disposeCount).toBe(1);
+      }
+
+      act(() => {
+        for (const record of staleRecords) {
+          client.update(
+            "headless:feed",
+            (args) => args === record.args,
+            page([{ id: "stale-append-result" }]),
+          );
+        }
+      });
+      expect(state(mounted.container).feedItems).toEqual([]);
+
+      const fresh = client.active("headless:feed").find(
+        (record) => record.args.sessionGeneration !== oldGeneration,
+      );
+      expect(fresh).toBeDefined();
+      act(() =>
+        client.update(
+          "headless:feed",
+          (args) => args === fresh!.args,
+          page([{ id: "fresh-b" }]),
+        ),
+      );
+      expect(state(mounted.container).feedItems).toEqual(["fresh-b"]);
+      mounted.unmount();
+      for (const record of client.matching("headless:feed")) {
+        expect(record.listeners.size).toBe(0);
+        expect(record.disposeCount).toBe(1);
+      }
+    },
+  );
 });
 
 describe("mounted identity-generation isolation", () => {
