@@ -26,16 +26,22 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server.js";
 import {
   abortMergeJob,
+  countAffectedMergeRelations,
   continueMergeJob,
   createMergeJob,
   fenceMergeWrite,
   mergeObservation,
+  runAtomicMerge,
 } from "./model/merge.js";
 
 export const seed = mutation({
   args: { scopeId: v.string(), relationCount: v.number() },
   returns: v.any(),
   handler: async (ctx, args) => {
+    await ctx.db.insert("installations", {
+      scopeId: args.scopeId,
+      readPolicy: "public",
+    });
     const adminId = await ctx.db.insert("actors", {
       scopeId: args.scopeId,
       externalKey: args.scopeId + ":admin",
@@ -78,6 +84,13 @@ export const seed = mutation({
       });
       const postId = index % 3 === 0 ? canonicalPostId : sourcePostId;
       await ctx.db.insert("votes", { scopeId: args.scopeId, postId, actorId });
+      if (index % 7 === 0) {
+        await ctx.db.insert("votes", {
+          scopeId: args.scopeId,
+          postId: postId === sourcePostId ? canonicalPostId : sourcePostId,
+          actorId,
+        });
+      }
       await ctx.db.insert("postSubscriptions", {
         scopeId: args.scopeId,
         postId,
@@ -129,6 +142,19 @@ export const begin = mutation({
       sourcePostId,
       canonicalPostId,
     });
+    const affected = await countAffectedMergeRelations(ctx, {
+      scopeId: args.scopeId,
+      sourcePostId,
+      canonicalPostId,
+    });
+    if (affected <= 50) {
+      const job = await ctx.db.get(result.jobId);
+      if (!job) throw new Error("missing merge job");
+      return {
+        jobId: String(result.jobId),
+        state: (await runAtomicMerge(ctx, job)).state,
+      };
+    }
     return { jobId: String(result.jobId), state: result.state };
   },
 });
@@ -180,6 +206,18 @@ export const observe = query({
   returns: v.any(),
   handler: (ctx, args) => mergeObservation(ctx, args.scopeId, args.jobId),
 });
+
+export const hideCanonical = mutation({
+  args: { scopeId: v.string(), postId: v.string() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const postId = ctx.db.normalizeId("posts", args.postId);
+    const post = postId ? await ctx.db.get(postId) : null;
+    if (!post || post.scopeId !== args.scopeId) throw new Error("missing post");
+    await ctx.db.patch(post._id, { visibilityKey: "hidden", archivedAt: Date.now() });
+    return null;
+  },
+});
 `;
 
 const harnessSource = `
@@ -192,6 +230,8 @@ export const step = mutation({ args: { scopeId: v.string(), jobId: v.string() },
 export const abortMerge = mutation({ args: { scopeId: v.string(), jobId: v.string() }, returns: v.any(), handler: (ctx, args) => ctx.runMutation(components.afferent.probe.abortMerge, args) });
 export const concurrentWrite = mutation({ args: { scopeId: v.string(), jobId: v.string(), postId: v.string(), suffix: v.string() }, returns: v.null(), handler: (ctx, args) => ctx.runMutation(components.afferent.probe.concurrentWrite, args) });
 export const observe = query({ args: { scopeId: v.string(), jobId: v.string() }, returns: v.any(), handler: (ctx, args) => ctx.runQuery(components.afferent.probe.observe, args) });
+export const resolve = query({ args: { scopeId: v.string(), postId: v.string() }, returns: v.any(), handler: (ctx, args) => ctx.runQuery(components.afferent.public.posts.resolvePost, { ...args, viewerAuthenticated: true }) });
+export const hideCanonical = mutation({ args: { scopeId: v.string(), postId: v.string() }, returns: v.null(), handler: (ctx, args) => ctx.runMutation(components.afferent.probe.hideCanonical, args) });
 `;
 
 function reference(name) {
@@ -308,6 +348,11 @@ try {
   const job = { scopeId: "alpha", jobId: begun.jobId };
   const preSnapshot = await recordObservation(client, job);
   const initialPre = observable(preSnapshot);
+  await Promise.all([
+    client.mutation(reference("step"), job),
+    client.mutation(reference("step"), job),
+  ]);
+  assert.deepEqual(observable(await recordObservation(client, job)), initialPre);
 
   await advanceTo(client, job, "ready");
   await stopBackend();
@@ -335,6 +380,9 @@ try {
   const done = await recordObservation(client, job);
   assert.deepEqual(observable(done), post);
   assert.equal(done.physical.sourceRelations, 0);
+  await client.mutation(reference("step"), job);
+  await client.mutation(reference("step"), job);
+  assert.deepEqual(observable(await recordObservation(client, job)), post);
 
   const abortSeed = await client.mutation(reference("seed"), { scopeId: "abort", relationCount: 51 });
   const abortBegun = await client.mutation(reference("begin"), { scopeId: "abort", ...abortSeed });
@@ -353,6 +401,23 @@ try {
 
   const betaBegun = await client.mutation(reference("begin"), { scopeId: "beta", ...beta });
   assert.notEqual(betaBegun.jobId, job.jobId);
+  assert.equal(betaBegun.state, "done");
+  const betaResolution = await client.query(reference("resolve"), {
+    scopeId: "beta",
+    postId: beta.sourcePostId,
+  });
+  assert.equal(betaResolution.status, "merged");
+  await client.mutation(reference("hideCanonical"), {
+    scopeId: "alpha",
+    postId: seeded.canonicalPostId,
+  });
+  assert.deepEqual(
+    await client.query(reference("resolve"), {
+      scopeId: "alpha",
+      postId: seeded.sourcePostId,
+    }),
+    { contractVersion: 1, status: "notFound" },
+  );
   assertPreOrPostOnly(
     observations.filter((sample) => sample.scopeId === "alpha"),
     fencedPre,

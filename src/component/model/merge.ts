@@ -369,7 +369,18 @@ async function insertStage(
 ) {
   const { job, kind, row, sourceSide } = args;
   const key = logicalKey(kind, row);
-  const existing = await ctx.db
+  const existingOriginal = await ctx.db
+    .query("mergeStages")
+    .withIndex("by_scope_job_kind_original", (q) =>
+      q
+        .eq("scopeId", job.scopeId)
+        .eq("mergeJobId", job._id)
+        .eq("kind", kind)
+        .eq("originalId", String(row._id)),
+    )
+    .unique();
+  if (existingOriginal) return { vote: 0, comment: 0 };
+  const existingLogical = await ctx.db
     .query("mergeStages")
     .withIndex("by_scope_job_kind_key", (q) =>
       q
@@ -378,17 +389,7 @@ async function insertStage(
         .eq("kind", kind)
         .eq("logicalKey", key),
     )
-    .unique();
-  if (existing) {
-    if (!sourceSide && existing.sourceSide) {
-      await ctx.db.patch(existing._id, {
-        originalId: String(row._id),
-        sourceSide: false,
-        generation: job.generation,
-      });
-    }
-    return { vote: 0, comment: 0 };
-  }
+    .first();
   await ctx.db.insert("mergeStages", {
     scopeId: job.scopeId,
     mergeJobId: job._id,
@@ -401,8 +402,8 @@ async function insertStage(
     generation: job.generation,
   });
   return {
-    vote: kind === "vote" ? 1 : 0,
-    comment: kind === "comment" ? 1 : 0,
+    vote: kind === "vote" && !existingLogical ? 1 : 0,
+    comment: kind === "comment" && !existingLogical ? 1 : 0,
   };
 }
 
