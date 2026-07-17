@@ -42,6 +42,13 @@ test("the real watch harness distinguishes setup failures from assertions", asyn
   assert.match(source, /deleteItem/);
   assert.match(source, /moveItem/);
   assert.match(source, /revision/);
+  assert.match(source, /proveAtomicClientTransition/);
+  assert.match(source, /sibling\.localQueryResult\(\)/);
+  assert.match(source, /one installed client transition/);
+  assert.match(source, /recordEveryPublication/);
+  assert.match(source, /assertExactSince/);
+  assert.match(source, /allowedKeys\.includes/);
+  assert.match(source, /cross-window sort movement/);
   assert.doesNotMatch(source, /new Set\(/);
   assert.doesNotMatch(source, /results\.length > 0/);
 });

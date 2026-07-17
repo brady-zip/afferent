@@ -25,6 +25,7 @@ import {
   type AfferentBindings,
   type AfferentAuthState,
 } from "../../src/react/index.js";
+import { createPaginatedWatchStore } from "../../src/react/query.js";
 
 interface QueryRecord {
   name: string;
@@ -121,6 +122,28 @@ class ControlledWatchClient {
       record.error = undefined;
       record.value = value;
       for (const listener of record.listeners) listener();
+    }
+  }
+
+  updateTransaction(
+    name: string,
+    updates: ReadonlyArray<{
+      predicate: (args: Record<string, unknown>) => boolean;
+      value: unknown;
+    }>,
+    listenerOrder?: ReadonlyArray<number>,
+  ) {
+    const records = updates.map(({ predicate }) => {
+      const matches = this.matching(name, predicate);
+      expect(matches).toHaveLength(1);
+      return matches[0];
+    });
+    for (let index = 0; index < records.length; index += 1) {
+      records[index].error = undefined;
+      records[index].value = updates[index].value;
+    }
+    for (const index of listenerOrder ?? records.map((_record, index) => index)) {
+      for (const listener of records[index].listeners) listener();
     }
   }
 
@@ -413,6 +436,103 @@ describe("mounted non-throwing headless reads", () => {
 });
 
 describe("mounted ordered pagination", () => {
+  test("publishes only the exact prior or current array when one transition changes sibling pages", () => {
+    const client = new ControlledWatchClient();
+    client.resolver = (name, args) => {
+      if (name !== "headless:feed") return defaultQueryValue(name, args);
+      const options = args.paginationOpts as {
+        cursor: string | null;
+        endCursor?: string;
+      };
+      if (options.cursor === null && options.endCursor === undefined) {
+        return page([{ id: "a" }, { id: "b" }], {
+          isDone: false,
+          continueCursor: "after-b",
+        });
+      }
+      if (options.cursor === null && options.endCursor === "after-b") {
+        return page([{ id: "a" }, { id: "b" }], {
+          continueCursor: "after-b",
+        });
+      }
+      if (options.cursor === "after-b" && options.endCursor === undefined) {
+        return page([{ id: "e" }], {
+          isDone: false,
+          continueCursor: "after-e",
+        });
+      }
+      if (options.cursor === "after-b" && options.endCursor === "after-e") {
+        return page([{ id: "e" }], { continueCursor: "after-e" });
+      }
+      if (options.cursor === "after-e" && options.endCursor === undefined) {
+        return page([{ id: "back" }, { id: "f" }]);
+      }
+      return undefined;
+    };
+    const store = createPaginatedWatchStore({
+      client: client as never,
+      query: refs.feed as never,
+      args: {} as never,
+      generation: 1,
+      initialNumItems: 2,
+    });
+    const publications: string[][] = [];
+    const stop = store.subscribe(() => {
+      publications.push(
+        store.getSnapshot().results.map((item) => String((item as { id: unknown }).id)),
+      );
+    });
+    store.loadMore(2);
+    store.loadMore(2);
+    expect(store.getSnapshot().results.map((item) => (item as { id: unknown }).id)).toEqual([
+      "a",
+      "b",
+      "e",
+      "back",
+      "f",
+    ]);
+    publications.length = 0;
+
+    client.updateTransaction(
+      "headless:feed",
+      [
+        {
+          predicate: (args) => {
+            const options = args.paginationOpts as {
+              cursor: string | null;
+              endCursor?: string;
+            };
+            return options.cursor === null && options.endCursor === "after-b";
+          },
+          value: page([{ id: "e" }, { id: "a" }, { id: "b" }], {
+            continueCursor: "after-b",
+          }),
+        },
+        {
+          predicate: (args) => {
+            const options = args.paginationOpts as {
+              cursor: string | null;
+              endCursor?: string;
+            };
+            return options.cursor === "after-b" && options.endCursor === "after-e";
+          },
+          value: page([], { continueCursor: "after-e" }),
+        },
+      ],
+      [1, 0],
+    );
+
+    const previous = JSON.stringify(["a", "b", "e", "back", "f"]);
+    const current = JSON.stringify(["e", "a", "b", "back", "f"]);
+    expect(publications.length).toBeGreaterThan(0);
+    for (const publication of publications) {
+      expect([previous, current]).toContain(JSON.stringify(publication));
+    }
+    expect(publications.at(-1)).toEqual(["e", "a", "b", "back", "f"]);
+    stop();
+    store.dispose();
+  });
+
   test("pins each loaded tail and grows the exact cursor-bounded window", async () => {
     const client = new ControlledWatchClient();
     client.resolver = (name, args) => {

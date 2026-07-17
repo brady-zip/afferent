@@ -392,6 +392,85 @@ async function waitFor(store, predicate, label) {
   });
 }
 
+function recordEveryPublication(store) {
+  const publications = [];
+  const stop = store.subscribe(() => {
+    const snapshot = store.getSnapshot();
+    publications.push({
+      labels: snapshot.results.map((item) => item.label),
+      status: snapshot.status,
+      errorCode: snapshot.error?.code,
+    });
+  });
+  return {
+    mark: () => publications.length,
+    stop,
+    assertExactSince(mark, allowed, label) {
+      const observed = publications.slice(mark);
+      assert.ok(observed.length > 0, `${label} must publish at least once`);
+      const allowedKeys = allowed.map((labels) => JSON.stringify(labels));
+      for (const publication of observed) {
+        assert.ok(
+          allowedKeys.includes(JSON.stringify(publication.labels)),
+          `${label} emitted a mixed publication: ${JSON.stringify(publication)}`,
+        );
+      }
+    },
+  };
+}
+
+async function waitUntil(predicate, label) {
+  const deadline = Date.now() + 15_000;
+  while (Date.now() < deadline) {
+    const value = predicate();
+    if (value) return value;
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  throw new Error(`Timed out waiting for ${label}`);
+}
+
+async function proveAtomicClientTransition(react, http, list, insertItem, deleteItem) {
+  const watches = [1, 2, 3].map((numItems, index) =>
+    react.watchQuery(list, {
+      paginationOpts: { numItems, cursor: null, id: 90_000 + index },
+    }),
+  );
+  let armed = false;
+  const observations = [];
+  const stops = watches.map((watch, listenerIndex) =>
+    watch.onUpdate(() => {
+      if (!armed) return;
+      observations.push({
+        listenerIndex,
+        results: watches.map((sibling) => sibling.localQueryResult()),
+      });
+    }),
+  );
+  await waitUntil(
+    () => watches.every((watch) => watch.localQueryResult() !== undefined),
+    "three direct page watches",
+  );
+  armed = true;
+  const expectedRevision = await http.mutation(insertItem, {
+    label: "atomic-probe",
+    position: 1,
+  });
+  await waitUntil(
+    () => observations.length >= watches.length,
+    "one callback from every changed direct page watch",
+  );
+  armed = false;
+  for (const observation of observations) {
+    assert.deepEqual(
+      observation.results.map((result) => result?.revision),
+      [expectedRevision, expectedRevision, expectedRevision],
+      `listener ${observation.listenerIndex} must reread one installed client transition`,
+    );
+  }
+  for (const stop of stops) stop();
+  await http.mutation(deleteItem, { label: "atomic-probe" });
+}
+
 try {
   const build = await run("npm", ["run", "build"]);
   if (build.code !== 0) throw new Error(build.stderr || build.stdout);
@@ -432,6 +511,13 @@ try {
   setupComplete = true;
 
   try {
+    await proveAtomicClientTransition(
+      react,
+      http,
+      list,
+      insertItem,
+      deleteItem,
+    );
     await http.mutation(setMode, { mode: "direct" });
     const directStore = queryModule.createDirectWatchStore({
       client: tracking,
@@ -471,7 +557,8 @@ try {
       generation: 1,
       initialNumItems: 2,
     });
-    const stopPages = pageStore.subscribe(() => {});
+    const pagePublications = recordEveryPublication(pageStore);
+    const stopPages = pagePublications.stop;
     const first = await waitFor(
       pageStore,
       (snapshot) => snapshot.status === "CanLoadMore",
@@ -521,6 +608,7 @@ try {
       "f",
     ]);
 
+    let publicationMark = pagePublications.mark();
     await http.mutation(insertItem, { label: "zero", position: 5 });
     const grown = await waitFor(
       pageStore,
@@ -538,7 +626,16 @@ try {
       "e",
       "f",
     ]);
+    pagePublications.assertExactSince(
+      publicationMark,
+      [
+        ["a", "b", "c", "d", "e", "f"],
+        ["zero", "a", "b", "c", "d", "e", "f"],
+      ],
+      "front insertion",
+    );
 
+    publicationMark = pagePublications.mark();
     await http.mutation(insertItem, { label: "middle", position: 35 });
     const middleGrown = await waitFor(
       pageStore,
@@ -557,7 +654,16 @@ try {
       "e",
       "f",
     ]);
+    pagePublications.assertExactSince(
+      publicationMark,
+      [
+        ["zero", "a", "b", "c", "d", "e", "f"],
+        ["zero", "a", "b", "c", "middle", "d", "e", "f"],
+      ],
+      "middle insertion",
+    );
 
+    publicationMark = pagePublications.mark();
     await http.mutation(insertItem, { label: "back", position: 55 });
     const backInserted = await waitFor(
       pageStore,
@@ -577,7 +683,16 @@ try {
       "back",
       "f",
     ]);
+    pagePublications.assertExactSince(
+      publicationMark,
+      [
+        ["zero", "a", "b", "c", "middle", "d", "e", "f"],
+        ["zero", "a", "b", "c", "middle", "d", "e", "back", "f"],
+      ],
+      "back insertion",
+    );
 
+    publicationMark = pagePublications.mark();
     await http.mutation(deleteItem, { label: "zero" });
     const frontDeleted = await waitFor(
       pageStore,
@@ -596,7 +711,16 @@ try {
       "back",
       "f",
     ]);
+    pagePublications.assertExactSince(
+      publicationMark,
+      [
+        ["zero", "a", "b", "c", "middle", "d", "e", "back", "f"],
+        ["a", "b", "c", "middle", "d", "e", "back", "f"],
+      ],
+      "front deletion",
+    );
 
+    publicationMark = pagePublications.mark();
     await http.mutation(deleteItem, { label: "middle" });
     const middleDeleted = await waitFor(
       pageStore,
@@ -614,8 +738,42 @@ try {
       "back",
       "f",
     ]);
+    pagePublications.assertExactSince(
+      publicationMark,
+      [
+        ["a", "b", "c", "middle", "d", "e", "back", "f"],
+        ["a", "b", "c", "d", "e", "back", "f"],
+      ],
+      "middle deletion",
+    );
 
+    publicationMark = pagePublications.mark();
     await http.mutation(deleteItem, { label: "c" });
+    const cDeleted = await waitFor(
+      pageStore,
+      (snapshot) =>
+        JSON.stringify(snapshot.results.map((item) => item.label)) ===
+        JSON.stringify(["a", "b", "d", "e", "back", "f"]),
+      "first middle-window deletion",
+    );
+    await assertCanonicalWindow(http, canonical, tracking, cDeleted, [
+      "a",
+      "b",
+      "d",
+      "e",
+      "back",
+      "f",
+    ]);
+    pagePublications.assertExactSince(
+      publicationMark,
+      [
+        ["a", "b", "c", "d", "e", "back", "f"],
+        ["a", "b", "d", "e", "back", "f"],
+      ],
+      "middle-window deletion",
+    );
+
+    publicationMark = pagePublications.mark();
     await http.mutation(deleteItem, { label: "d" });
     const collapsed = await waitFor(
       pageStore,
@@ -637,7 +795,16 @@ try {
       "back",
       "f",
     ]);
+    pagePublications.assertExactSince(
+      publicationMark,
+      [
+        ["a", "b", "d", "e", "back", "f"],
+        ["a", "b", "e", "back", "f"],
+      ],
+      "empty-window collapse",
+    );
 
+    publicationMark = pagePublications.mark();
     await http.mutation(moveItem, { label: "e", position: 5 });
     const reordered = await waitFor(
       pageStore,
@@ -653,6 +820,14 @@ try {
       "back",
       "f",
     ]);
+    pagePublications.assertExactSince(
+      publicationMark,
+      [
+        ["a", "b", "e", "back", "f"],
+        ["e", "a", "b", "back", "f"],
+      ],
+      "cross-window sort movement",
+    );
 
     const thresholdExpectations = [
       [1200, "SplitRequired", false],
