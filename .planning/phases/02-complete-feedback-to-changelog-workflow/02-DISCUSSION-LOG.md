@@ -98,6 +98,16 @@
 
 ---
 
+## D-12 Atomicity Correction
+
+**Date:** 2026-07-16
+
+During Plan 02-05 execution review, the live peer and Codex identified that the implemented large-merge continuation physically reparents or deletes source relations before the final tombstone. A combined canonical-plus-source reader can therefore observe a partial transfer even though direct post lookup does not redirect until finalization.
+
+The accepted additive correction is Plan 02-11: retain the one-transaction path for at most 50 total affected rows; prepare larger unions in invisible `mergeJobId`-tagged stage rows without altering source originals; use `preparing -> ready -> cutover_done -> cleaning -> done` plus pre-cutover `aborted`; publish the tombstone, redirect, precomputed counters, and reader-truth switch in exactly one transaction; and make cleanup observationally inert. Real Convex tests must continuously observe canonical plus source state, kill/resume every phase, cover abort and concurrent vote/comment writes, and prove exact convergence.
+
+---
+
 ## the agent's Discretion
 
 - Exact Trending constants, field sizes, rate-limit values/windows, Complete recency window, inbox cap, lease/retry thresholds, and debounce defaults.
