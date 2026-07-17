@@ -69,3 +69,29 @@ test("the real watch harness distinguishes setup failures from assertions", asyn
   );
   assert.doesNotMatch(querySource, /\b(?:revision|watermark)\b/i);
 });
+
+test("the packed fixture wires the optional comment feed through trusted host boundaries", async () => {
+  const [wrapperSource, applicationSource] = await Promise.all([
+    readFile(
+      join(repositoryRoot, "fixtures/packed-vite-convex/convex/afferent.ts"),
+      "utf8",
+    ),
+    readFile(
+      join(repositoryRoot, "fixtures/packed-vite-convex/src/App.tsx"),
+      "utf8",
+    ),
+  ]);
+
+  assert.match(wrapperSource, /export const listComments = query/);
+  assert.match(wrapperSource, /listCommentsIntentValidator/);
+  assert.match(wrapperSource, /commentPageResultValidator/);
+  assert.match(wrapperSource, /client\.read\.listComments/);
+  assert.match(wrapperSource, /withoutSessionGeneration\(args\)/);
+
+  assert.match(applicationSource, /useComments/);
+  assert.match(
+    applicationSource,
+    /listComments:\s*api\.afferent\.listComments/,
+  );
+  assert.doesNotMatch(applicationSource, /\.\.\/\.\.\/src\//);
+});
