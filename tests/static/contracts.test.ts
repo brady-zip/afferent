@@ -70,6 +70,37 @@ describe("public contract privacy", () => {
     expect(internalSource).toContain("GenericMutationCtx<any>");
   });
 
+  test("keeps delivery leases on the explicit server-only surface", () => {
+    const serverSource = fs.readFileSync("src/client/server.ts", "utf8");
+    const rootSource = fs.readFileSync("src/client/index.ts", "utf8");
+    const reactSource = sourceFilesBelow("src/react")
+      .map((file) => fs.readFileSync(file, "utf8"))
+      .join("\n");
+
+    expect(serverSource).toContain("createDeliveryClient");
+    expect(serverSource).toContain("authorizeDelivery");
+    for (const forbiddenSource of [rootSource, reactSource]) {
+      expect(forbiddenSource).not.toContain("createDeliveryClient");
+      expect(forbiddenSource).not.toContain("claimDeliveryBatch");
+      expect(forbiddenSource).not.toContain("ackDelivery");
+      expect(forbiddenSource).not.toContain("releaseDelivery");
+    }
+  });
+
+  test("keeps delivery payloads versioned, typed, and free of PII fields", () => {
+    const contractsSource = fs.readFileSync("src/client/contracts.ts", "utf8");
+    expect(contractsSource).toContain("DeliveryEventDto");
+    expect(contractsSource).toContain("DeliveryLeaseDto");
+    expect(contractsSource).toContain("recipientKey");
+    const deliverySlice = contractsSource.slice(
+      contractsSource.indexOf("export type DeliveryEventDto"),
+      contractsSource.indexOf("export type DeliveryLeaseDto"),
+    );
+    expect(deliverySlice).not.toMatch(
+      /email|displayName|avatarUrl|provider|rendered|message/i,
+    );
+  });
+
   test("keeps authority and provider records out of intent validators", () => {
     expect(Object.keys(createPostIntentValidator.fields).sort()).toEqual([
       "boardId",

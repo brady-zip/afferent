@@ -7,6 +7,7 @@ export default defineConfig({
       "tests/integration/pagination-backend.test.ts",
       "tests/integration/tag-cleanup-backend.test.ts",
       "tests/integration/fanout-backend.test.ts",
+      "tests/integration/outbox-backend.test.ts",
     ],
     exclude: [...configDefaults.exclude, "fixtures/**"],
   },
