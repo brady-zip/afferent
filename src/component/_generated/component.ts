@@ -599,6 +599,26 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
       };
     };
     feedback: {
+      ackDelivery: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          deliveryId: string;
+          leaseOwner: string;
+          leaseVersion: number;
+          scopeId: string;
+        },
+        | { contractVersion: 1; ok: true; status: "acked" }
+        | { contractVersion: 1; ok: true; status: "dead_letter" }
+        | {
+            availableAt: number;
+            contractVersion: 1;
+            ok: true;
+            status: "pending";
+          }
+        | { contractVersion: 1; error: { code: "LEASE_LOST" }; ok: false },
+        Name
+      >;
       addComment: FunctionReference<
         "mutation",
         "internal",
@@ -698,6 +718,37 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         "internal",
         { actorId: string; scopeId: string },
         { avatarUrl?: string; displayName?: string; id: string },
+        Name
+      >;
+      claimDeliveryBatch: FunctionReference<
+        "mutation",
+        "internal",
+        { leaseOwner: string; limit: number; scopeId: string },
+        {
+          contractVersion: 1;
+          leases: Array<{
+            attempts: number;
+            contractVersion: 1;
+            event: {
+              contractVersion: 1;
+              entityId: string;
+              eventId: string;
+              occurredAt: number;
+              recipientKey: string;
+              sequence: number;
+              type:
+                | "status_changed"
+                | "admin_replied"
+                | "comment_replied"
+                | "mentioned"
+                | "changelog_published";
+            };
+            id: string;
+            leaseOwner: string;
+            leaseUntil: number;
+            leaseVersion: number;
+          }>;
+        },
         Name
       >;
       configureInstallation: FunctionReference<
@@ -1595,6 +1646,26 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         },
         Name
       >;
+      releaseDelivery: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          deliveryId: string;
+          leaseOwner: string;
+          leaseVersion: number;
+          scopeId: string;
+        },
+        | { contractVersion: 1; ok: true; status: "acked" }
+        | { contractVersion: 1; ok: true; status: "dead_letter" }
+        | {
+            availableAt: number;
+            contractVersion: 1;
+            ok: true;
+            status: "pending";
+          }
+        | { contractVersion: 1; error: { code: "LEASE_LOST" }; ok: false },
+        Name
+      >;
       renameTag: FunctionReference<
         "mutation",
         "internal",
@@ -2205,6 +2276,79 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               | "mentioned"
               | "changelog_published";
           },
+          Name
+        >;
+      };
+      outbox: {
+        ackDelivery: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            deliveryId: string;
+            leaseOwner: string;
+            leaseVersion: number;
+            scopeId: string;
+          },
+          | { contractVersion: 1; ok: true; status: "acked" }
+          | { contractVersion: 1; ok: true; status: "dead_letter" }
+          | {
+              availableAt: number;
+              contractVersion: 1;
+              ok: true;
+              status: "pending";
+            }
+          | { contractVersion: 1; error: { code: "LEASE_LOST" }; ok: false },
+          Name
+        >;
+        claimDeliveryBatch: FunctionReference<
+          "mutation",
+          "internal",
+          { leaseOwner: string; limit: number; scopeId: string },
+          {
+            contractVersion: 1;
+            leases: Array<{
+              attempts: number;
+              contractVersion: 1;
+              event: {
+                contractVersion: 1;
+                entityId: string;
+                eventId: string;
+                occurredAt: number;
+                recipientKey: string;
+                sequence: number;
+                type:
+                  | "status_changed"
+                  | "admin_replied"
+                  | "comment_replied"
+                  | "mentioned"
+                  | "changelog_published";
+              };
+              id: string;
+              leaseOwner: string;
+              leaseUntil: number;
+              leaseVersion: number;
+            }>;
+          },
+          Name
+        >;
+        releaseDelivery: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            deliveryId: string;
+            leaseOwner: string;
+            leaseVersion: number;
+            scopeId: string;
+          },
+          | { contractVersion: 1; ok: true; status: "acked" }
+          | { contractVersion: 1; ok: true; status: "dead_letter" }
+          | {
+              availableAt: number;
+              contractVersion: 1;
+              ok: true;
+              status: "pending";
+            }
+          | { contractVersion: 1; error: { code: "LEASE_LOST" }; ok: false },
           Name
         >;
       };

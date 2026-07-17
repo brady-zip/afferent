@@ -384,6 +384,38 @@ export default defineSchema({
       "state",
       "actorId",
     ]),
+  notificationDeliveries: defineTable({
+    scopeId: v.string(),
+    eventId: v.id("notificationEvents"),
+    actorId: v.id("actors"),
+    type: v.union(
+      v.literal("status_changed"),
+      v.literal("admin_replied"),
+      v.literal("comment_replied"),
+      v.literal("mentioned"),
+      v.literal("changelog_published"),
+    ),
+    entityId: v.string(),
+    occurredAt: v.number(),
+    sequence: v.number(),
+    state: v.union(
+      v.literal("pending"),
+      v.literal("leased"),
+      v.literal("acked"),
+      v.literal("dead_letter"),
+    ),
+    availableAt: v.number(),
+    attempts: v.number(),
+    leaseOwner: v.optional(v.string()),
+    leaseUntil: v.optional(v.number()),
+    leaseVersion: v.number(),
+    ackedAt: v.optional(v.number()),
+    deadLetterAt: v.optional(v.number()),
+  })
+    .index("by_scope_event_actor", ["scopeId", "eventId", "actorId"])
+    .index("by_scope_state_available", ["scopeId", "state", "availableAt"])
+    .index("by_scope_state_lease", ["scopeId", "state", "leaseUntil"])
+    .index("by_scope_state_acked", ["scopeId", "state", "ackedAt"]),
   notificationFanoutJobs: defineTable({
     scopeId: v.string(),
     eventId: v.id("notificationEvents"),

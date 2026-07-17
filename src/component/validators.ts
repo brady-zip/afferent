@@ -105,6 +105,55 @@ export const notificationEventTypeValidator = v.union(
   v.literal("changelog_published"),
 );
 
+export const deliveryEventDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  eventId: v.string(),
+  type: notificationEventTypeValidator,
+  entityId: v.string(),
+  sequence: v.number(),
+  occurredAt: v.number(),
+  recipientKey: v.string(),
+});
+
+export const deliveryLeaseDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  id: v.string(),
+  event: deliveryEventDtoValidator,
+  leaseOwner: v.string(),
+  leaseVersion: v.number(),
+  leaseUntil: v.number(),
+  attempts: v.number(),
+});
+
+export const deliveryBatchDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  leases: v.array(deliveryLeaseDtoValidator),
+});
+
+export const deliveryOperationResultValidator = v.union(
+  v.object({
+    contractVersion: v.literal(1),
+    ok: v.literal(true),
+    status: v.literal("acked"),
+  }),
+  v.object({
+    contractVersion: v.literal(1),
+    ok: v.literal(true),
+    status: v.literal("dead_letter"),
+  }),
+  v.object({
+    contractVersion: v.literal(1),
+    ok: v.literal(true),
+    status: v.literal("pending"),
+    availableAt: v.number(),
+  }),
+  v.object({
+    contractVersion: v.literal(1),
+    ok: v.literal(false),
+    error: v.object({ code: v.literal("LEASE_LOST") }),
+  }),
+);
+
 export const postSubscriptionDtoValidator = v.object({
   contractVersion: v.literal(1),
   postId: v.string(),

@@ -45,3 +45,8 @@ export {
   listNotifications,
   markNotificationRead,
 } from "./notifications/inbox.js";
+export {
+  ackDelivery,
+  claimDeliveryBatch,
+  releaseDelivery,
+} from "./notifications/outbox.js";

@@ -1,6 +1,7 @@
 import type { Doc, Id } from "../_generated/dataModel.js";
 import type { MutationCtx } from "../_generated/server.js";
 import { INBOX_RETENTION_CAP } from "../model/notifications.js";
+import { materializeDeliveryRecipient } from "./outbox.js";
 
 async function loadUnreadCounter(
   ctx: MutationCtx,
@@ -130,5 +131,6 @@ export async function materializeRecipientRow(
     throw new Error("NOTIFICATION_EVENT_SCOPE_INVARIANT");
   }
   await materializeInboxRecipient(ctx, event, recipient.actorId);
+  await materializeDeliveryRecipient(ctx, event, recipient.actorId);
   await ctx.db.patch(recipient._id, { state: "materialized" });
 }

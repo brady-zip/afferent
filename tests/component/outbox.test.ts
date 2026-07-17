@@ -75,17 +75,23 @@ describe("vendor-neutral notification outbox", () => {
         occurredAt: 123,
         guardKey: "guard:materialize",
       });
-      const recipientId = await ctx.db.insert("notificationEventRecipients", {
+      await ctx.db.insert("notificationEventRecipients", {
         scopeId: "scope:materialize",
         eventId,
         actorId: recipientActorId,
         state: "pending",
       });
-      return { eventId, recipientId };
+      const jobId = await ctx.db.insert("notificationFanoutJobs", {
+        scopeId: "scope:materialize",
+        eventId,
+        state: "pending",
+        createdAt: 123,
+      });
+      return { eventId, jobId };
     });
 
-    await testBackend.mutation(internal.notifications.outbox.materializeTestRecipient, {
-      recipientId: String(seeded.recipientId),
+    await testBackend.mutation(internal.jobs.fanout.continueFanout, {
+      jobId: String(seeded.jobId),
     });
     const rows = await testBackend.run(async (ctx) => ({
       inbox: await ctx.db
@@ -116,7 +122,7 @@ describe("vendor-neutral notification outbox", () => {
 
   test("claims at most 50 rows, fences stale workers, and reclaims expiry", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(1_000);
+    vi.setSystemTime(1000);
     const testBackend = backend();
     for (let index = 0; index < 51; index += 1) {
       await seedDelivery(testBackend, {
@@ -136,7 +142,7 @@ describe("vendor-neutral notification outbox", () => {
       contractVersion: 1,
       leaseOwner: "worker:a",
       leaseVersion: 1,
-      leaseUntil: 1_000 + LEASE_MS,
+      leaseUntil: 1000 + LEASE_MS,
     });
     expect(Object.keys(first.leases[0].event).sort()).toEqual([
       "contractVersion",
@@ -154,7 +160,7 @@ describe("vendor-neutral notification outbox", () => {
     );
     expect(concurrent.leases).toHaveLength(1);
 
-    vi.setSystemTime(1_000 + LEASE_MS + 1);
+    vi.setSystemTime(1000 + LEASE_MS + 1);
     const reclaimed = await testBackend.mutation(
       api.notifications.outbox.claimDeliveryBatch,
       { scopeId: "scope:lease", leaseOwner: "worker:b", limit: 1 },
