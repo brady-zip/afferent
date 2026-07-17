@@ -109,7 +109,7 @@ status: complete
 2. **Task 2: Implement the guarded resumable merge state machine** - `2ee2c0c` (feat)
 3. **Task 3: Expose direct resolution and merge through host/headless APIs** - `380fe8a` (feat)
 4. **Legacy direct-post compatibility correction** - `7504e98` (fix)
-5. **Required D-12 corrective dependency** - Plan 02-11 commits `209a5cc`, `37ba60b`, `0f53278`, `5f00257`
+5. **Required D-12 corrective dependency** - Plan 02-11 commits `209a5cc`, `37ba60b`, `0f53278`, `5f00257`, `be5147e`
 
 ## Decisions Made
 
@@ -132,7 +132,7 @@ status: complete
 - **Issue:** A combined source-plus-canonical observer could see relations move before the final tombstone.
 - **Fix:** Added Plan 02-11 rather than claiming the unsafe path satisfied D-12.
 - **Verification:** Disposable real Convex pre/post-only observation, restart, abort, concurrency, repeated-step, two-scope, and final convergence matrix.
-- **Committed in:** `209a5cc`, `37ba60b`, `0f53278`, `5f00257`
+- **Committed in:** `209a5cc`, `37ba60b`, `0f53278`, `5f00257`, `be5147e`
 
 ---
 

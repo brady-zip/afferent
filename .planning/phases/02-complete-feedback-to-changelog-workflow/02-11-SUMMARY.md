@@ -111,6 +111,7 @@ status: complete
 2. **Task 2: Replace live batch reparenting with hidden staged truth and one atomic cutover** - `37ba60b` (fix)
 3. **Task 3: Fence concurrent writes and prove inert cleanup, resume, and abort** - `0f53278` (fix)
 4. **Verification seam cleanup** - `5f00257` (fix)
+5. **Expanded real-backend overlap, repeated-delivery, small-path, and hidden-target matrix** - `be5147e` (test)
 
 ## Files Created/Modified
 
@@ -171,7 +172,7 @@ None.
 
 ## Self-Check: PASSED
 
-- Commits `209a5cc`, `37ba60b`, `0f53278`, and `5f00257` exist and all declared key files exist.
+- Commits `209a5cc`, `37ba60b`, `0f53278`, `5f00257`, and `be5147e` exist and all declared key files exist.
 - `npm test`, typecheck, lint, build, the 34-test affected matrix, and `node scripts/test-merge-backend.mjs` pass.
 - Source relations converge to zero after cleanup; abort preserves the complete pre-state and post-cutover abort is rejected.
 
