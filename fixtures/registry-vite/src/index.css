@@ -1,0 +1,15 @@
+@import "tailwindcss";
+@import "./components/afferent/afferent.css";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --radius-md: var(--radius);
+}
+
+body {
+  margin: 0;
+}
