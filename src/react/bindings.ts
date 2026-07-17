@@ -27,6 +27,8 @@ import type {
   TagDeleteResultDto,
   TagDto,
   TagListDto,
+  PostLookupResult,
+  MergePostResult,
 } from "../client/contracts.js";
 
 export type FeedbackFeedQueryReference = FunctionReference<
@@ -63,6 +65,7 @@ export type SimilarPostsQueryReference = FunctionReference<
 
 export interface PublicBindings {
   listFeedback: FeedbackFeedQueryReference;
+  getPost?: FunctionReference<"query", "public", { postId: PostId }, PostLookupResult>;
   searchFeedback?: FeedbackSearchQueryReference;
   suggestSimilarPosts?: SimilarPostsQueryReference;
 }
@@ -182,6 +185,10 @@ export interface AdminBindings {
     desired: boolean;
   }>;
   deleteTag: AdminMutationReference<{ tagId: TagId }, TagDeleteResultDto>;
+  mergePost?: AdminMutationReference<
+    { sourcePostId: PostId; canonicalPostId: PostId },
+    MergePostResult
+  >;
   createChangelogDraft?: AdminMutationReference<
     { title: string; body: string; slug?: string },
     AdminChangelogEntryDto

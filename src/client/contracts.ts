@@ -142,6 +142,23 @@ export type FeedbackPostDto = Readonly<{
   tags: TagDto[];
 }>;
 
+export type PostLookupResult =
+  | Readonly<{ contractVersion: 1; status: "post"; post: FeedbackPostDto }>
+  | Readonly<{
+      contractVersion: 1;
+      status: "merged";
+      requestedPostId: PostId;
+      canonicalPostId: PostId;
+    }>
+  | Readonly<{ contractVersion: 1; status: "notFound" }>;
+
+export type MergePostResult = Readonly<{
+  contractVersion: 1;
+  status: "pending" | "complete";
+  sourcePostId: PostId;
+  canonicalPostId: PostId;
+}>;
+
 export type PaginationOptions = Readonly<{
   numItems: number;
   cursor: string | null;
@@ -801,6 +818,19 @@ export const feedbackPageResultValidator = v.object({
   ),
 });
 
+export const postLookupResultValidator = v.union(
+  v.object({ contractVersion: v.literal(1), status: v.literal("post"), post: publicFeedbackPostDtoValidator }),
+  v.object({ contractVersion: v.literal(1), status: v.literal("merged"), requestedPostId: v.string(), canonicalPostId: v.string() }),
+  v.object({ contractVersion: v.literal(1), status: v.literal("notFound") }),
+);
+
+export const mergePostResultValidator = v.object({
+  contractVersion: v.literal(1),
+  status: v.union(v.literal("pending"), v.literal("complete")),
+  sourcePostId: v.string(),
+  canonicalPostId: v.string(),
+});
+
 export const roadmapItemResultValidator = v.object({
   contractVersion: v.literal(1),
   id: v.string(),
@@ -1019,7 +1049,7 @@ export interface ReadCapabilities<Context> {
     ctx: Context,
     args: { title: string; body?: string; limit?: number },
   ): Promise<SimilarPostResultDto>;
-  getPost(ctx: Context, args: { postId: PostId }): Promise<PostDto>;
+  getPost(ctx: Context, args: { postId: PostId }): Promise<PostLookupResult>;
   countPosts(ctx: Context, args: { boardId: BoardId }): Promise<PostCountDto>;
   listComments(
     ctx: Context,
@@ -1130,6 +1160,10 @@ export interface AdminCapabilities<
     ctx: MutationContext,
     args: { tagId: TagId },
   ): Promise<TagDeleteResultDto>;
+  mergePost(
+    ctx: MutationContext,
+    args: { sourcePostId: PostId; canonicalPostId: PostId },
+  ): Promise<MergePostResult>;
   createChangelogDraft(
     ctx: MutationContext,
     args: { title: string; body: string; slug?: string },

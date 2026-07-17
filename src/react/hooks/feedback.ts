@@ -13,6 +13,8 @@ import type {
   SearchResultDto,
   SimilarPostResultDto,
   TagId,
+  PostId,
+  PostLookupResult,
 } from "../../client/contracts.js";
 import type {
   FeedbackSearchQueryReference,
@@ -29,6 +31,42 @@ const UNCONFIGURED_SEARCH_REFERENCE = makeFunctionReference<"query">(
 const UNCONFIGURED_SIMILAR_REFERENCE = makeFunctionReference<"query">(
   "__afferent:unconfiguredSimilar",
 ) as SimilarPostsQueryReference;
+const UNCONFIGURED_POST_REFERENCE = makeFunctionReference<"query">(
+  "__afferent:unconfiguredPost",
+);
+
+export type PostLookupState =
+  | Readonly<{ status: "unsupported" | "loading" | "notFound" }>
+  | Readonly<{ status: "post"; post: FeedbackPostDto }>
+  | Readonly<{
+      status: "merged";
+      requestedPostId: PostId;
+      canonicalPostId: PostId;
+    }>;
+
+export function mapPostLookupState(
+  result: PostLookupResult | undefined,
+  configured: boolean,
+): PostLookupState {
+  if (!configured) return { status: "unsupported" };
+  if (result === undefined) return { status: "loading" };
+  if (result.status === "post") return { status: "post", post: result.post };
+  if (result.status === "merged") {
+    return {
+      status: "merged",
+      requestedPostId: result.requestedPostId,
+      canonicalPostId: result.canonicalPostId,
+    };
+  }
+  return { status: "notFound" };
+}
+
+export function usePost(postId: PostId): PostLookupState {
+  const { bindings } = useAfferentContext();
+  const binding = bindings.public.getPost;
+  const result = useQuery(binding ?? UNCONFIGURED_POST_REFERENCE, binding ? { postId } : "skip") as PostLookupResult | undefined;
+  return mapPostLookupState(result, binding !== undefined);
+}
 
 export interface FeedbackFeedArgs {
   order: FeedbackOrder;

@@ -21,6 +21,8 @@ export {
   useFeedbackFeed,
   useFeedbackSearch,
   useSimilarPosts,
+  mapPostLookupState,
+  usePost,
 } from "./hooks/feedback.js";
 export { mapRoadmapGroupState, useRoadmap } from "./hooks/roadmap.js";
 export {
@@ -42,6 +44,7 @@ export {
   usePostModeration,
   useTagManagement,
   useTags,
+  useMergePost,
 } from "./hooks/admin.js";
 export type {
   AdminCapabilityState,
@@ -64,6 +67,7 @@ export type {
   FeedbackPaginationState,
   FeedbackSearchArgs,
   SimilarPostsArgs,
+  PostLookupState,
 } from "./hooks/feedback.js";
 export type {
   RoadmapArgs,

@@ -5,7 +5,6 @@ import { v } from "convex/values";
 import { query } from "../_generated/server.js";
 import {
   countDtoValidator,
-  postDtoValidator,
   postPageDtoValidator,
 } from "../validators.js";
 import schema from "../schema.js";

@@ -24,6 +24,8 @@ import type {
   FeedbackPostDto,
   PostActivityPageDto,
   PublishedChangelogLookupDto,
+  PostLookupResult,
+  MergePostResult,
   RoadmapGroupPageDto,
   TagDeleteResultDto,
   TagDto,
@@ -170,7 +172,7 @@ export function createClientWithScope(
           scopeId,
           postId: args.postId,
           viewerAuthenticated: await viewerAuthenticated(options, ctx),
-        })) as unknown as PostDto;
+        })) as unknown as PostLookupResult;
       },
       async countPosts(ctx, args) {
         const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
@@ -471,6 +473,19 @@ export function createClientWithScope(
           actor,
           tagId: args.tagId,
         })) as unknown as TagDeleteResultDto;
+      },
+      async mergePost(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        if (!(await options.authorizeAdmin(ctx)))
+          throw new Error("ADMIN_AUTHORIZATION_REQUIRED");
+        const actor = await options.resolveActor(ctx);
+        if (!actor) throw new Error("AUTHENTICATION_REQUIRED");
+        return (await ctx.runMutation(component.admin.merge.mergePost, {
+          scopeId,
+          actor,
+          sourcePostId: args.sourcePostId,
+          canonicalPostId: args.canonicalPostId,
+        })) as unknown as MergePostResult;
       },
       async createChangelogDraft(ctx, args) {
         const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
