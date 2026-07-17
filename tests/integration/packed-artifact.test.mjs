@@ -96,6 +96,38 @@ test("the release gate covers every suite and every supported packed export", as
   assert.match(gate, /private data-model export/);
 });
 
+test("the Phase 2 gate covers the public React artifact and complete consumer", async () => {
+  const manifest = JSON.parse(
+    await readFile(join(repositoryRoot, "package.json"), "utf8"),
+  );
+  assert.deepEqual(manifest.exports["./react.js"], {
+    types: "./dist/react/index.d.ts",
+    default: "./dist/react/index.js",
+  });
+  for (const command of [
+    "test:model",
+    "test:component",
+    "test:backend",
+    "test:static",
+    "test:react",
+    "test:package",
+    "typecheck",
+    "lint",
+    "build",
+  ]) {
+    assert.ok(
+      manifest.scripts["test:phase2"].includes(command),
+      `Phase 2 gate is missing ${command}`,
+    );
+  }
+  const gate = await readFile(
+    join(repositoryRoot, "scripts/test-packed-consumer.mjs"),
+    "utf8",
+  );
+  assert.match(gate, /afferent\/react\.js/);
+  assert.match(gate, /fixtures\/packed-vite-convex/);
+});
+
 test(
   "the complete release gate passes through the external packed consumer",
   { timeout: 300_000 },

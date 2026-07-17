@@ -42,6 +42,24 @@ function sourceFilesBelow(directory: string): string[] {
 }
 
 describe("public contract privacy", () => {
+  test("publishes one closed versioned headless result and error vocabulary", () => {
+    const contractsSource = fs.readFileSync("src/client/contracts.ts", "utf8");
+    expect(contractsSource).toContain("export type AfferentError =");
+    expect(contractsSource).toContain("export type AfferentResult<T>");
+    for (const code of [
+      "AUTHENTICATION_REQUIRED",
+      "NOT_AUTHORIZED",
+      "VALIDATION",
+      "NOT_FOUND",
+      "RATE_LIMITED",
+      "CONFLICT",
+      "TRANSIENT",
+      "UNKNOWN",
+    ]) {
+      expect(contractsSource).toContain(`\"${code}\"`);
+    }
+  });
+
   test("normalizes the session-validated Better Auth component user document", () => {
     expect(
       normalizeBetterAuthUser({
