@@ -145,7 +145,7 @@ Afferent reaches its first public release through four coarse vertical slices. T
 
 ### Phase 3: Source-Owned Product Interface
 
-**Goal:** Developers can adopt polished public and admin interfaces as accessible, responsive source they fully own and restyle.
+**Goal:** As a developer adopting Afferent, I want to install and restyle source-owned public and admin shadcn interfaces from one canonical registry-backed source, so that my users and administrators can complete the feedback lifecycle through accessible, responsive screens without replacing the headless behavior layer.
 **Mode:** mvp
 **Depends on:** Phase 2
 **Requirements:** UI-04, UI-05, UI-06, UI-07, QUAL-04, QUAL-07, QUAL-08
@@ -153,8 +153,8 @@ Afferent reaches its first public release through four coarse vertical slices. T
 
 1. A developer can install source-owned shadcn components for public feedback, roadmap, changelog, and notification workflows and restyle them without replacing the headless behavior layer.
 2. A developer can install source-owned admin components for triage, moderation, roadmap status management, and changelog publishing and use the complete workflows with keyboard-only interaction.
-3. The shadcn registry and mirrored repository examples come from one canonical source, and a clean consumer fixture installs and builds them against the supported package range.
-4. Supplied public and admin interfaces pass the documented WCAG 2.2 AA-oriented keyboard, focus, announcement, contrast, zoom, and reflow checks on phone, tablet, and desktop layouts.
+3. The shadcn registry and byte-equivalent mirrored repository examples come from one canonical source with a deterministic drift gate, and a clean consumer fixture installs the packed Afferent tarball plus generated registry items through the real shadcn path before typechecking and building against the supported package range.
+4. Supplied public and admin interfaces pass documented WCAG 2.2 AA-oriented keyboard, focus, announcement, contrast, 320 CSS-pixel reflow, 200% zoom, and phone/tablet/desktop layout checks with versioned evidence.
 
 **Plans:** TBD
 **UI hint**: yes
