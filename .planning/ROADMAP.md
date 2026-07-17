@@ -157,11 +157,18 @@ Afferent reaches its first public release through four coarse vertical slices. T
 4. Supplied public and admin interfaces pass documented WCAG 2.2 AA-oriented keyboard, focus, announcement, contrast, 320 CSS-pixel reflow, 200% zoom, and phone/tablet/desktop layout checks with versioned evidence.
 
 **UI hint**: yes
-**Plans:** 6 plans
+**Plans:** 1/6 plans executed
+
+- [x] 03-01-PLAN.md
+- [ ] 03-02-PLAN.md
+- [ ] 03-03-PLAN.md
+- [ ] 03-04-PLAN.md
+- [ ] 03-05-PLAN.md
+- [ ] 03-06-PLAN.md
 
 **Wave 1**
 
-- [ ] `03-01-PLAN.md` — Prove one canonical board item through packed tarball, real local shadcn install, and isolated exact dependency closure.
+- [x] `03-01-PLAN.md` — Prove one canonical board item through packed tarball, real local shadcn install, and isolated exact dependency closure.
 
 **Wave 2** _(blocked on Wave 1 completion)_
 
@@ -214,8 +221,8 @@ Phases execute sequentially: 1 -> 2 -> 3 -> 4
 | Phase                                      | Plans Complete | Status      | Completed  |
 | ------------------------------------------ | -------------- | ----------- | ---------- |
 | 1. Secure Installable Feedback Board       | 8/8            | Complete    | 2026-07-16 |
-| 2. Complete Feedback-to-Changelog Workflow | 14/14 | Complete    | 2026-07-17 |
-| 3. Source-Owned Product Interface          | 0/6            | Planned     | -          |
+| 2. Complete Feedback-to-Changelog Workflow | 14/14          | Complete    | 2026-07-17 |
+| 3. Source-Owned Product Interface          | 1/6            | In Progress | -          |
 | 4. Hosted Production Release               | 0/TBD          | Not started | -          |
 
 ---
