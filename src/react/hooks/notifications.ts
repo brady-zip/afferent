@@ -1,10 +1,10 @@
-import { usePaginatedQuery } from "convex-helpers/react";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { makeFunctionReference } from "convex/server";
 // @ts-expect-error React declarations are supplied by strict consumer fixtures.
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type {
+  AfferentError,
   AfferentErrorDto,
   NotificationDto,
   NotificationId,
@@ -14,12 +14,10 @@ import type {
 } from "../../client/contracts.js";
 import type { NotificationBindings } from "../bindings.js";
 import { useAfferentContext } from "../provider.js";
+import { useDirectWatchQuery, usePaginatedWatchQuery } from "../query.js";
 import { mapModerationError } from "./admin.js";
 
 const DEFAULT_NOTIFICATION_PAGE_SIZE = 20;
-const UNCONFIGURED_NOTIFICATION_QUERY = makeFunctionReference<"query">(
-  "__afferent:unconfiguredNotificationQuery",
-);
 const UNCONFIGURED_NOTIFICATION_MUTATION = makeFunctionReference<"mutation">(
   "__afferent:unconfiguredNotificationMutation",
 );
@@ -28,7 +26,7 @@ export interface NotificationPaginationState {
   results: NotificationDto[];
   status:
     "LoadingFirstPage" | "CanLoadMore" | "LoadingMore" | "Exhausted" | "Error";
-  error?: Error;
+  error?: AfferentError;
   loadMore: (count: number) => void;
 }
 
@@ -54,7 +52,7 @@ export type NotificationFeedState =
       items: NotificationDto[];
       isLoadingMore: false;
       canLoadMore: false;
-      error: Error;
+      error: AfferentError;
       loadMore: () => void;
     }>;
 
@@ -87,7 +85,7 @@ export function mapNotificationFeedState(
       items: pagination.results,
       isLoadingMore: false,
       canLoadMore: false,
-      error: pagination.error ?? new Error("Notification inbox failed"),
+      error: pagination.error!,
       loadMore,
     };
   }
@@ -130,7 +128,7 @@ function unavailableError(): AfferentErrorDto {
 function applySubscriptionOptimism(
   mutation: ReturnType<typeof useMutation>,
   queryBinding: NotificationBindings["getPostSubscription"] | undefined,
-  sessionGeneration: string,
+  sessionGeneration: number,
 ) {
   const candidate = mutation as typeof mutation & {
     withOptimisticUpdate?: (
@@ -152,16 +150,18 @@ function applySubscriptionOptimism(
 }
 
 export function usePostSubscription(postId: PostId) {
-  const { bindings, auth, sessionKey } = useAfferentContext();
+  const { bindings, auth, client, generation } = useAfferentContext();
   const configured = bindings.notifications !== undefined;
-  const sessionGeneration = sessionKey;
-  const value = useQuery(
-    bindings.notifications?.getPostSubscription ??
-      UNCONFIGURED_NOTIFICATION_QUERY,
-    configured && auth.status === "authenticated"
+  const sessionGeneration = generation;
+  const query = useDirectWatchQuery({
+    client,
+    query: bindings.notifications?.getPostSubscription,
+    args: configured && auth.status === "authenticated"
       ? { postId, sessionGeneration }
-      : "skip",
-  ) as PostSubscriptionDto | undefined;
+      : undefined,
+    generation,
+  });
+  const value = query.status === "ready" ? query.value : undefined;
   const rawMutation = useMutation(
     (bindings.notifications?.setPostSubscription ??
       UNCONFIGURED_NOTIFICATION_MUTATION) as NotificationBindings["setPostSubscription"],
@@ -215,9 +215,10 @@ export function usePostSubscription(postId: PostId) {
     }
   }
 
-  let status: "unsupported" | "unauthenticated" | "loading" | "ready";
+  let status: "unsupported" | "unauthenticated" | "loading" | "ready" | "error";
   if (!configured) status = "unsupported";
   else if (auth.status === "unauthenticated") status = "unauthenticated";
+  else if (query.status === "error") status = "error";
   else if (auth.status === "loading" || value === undefined) status = "loading";
   else status = "ready";
   return useMemo(
@@ -225,18 +226,18 @@ export function usePostSubscription(postId: PostId) {
       status,
       value,
       pending,
-      error,
+      error: query.status === "error" ? query.error : error,
       setSubscribed,
       reset: () => setError(undefined),
     }),
-    [error, pending, status, value],
+    [error, pending, query, status, value],
   );
 }
 
 function applyMarkReadOptimism(
   mutation: ReturnType<typeof useMutation>,
   binding: NotificationBindings["getUnreadCount"] | undefined,
-  sessionGeneration: string,
+  sessionGeneration: number,
 ) {
   const candidate = mutation as typeof mutation & {
     withOptimisticUpdate?: (handler: (store: any) => void) => typeof mutation;
@@ -256,17 +257,21 @@ function applyMarkReadOptimism(
 }
 
 export function useNotifications() {
-  const { bindings, auth, sessionKey } = useAfferentContext();
+  const { bindings, auth, client, generation } = useAfferentContext();
   const configured = bindings.notifications !== undefined;
-  const sessionGeneration = sessionKey;
-  const pagination = usePaginatedQuery(
-    bindings.notifications?.listNotifications ??
-      UNCONFIGURED_NOTIFICATION_QUERY,
-    configured && auth.status === "authenticated"
+  const sessionGeneration = generation;
+  const pagination = usePaginatedWatchQuery<
+    NotificationDto,
+    NotificationBindings["listNotifications"]
+  >({
+    client,
+    query: bindings.notifications?.listNotifications,
+    args: configured && auth.status === "authenticated"
       ? { sessionGeneration }
-      : "skip",
-    { initialNumItems: DEFAULT_NOTIFICATION_PAGE_SIZE },
-  );
+      : undefined,
+    generation,
+    initialNumItems: DEFAULT_NOTIFICATION_PAGE_SIZE,
+  });
   const rawMutation = useMutation(
     (bindings.notifications?.markNotificationRead ??
       UNCONFIGURED_NOTIFICATION_MUTATION) as NotificationBindings["markNotificationRead"],
@@ -349,20 +354,26 @@ export function useNotifications() {
 }
 
 export function useUnreadNotificationCount() {
-  const { bindings, auth, sessionKey } = useAfferentContext();
+  const { bindings, auth, client, generation } = useAfferentContext();
   const configured = bindings.notifications !== undefined;
-  const sessionGeneration = sessionKey;
-  const value = useQuery(
-    bindings.notifications?.getUnreadCount ?? UNCONFIGURED_NOTIFICATION_QUERY,
-    configured && auth.status === "authenticated"
+  const sessionGeneration = generation;
+  const query = useDirectWatchQuery({
+    client,
+    query: bindings.notifications?.getUnreadCount,
+    args: configured && auth.status === "authenticated"
       ? { sessionGeneration }
-      : "skip",
-  ) as UnreadNotificationCountDto | undefined;
+      : undefined,
+    generation,
+  });
+  const value = query.status === "ready" ? query.value : undefined;
   if (!configured) return { status: "unsupported" as const, count: 0 };
   if (auth.status === "unauthenticated") {
     return { status: "unauthenticated" as const, count: 0 };
   }
   if (auth.status === "loading" || value === undefined) {
+    if (query.status === "error") {
+      return { status: "error" as const, count: 0, error: query.error };
+    }
     return { status: "loading" as const, count: 0 };
   }
   return { status: "ready" as const, count: value.count };

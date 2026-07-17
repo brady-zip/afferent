@@ -36,6 +36,7 @@ export type FeedbackFeedQueryReference = FunctionReference<
     boardId?: string;
     status?: PostStatusKey;
     tagId?: string;
+    sessionGeneration: number;
     paginationOpts: PaginationOptions;
   },
   FeedbackPageDto
@@ -49,6 +50,7 @@ export type FeedbackSearchQueryReference = FunctionReference<
     boardId?: string;
     status?: PostStatusKey;
     tagId?: string;
+    sessionGeneration: number;
   },
   SearchResultDto
 >;
@@ -56,7 +58,12 @@ export type FeedbackSearchQueryReference = FunctionReference<
 export type SimilarPostsQueryReference = FunctionReference<
   "query",
   "public",
-  { title: string; body?: string; limit?: number },
+  {
+    title: string;
+    body?: string;
+    limit?: number;
+    sessionGeneration: number;
+  },
   SimilarPostResultDto
 >;
 
@@ -65,7 +72,7 @@ export interface PublicBindings {
   getPost?: FunctionReference<
     "query",
     "public",
-    { postId: string },
+    { postId: string; sessionGeneration: number },
     PostLookupResult
   >;
   searchFeedback?: FeedbackSearchQueryReference;
@@ -111,7 +118,7 @@ export type RoadmapGroupQueryReference = FunctionReference<
   {
     status: RoadmapStatusKey;
     boardId?: string;
-    sessionGeneration?: string;
+    sessionGeneration: number;
     paginationOpts: PaginationOptions;
   },
   RoadmapGroupPageDto
@@ -124,14 +131,14 @@ export interface RoadmapBindings {
 export type ChangelogFeedQueryReference = FunctionReference<
   "query",
   "public",
-  { sessionGeneration?: string; paginationOpts: PaginationOptions },
+  { sessionGeneration: number; paginationOpts: PaginationOptions },
   ChangelogPageDto
 >;
 
 export type ChangelogEntryQueryReference = FunctionReference<
   "query",
   "public",
-  { slug: string; sessionGeneration?: string },
+  { slug: string; sessionGeneration: number },
   PublishedChangelogLookupDto
 >;
 
@@ -144,7 +151,7 @@ export interface NotificationBindings {
   getPostSubscription: FunctionReference<
     "query",
     "public",
-    { postId: string; sessionGeneration?: string },
+    { postId: string; sessionGeneration: number },
     PostSubscriptionDto
   >;
   setPostSubscription: FunctionReference<
@@ -156,13 +163,13 @@ export interface NotificationBindings {
   listNotifications: FunctionReference<
     "query",
     "public",
-    { sessionGeneration?: string; paginationOpts: PaginationOptions },
+    { sessionGeneration: number; paginationOpts: PaginationOptions },
     NotificationPageDto
   >;
   getUnreadCount: FunctionReference<
     "query",
     "public",
-    { sessionGeneration?: string },
+    { sessionGeneration: number },
     UnreadNotificationCountDto
   >;
   markNotificationRead: FunctionReference<
@@ -182,7 +189,7 @@ export interface AdminBindings {
   capability: FunctionReference<
     "query",
     "public",
-    { sessionGeneration?: string },
+    { sessionGeneration: number },
     boolean
   >;
   editPost: AdminMutationReference<{
@@ -205,7 +212,7 @@ export interface AdminBindings {
     "public",
     {
       postId: string;
-      sessionGeneration?: string;
+      sessionGeneration: number;
       paginationOpts: PaginationOptions;
     },
     PostActivityPageDto
@@ -213,7 +220,7 @@ export interface AdminBindings {
   listTags: FunctionReference<
     "query",
     "public",
-    { sessionGeneration?: string },
+    { sessionGeneration: number },
     TagListDto
   >;
   createTag: AdminMutationReference<{ name: string }, TagDto>;

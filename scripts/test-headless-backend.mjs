@@ -113,7 +113,7 @@ function run(command, args, options = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       cwd: options.cwd ?? repositoryRoot,
-      env: { ...process.env, ...(options.env ?? {}) },
+      env: { ...process.env, ...options.env },
       stdio: ["ignore", "pipe", "pipe"],
     });
     let stdout = "";

@@ -26,19 +26,19 @@ import {
   type AfferentAuthState,
 } from "../../src/react/index.js";
 
-type QueryRecord = {
+interface QueryRecord {
   name: string;
   args: Record<string, unknown>;
   value: unknown;
   error?: unknown;
   listeners: Set<() => void>;
-};
+}
 
-type Deferred = {
+interface Deferred {
   promise: Promise<unknown>;
   resolve: (value: unknown) => void;
   reject: (error: unknown) => void;
-};
+}
 
 function deferred(): Deferred {
   let resolve!: (value: unknown) => void;
@@ -52,11 +52,11 @@ function deferred(): Deferred {
 
 class ControlledWatchClient {
   records: QueryRecord[] = [];
-  mutationCalls: Array<{
+  mutationCalls: {
     name: string;
     args: Record<string, unknown>;
     options?: { optimisticUpdate?: (store: unknown, args: unknown) => void };
-  }> = [];
+  }[] = [];
   mutationQueue: Deferred[] = [];
   defaultError: unknown;
   resolver: (name: string, args: Record<string, unknown>) => unknown =
@@ -116,7 +116,7 @@ class ControlledWatchClient {
     for (const record of matches) {
       record.error = undefined;
       record.value = value;
-      for (const listener of [...record.listeners]) listener();
+      for (const listener of record.listeners) listener();
     }
   }
 
@@ -129,14 +129,14 @@ class ControlledWatchClient {
     expect(matches.length).toBeGreaterThan(0);
     for (const record of matches) {
       record.error = error;
-      for (const listener of [...record.listeners]) listener();
+      for (const listener of record.listeners) listener();
     }
   }
 
   failAll(error: unknown) {
     for (const record of this.records) {
       record.error = error;
-      for (const listener of [...record.listeners]) listener();
+      for (const listener of record.listeners) listener();
     }
   }
 }
@@ -204,7 +204,7 @@ const bindings = {
   },
 } as unknown as AfferentBindings;
 
-function page(items: Array<Record<string, unknown>>, overrides = {}) {
+function page(items: Record<string, unknown>[], overrides = {}) {
   return {
     contractVersion: 2,
     page: items,
@@ -520,16 +520,13 @@ describe("mounted identity-generation isolation", () => {
   test("clears actor pages and capabilities on the first A to B to A renders", async () => {
     const client = new ControlledWatchClient();
     client.resolver = (name, args) => {
-      const generation = args.sessionGeneration;
-      if (name === "headless:feed")
-        return generation === undefined
-          ? undefined
-          : page([{ id: `feed-${generation}` }]);
-      if (name === "headless:notifications")
-        return generation === undefined
-          ? undefined
-          : page([{ id: `notification-${generation}` }]);
-      if (name === "headless:capability") return true;
+      if (
+        name === "headless:feed" ||
+        name === "headless:notifications" ||
+        name === "headless:capability"
+      ) {
+        return undefined;
+      }
       return defaultQueryValue(name, args);
     };
     const mounted = renderHarness(client, {
@@ -540,6 +537,26 @@ describe("mounted identity-generation isolation", () => {
     const firstGeneration =
       client.matching("headless:feed")[0].args.sessionGeneration;
     expect(firstGeneration).toBeDefined();
+    act(() => {
+      client.update(
+        "headless:feed",
+        (args) => args.sessionGeneration === firstGeneration,
+        page([{ id: `feed-${firstGeneration}` }]),
+      );
+      client.update(
+        "headless:notifications",
+        (args) => args.sessionGeneration === firstGeneration,
+        page([{ id: `notification-${firstGeneration}` }]),
+      );
+      client.update(
+        "headless:capability",
+        (args) => args.sessionGeneration === firstGeneration,
+        true,
+      );
+    });
+    expect(state(mounted.container).feedItems).toEqual([
+      `feed-${firstGeneration}`,
+    ]);
 
     mounted.rerender({
       status: "authenticated",
@@ -579,8 +596,9 @@ describe("mounted identity-generation isolation", () => {
     } as never);
     await act(async () => {});
     let request!: Promise<unknown>;
-    act(() => {
+    await act(async () => {
       request = mutationProbe!.setVote("post:1" as never, true);
+      await Promise.resolve();
     });
     expect(state(mounted.container).pending["post:1:vote"]).toBe(true);
     mounted.rerender({ status: "unauthenticated" });

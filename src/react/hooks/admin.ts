@@ -1,5 +1,4 @@
-import { usePaginatedQuery } from "convex-helpers/react";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { makeFunctionReference } from "convex/server";
 // @ts-expect-error React declarations are supplied by strict consumer fixtures.
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -19,23 +18,15 @@ import type {
 } from "../../client/contracts.js";
 import type { AdminBindings } from "../bindings.js";
 import { useAfferentContext } from "../provider.js";
+import { useDirectWatchQuery, usePaginatedWatchQuery } from "../query.js";
 import { mapAfferentError } from "./mutations.js";
 
-const UNCONFIGURED_ADMIN_QUERY = makeFunctionReference<"query">(
-  "__afferent:unconfiguredAdminCapability",
-);
 const UNCONFIGURED_ADMIN_MUTATION = makeFunctionReference<"mutation">(
   "__afferent:unconfiguredAdminMutation",
 );
-const UNCONFIGURED_ACTIVITY_QUERY = makeFunctionReference<"query">(
-  "__afferent:unconfiguredPostActivity",
-);
-const UNCONFIGURED_TAG_QUERY = makeFunctionReference<"query">(
-  "__afferent:unconfiguredTags",
-);
-
 export type AdminCapabilityState =
   | Readonly<{ status: "unsupported" | "loading" | "not-authorized" }>
+  | Readonly<{ status: "error"; error: ModerationError }>
   | Readonly<{ status: "ready" }>;
 
 export function mapAdminCapabilityState(
@@ -48,17 +39,23 @@ export function mapAdminCapabilityState(
 }
 
 export function useAdminCapability(): AdminCapabilityState {
-  const { bindings, auth } = useAfferentContext();
+  const { bindings, auth, client, generation } = useAfferentContext();
   const configured = bindings.admin !== undefined;
   const enabled = configured && auth.status === "authenticated";
-  const value = useQuery(
-    bindings.admin?.capability ?? UNCONFIGURED_ADMIN_QUERY,
-    enabled ? { sessionGeneration: auth.sessionGeneration } : "skip",
-  );
+  const query = useDirectWatchQuery({
+    client,
+    query: bindings.admin?.capability,
+    args: enabled ? { sessionGeneration: generation } : undefined,
+    generation,
+  });
   if (!configured) return { status: "unsupported" };
   if (auth.status === "loading") return { status: "loading" };
   if (auth.status === "unauthenticated") return { status: "not-authorized" };
-  return mapAdminCapabilityState(value, true);
+  if (query.status === "error") return query;
+  return mapAdminCapabilityState(
+    query.status === "ready" ? query.value : undefined,
+    true,
+  );
 }
 
 export type ModerationAction =
@@ -197,24 +194,29 @@ export function usePostModeration() {
 }
 
 export type PostActivityState = Readonly<{
-  status: "unsupported" | "loading" | "ready" | "empty";
+  status: "unsupported" | "loading" | "ready" | "empty" | "error";
   items: PostActivityDto[];
   isLoadingMore: boolean;
   canLoadMore: boolean;
   loadMore: () => void;
+  error?: ModerationError;
 }>;
 
 export function usePostActivity(postId: PostId): PostActivityState {
-  const { bindings, auth } = useAfferentContext();
+  const { bindings, auth, client, generation } = useAfferentContext();
   const binding = bindings.admin?.listPostActivity;
-  const page = usePaginatedQuery(
-    (binding ??
-      UNCONFIGURED_ACTIVITY_QUERY) as AdminBindings["listPostActivity"],
-    binding && auth.status === "authenticated"
-      ? { postId, sessionGeneration: auth.sessionGeneration }
-      : "skip",
-    { initialNumItems: 20 },
-  );
+  const page = usePaginatedWatchQuery<
+    PostActivityDto,
+    AdminBindings["listPostActivity"]
+  >({
+    client,
+    query: binding,
+    args: binding && auth.status === "authenticated"
+      ? { postId, sessionGeneration: generation }
+      : undefined,
+    generation,
+    initialNumItems: 20,
+  });
   const loadMore = () => page.loadMore(20);
   if (!binding)
     return {
@@ -228,6 +230,15 @@ export function usePostActivity(postId: PostId): PostActivityState {
     return {
       status: "loading",
       items: page.results,
+      isLoadingMore: false,
+      canLoadMore: false,
+      loadMore,
+    };
+  if (page.status === "Error")
+    return {
+      status: "error",
+      items: page.results,
+      error: page.error,
       isLoadingMore: false,
       canLoadMore: false,
       loadMore,
@@ -250,8 +261,10 @@ export function usePostActivity(postId: PostId): PostActivityState {
 }
 
 export type TagListState = Readonly<{
-  status: "unsupported" | "loading" | "not-authorized" | "empty" | "ready";
+  status:
+    "unsupported" | "loading" | "not-authorized" | "empty" | "ready" | "error";
   items: TagDto[];
+  error?: ModerationError;
 }>;
 
 export function mapTagListState(
@@ -265,20 +278,28 @@ export function mapTagListState(
 }
 
 export function useTags(): TagListState {
-  const { bindings, auth } = useAfferentContext();
+  const { bindings, auth, client, generation } = useAfferentContext();
   const binding = bindings.admin?.listTags;
-  const value = useQuery(
-    binding ?? UNCONFIGURED_TAG_QUERY,
-    binding && auth.status === "authenticated"
-      ? { sessionGeneration: auth.sessionGeneration }
-      : "skip",
-  ) as TagListDto | undefined;
+  const query = useDirectWatchQuery({
+    client,
+    query: binding,
+    args: binding && auth.status === "authenticated"
+      ? { sessionGeneration: generation }
+      : undefined,
+    generation,
+  });
   if (!binding) return { status: "unsupported", items: [] };
   if (auth.status === "loading") return { status: "loading", items: [] };
   if (auth.status === "unauthenticated") {
     return { status: "not-authorized", items: [] };
   }
-  return mapTagListState(value, true);
+  if (query.status === "error") {
+    return { status: "error", items: [], error: query.error };
+  }
+  return mapTagListState(
+    query.status === "ready" ? query.value : undefined,
+    true,
+  );
 }
 
 export type TagManagementAction =

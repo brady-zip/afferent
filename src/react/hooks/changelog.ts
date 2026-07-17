@@ -1,11 +1,11 @@
-import { usePaginatedQuery } from "convex-helpers/react";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { makeFunctionReference } from "convex/server";
 // @ts-expect-error React declarations are supplied by strict consumer fixtures.
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type {
   AdminChangelogEntryDto,
+  AfferentError,
   AfferentErrorDto,
   ChangelogId,
   PostId,
@@ -14,19 +14,13 @@ import type {
 } from "../../client/contracts.js";
 import type {
   AdminBindings,
-  ChangelogEntryQueryReference,
   ChangelogFeedQueryReference,
 } from "../bindings.js";
 import { useAfferentContext } from "../provider.js";
+import { useDirectWatchQuery, usePaginatedWatchQuery } from "../query.js";
 import { mapModerationError } from "./admin.js";
 
 const DEFAULT_CHANGELOG_PAGE_SIZE = 20;
-const UNCONFIGURED_CHANGELOG_FEED = makeFunctionReference<"query">(
-  "__afferent:unconfiguredChangelogFeed",
-) as ChangelogFeedQueryReference;
-const UNCONFIGURED_CHANGELOG_ENTRY = makeFunctionReference<"query">(
-  "__afferent:unconfiguredChangelogEntry",
-) as ChangelogEntryQueryReference;
 const UNCONFIGURED_CHANGELOG_MUTATION = makeFunctionReference<"mutation">(
   "__afferent:unconfiguredChangelogMutation",
 );
@@ -35,7 +29,7 @@ export interface ChangelogPaginationState {
   results: PublicChangelogEntryDto[];
   status:
     "LoadingFirstPage" | "CanLoadMore" | "LoadingMore" | "Exhausted" | "Error";
-  error?: Error;
+  error?: AfferentError;
   loadMore: (count: number) => void;
 }
 
@@ -61,7 +55,7 @@ export type ChangelogFeedState =
       items: PublicChangelogEntryDto[];
       isLoadingMore: false;
       canLoadMore: false;
-      error: Error;
+      error: AfferentError;
       loadMore: () => void;
     }>;
 
@@ -94,7 +88,7 @@ export function mapChangelogFeedState(
       items: pagination.results,
       isLoadingMore: false,
       canLoadMore: false,
-      error: pagination.error ?? new Error("Changelog feed failed"),
+      error: pagination.error!,
       loadMore,
     };
   }
@@ -119,24 +113,25 @@ export function mapChangelogFeedState(
 }
 
 export function useChangelogFeed(): ChangelogFeedState {
-  const { bindings, auth } = useAfferentContext();
+  const { bindings, client, generation } = useAfferentContext();
   const binding = bindings.changelog?.listPublished;
-  const sessionGeneration =
-    auth.status === "authenticated"
-      ? (auth.sessionGeneration ?? "authenticated")
-      : auth.status;
-  const pagination = usePaginatedQuery(
-    binding ?? UNCONFIGURED_CHANGELOG_FEED,
-    binding ? { sessionGeneration } : "skip",
-    { initialNumItems: DEFAULT_CHANGELOG_PAGE_SIZE },
-  );
+  const pagination = usePaginatedWatchQuery<
+    PublicChangelogEntryDto,
+    ChangelogFeedQueryReference
+  >({
+    client,
+    query: binding,
+    args: binding ? { sessionGeneration: generation } : undefined,
+    generation,
+    initialNumItems: DEFAULT_CHANGELOG_PAGE_SIZE,
+  });
   return mapChangelogFeedState(pagination, binding === undefined);
 }
 
 export type ChangelogEntryState =
   | Readonly<{ status: "unsupported" | "loading" | "notFound" }>
   | Readonly<{ status: "ready"; entry: PublicChangelogEntryDto }>
-  | Readonly<{ status: "error"; error: Error }>;
+  | Readonly<{ status: "error"; error: AfferentError }>;
 
 export function mapChangelogEntryState(
   value: PublishedChangelogLookupDto | Error | undefined,
@@ -144,23 +139,27 @@ export function mapChangelogEntryState(
 ): ChangelogEntryState {
   if (!configured) return { status: "unsupported" };
   if (value === undefined) return { status: "loading" };
-  if (value instanceof Error) return { status: "error", error: value };
+  if (value instanceof Error) {
+    return { status: "error", error: mapModerationError(value) };
+  }
   if (value.status === "notFound") return { status: "notFound" };
   return { status: "ready", entry: value.entry };
 }
 
 export function useChangelogEntry(slug: string): ChangelogEntryState {
-  const { bindings, auth } = useAfferentContext();
+  const { bindings, client, generation } = useAfferentContext();
   const binding = bindings.changelog?.getPublishedBySlug;
-  const sessionGeneration =
-    auth.status === "authenticated"
-      ? (auth.sessionGeneration ?? "authenticated")
-      : auth.status;
-  const value = useQuery(
-    binding ?? UNCONFIGURED_CHANGELOG_ENTRY,
-    binding ? { slug, sessionGeneration } : "skip",
-  ) as PublishedChangelogLookupDto | undefined;
-  return mapChangelogEntryState(value, binding !== undefined);
+  const value = useDirectWatchQuery({
+    client,
+    query: binding,
+    args: binding ? { slug, sessionGeneration: generation } : undefined,
+    generation,
+  });
+  if (value.status === "error") return value;
+  return mapChangelogEntryState(
+    value.status === "ready" ? value.value : undefined,
+    binding !== undefined,
+  );
 }
 
 export type ChangelogEditorAction =

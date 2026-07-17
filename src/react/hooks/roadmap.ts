@@ -1,24 +1,19 @@
-import { usePaginatedQuery } from "convex-helpers/react";
-import { makeFunctionReference } from "convex/server";
-
 import type {
+  AfferentError,
   BoardId,
   RoadmapItemDto,
   RoadmapStatusKey,
 } from "../../client/contracts.js";
 import type { RoadmapGroupQueryReference } from "../bindings.js";
 import { useAfferentContext } from "../provider.js";
+import { usePaginatedWatchQuery } from "../query.js";
 
 const DEFAULT_ROADMAP_PAGE_SIZE = 20;
-const UNCONFIGURED_ROADMAP_REFERENCE = makeFunctionReference<"query">(
-  "__afferent:unconfiguredRoadmap",
-) as RoadmapGroupQueryReference;
-
 export interface RoadmapPaginationState {
   results: RoadmapItemDto[];
   status:
     "LoadingFirstPage" | "CanLoadMore" | "LoadingMore" | "Exhausted" | "Error";
-  error?: Error;
+  error?: AfferentError;
   loadMore: (count: number) => void;
 }
 
@@ -42,7 +37,7 @@ export type RoadmapGroupState =
   | Readonly<{
       status: "error";
       items: RoadmapItemDto[];
-      error: Error;
+      error: AfferentError;
       isLoadingMore: false;
       canLoadMore: false;
       loadMore: () => void;
@@ -75,7 +70,7 @@ export function mapRoadmapGroupState(
     return {
       status: "error",
       items: pagination.results,
-      error: pagination.error ?? new Error("Roadmap group failed"),
+      error: pagination.error!,
       isLoadingMore: false,
       canLoadMore: false,
       loadMore,
@@ -118,7 +113,7 @@ export type RoadmapState = Readonly<{
 function roadmapQueryArgs(
   status: RoadmapStatusKey,
   boardId: BoardId | undefined,
-  sessionGeneration: string,
+  sessionGeneration: number,
 ) {
   return {
     status,
@@ -128,33 +123,44 @@ function roadmapQueryArgs(
 }
 
 export function useRoadmap(args: RoadmapArgs = {}): RoadmapState {
-  const { bindings, auth } = useAfferentContext();
+  const { bindings, auth, client, generation } = useAfferentContext();
   const binding = bindings.roadmap?.listRoadmapGroup;
-  const sessionGeneration =
-    auth.status === "authenticated"
-      ? (auth.sessionGeneration ?? "authenticated")
-      : auth.status;
-  const planned = usePaginatedQuery(
-    binding ?? UNCONFIGURED_ROADMAP_REFERENCE,
-    binding
-      ? roadmapQueryArgs("planned", args.boardId, sessionGeneration)
-      : "skip",
-    { initialNumItems: DEFAULT_ROADMAP_PAGE_SIZE },
-  );
-  const inProgress = usePaginatedQuery(
-    binding ?? UNCONFIGURED_ROADMAP_REFERENCE,
-    binding
-      ? roadmapQueryArgs("in_progress", args.boardId, sessionGeneration)
-      : "skip",
-    { initialNumItems: DEFAULT_ROADMAP_PAGE_SIZE },
-  );
-  const complete = usePaginatedQuery(
-    binding ?? UNCONFIGURED_ROADMAP_REFERENCE,
-    binding
-      ? roadmapQueryArgs("complete", args.boardId, sessionGeneration)
-      : "skip",
-    { initialNumItems: DEFAULT_ROADMAP_PAGE_SIZE },
-  );
+  const planned = usePaginatedWatchQuery<
+    RoadmapItemDto,
+    RoadmapGroupQueryReference
+  >({
+    client,
+    query: binding,
+    args: binding
+      ? roadmapQueryArgs("planned", args.boardId, generation)
+      : undefined,
+    generation,
+    initialNumItems: DEFAULT_ROADMAP_PAGE_SIZE,
+  });
+  const inProgress = usePaginatedWatchQuery<
+    RoadmapItemDto,
+    RoadmapGroupQueryReference
+  >({
+    client,
+    query: binding,
+    args: binding
+      ? roadmapQueryArgs("in_progress", args.boardId, generation)
+      : undefined,
+    generation,
+    initialNumItems: DEFAULT_ROADMAP_PAGE_SIZE,
+  });
+  const complete = usePaginatedWatchQuery<
+    RoadmapItemDto,
+    RoadmapGroupQueryReference
+  >({
+    client,
+    query: binding,
+    args: binding
+      ? roadmapQueryArgs("complete", args.boardId, generation)
+      : undefined,
+    generation,
+    initialNumItems: DEFAULT_ROADMAP_PAGE_SIZE,
+  });
   const unsupported = binding === undefined;
   return {
     ...(args.boardId === undefined ? {} : { boardId: args.boardId }),

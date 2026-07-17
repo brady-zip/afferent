@@ -1,69 +1,12 @@
-import { renderToStaticMarkup } from "react-dom/server";
-import { beforeEach, describe, expect, test, vi } from "vitest";
-
-const { useMutation, usePaginatedQuery, useQuery } = vi.hoisted(() => ({
-  useMutation: vi.fn(),
-  usePaginatedQuery: vi.fn(),
-  useQuery: vi.fn(),
-}));
-
-vi.mock("convex/react", () => ({ useMutation, useQuery }));
-vi.mock("convex-helpers/react", () => ({ usePaginatedQuery }));
+import { describe, expect, test, vi } from "vitest";
 
 import {
-  AfferentProvider,
-  type AfferentBindings,
   mapChangelogEntryState,
   mapChangelogFeedState,
-  useChangelogEditor,
-  useChangelogEntry,
-  useChangelogFeed,
 } from "../../src/react/index.js";
 
-const bindings = {
-  public: { listFeedback: { _type: "query" } },
-  changelog: {
-    listPublished: { _type: "query", name: "listPublished" },
-    getPublishedBySlug: { _type: "query", name: "getPublishedBySlug" },
-  },
-  admin: {
-    capability: { _type: "query" },
-    createChangelogDraft: { _type: "mutation" },
-    editChangelog: { _type: "mutation" },
-    setChangelogLinks: { _type: "mutation" },
-    publishChangelog: { _type: "mutation" },
-    unpublishChangelog: { _type: "mutation" },
-  },
-} as unknown as AfferentBindings;
-
-let editorProbe: ReturnType<typeof useChangelogEditor> | undefined;
-
-function Probe() {
-  const feed = useChangelogFeed();
-  const entry = useChangelogEntry("summer-release");
-  const editor = useChangelogEditor();
-  editorProbe = editor;
-  return (
-    <output>
-      {JSON.stringify({
-        feed: feed.status,
-        entry: entry.status,
-        editor: editor.status,
-      })}
-    </output>
-  );
-}
-
 describe("headless changelog hooks", () => {
-  beforeEach(() => {
-    useMutation.mockReset();
-    usePaginatedQuery.mockReset();
-    useQuery.mockReset();
-    editorProbe = undefined;
-    useMutation.mockReturnValue(vi.fn());
-  });
-
-  test("maps helper pagination and public slug lookup states", () => {
+  test("maps ordered pagination and public slug lookup states", () => {
     const results = [{ id: "entry-1" }];
     const loadMore = vi.fn();
     const feed = mapChangelogFeedState({
@@ -87,68 +30,15 @@ describe("headless changelog hooks", () => {
     ).toMatchObject({ status: "notFound" });
   });
 
-  test("uses injected refs and exposes explicit unsupported/async states", () => {
-    usePaginatedQuery.mockReturnValue({
-      results: [],
-      status: "Exhausted",
-      loadMore: vi.fn(),
+  test("preserves unsupported states without configured bindings", () => {
+    expect(
+      mapChangelogFeedState(
+        { results: [], status: "LoadingFirstPage", loadMore: vi.fn() },
+        true,
+      ),
+    ).toMatchObject({ status: "unsupported", items: [] });
+    expect(mapChangelogEntryState(undefined, false)).toEqual({
+      status: "unsupported",
     });
-    useQuery.mockReturnValue({ contractVersion: 1, status: "notFound" });
-    const markup = renderToStaticMarkup(
-      <AfferentProvider
-        bindings={bindings}
-        auth={{ status: "authenticated", sessionGeneration: "actor-a" }}
-      >
-        <Probe />
-      </AfferentProvider>,
-    );
-    expect(markup).toContain("&quot;feed&quot;:&quot;empty&quot;");
-    expect(markup).toContain("&quot;entry&quot;:&quot;notFound&quot;");
-    expect(markup).toContain("&quot;editor&quot;:&quot;ready&quot;");
-
-    const unsupported = renderToStaticMarkup(
-      <AfferentProvider
-        bindings={{ public: bindings.public } as AfferentBindings}
-        auth={{ status: "unauthenticated" }}
-      >
-        <Probe />
-      </AfferentProvider>,
-    );
-    expect(unsupported).toContain("&quot;feed&quot;:&quot;unsupported&quot;");
-    expect(unsupported).toContain("&quot;entry&quot;:&quot;unsupported&quot;");
-    expect(unsupported).toContain("&quot;editor&quot;:&quot;unsupported&quot;");
-  });
-
-  test("guards duplicate editorial actions and waits for server truth", async () => {
-    let resolveMutation: ((value: object) => void) | undefined;
-    const mutation = vi.fn(
-      () =>
-        new Promise((resolve) => {
-          resolveMutation = resolve;
-        }),
-    );
-    useMutation.mockReturnValue(mutation);
-    usePaginatedQuery.mockReturnValue({
-      results: [],
-      status: "Exhausted",
-      loadMore: vi.fn(),
-    });
-    useQuery.mockReturnValue({ contractVersion: 1, status: "notFound" });
-    renderToStaticMarkup(
-      <AfferentProvider bindings={bindings} auth={{ status: "authenticated" }}>
-        <Probe />
-      </AfferentProvider>,
-    );
-    const first = editorProbe!.publish("entry-1" as never);
-    await expect(
-      editorProbe!.publish("entry-1" as never),
-    ).resolves.toMatchObject({ ok: false, error: { code: "VALIDATION" } });
-    resolveMutation?.({
-      contractVersion: 1,
-      id: "entry-1",
-      state: "published",
-    });
-    await expect(first).resolves.toMatchObject({ ok: true });
-    expect(mutation).toHaveBeenCalledTimes(1);
   });
 });

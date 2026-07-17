@@ -1,5 +1,4 @@
-import { usePaginatedQuery } from "convex-helpers/react";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { makeFunctionReference } from "convex/server";
 // @ts-expect-error React declarations are supplied by strict consumer fixtures.
 import { useEffect, useState } from "react";
@@ -22,31 +21,22 @@ import type {
 } from "../../client/contracts.js";
 import type {
   FeedbackFeedQueryReference,
-  FeedbackSearchQueryReference,
-  SimilarPostsQueryReference,
   ParticipationBindings,
 } from "../bindings.js";
 import { useAfferentContext } from "../provider.js";
-import { useMutationController } from "./mutations.js";
+import { useDirectWatchQuery, usePaginatedWatchQuery } from "../query.js";
+import { mapAfferentError, useMutationController } from "./mutations.js";
 
 const DEFAULT_PAGE_SIZE = 20;
 export const DEFAULT_SEARCH_DEBOUNCE_MS = 250;
 
-const UNCONFIGURED_SEARCH_REFERENCE = makeFunctionReference<"query">(
-  "__afferent:unconfiguredSearch",
-) as FeedbackSearchQueryReference;
-const UNCONFIGURED_SIMILAR_REFERENCE = makeFunctionReference<"query">(
-  "__afferent:unconfiguredSimilar",
-) as SimilarPostsQueryReference;
-const UNCONFIGURED_POST_REFERENCE = makeFunctionReference<"query">(
-  "__afferent:unconfiguredPost",
-);
 const UNCONFIGURED_PARTICIPATION_MUTATION = makeFunctionReference<"mutation">(
   "__afferent:unconfiguredParticipationMutation",
 );
 
 export type PostLookupState =
   | Readonly<{ status: "unsupported" | "loading" | "notFound" }>
+  | Readonly<{ status: "error"; error: AfferentError }>
   | Readonly<{ status: "post"; post: FeedbackPostDto }>
   | Readonly<{
       status: "merged";
@@ -72,13 +62,19 @@ export function mapPostLookupState(
 }
 
 export function usePost(postId: PostId): PostLookupState {
-  const { bindings } = useAfferentContext();
+  const { bindings, client, generation } = useAfferentContext();
   const binding = bindings.public.getPost;
-  const result = useQuery(
-    binding ?? UNCONFIGURED_POST_REFERENCE,
-    binding ? { postId } : "skip",
-  ) as PostLookupResult | undefined;
-  return mapPostLookupState(result, binding !== undefined);
+  const query = useDirectWatchQuery({
+    client,
+    query: binding,
+    args: binding ? { postId, sessionGeneration: generation } : undefined,
+    generation,
+  });
+  if (query.status === "error") return query;
+  return mapPostLookupState(
+    query.status === "ready" ? query.value : undefined,
+    binding !== undefined,
+  );
 }
 
 export interface FeedbackFeedArgs {
@@ -116,7 +112,7 @@ export type FeedbackFeedState =
   | Readonly<{
       status: "error";
       items: FeedbackPostDto[];
-      error: Error;
+      error: AfferentError;
       isLoadingMore: false;
       canLoadMore: false;
       loadMore: () => void;
@@ -126,7 +122,7 @@ export interface FeedbackPaginationState {
   results: FeedbackPostDto[];
   status:
     "LoadingFirstPage" | "CanLoadMore" | "LoadingMore" | "Exhausted" | "Error";
-  error?: Error;
+  error?: AfferentError;
   loadMore: (count: number) => void;
 }
 
@@ -147,7 +143,8 @@ export function mapFeedbackFeedState(
     return {
       status: "error",
       items: pagination.results,
-      error: pagination.error ?? new Error("Feedback feed failed"),
+      error:
+        pagination.error ?? mapAfferentError(new Error("Feedback feed failed")),
       isLoadingMore: false,
       canLoadMore: false,
       loadMore,
@@ -174,8 +171,15 @@ export function mapFeedbackFeedState(
 }
 
 export function useFeedbackFeed(args: FeedbackFeedArgs): FeedbackFeedState {
-  const { bindings } = useAfferentContext();
-  const pagination = usePaginatedQuery(bindings.public.listFeedback, args, {
+  const { bindings, client, generation } = useAfferentContext();
+  const pagination = usePaginatedWatchQuery<
+    FeedbackPostDto,
+    FeedbackFeedQueryReference
+  >({
+    client,
+    query: bindings.public.listFeedback,
+    args: { ...args, sessionGeneration: generation },
+    generation,
     initialNumItems: DEFAULT_PAGE_SIZE,
   });
   return mapFeedbackFeedState(pagination);
@@ -213,7 +217,7 @@ export type BoundedDiscoveryState =
       status: "error";
       items: DiscoveryPostDto[];
       hasMore: false;
-      error: Error;
+      error: AfferentError;
     }>;
 
 export function mapBoundedDiscoveryState(
@@ -227,7 +231,12 @@ export function mapBoundedDiscoveryState(
     return { status: "loading", items: [], hasMore: false };
   }
   if (result instanceof Error) {
-    return { status: "error", items: [], hasMore: false, error: result };
+    return {
+      status: "error",
+      items: [],
+      hasMore: false,
+      error: mapAfferentError(result),
+    };
   }
   if (result.items.length === 0) {
     return { status: "empty", items: [], hasMore: false };
@@ -252,7 +261,7 @@ function useDebouncedValue<T>(value: T, delay: number) {
 export function useFeedbackSearch(
   args: FeedbackSearchArgs,
 ): BoundedDiscoveryState {
-  const { bindings } = useAfferentContext();
+  const { bindings, client, generation } = useAfferentContext();
   const binding = bindings.public.searchFeedback;
   const debounced = useDebouncedValue(
     {
@@ -260,38 +269,54 @@ export function useFeedbackSearch(
       ...(args.boardId === undefined ? {} : { boardId: args.boardId }),
       ...(args.status === undefined ? {} : { status: args.status }),
       ...(args.tagId === undefined ? {} : { tagId: args.tagId }),
+      sessionGeneration: generation,
     },
     args.debounceMs ?? DEFAULT_SEARCH_DEBOUNCE_MS,
   );
   const enabled = binding !== undefined && debounced.query.trim().length > 0;
-  const result = useQuery(
-    binding ?? UNCONFIGURED_SEARCH_REFERENCE,
-    enabled ? debounced : "skip",
-  );
+  const result = useDirectWatchQuery({
+    client,
+    query: binding,
+    args: enabled ? debounced : undefined,
+    generation,
+  });
   if (binding === undefined) return mapBoundedDiscoveryState(undefined, true);
   if (!enabled) return { status: "empty", items: [], hasMore: false };
-  return mapBoundedDiscoveryState(result);
+  if (result.status === "error") {
+    return { status: "error", items: [], hasMore: false, error: result.error };
+  }
+  return mapBoundedDiscoveryState(
+    result.status === "ready" ? result.value : undefined,
+  );
 }
 
 export function useSimilarPosts(args: SimilarPostsArgs): BoundedDiscoveryState {
-  const { bindings } = useAfferentContext();
+  const { bindings, client, generation } = useAfferentContext();
   const binding = bindings.public.suggestSimilarPosts;
   const debounced = useDebouncedValue(
     {
       title: args.title,
       ...(args.body === undefined ? {} : { body: args.body }),
       ...(args.limit === undefined ? {} : { limit: args.limit }),
+      sessionGeneration: generation,
     },
     args.debounceMs ?? DEFAULT_SEARCH_DEBOUNCE_MS,
   );
   const enabled = binding !== undefined && debounced.title.trim().length > 0;
-  const result = useQuery(
-    binding ?? UNCONFIGURED_SIMILAR_REFERENCE,
-    enabled ? debounced : "skip",
-  );
+  const result = useDirectWatchQuery({
+    client,
+    query: binding,
+    args: enabled ? debounced : undefined,
+    generation,
+  });
   if (binding === undefined) return mapBoundedDiscoveryState(undefined, true);
   if (!enabled) return { status: "empty", items: [], hasMore: false };
-  return mapBoundedDiscoveryState(result);
+  if (result.status === "error") {
+    return { status: "error", items: [], hasMore: false, error: result.error };
+  }
+  return mapBoundedDiscoveryState(
+    result.status === "ready" ? result.value : undefined,
+  );
 }
 
 export type FeedbackMutationAction =
@@ -325,11 +350,13 @@ function participationUnavailable(
   return undefined;
 }
 
-function applyVoteOptimism(
-  mutation: ReturnType<typeof useMutation>,
-  binding: ParticipationBindings["setVote"] | undefined,
-  feedBinding: FeedbackFeedQueryReference,
-) {
+function applyVoteOptimism(options: {
+  mutation: ReturnType<typeof useMutation>;
+  binding: ParticipationBindings["setVote"] | undefined;
+  feedBinding: FeedbackFeedQueryReference;
+  sessionGeneration: number;
+}) {
+  const { mutation, binding, feedBinding, sessionGeneration } = options;
   const candidate = mutation as typeof mutation & {
     withOptimisticUpdate?: (
       handler: (store: any, args: { postId: PostId; desired: boolean }) => void,
@@ -338,6 +365,7 @@ function applyVoteOptimism(
   if (!candidate.withOptimisticUpdate || !binding) return mutation;
   return candidate.withOptimisticUpdate((store, args) => {
     for (const query of store.getAllQueries(feedBinding)) {
+      if (query.args.sessionGeneration !== sessionGeneration) continue;
       if (!query.value) continue;
       const update = (post: FeedbackPostDto) => {
         if (post.id !== args.postId) return post;
@@ -359,7 +387,7 @@ function applyVoteOptimism(
 }
 
 export function useFeedbackMutations() {
-  const { bindings, auth, sessionKey } = useAfferentContext();
+  const { bindings, auth, generation, sessionKey } = useAfferentContext();
   const participation = bindings.participation;
   const createPost = useMutation(
     (participation?.createPost ??
@@ -377,11 +405,12 @@ export function useFeedbackMutations() {
     (participation?.setVote ??
       UNCONFIGURED_PARTICIPATION_MUTATION) as ParticipationBindings["setVote"],
   );
-  const setVote = applyVoteOptimism(
-    rawVote,
-    participation?.setVote,
-    bindings.public.listFeedback,
-  );
+  const setVote = applyVoteOptimism({
+    mutation: rawVote,
+    binding: participation?.setVote,
+    feedBinding: bindings.public.listFeedback,
+    sessionGeneration: generation,
+  });
   const addComment = useMutation(
     (participation?.addComment ??
       UNCONFIGURED_PARTICIPATION_MUTATION) as ParticipationBindings["addComment"],
