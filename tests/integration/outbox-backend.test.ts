@@ -10,7 +10,7 @@ const modules = import.meta.glob("../../src/component/**/*.ts");
 describe("outbox lease concurrency", () => {
   test("serializes two workers and rejects a stale ack after expiry", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(1_000);
+    vi.setSystemTime(1000);
     const backend = withRateLimiter(convexTest(schema, modules));
     await backend.run(async (ctx) => {
       const actorId = await ctx.db.insert("actors", {

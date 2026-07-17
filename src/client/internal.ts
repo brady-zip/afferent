@@ -8,6 +8,9 @@ import type {
   CommentDto,
   CommentPageDto,
   ChangelogPageDto,
+  DeliveryBatchDto,
+  DeliveryCapabilities,
+  DeliveryOperationResult,
   FeedbackPageDto,
   NotificationCapabilities,
   NotificationDto,
@@ -44,6 +47,15 @@ export type ClientResolvers = Readonly<{
   isAuthenticated?: (ctx: ReadContext) => Promise<boolean>;
 }>;
 
+export type DeliveryClientResolvers = Readonly<{
+  resolveScope: (ctx: MutationContext) => Promise<string>;
+  authorizeDelivery: (ctx: MutationContext) => Promise<boolean>;
+}>;
+
+export type DeliveryClient = Readonly<{
+  delivery: DeliveryCapabilities<MutationContext>;
+}>;
+
 export type AfferentClient = Readonly<{
   read: ReadCapabilities<ReadContext>;
   participation: ParticipationCapabilities<MutationContext>;
@@ -51,9 +63,9 @@ export type AfferentClient = Readonly<{
   admin: AdminCapabilities<ReadContext, MutationContext>;
 }>;
 
-async function resolveRequiredScope(
-  resolver: ClientResolvers["resolveScope"],
-  ctx: HostContext,
+async function resolveRequiredScope<Context extends HostContext>(
+  resolver: (ctx: Context) => Promise<string>,
+  ctx: Context,
 ) {
   const scopeId = await resolver(ctx);
   if (!scopeId?.trim()) throw new Error("SCOPE_RESOLUTION_REQUIRED");
@@ -62,6 +74,49 @@ async function resolveRequiredScope(
 
 async function viewerAuthenticated(options: ClientResolvers, ctx: ReadContext) {
   return options.isAuthenticated ? await options.isAuthenticated(ctx) : false;
+}
+
+export function createDeliveryClientWithScope(
+  component: ComponentApi,
+  options: DeliveryClientResolvers,
+): DeliveryClient {
+  async function authorize(ctx: MutationContext) {
+    const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+    if (!(await options.authorizeDelivery(ctx))) {
+      throw new Error("NOT_AUTHORIZED");
+    }
+    return scopeId;
+  }
+
+  return {
+    delivery: {
+      async claimDeliveryBatch(ctx, args) {
+        const scopeId = await authorize(ctx);
+        return (await ctx.runMutation(
+          component.notifications.outbox.claimDeliveryBatch,
+          {
+            scopeId,
+            leaseOwner: args.leaseOwner,
+            limit: args.limit ?? 50,
+          },
+        )) as unknown as DeliveryBatchDto;
+      },
+      async ackDelivery(ctx, args) {
+        const scopeId = await authorize(ctx);
+        return (await ctx.runMutation(
+          component.notifications.outbox.ackDelivery,
+          { scopeId, ...args },
+        )) as unknown as DeliveryOperationResult;
+      },
+      async releaseDelivery(ctx, args) {
+        const scopeId = await authorize(ctx);
+        return (await ctx.runMutation(
+          component.notifications.outbox.releaseDelivery,
+          { scopeId, ...args },
+        )) as unknown as DeliveryOperationResult;
+      },
+    },
+  };
 }
 
 export function createClientWithScope(

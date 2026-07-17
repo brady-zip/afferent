@@ -12,6 +12,7 @@ export type TagId = BrandedId<"TagId">;
 export type ActivityId = BrandedId<"ActivityId">;
 export type ChangelogId = BrandedId<"ChangelogId">;
 export type NotificationId = BrandedId<"NotificationId">;
+export type DeliveryId = BrandedId<"DeliveryId">;
 
 export type RoadmapStatusKey = "planned" | "in_progress" | "complete";
 
@@ -313,6 +314,46 @@ export type UnreadNotificationCountDto = Readonly<{
   count: number;
 }>;
 
+export type DeliveryEventDto = Readonly<{
+  contractVersion: 1;
+  eventId: string;
+  type: NotificationEventType;
+  entityId: string;
+  sequence: number;
+  occurredAt: number;
+  recipientKey: string;
+}>;
+
+export type DeliveryLeaseDto = Readonly<{
+  contractVersion: 1;
+  id: DeliveryId;
+  event: DeliveryEventDto;
+  leaseOwner: string;
+  leaseVersion: number;
+  leaseUntil: number;
+  attempts: number;
+}>;
+
+export type DeliveryBatchDto = Readonly<{
+  contractVersion: 1;
+  leases: DeliveryLeaseDto[];
+}>;
+
+export type DeliveryOperationResult =
+  | Readonly<{ contractVersion: 1; ok: true; status: "acked" }>
+  | Readonly<{ contractVersion: 1; ok: true; status: "dead_letter" }>
+  | Readonly<{
+      contractVersion: 1;
+      ok: true;
+      status: "pending";
+      availableAt: number;
+    }>
+  | Readonly<{
+      contractVersion: 1;
+      ok: false;
+      error: Readonly<{ code: "LEASE_LOST" }>;
+    }>;
+
 export type PostCountDto = Readonly<{
   contractVersion: 1;
   count: number;
@@ -426,6 +467,16 @@ export const getUnreadNotificationCountIntentValidator = v.object({
 export const markNotificationReadIntentValidator = v.object({
   notificationId: v.string(),
 });
+export const claimDeliveryBatchIntentValidator = v.object({
+  leaseOwner: v.string(),
+  limit: v.optional(v.number()),
+});
+export const ackDeliveryIntentValidator = v.object({
+  deliveryId: v.string(),
+  leaseOwner: v.string(),
+  leaseVersion: v.number(),
+});
+export const releaseDeliveryIntentValidator = ackDeliveryIntentValidator;
 
 export const adminEditPostIntentValidator = editPostIntentValidator;
 export const movePostIntentValidator = v.object({
@@ -721,6 +772,52 @@ export const notificationEventTypeResultValidator = v.union(
   v.literal("comment_replied"),
   v.literal("mentioned"),
   v.literal("changelog_published"),
+);
+
+export const deliveryEventResultValidator = v.object({
+  contractVersion: v.literal(1),
+  eventId: v.string(),
+  type: notificationEventTypeResultValidator,
+  entityId: v.string(),
+  sequence: v.number(),
+  occurredAt: v.number(),
+  recipientKey: v.string(),
+});
+export const deliveryLeaseResultValidator = v.object({
+  contractVersion: v.literal(1),
+  id: v.string(),
+  event: deliveryEventResultValidator,
+  leaseOwner: v.string(),
+  leaseVersion: v.number(),
+  leaseUntil: v.number(),
+  attempts: v.number(),
+});
+export const deliveryBatchResultValidator = v.object({
+  contractVersion: v.literal(1),
+  leases: v.array(deliveryLeaseResultValidator),
+});
+export const deliveryOperationResultValidator = v.union(
+  v.object({
+    contractVersion: v.literal(1),
+    ok: v.literal(true),
+    status: v.literal("acked"),
+  }),
+  v.object({
+    contractVersion: v.literal(1),
+    ok: v.literal(true),
+    status: v.literal("dead_letter"),
+  }),
+  v.object({
+    contractVersion: v.literal(1),
+    ok: v.literal(true),
+    status: v.literal("pending"),
+    availableAt: v.number(),
+  }),
+  v.object({
+    contractVersion: v.literal(1),
+    ok: v.literal(false),
+    error: v.object({ code: v.literal("LEASE_LOST") }),
+  }),
 );
 
 export const notificationResultValidator = v.object({
@@ -1102,6 +1199,29 @@ export interface NotificationCapabilities<
     ctx: MutationContext,
     args: { notificationId: NotificationId },
   ): Promise<NotificationDto>;
+}
+
+export interface DeliveryCapabilities<Context> {
+  claimDeliveryBatch(
+    ctx: Context,
+    args: { leaseOwner: string; limit?: number },
+  ): Promise<DeliveryBatchDto>;
+  ackDelivery(
+    ctx: Context,
+    args: {
+      deliveryId: DeliveryId;
+      leaseOwner: string;
+      leaseVersion: number;
+    },
+  ): Promise<DeliveryOperationResult>;
+  releaseDelivery(
+    ctx: Context,
+    args: {
+      deliveryId: DeliveryId;
+      leaseOwner: string;
+      leaseVersion: number;
+    },
+  ): Promise<DeliveryOperationResult>;
 }
 
 export interface AdminCapabilities<
