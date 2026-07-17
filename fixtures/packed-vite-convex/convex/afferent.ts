@@ -5,6 +5,7 @@ import {
   adminChangelogEntryResultValidator,
   adminEditPostIntentValidator,
   changelogPageResultValidator,
+  commentPageResultValidator,
   configureInstallationIntentValidator,
   createAfferentClient,
   createChangelogDraftIntentValidator,
@@ -20,6 +21,7 @@ import {
   getUnreadNotificationCountIntentValidator,
   installationResultValidator,
   listFeedbackIntentValidator,
+  listCommentsIntentValidator,
   listNotificationsIntentValidator,
   listPostActivityIntentValidator,
   listPostsIntentValidator,
@@ -115,6 +117,17 @@ export const listFeedback = query({
   returns: feedbackPageResultValidator,
   handler: (ctx, args) =>
     client.read.listFeedback(ctx, withoutSessionGeneration(args) as never),
+});
+
+export const listComments = query({
+  args: {
+    ...listCommentsIntentValidator.fields,
+    ...cacheGenerationValidator,
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: commentPageResultValidator,
+  handler: (ctx, args) =>
+    client.read.listComments(ctx, withoutSessionGeneration(args) as never),
 });
 
 export const resolvePost = query({

@@ -10,6 +10,7 @@ import {
   useChangelogEditor,
   useChangelogEntry,
   useChangelogFeed,
+  useComments,
   useFeedbackFeed,
   useFeedbackMutations,
   useFeedbackSearch,
@@ -29,6 +30,7 @@ import type { AfferentBindings } from "afferent/react.js";
 const headlessBindings = {
   public: {
     listFeedback: api.afferent.listFeedback,
+    listComments: api.afferent.listComments,
     getPost: api.afferent.resolvePost,
     searchFeedback: api.afferent.searchFeedback,
     suggestSimilarPosts: api.afferent.suggestSimilarPosts,
@@ -76,6 +78,7 @@ const headlessBindings = {
 
 function HeadlessWorkflow({ postId }: Readonly<{ postId?: PostId }>) {
   const feed = useFeedbackFeed({ order: "newest" });
+  const comments = useComments(postId ?? ("missing" as PostId));
   const search = useFeedbackSearch({ query: "feedback" });
   const similar = useSimilarPosts({ title: "feedback" });
   const direct = usePost(postId ?? ("missing" as PostId));
@@ -99,6 +102,7 @@ function HeadlessWorkflow({ postId }: Readonly<{ postId?: PostId }>) {
       <dl>
         {Object.entries({
           feed: feed.status,
+          comments: comments.status,
           search: search.status,
           similar: similar.status,
           direct: direct.status,
