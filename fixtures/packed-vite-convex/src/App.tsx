@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "convex/react";
+import { useConvex, useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 
@@ -144,6 +144,7 @@ export async function submitFeedback(
 }
 
 export function App() {
+  const convex = useConvex();
   const configureInstallation = useMutation(api.afferent.configureInstallation);
   const createPost = useMutation(api.afferent.createPost);
   const [boardId, setBoardId] = useState<string>();
@@ -172,7 +173,8 @@ export function App() {
   return (
     <AfferentProvider
       bindings={headlessBindings}
-      auth={{ status: "authenticated", sessionGeneration: "fixture-user" }}
+      client={convex}
+      auth={{ status: "authenticated", identityToken: "fixture-user" }}
     >
       <main>
         <h1>Product Feedback</h1>

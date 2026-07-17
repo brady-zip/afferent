@@ -457,19 +457,15 @@ export const addCommentIntentValidator = v.object({
 
 export const getPostSubscriptionIntentValidator = v.object({
   postId: v.string(),
-  sessionGeneration: v.optional(v.string()),
 });
 export const setPostSubscriptionIntentValidator = v.object({
   postId: v.string(),
   desired: v.boolean(),
 });
 export const listNotificationsIntentValidator = v.object({
-  sessionGeneration: v.optional(v.string()),
   paginationOpts: v.optional(paginationOptsValidator),
 });
-export const getUnreadNotificationCountIntentValidator = v.object({
-  sessionGeneration: v.optional(v.string()),
-});
+export const getUnreadNotificationCountIntentValidator = v.object({});
 export const markNotificationReadIntentValidator = v.object({
   notificationId: v.string(),
 });
@@ -510,7 +506,6 @@ export const setArchivedIntentValidator = v.object({
 });
 export const listPostActivityIntentValidator = v.object({
   postId: v.string(),
-  sessionGeneration: v.optional(v.string()),
   paginationOpts: v.optional(paginationOptsValidator),
 });
 export const publicPostStatusKeyValidator = v.union(
@@ -571,12 +566,8 @@ export const postActivityPageResultValidator = v.object({
     ),
   ),
 });
-export const listTagsIntentValidator = v.object({
-  sessionGeneration: v.optional(v.string()),
-});
-export const adminCapabilityIntentValidator = v.object({
-  sessionGeneration: v.optional(v.string()),
-});
+export const listTagsIntentValidator = v.object({});
+export const adminCapabilityIntentValidator = v.object({});
 export const adminCapabilityResultValidator = v.boolean();
 export const mergePostIntentValidator = v.object({
   sourcePostId: v.string(),
@@ -628,18 +619,15 @@ export const listRoadmapGroupIntentValidator = v.object({
     v.literal("complete"),
   ),
   boardId: v.optional(v.string()),
-  sessionGeneration: v.optional(v.string()),
   paginationOpts: v.optional(paginationOptsValidator),
 });
 
 export const listPublishedChangelogIntentValidator = v.object({
-  sessionGeneration: v.optional(v.string()),
   paginationOpts: v.optional(paginationOptsValidator),
 });
 
 export const getPublishedChangelogBySlugIntentValidator = v.object({
   slug: v.string(),
-  sessionGeneration: v.optional(v.string()),
 });
 
 export const createChangelogDraftIntentValidator = v.object({
@@ -1206,20 +1194,16 @@ export interface ReadCapabilities<Context> {
     args: {
       status: RoadmapStatusKey;
       boardId?: BoardId;
-      sessionGeneration?: string;
       paginationOpts?: PaginationOptions;
     },
   ): Promise<RoadmapGroupPageDto>;
   listPublishedChangelog(
     ctx: Context,
-    args: {
-      sessionGeneration?: string;
-      paginationOpts?: PaginationOptions;
-    },
+    args: { paginationOpts?: PaginationOptions },
   ): Promise<ChangelogPageDto>;
   getPublishedChangelogBySlug(
     ctx: Context,
-    args: { slug: string; sessionGeneration?: string },
+    args: { slug: string },
   ): Promise<PublishedChangelogLookupDto>;
   searchFeedback(
     ctx: Context,
@@ -1272,7 +1256,7 @@ export interface NotificationCapabilities<
 > {
   getPostSubscription(
     ctx: QueryContext,
-    args: { postId: PostId; sessionGeneration?: string },
+    args: { postId: PostId },
   ): Promise<PostSubscriptionDto>;
   setPostSubscription(
     ctx: MutationContext,
@@ -1280,11 +1264,11 @@ export interface NotificationCapabilities<
   ): Promise<AfferentActionResult<PostSubscriptionDto>>;
   listNotifications(
     ctx: QueryContext,
-    args: { sessionGeneration?: string; paginationOpts?: PaginationOptions },
+    args: { paginationOpts?: PaginationOptions },
   ): Promise<NotificationPageDto>;
   getUnreadCount(
     ctx: QueryContext,
-    args: { sessionGeneration?: string },
+    args: Record<string, never>,
   ): Promise<UnreadNotificationCountDto>;
   markNotificationRead(
     ctx: MutationContext,

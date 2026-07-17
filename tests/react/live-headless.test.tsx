@@ -569,6 +569,14 @@ describe("mounted identity-generation isolation", () => {
     const secondGeneration = client.matching("headless:feed").at(-1)!.args
       .sessionGeneration;
     expect(secondGeneration).not.toBe(firstGeneration);
+    act(() => {
+      client.update(
+        "headless:feed",
+        (args) => args.sessionGeneration === firstGeneration,
+        page([{ id: "stale-direct-page" }]),
+      );
+    });
+    expect(state(mounted.container).feedItems).toEqual([]);
 
     mounted.rerender({
       status: "authenticated",
@@ -578,6 +586,18 @@ describe("mounted identity-generation isolation", () => {
       .sessionGeneration;
     expect(thirdGeneration).not.toBe(firstGeneration);
     expect(thirdGeneration).not.toBe(secondGeneration);
+    mounted.rerender({ status: "unauthenticated" });
+    const fourthGeneration = client.matching("headless:feed").at(-1)!.args
+      .sessionGeneration;
+    expect(fourthGeneration).not.toBe(thirdGeneration);
+    mounted.rerender({
+      status: "authenticated",
+      identityToken: "actor-a",
+    } as never);
+    const fifthGeneration = client.matching("headless:feed").at(-1)!.args
+      .sessionGeneration;
+    expect(fifthGeneration).not.toBe(thirdGeneration);
+    expect(fifthGeneration).not.toBe(fourthGeneration);
     for (const record of client.records) {
       expect(JSON.stringify(record.args)).not.toContain("actor-a");
       expect(JSON.stringify(record.args)).not.toContain("actor-b");
@@ -607,6 +627,46 @@ describe("mounted identity-generation isolation", () => {
       oldMutation.reject(new Error("old actor failed"));
       await request;
     });
+    expect(state(mounted.container).errors).toEqual({});
+    mounted.unmount();
+  });
+
+  test("cancels a rate-limit retry timer when generation changes", async () => {
+    vi.useFakeTimers();
+    const client = new ControlledWatchClient();
+    const limitedMutation = deferred();
+    client.mutationQueue.push(limitedMutation);
+    const mounted = renderHarness(client, {
+      status: "authenticated",
+      identityToken: "actor-a",
+    } as never);
+    await act(async () => {});
+    const actorAProbe = mutationProbe!;
+    let request!: Promise<unknown>;
+    await act(async () => {
+      request = actorAProbe.setVote("post:1" as never, true);
+      await Promise.resolve();
+      limitedMutation.resolve({
+        ok: false,
+        error: {
+          contractVersion: 1,
+          code: "RATE_LIMITED",
+          operation: "vote",
+          retryAfterMs: 100,
+        },
+      });
+      await request;
+    });
+    expect(state(mounted.container).errors["post:1:vote"]).toMatchObject({
+      code: "RATE_LIMITED",
+    });
+    const retry = actorAProbe.retry("post:1:vote");
+    mounted.rerender({ status: "unauthenticated" });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(100);
+      await retry;
+    });
+    expect(client.mutationCalls).toHaveLength(1);
     expect(state(mounted.container).errors).toEqual({});
     mounted.unmount();
   });

@@ -213,6 +213,25 @@ const installedPackage = join(materializedConsumer, "node_modules/afferent");
 const installedManifest = JSON.parse(
   await readFile(join(installedPackage, "package.json"), "utf8"),
 );
+const providerDeclaration = await readFile(
+  join(installedPackage, "dist/react/provider.d.ts"),
+  "utf8",
+);
+const bindingDeclaration = await readFile(
+  join(installedPackage, "dist/react/bindings.d.ts"),
+  "utf8",
+);
+for (const required of ["identityToken: string", "client: AfferentWatchClient"]) {
+  if (!providerDeclaration.includes(required)) {
+    throw new Error(`packed provider declaration is missing ${required}`);
+  }
+}
+if (
+  !bindingDeclaration.includes("sessionGeneration: number") ||
+  providerDeclaration.includes("authenticated:default")
+) {
+  throw new Error("packed identity-generation declaration contract is stale");
+}
 if (
   installedManifest.license !== "Apache-2.0" ||
   installedManifest.type !== "module"

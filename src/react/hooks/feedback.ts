@@ -387,7 +387,7 @@ function applyVoteOptimism(options: {
 }
 
 export function useFeedbackMutations() {
-  const { bindings, auth, generation, sessionKey } = useAfferentContext();
+  const { bindings, auth, generation } = useAfferentContext();
   const participation = bindings.participation;
   const createPost = useMutation(
     (participation?.createPost ??
@@ -415,7 +415,7 @@ export function useFeedbackMutations() {
     (participation?.addComment ??
       UNCONFIGURED_PARTICIPATION_MUTATION) as ParticipationBindings["addComment"],
   );
-  const controller = useMutationController(sessionKey);
+  const controller = useMutationController(generation);
   const unavailable = participationUnavailable(
     participation !== undefined,
     auth.status === "authenticated",

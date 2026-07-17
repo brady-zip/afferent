@@ -7,13 +7,26 @@ import { describe, expect, test } from "vitest";
 
 import {
   addCommentIntentValidator,
+  adminCapabilityIntentValidator,
   anonymizeActorIntentValidator,
   createPostIntentValidator,
   countResultValidator,
   editPostIntentValidator,
+  getPostIntentValidator,
+  getPostSubscriptionIntentValidator,
+  getPublishedChangelogBySlugIntentValidator,
+  getUnreadNotificationCountIntentValidator,
+  listFeedbackIntentValidator,
+  listNotificationsIntentValidator,
+  listPostActivityIntentValidator,
+  listPublishedChangelogIntentValidator,
+  listRoadmapGroupIntentValidator,
+  listTagsIntentValidator,
   publicPostDtoValidator,
   publicCommentDtoValidator,
   setVoteIntentValidator,
+  searchFeedbackIntentValidator,
+  suggestSimilarPostsIntentValidator,
   withdrawPostIntentValidator,
 } from "../../src/client/contracts.js";
 import { normalizeBetterAuthUser } from "../../src/client/adapters/better-auth.js";
@@ -143,6 +156,32 @@ describe("public contract privacy", () => {
     expect(Object.keys(anonymizeActorIntentValidator.fields)).toEqual([
       "actorId",
     ]);
+  });
+
+  test("keeps the browser cache generation out of component intents", () => {
+    for (const validator of [
+      listFeedbackIntentValidator,
+      getPostIntentValidator,
+      searchFeedbackIntentValidator,
+      suggestSimilarPostsIntentValidator,
+      listRoadmapGroupIntentValidator,
+      listPublishedChangelogIntentValidator,
+      getPublishedChangelogBySlugIntentValidator,
+      getPostSubscriptionIntentValidator,
+      listNotificationsIntentValidator,
+      getUnreadNotificationCountIntentValidator,
+      adminCapabilityIntentValidator,
+      listPostActivityIntentValidator,
+      listTagsIntentValidator,
+    ]) {
+      expect(validator.fields).not.toHaveProperty("sessionGeneration");
+    }
+    const wrapper = fs.readFileSync(
+      "fixtures/packed-vite-convex/convex/afferent.ts",
+      "utf8",
+    );
+    expect(wrapper).toContain("sessionGeneration: v.number()");
+    expect(wrapper).toContain("withoutSessionGeneration(args)");
   });
 
   test("freezes the exact versioned public post DTO shape", () => {

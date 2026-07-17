@@ -1,5 +1,5 @@
 // @ts-expect-error React declarations are supplied by strict consumer fixtures.
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import type {
   AfferentError,
@@ -100,80 +100,123 @@ export function duplicateMutationError(): AfferentError {
   };
 }
 
-export function useMutationController(sessionKey: string) {
-  const [pending, setPending] = useState({} as Record<string, boolean>);
-  const [errors, setErrors] = useState(
-    {} as Record<string, AfferentError | undefined>,
+interface MutationControllerState {
+  generation: number;
+  pending: Record<string, boolean>;
+  errors: Record<string, AfferentError | undefined>;
+}
+
+interface RetryAction {
+  generation: number;
+  invoke: () => Promise<AfferentResult<unknown>>;
+}
+
+const EMPTY_PENDING: Record<string, boolean> = {};
+const EMPTY_ERRORS: Record<string, AfferentError | undefined> = {};
+
+export function useMutationController(generation: number) {
+  const currentGeneration = useRef(generation);
+  currentGeneration.current = generation;
+  const [state, setState] = useState(
+    (): MutationControllerState => ({
+      generation,
+      pending: {},
+      errors: {},
+    }),
   );
   const inFlight = useRef(new Set<string>());
-  const retryActions = useRef(
-    new Map<string, () => Promise<AfferentResult<unknown>>>(),
-  );
+  const retryActions = useRef(new Map<string, RetryAction>());
 
-  useEffect(() => {
-    inFlight.current.clear();
-    retryActions.current.clear();
-    setPending({});
-    setErrors({});
-  }, [sessionKey]);
+  const pending = state.generation === generation ? state.pending : EMPTY_PENDING;
+  const errors = state.generation === generation ? state.errors : EMPTY_ERRORS;
+
+  function write(
+    capturedGeneration: number,
+    update: (current: MutationControllerState) => MutationControllerState,
+  ) {
+    if (currentGeneration.current !== capturedGeneration) return;
+    setState((current: MutationControllerState) => {
+      if (currentGeneration.current !== capturedGeneration) return current;
+      const owned =
+        current.generation === capturedGeneration
+          ? current
+          : { generation: capturedGeneration, pending: {}, errors: {} };
+      return update(owned);
+    });
+  }
 
   async function run<T>(
     key: string,
     invoke: () => Promise<T | AfferentResult<T>>,
     unavailable?: AfferentError,
   ): Promise<AfferentResult<T>> {
-    if (inFlight.current.has(key)) {
+    const capturedGeneration = generation;
+    const ownedKey = `${capturedGeneration}:${key}`;
+    if (currentGeneration.current !== capturedGeneration) {
+      return {
+        ok: false,
+        error: {
+          contractVersion: 1,
+          code: "NOT_AUTHORIZED",
+          message: "Identity changed before the request started",
+        },
+      };
+    }
+    if (inFlight.current.has(ownedKey)) {
       return { ok: false, error: duplicateMutationError() };
     }
     if (unavailable) return { ok: false, error: unavailable };
 
-    inFlight.current.add(key);
+    inFlight.current.add(ownedKey);
     retryActions.current.delete(key);
-    setPending((current: Record<string, boolean>) => ({
+    write(capturedGeneration, (current) => ({
       ...current,
-      [key]: true,
-    }));
-    setErrors((current: Record<string, AfferentError | undefined>) => ({
-      ...current,
-      [key]: undefined,
+      pending: { ...current.pending, [key]: true },
+      errors: { ...current.errors, [key]: undefined },
     }));
     try {
       const result = normalizeAfferentResult(await invoke());
       if (!result.ok) {
         const mapped = mapAfferentError(result.error);
-        setErrors((current: Record<string, AfferentError | undefined>) => ({
+        write(capturedGeneration, (current) => ({
           ...current,
-          [key]: mapped,
+          errors: { ...current.errors, [key]: mapped },
         }));
-        if (isRetryableAfferentError(mapped)) {
-          retryActions.current.set(
-            key,
-            () =>
+        if (
+          currentGeneration.current === capturedGeneration &&
+          isRetryableAfferentError(mapped)
+        ) {
+          retryActions.current.set(key, {
+            generation: capturedGeneration,
+            invoke: () =>
               run(key, invoke, unavailable) as Promise<AfferentResult<unknown>>,
-          );
+          });
         }
         return { ok: false, error: mapped };
       }
       return result;
     } catch (error) {
       const mapped = mapAfferentError(error);
-      setErrors((current: Record<string, AfferentError | undefined>) => ({
+      write(capturedGeneration, (current) => ({
         ...current,
-        [key]: mapped,
+        errors: { ...current.errors, [key]: mapped },
       }));
-      if (isRetryableAfferentError(mapped)) {
-        retryActions.current.set(
-          key,
-          () =>
+      if (
+        currentGeneration.current === capturedGeneration &&
+        isRetryableAfferentError(mapped)
+      ) {
+        retryActions.current.set(key, {
+          generation: capturedGeneration,
+          invoke: () =>
             run(key, invoke, unavailable) as Promise<AfferentResult<unknown>>,
-        );
+        });
       }
       return { ok: false, error: mapped };
     } finally {
-      inFlight.current.delete(key);
-      setPending((current: Record<string, boolean>) => ({
+      inFlight.current.delete(ownedKey);
+      write(capturedGeneration, (current) => ({
         ...current,
-        [key]: false,
+        pending: { ...current.pending, [key]: false },
       }));
     }
   }
@@ -181,12 +224,26 @@ export function useMutationController(sessionKey: string) {
   async function retry(key: string) {
     const action = retryActions.current.get(key);
     const error = errors[key];
-    if (!action || !error || !isRetryableAfferentError(error)) return undefined;
+    if (
+      !action ||
+      action.generation !== generation ||
+      currentGeneration.current !== generation ||
+      !error ||
+      !isRetryableAfferentError(error)
+    ) {
+      return undefined;
+    }
     const delay = retryDelayMs(error);
     if (delay > 0) {
       await new Promise<void>((resolve) => setTimeout(resolve, delay));
     }
-    return await action();
+    if (
+      currentGeneration.current !== action.generation ||
+      retryActions.current.get(key) !== action
+    ) {
+      return undefined;
+    }
+    return await action.invoke();
   }
 
   return {
@@ -196,9 +253,9 @@ export function useMutationController(sessionKey: string) {
     retry,
     reset(key: string) {
       retryActions.current.delete(key);
-      setErrors((current: Record<string, AfferentError | undefined>) => ({
+      write(generation, (current) => ({
         ...current,
-        [key]: undefined,
+        errors: { ...current.errors, [key]: undefined },
       }));
     },
   };

@@ -1,7 +1,7 @@
 import { useMutation } from "convex/react";
 import { makeFunctionReference } from "convex/server";
 // @ts-expect-error React declarations are supplied by strict consumer fixtures.
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 
 import type {
   AfferentErrorDto,
@@ -19,7 +19,7 @@ import type {
 import type { AdminBindings } from "../bindings.js";
 import { useAfferentContext } from "../provider.js";
 import { useDirectWatchQuery, usePaginatedWatchQuery } from "../query.js";
-import { mapAfferentError } from "./mutations.js";
+import { mapAfferentError, useMutationController } from "./mutations.js";
 
 const UNCONFIGURED_ADMIN_MUTATION = makeFunctionReference<"mutation">(
   "__afferent:unconfiguredAdminMutation",
@@ -71,12 +71,20 @@ export function mapModerationError(error: unknown): ModerationError {
   return mapAfferentError(error);
 }
 
+function unavailableAdminError(message: string): ModerationError {
+  return {
+    contractVersion: 1,
+    code: "NOT_AUTHORIZED",
+    message,
+  };
+}
+
 type ModerationResult =
   | Readonly<{ ok: true; data: FeedbackPostDto }>
   | Readonly<{ ok: false; error: ModerationError }>;
 
 export function usePostModeration() {
-  const { bindings, sessionKey } = useAfferentContext();
+  const { bindings, generation } = useAfferentContext();
   const admin = bindings.admin;
   const edit = useMutation(
     (admin?.editPost ??
@@ -98,17 +106,10 @@ export function usePostModeration() {
     (admin?.setArchived ??
       UNCONFIGURED_ADMIN_MUTATION) as AdminBindings["setArchived"],
   );
-  const [pending, setPending] = useState({} as Record<string, boolean>);
-  const [errors, setErrors] = useState(
-    {} as Record<string, ModerationError | undefined>,
-  );
-  const inFlight = useRef(new Set<string>());
-
-  useEffect(() => {
-    inFlight.current.clear();
-    setPending({});
-    setErrors({});
-  }, [sessionKey]);
+  const controller = useMutationController(generation);
+  const unavailable = admin
+    ? undefined
+    : unavailableAdminError("Admin capabilities are not configured");
 
   async function run(
     postId: PostId,
@@ -116,67 +117,17 @@ export function usePostModeration() {
     invoke: () => Promise<FeedbackPostDto>,
   ): Promise<ModerationResult> {
     const key = moderationActionKey(postId, action);
-    if (inFlight.current.has(key)) {
-      return {
-        ok: false,
-        error: {
-          contractVersion: 1,
-          code: "VALIDATION",
-          message: "Request already pending",
-        },
-      };
-    }
-    if (admin === undefined) {
-      return {
-        ok: false,
-        error: {
-          contractVersion: 1,
-          code: "NOT_AUTHORIZED",
-          message: "Admin capabilities are not configured",
-        },
-      };
-    }
-    inFlight.current.add(key);
-    setPending((current: Record<string, boolean>) => ({
-      ...current,
-      [key]: true,
-    }));
-    setErrors((current: Record<string, ModerationError | undefined>) => ({
-      ...current,
-      [key]: undefined,
-    }));
-    try {
-      return { ok: true, data: await invoke() };
-    } catch (error) {
-      const mappedError = mapModerationError(
-        (error as { data?: unknown }).data ?? error,
-      );
-      setErrors((current: Record<string, ModerationError | undefined>) => ({
-        ...current,
-        [key]: mappedError,
-      }));
-      return { ok: false, error: mappedError };
-    } finally {
-      inFlight.current.delete(key);
-      setPending((current: Record<string, boolean>) => ({
-        ...current,
-        [key]: false,
-      }));
-    }
+    return await controller.run(key, invoke, unavailable);
   }
 
   return useMemo(
     () => ({
       status:
         admin === undefined ? ("unsupported" as const) : ("ready" as const),
-      pending,
-      errors,
+      pending: controller.pending,
+      errors: controller.errors,
       reset(postId: PostId, action: ModerationAction) {
-        const key = moderationActionKey(postId, action);
-        setErrors((current: Record<string, ModerationError | undefined>) => ({
-          ...current,
-          [key]: undefined,
-        }));
+        controller.reset(moderationActionKey(postId, action));
       },
       editPost: (args: { postId: PostId; title?: string; body?: string }) =>
         run(args.postId, "edit", () => edit(args)),
@@ -189,7 +140,7 @@ export function usePostModeration() {
       setArchived: (args: { postId: PostId; archived: boolean }) =>
         run(args.postId, "archive", () => archive(args)),
     }),
-    [admin, archive, edit, errors, lock, move, pending, status],
+    [admin, archive, controller, edit, lock, move, status],
   );
 }
 
@@ -314,7 +265,7 @@ type TagManagementResult<T> =
   | Readonly<{ ok: false; error: ModerationError }>;
 
 export function useTagManagement() {
-  const { bindings, sessionKey } = useAfferentContext();
+  const { bindings, generation } = useAfferentContext();
   const admin = bindings.admin;
   const createTag = useMutation(
     (admin?.createTag ??
@@ -332,83 +283,26 @@ export function useTagManagement() {
     (admin?.deleteTag ??
       UNCONFIGURED_ADMIN_MUTATION) as AdminBindings["deleteTag"],
   );
-  const [pending, setPending] = useState({} as Record<string, boolean>);
-  const [errors, setErrors] = useState(
-    {} as Record<string, ModerationError | undefined>,
-  );
-  const inFlight = useRef(new Set<string>());
-
-  useEffect(() => {
-    inFlight.current.clear();
-    setPending({});
-    setErrors({});
-  }, [sessionKey]);
+  const controller = useMutationController(generation);
+  const unavailable = admin
+    ? undefined
+    : unavailableAdminError("Admin capabilities are not configured");
 
   async function run<T>(
     key: string,
     invoke: () => Promise<T>,
   ): Promise<TagManagementResult<T>> {
-    if (inFlight.current.has(key)) {
-      return {
-        ok: false,
-        error: {
-          contractVersion: 1,
-          code: "VALIDATION",
-          message: "Request already pending",
-        },
-      };
-    }
-    if (admin === undefined) {
-      return {
-        ok: false,
-        error: {
-          contractVersion: 1,
-          code: "NOT_AUTHORIZED",
-          message: "Admin capabilities are not configured",
-        },
-      };
-    }
-    inFlight.current.add(key);
-    setPending((current: Record<string, boolean>) => ({
-      ...current,
-      [key]: true,
-    }));
-    setErrors((current: Record<string, ModerationError | undefined>) => ({
-      ...current,
-      [key]: undefined,
-    }));
-    try {
-      return { ok: true, data: await invoke() };
-    } catch (error) {
-      const mappedError = mapModerationError(
-        (error as { data?: unknown }).data ?? error,
-      );
-      setErrors((current: Record<string, ModerationError | undefined>) => ({
-        ...current,
-        [key]: mappedError,
-      }));
-      return { ok: false, error: mappedError };
-    } finally {
-      inFlight.current.delete(key);
-      setPending((current: Record<string, boolean>) => ({
-        ...current,
-        [key]: false,
-      }));
-    }
+    return await controller.run(key, invoke, unavailable);
   }
 
   return useMemo(
     () => ({
       status:
         admin === undefined ? ("unsupported" as const) : ("ready" as const),
-      pending,
-      errors,
+      pending: controller.pending,
+      errors: controller.errors,
       reset(entityId: string, action: TagManagementAction) {
-        const key = tagActionKey(entityId, action);
-        setErrors((current: Record<string, ModerationError | undefined>) => ({
-          ...current,
-          [key]: undefined,
-        }));
+        controller.reset(tagActionKey(entityId, action));
       },
       createTag: (args: { name: string }) =>
         run<TagDto>(tagActionKey("tag", "create"), () => createTag(args)),
@@ -427,7 +321,7 @@ export function useTagManagement() {
           deleteTag(args),
         ),
     }),
-    [admin, createTag, deleteTag, errors, pending, renameTag, setPostTag],
+    [admin, controller, createTag, deleteTag, renameTag, setPostTag],
   );
 }
 
@@ -436,24 +330,14 @@ type MergeActionResult =
   | Readonly<{ ok: false; error: ModerationError }>;
 
 export function useMergePost() {
-  const { bindings, sessionKey } = useAfferentContext();
+  const { bindings, generation } = useAfferentContext();
   const binding = bindings.admin?.mergePost;
   const mutate = useMutation(
     (binding ?? UNCONFIGURED_ADMIN_MUTATION) as NonNullable<
       AdminBindings["mergePost"]
     >,
   );
-  const [pending, setPending] = useState({} as Record<string, boolean>);
-  const [errors, setErrors] = useState(
-    {} as Record<string, ModerationError | undefined>,
-  );
-  const inFlight = useRef(new Set<string>());
-
-  useEffect(() => {
-    inFlight.current.clear();
-    setPending({});
-    setErrors({});
-  }, [sessionKey]);
+  const controller = useMutationController(generation);
 
   async function merge(args: {
     sourcePostId: PostId;
@@ -463,69 +347,26 @@ export function useMergePost() {
       args.sourcePostId,
       "merge" as ModerationAction,
     );
-    if (inFlight.current.has(key)) {
-      return {
-        ok: false,
-        error: {
-          contractVersion: 1,
-          code: "CONFLICT",
-          message: "Merge already pending",
-        },
-      };
-    }
-    if (!binding) {
-      return {
-        ok: false,
-        error: {
-          contractVersion: 1,
-          code: "NOT_AUTHORIZED",
-          message: "Merge capability is not configured",
-        },
-      };
-    }
-    inFlight.current.add(key);
-    setPending((current: Record<string, boolean>) => ({
-      ...current,
-      [key]: true,
-    }));
-    setErrors((current: Record<string, ModerationError | undefined>) => ({
-      ...current,
-      [key]: undefined,
-    }));
-    try {
-      return { ok: true, data: await mutate(args) };
-    } catch (error) {
-      const mapped = mapModerationError(
-        (error as { data?: unknown }).data ?? error,
-      );
-      setErrors((current: Record<string, ModerationError | undefined>) => ({
-        ...current,
-        [key]: mapped,
-      }));
-      return { ok: false, error: mapped };
-    } finally {
-      inFlight.current.delete(key);
-      setPending((current: Record<string, boolean>) => ({
-        ...current,
-        [key]: false,
-      }));
-    }
+    return await controller.run(
+      key,
+      () => mutate(args),
+      binding
+        ? undefined
+        : unavailableAdminError("Merge capability is not configured"),
+    );
   }
 
   return {
     status: binding ? ("ready" as const) : ("unsupported" as const),
-    pending,
-    errors,
+    pending: controller.pending,
+    errors: controller.errors,
     merge,
     reset(sourcePostId: PostId) {
       const key = moderationActionKey(
         sourcePostId,
         "merge" as ModerationAction,
       );
-      setErrors((current: Record<string, ModerationError | undefined>) => ({
-        ...current,
-        [key]: undefined,
-      }));
+      controller.reset(key);
     },
   };
 }

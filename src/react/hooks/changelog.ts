@@ -1,7 +1,7 @@
 import { useMutation } from "convex/react";
 import { makeFunctionReference } from "convex/server";
 // @ts-expect-error React declarations are supplied by strict consumer fixtures.
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 
 import type {
   AdminChangelogEntryDto,
@@ -18,7 +18,7 @@ import type {
 } from "../bindings.js";
 import { useAfferentContext } from "../provider.js";
 import { useDirectWatchQuery, usePaginatedWatchQuery } from "../query.js";
-import { mapModerationError } from "./admin.js";
+import { useMutationController } from "./mutations.js";
 
 const DEFAULT_CHANGELOG_PAGE_SIZE = 20;
 const UNCONFIGURED_CHANGELOG_MUTATION = makeFunctionReference<"mutation">(
@@ -134,14 +134,11 @@ export type ChangelogEntryState =
   | Readonly<{ status: "error"; error: AfferentError }>;
 
 export function mapChangelogEntryState(
-  value: PublishedChangelogLookupDto | Error | undefined,
+  value: PublishedChangelogLookupDto | undefined,
   configured: boolean,
 ): ChangelogEntryState {
   if (!configured) return { status: "unsupported" };
   if (value === undefined) return { status: "loading" };
-  if (value instanceof Error) {
-    return { status: "error", error: mapModerationError(value) };
-  }
   if (value.status === "notFound") return { status: "notFound" };
   return { status: "ready", entry: value.entry };
 }
@@ -187,7 +184,7 @@ function changelogEditorStatus(
 }
 
 export function useChangelogEditor() {
-  const { bindings, auth, sessionKey } = useAfferentContext();
+  const { bindings, auth, generation } = useAfferentContext();
   const admin = bindings.admin;
   const configured =
     admin?.createChangelogDraft !== undefined &&
@@ -223,85 +220,33 @@ export function useChangelogEditor() {
       AdminBindings["unpublishChangelog"]
     >,
   );
-  const [pending, setPending] = useState({} as Record<string, boolean>);
-  const [errors, setErrors] = useState(
-    {} as Record<string, AfferentErrorDto | undefined>,
-  );
-  const inFlight = useRef(new Set<string>());
-
-  useEffect(() => {
-    inFlight.current.clear();
-    setPending({});
-    setErrors({});
-  }, [sessionKey]);
-
-  async function run(
-    key: string,
-    invoke: () => Promise<AdminChangelogEntryDto>,
-  ): Promise<ChangelogEditorResult> {
-    if (inFlight.current.has(key)) {
-      return {
-        ok: false,
-        error: {
-          contractVersion: 1,
-          code: "VALIDATION",
-          message: "Request already pending",
-        },
-      };
-    }
-    if (!configured || auth.status !== "authenticated") {
-      return {
-        ok: false,
-        error: {
+  const controller = useMutationController(generation);
+  const unavailable =
+    configured && auth.status === "authenticated"
+      ? undefined
+      : ({
           contractVersion: 1,
           code:
             auth.status === "authenticated"
               ? "NOT_AUTHORIZED"
               : "AUTHENTICATION_REQUIRED",
           message: "Changelog editorial capabilities are unavailable",
-        },
-      };
-    }
-    inFlight.current.add(key);
-    setPending((current: Record<string, boolean>) => ({
-      ...current,
-      [key]: true,
-    }));
-    setErrors((current: Record<string, AfferentErrorDto | undefined>) => ({
-      ...current,
-      [key]: undefined,
-    }));
-    try {
-      return { ok: true, data: await invoke() };
-    } catch (error) {
-      const mapped = mapModerationError(
-        (error as { data?: unknown }).data ?? error,
-      );
-      setErrors((current: Record<string, AfferentErrorDto | undefined>) => ({
-        ...current,
-        [key]: mapped,
-      }));
-      return { ok: false, error: mapped };
-    } finally {
-      inFlight.current.delete(key);
-      setPending((current: Record<string, boolean>) => ({
-        ...current,
-        [key]: false,
-      }));
-    }
+        } as const);
+
+  async function run(
+    key: string,
+    invoke: () => Promise<AdminChangelogEntryDto>,
+  ): Promise<ChangelogEditorResult> {
+    return await controller.run(key, invoke, unavailable);
   }
 
   return useMemo(
     () => ({
       status: changelogEditorStatus(configured, auth.status),
-      pending,
-      errors,
+      pending: controller.pending,
+      errors: controller.errors,
       reset(entryId: ChangelogId | "new", action: ChangelogEditorAction) {
-        const key = changelogActionKey(entryId, action);
-        setErrors((current: Record<string, AfferentErrorDto | undefined>) => ({
-          ...current,
-          [key]: undefined,
-        }));
+        controller.reset(changelogActionKey(entryId, action));
       },
       createDraft: (args: { title: string; body: string; slug?: string }) =>
         run(changelogActionKey("new", "create"), () => createDraft(args)),
@@ -326,8 +271,7 @@ export function useChangelogEditor() {
       configured,
       createDraft,
       edit,
-      errors,
-      pending,
+      controller,
       publish,
       setLinks,
       unpublish,

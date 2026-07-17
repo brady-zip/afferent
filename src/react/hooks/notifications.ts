@@ -1,7 +1,7 @@
 import { useMutation } from "convex/react";
 import { makeFunctionReference } from "convex/server";
 // @ts-expect-error React declarations are supplied by strict consumer fixtures.
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 
 import type {
   AfferentError,
@@ -15,7 +15,7 @@ import type {
 import type { NotificationBindings } from "../bindings.js";
 import { useAfferentContext } from "../provider.js";
 import { useDirectWatchQuery, usePaginatedWatchQuery } from "../query.js";
-import { mapModerationError } from "./admin.js";
+import { useMutationController } from "./mutations.js";
 
 const DEFAULT_NOTIFICATION_PAGE_SIZE = 20;
 const UNCONFIGURED_NOTIFICATION_MUTATION = makeFunctionReference<"mutation">(
@@ -109,14 +109,6 @@ export function mapNotificationFeedState(
   };
 }
 
-function duplicateRequestError(): AfferentErrorDto {
-  return {
-    contractVersion: 1,
-    code: "VALIDATION",
-    message: "Request already pending",
-  };
-}
-
 function unavailableError(): AfferentErrorDto {
   return {
     contractVersion: 1,
@@ -171,48 +163,17 @@ export function usePostSubscription(postId: PostId) {
     bindings.notifications?.getPostSubscription,
     sessionGeneration,
   );
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState(undefined as AfferentErrorDto | undefined);
-  const inFlight = useRef(false);
-
-  useEffect(() => {
-    inFlight.current = false;
-    setPending(false);
-    setError(undefined);
-  }, [sessionGeneration]);
+  const controller = useMutationController(generation);
+  const mutationKey = `${postId}:subscription`;
 
   async function setSubscribed(desired: boolean) {
-    if (inFlight.current)
-      return { ok: false as const, error: duplicateRequestError() };
-    if (!configured || auth.status !== "authenticated") {
-      return { ok: false as const, error: unavailableError() };
-    }
-    inFlight.current = true;
-    setPending(true);
-    setError(undefined);
-    try {
-      const result = await mutation({ postId, desired });
-      if (
-        typeof result === "object" &&
-        result !== null &&
-        "ok" in result &&
-        result.ok === false
-      ) {
-        const failure = result as { ok: false; error: AfferentErrorDto };
-        setError(failure.error);
-        return failure;
-      }
-      return { ok: true as const, data: result as PostSubscriptionDto };
-    } catch (error) {
-      const mapped = mapModerationError(
-        (error as { data?: unknown }).data ?? error,
-      );
-      setError(mapped);
-      return { ok: false as const, error: mapped };
-    } finally {
-      inFlight.current = false;
-      setPending(false);
-    }
+    return await controller.run(
+      mutationKey,
+      () => mutation({ postId, desired }),
+      !configured || auth.status !== "authenticated"
+        ? unavailableError()
+        : undefined,
+    );
   }
 
   let status: "unsupported" | "unauthenticated" | "loading" | "ready" | "error";
@@ -225,12 +186,15 @@ export function usePostSubscription(postId: PostId) {
     () => ({
       status,
       value,
-      pending,
-      error: query.status === "error" ? query.error : error,
+      pending: controller.pending[mutationKey] ?? false,
+      error:
+        query.status === "error"
+          ? query.error
+          : controller.errors[mutationKey],
       setSubscribed,
-      reset: () => setError(undefined),
+      reset: () => controller.reset(mutationKey),
     }),
-    [error, pending, query, status, value],
+    [controller, mutationKey, query, status, value],
   );
 }
 
@@ -281,53 +245,17 @@ export function useNotifications() {
     bindings.notifications?.getUnreadCount,
     sessionGeneration,
   );
-  const [pending, setPending] = useState({} as Record<string, boolean>);
-  const [errors, setErrors] = useState(
-    {} as Record<string, AfferentErrorDto | undefined>,
-  );
-  const inFlight = useRef(new Set<string>());
-
-  useEffect(() => {
-    inFlight.current.clear();
-    setPending({});
-    setErrors({});
-  }, [sessionGeneration]);
+  const controller = useMutationController(generation);
 
   async function markRead(notificationId: NotificationId) {
     const key = String(notificationId);
-    if (inFlight.current.has(key)) {
-      return { ok: false as const, error: duplicateRequestError() };
-    }
-    if (!configured || auth.status !== "authenticated") {
-      return { ok: false as const, error: unavailableError() };
-    }
-    inFlight.current.add(key);
-    setPending((current: Record<string, boolean>) => ({
-      ...current,
-      [key]: true,
-    }));
-    setErrors((current: Record<string, AfferentErrorDto | undefined>) => ({
-      ...current,
-      [key]: undefined,
-    }));
-    try {
-      return { ok: true as const, data: await mutation({ notificationId }) };
-    } catch (error) {
-      const mapped = mapModerationError(
-        (error as { data?: unknown }).data ?? error,
-      );
-      setErrors((current: Record<string, AfferentErrorDto | undefined>) => ({
-        ...current,
-        [key]: mapped,
-      }));
-      return { ok: false as const, error: mapped };
-    } finally {
-      inFlight.current.delete(key);
-      setPending((current: Record<string, boolean>) => ({
-        ...current,
-        [key]: false,
-      }));
-    }
+    return await controller.run(
+      key,
+      () => mutation({ notificationId }),
+      !configured || auth.status !== "authenticated"
+        ? unavailableError()
+        : undefined,
+    );
   }
 
   let mode: "unsupported" | "configured" | "unauthenticated";
@@ -338,18 +266,14 @@ export function useNotifications() {
   return useMemo(
     () => ({
       ...feed,
-      pending,
-      errors,
+      pending: controller.pending,
+      errors: controller.errors,
       markRead,
       reset(notificationId: NotificationId) {
-        const key = String(notificationId);
-        setErrors((current: Record<string, AfferentErrorDto | undefined>) => ({
-          ...current,
-          [key]: undefined,
-        }));
+        controller.reset(String(notificationId));
       },
     }),
-    [errors, feed, pending],
+    [controller, feed],
   );
 }
 

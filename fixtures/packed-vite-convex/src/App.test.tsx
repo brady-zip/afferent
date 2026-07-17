@@ -23,6 +23,18 @@ test("the packed React subpath exposes the complete headless workflow", () => {
   ]) {
     expect(headless[exported as keyof typeof headless]).toBeTypeOf("function");
   }
+  expect(
+    headless.getAfferentSessionKey({
+      status: "authenticated",
+      identityToken: "fixture-user",
+    }),
+  ).toBe("authenticated");
+  expect(() =>
+    headless.getAfferentSessionKey({
+      status: "authenticated",
+      identityToken: "",
+    }),
+  ).toThrow("identityToken must be non-empty");
 });
 
 test("the form submit handler writes through the host wrapper and renders the public DTO", async () => {

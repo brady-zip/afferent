@@ -1,52 +1,33 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, test, vi } from "vitest";
-
-const { usePaginatedQuery, useQuery } = vi.hoisted(() => ({
-  usePaginatedQuery: vi.fn(() => ({
-    results: [],
-    status: "Exhausted",
-    loadMore: vi.fn(),
-  })),
-  useQuery: vi.fn(),
-}));
-
-vi.mock("convex-helpers/react", () => ({ usePaginatedQuery }));
-vi.mock("convex/react", () => ({
-  useQuery,
-  useMutation: vi.fn(() => vi.fn()),
-}));
+import { describe, expect, test } from "vitest";
 
 import {
   AfferentProvider,
   getAfferentSessionKey,
   type AfferentBindings,
-  useAdminCapability,
   useAfferentContext,
-  useFeedbackFeed,
 } from "../../src/react/index.js";
 
-const publicBindings = {
-  listFeedback: { _type: "query" },
-} as unknown as AfferentBindings["public"];
+const bindings = {
+  public: { listFeedback: { _type: "query" } },
+} as unknown as AfferentBindings;
+const client = { watchQuery: () => ({}) } as never;
 
 function Probe() {
   const context = useAfferentContext();
-  const feed = useFeedbackFeed({ order: "newest" });
-  const admin = useAdminCapability();
   return (
     <output>
       {JSON.stringify({
         auth: context.auth.status,
+        generation: context.generation,
         sessionKey: context.sessionKey,
-        feed: feed.status,
-        admin: admin.status,
       })}
     </output>
   );
 }
 
 describe("AfferentProvider contract", () => {
-  test("derives a reset key from auth state and opaque account generation", () => {
+  test("requires a non-empty opaque identity without serializing it", () => {
     expect(getAfferentSessionKey({ status: "loading" })).toBe("loading");
     expect(getAfferentSessionKey({ status: "unauthenticated" })).toBe(
       "unauthenticated",
@@ -54,54 +35,30 @@ describe("AfferentProvider contract", () => {
     expect(
       getAfferentSessionKey({
         status: "authenticated",
-        sessionGeneration: "actor-a",
+        identityToken: "actor-a-private-token",
       }),
-    ).toBe("authenticated:actor-a");
-    expect(
+    ).toBe("authenticated");
+    expect(() =>
       getAfferentSessionKey({
         status: "authenticated",
-        sessionGeneration: "actor-b",
+        identityToken: "   ",
       }),
-    ).not.toBe("authenticated:actor-a");
+    ).toThrow("identityToken must be non-empty");
   });
 
-  test("runs baseline public reads during auth loading while protected groups wait", () => {
-    useQuery.mockReturnValue(undefined);
+  test("exposes only a local numeric generation and generation key", () => {
     const html = renderToStaticMarkup(
       <AfferentProvider
-        bindings={{
-          public: publicBindings,
-          admin: {
-            capability: { _type: "query" },
-          } as never,
-        }}
-        auth={{ status: "loading" }}
+        bindings={bindings}
+        client={client}
+        auth={{ status: "authenticated", identityToken: "private-actor-a" }}
       >
         <Probe />
       </AfferentProvider>,
     );
-    expect(html).toContain("&quot;feed&quot;:&quot;empty&quot;");
-    expect(html).toContain("&quot;admin&quot;:&quot;loading&quot;");
-    expect(usePaginatedQuery).toHaveBeenCalledWith(
-      publicBindings.listFeedback,
-      { order: "newest" },
-      { initialNumItems: 20 },
-    );
-    expect(useQuery).toHaveBeenCalledWith(expect.anything(), "skip");
-  });
-
-  test("keeps omitted optional groups unsupported instead of failing setup", () => {
-    const html = renderToStaticMarkup(
-      <AfferentProvider
-        bindings={{ public: publicBindings }}
-        auth={{ status: "authenticated", sessionGeneration: "actor-a" }}
-      >
-        <Probe />
-      </AfferentProvider>,
-    );
-    expect(html).toContain("&quot;admin&quot;:&quot;unsupported&quot;");
-    expect(html).toContain(
-      "&quot;sessionKey&quot;:&quot;authenticated:actor-a&quot;",
-    );
+    expect(html).toContain("&quot;generation&quot;:1");
+    expect(html).toContain("&quot;sessionKey&quot;:&quot;generation:1&quot;");
+    expect(html).not.toContain("private-actor-a");
+    expect(html).not.toContain("authenticated:default");
   });
 });

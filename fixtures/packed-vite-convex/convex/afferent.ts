@@ -65,6 +65,7 @@ import {
 import type { BoardId } from "afferent";
 import type { ComponentApi } from "afferent/_generated/component.js";
 import { paginationOptsValidator } from "convex/server";
+import { v } from "convex/values";
 
 import { components } from "./_generated/api.js";
 import { mutation, query } from "./_generated/server.js";
@@ -79,6 +80,15 @@ const client = createAfferentClient(installedComponent, {
   authorizeAdmin,
   isAuthenticated: async () => true,
 });
+
+const cacheGenerationValidator = { sessionGeneration: v.number() };
+
+function withoutSessionGeneration<T extends { sessionGeneration: number }>(
+  args: T,
+): Omit<T, "sessionGeneration"> {
+  const { sessionGeneration: _sessionGeneration, ...intent } = args;
+  return intent;
+}
 
 export const configureInstallation = mutation({
   args: configureInstallationIntentValidator.fields,
@@ -99,52 +109,71 @@ export const listPosts = query({
 export const listFeedback = query({
   args: {
     ...listFeedbackIntentValidator.fields,
+    ...cacheGenerationValidator,
     paginationOpts: paginationOptsValidator,
   },
   returns: feedbackPageResultValidator,
-  handler: (ctx, args) => client.read.listFeedback(ctx, args as never),
+  handler: (ctx, args) =>
+    client.read.listFeedback(ctx, withoutSessionGeneration(args) as never),
 });
 
 export const resolvePost = query({
-  args: getPostIntentValidator.fields,
+  args: { ...getPostIntentValidator.fields, ...cacheGenerationValidator },
   returns: postLookupResultValidator,
-  handler: (ctx, args) => client.read.resolvePost(ctx, args as never),
+  handler: (ctx, args) =>
+    client.read.resolvePost(ctx, withoutSessionGeneration(args) as never),
 });
 
 export const searchFeedback = query({
-  args: searchFeedbackIntentValidator.fields,
+  args: { ...searchFeedbackIntentValidator.fields, ...cacheGenerationValidator },
   returns: searchFeedbackResultValidator,
-  handler: (ctx, args) => client.read.searchFeedback(ctx, args as never),
+  handler: (ctx, args) =>
+    client.read.searchFeedback(ctx, withoutSessionGeneration(args) as never),
 });
 
 export const suggestSimilarPosts = query({
-  args: suggestSimilarPostsIntentValidator.fields,
+  args: {
+    ...suggestSimilarPostsIntentValidator.fields,
+    ...cacheGenerationValidator,
+  },
   returns: similarPostResultValidator,
-  handler: (ctx, args) => client.read.suggestSimilarPosts(ctx, args),
+  handler: (ctx, args) =>
+    client.read.suggestSimilarPosts(ctx, withoutSessionGeneration(args)),
 });
 
 export const listRoadmapGroup = query({
   args: {
     ...listRoadmapGroupIntentValidator.fields,
+    ...cacheGenerationValidator,
     paginationOpts: paginationOptsValidator,
   },
   returns: roadmapGroupPageResultValidator,
-  handler: (ctx, args) => client.read.listRoadmapGroup(ctx, args as never),
+  handler: (ctx, args) =>
+    client.read.listRoadmapGroup(ctx, withoutSessionGeneration(args) as never),
 });
 
 export const listPublishedChangelog = query({
   args: {
     ...listPublishedChangelogIntentValidator.fields,
+    ...cacheGenerationValidator,
     paginationOpts: paginationOptsValidator,
   },
   returns: changelogPageResultValidator,
-  handler: (ctx, args) => client.read.listPublishedChangelog(ctx, args),
+  handler: (ctx, args) =>
+    client.read.listPublishedChangelog(ctx, withoutSessionGeneration(args)),
 });
 
 export const getPublishedChangelogBySlug = query({
-  args: getPublishedChangelogBySlugIntentValidator.fields,
+  args: {
+    ...getPublishedChangelogBySlugIntentValidator.fields,
+    ...cacheGenerationValidator,
+  },
   returns: publishedChangelogLookupResultValidator,
-  handler: (ctx, args) => client.read.getPublishedChangelogBySlug(ctx, args),
+  handler: (ctx, args) =>
+    client.read.getPublishedChangelogBySlug(
+      ctx,
+      withoutSessionGeneration(args),
+    ),
 });
 
 export const createPost = mutation({
@@ -178,10 +207,16 @@ export const addComment = mutation({
 });
 
 export const getPostSubscription = query({
-  args: getPostSubscriptionIntentValidator.fields,
+  args: {
+    ...getPostSubscriptionIntentValidator.fields,
+    ...cacheGenerationValidator,
+  },
   returns: postSubscriptionResultValidator,
   handler: (ctx, args) =>
-    client.notifications.getPostSubscription(ctx, args as never),
+    client.notifications.getPostSubscription(
+      ctx,
+      withoutSessionGeneration(args) as never,
+    ),
 });
 
 export const setPostSubscription = mutation({
@@ -194,16 +229,22 @@ export const setPostSubscription = mutation({
 export const listNotifications = query({
   args: {
     ...listNotificationsIntentValidator.fields,
+    ...cacheGenerationValidator,
     paginationOpts: paginationOptsValidator,
   },
   returns: notificationPageResultValidator,
-  handler: (ctx, args) => client.notifications.listNotifications(ctx, args),
+  handler: (ctx, args) =>
+    client.notifications.listNotifications(ctx, withoutSessionGeneration(args)),
 });
 
 export const getUnreadCount = query({
-  args: getUnreadNotificationCountIntentValidator.fields,
+  args: {
+    ...getUnreadNotificationCountIntentValidator.fields,
+    ...cacheGenerationValidator,
+  },
   returns: unreadNotificationCountResultValidator,
-  handler: (ctx, args) => client.notifications.getUnreadCount(ctx, args),
+  handler: (ctx, args) =>
+    client.notifications.getUnreadCount(ctx, withoutSessionGeneration(args)),
 });
 
 export const markNotificationRead = mutation({
@@ -214,7 +255,10 @@ export const markNotificationRead = mutation({
 });
 
 export const adminCapability = query({
-  args: adminCapabilityIntentValidator.fields,
+  args: {
+    ...adminCapabilityIntentValidator.fields,
+    ...cacheGenerationValidator,
+  },
   returns: adminCapabilityResultValidator,
   handler: () => authorizeAdmin(),
 });
@@ -252,14 +296,16 @@ export const setArchived = mutation({
 export const listPostActivity = query({
   args: {
     ...listPostActivityIntentValidator.fields,
+    ...cacheGenerationValidator,
     paginationOpts: paginationOptsValidator,
   },
   returns: postActivityPageResultValidator,
-  handler: (ctx, args) => client.admin.listPostActivity(ctx, args as never),
+  handler: (ctx, args) =>
+    client.admin.listPostActivity(ctx, withoutSessionGeneration(args) as never),
 });
 
 export const listTags = query({
-  args: listTagsIntentValidator.fields,
+  args: { ...listTagsIntentValidator.fields, ...cacheGenerationValidator },
   returns: tagListResultValidator,
   handler: (ctx) => client.admin.listTags(ctx, {}),
 });
