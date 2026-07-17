@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 2
 current_phase_name: Complete Feedback-to-Changelog Workflow
 status: executing
-stopped_at: Completed 02-09-PLAN.md
-last_updated: "2026-07-17T02:10:04.081Z"
+stopped_at: Completed 02-10-PLAN.md
+last_updated: "2026-07-17T11:35:06.647Z"
 last_activity: 2026-07-16
 last_activity_desc: Completed stable manual changelog lifecycle and headless editorial hooks
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 19
-  completed_plans: 16
+  completed_plans: 17
   percent: 25
 ---
 
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 ## Current Position
 
 Phase: 2 (Complete Feedback-to-Changelog Workflow) — EXECUTING
-Plan: 9 of 10
+Plan: 10 of 10
 Status: Ready to execute
 Last activity: 2026-07-16 — Completed stable manual changelog lifecycle and headless editorial hooks
 
@@ -77,6 +77,7 @@ _Updated after each plan completion_
 | Phase 02 P07 | 13min    | 3 tasks | 20 files |
 | Phase 02 P08 | 13min | 3 tasks | 29 files |
 | Phase 02 P09 | 31min | 3 tasks | 16 files |
+| Phase 02 P10 | 446min | 3 tasks | 21 files |
 
 ## Accumulated Context
 
@@ -137,6 +138,9 @@ Recent decisions affecting current work:
 - [Phase 02]: Use the logical notification event ID as the stable host idempotency key while keeping delivery ordering explicitly best effort. — Hosts dedupe retries without relying on a strict delivery order.
 - [Phase 02]: Fence outbox ack and release by scope, row, owner, and incrementing lease version; release attempt eight parks the row. — Expired workers cannot mutate reclaimed work and poison rows remain bounded.
 - [Phase 02]: Expose delivery only through afferent/server.js with per-call scope resolution and host-owned authorizeDelivery. — External side effects remain inside the consuming application's trusted server boundary.
+- [Phase 02]: Keep sessionGeneration opaque and local to React query keys. — Account switches invalidate actor-sensitive state without sending a client authority fact to the backend.
+- [Phase 02]: Use string IDs and required pagination arguments at generated FunctionReference boundaries. — Convex function arguments are invariant and native paginated references require paginationOpts; brands remain on DTO and hook-facing types.
+- [Phase 02]: Normalize expected headless failures into AfferentResult while retaining backend AfferentActionResult compatibility. — Consumers get one stable error vocabulary without widening or breaking the shipped server contract.
 
 ### Pending Todos
 
@@ -158,6 +162,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-17T02:10:04.076Z
-Stopped at: Completed 02-09-PLAN.md
+Last session: 2026-07-17T11:35:06.642Z
+Stopped at: Completed 02-10-PLAN.md
 Resume file: None
