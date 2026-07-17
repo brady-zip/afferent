@@ -15,8 +15,10 @@ import {
   requireInstallation,
   requireScope,
 } from "../model/scope.js";
-import { requireVisiblePost } from "../model/visibility.js";
-import { toPostDto } from "../model/views.js";
+import { isPostPubliclyVisible } from "../model/visibility.js";
+import { requirePostInScope } from "../model/scope.js";
+import { toFeedbackPostDto, toPostDto } from "../model/views.js";
+import { postLookupResultValidator } from "../validators.js";
 
 const MAX_POSTS = 50;
 
@@ -77,12 +79,36 @@ export const getPost = query({
     postId: v.string(),
     viewerAuthenticated: v.boolean(),
   },
-  returns: postDtoValidator,
+  returns: postLookupResultValidator,
   handler: async (ctx, args) => {
     requireScope(args.scopeId);
     await requireReadPolicy(ctx, args.scopeId, args.viewerAuthenticated);
-    const post = await requireVisiblePost(ctx, args.scopeId, args.postId);
-    return await toPostDto(ctx, post);
+    let post;
+    try {
+      post = await requirePostInScope(ctx, args.scopeId, args.postId);
+    } catch {
+      return { contractVersion: 1 as const, status: "notFound" as const };
+    }
+    if (post.mergedIntoPostId !== undefined) {
+      const canonical = await ctx.db.get(post.mergedIntoPostId);
+      if (!canonical || canonical.scopeId !== args.scopeId || !isPostPubliclyVisible(canonical)) {
+        return { contractVersion: 1 as const, status: "notFound" as const };
+      }
+      return {
+        contractVersion: 1 as const,
+        status: "merged" as const,
+        requestedPostId: String(post._id),
+        canonicalPostId: String(canonical._id),
+      };
+    }
+    if (!isPostPubliclyVisible(post)) {
+      return { contractVersion: 1 as const, status: "notFound" as const };
+    }
+    return {
+      contractVersion: 1 as const,
+      status: "post" as const,
+      post: await toFeedbackPostDto(ctx, post),
+    };
   },
 });
 

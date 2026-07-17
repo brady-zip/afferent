@@ -190,6 +190,28 @@ export const feedbackPostDtoValidator = v.object({
   tags: v.array(tagDtoValidator),
 });
 
+export const postLookupResultValidator = v.union(
+  v.object({
+    contractVersion: v.literal(1),
+    status: v.literal("post"),
+    post: feedbackPostDtoValidator,
+  }),
+  v.object({
+    contractVersion: v.literal(1),
+    status: v.literal("merged"),
+    requestedPostId: v.string(),
+    canonicalPostId: v.string(),
+  }),
+  v.object({ contractVersion: v.literal(1), status: v.literal("notFound") }),
+);
+
+export const mergePostResultValidator = v.object({
+  contractVersion: v.literal(1),
+  status: v.union(v.literal("pending"), v.literal("complete")),
+  sourcePostId: v.string(),
+  canonicalPostId: v.string(),
+});
+
 export const installationDtoValidator = v.object({
   contractVersion: v.literal(1),
   readPolicy: readPolicyValidator,

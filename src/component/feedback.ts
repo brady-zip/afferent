@@ -25,6 +25,7 @@ export {
   setPostStatus,
 } from "./admin/posts.js";
 export { listPostActivity } from "./admin/activity.js";
+export { mergePost } from "./admin/merge.js";
 export {
   createChangelogDraft,
   editChangelog,

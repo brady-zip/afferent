@@ -48,6 +48,7 @@ export default defineSchema({
     ),
     archivedAt: v.optional(v.number()),
     mergedIntoPostId: v.optional(v.id("posts")),
+    mergeJobId: v.optional(v.id("mergeJobs")),
   })
     .index("by_scope_board_state", ["scopeId", "boardId", "lifecycleState"])
     .index("by_scope_visibility_created", [
@@ -308,6 +309,51 @@ export default defineSchema({
       "actorId",
     ])
     .index("by_scope_actor_post", ["scopeId", "actorId", "postId"]),
+  mergeHistories: defineTable({
+    scopeId: v.string(),
+    sourcePostId: v.id("posts"),
+    canonicalPostId: v.id("posts"),
+    actorId: v.id("actors"),
+    sourceTitle: v.string(),
+    sourceBody: v.string(),
+    sourceBoardId: v.id("boards"),
+    sourceActorId: v.id("actors"),
+    sourceStatusKey: v.string(),
+    mergedAt: v.number(),
+  })
+    .index("by_scope_source", ["scopeId", "sourcePostId"])
+    .index("by_scope_canonical_time", [
+      "scopeId",
+      "canonicalPostId",
+      "mergedAt",
+    ]),
+  mergeJobs: defineTable({
+    scopeId: v.string(),
+    sourcePostId: v.id("posts"),
+    canonicalPostId: v.id("posts"),
+    actorId: v.id("actors"),
+    state: v.union(
+      v.literal("pending"),
+      v.literal("complete"),
+    ),
+    phase: v.union(
+      v.literal("votes"),
+      v.literal("subscriptions"),
+      v.literal("comments"),
+      v.literal("activity"),
+      v.literal("changelog_links"),
+      v.literal("notification_guards"),
+      v.literal("notifications"),
+      v.literal("tags"),
+      v.literal("finalize"),
+    ),
+    createdAt: v.number(),
+    voteCount: v.number(),
+    commentCount: v.number(),
+    completedAt: v.optional(v.number()),
+  })
+    .index("by_scope_source", ["scopeId", "sourcePostId"])
+    .index("by_scope_state_created", ["scopeId", "state", "createdAt"]),
   notificationEvents: defineTable({
     scopeId: v.string(),
     type: v.union(

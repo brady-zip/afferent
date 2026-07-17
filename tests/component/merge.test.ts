@@ -56,19 +56,29 @@ describe("duplicate merge lifecycle", () => {
       body: "Preserve my comment",
     });
 
-    const result = await admin.admin.mergePost(ctx, {
+    const result = await backend.mutation(api.admin.merge.mergePost, {
+      scopeId: "scope:alpha",
+      actor: { externalKey: "alpha:admin" },
       sourcePostId: source.id,
       canonicalPostId: canonical.id,
     });
     await backend.finishAllScheduledFunctions(() => vi.runAllTimers());
     expect(result).toMatchObject({ status: expect.stringMatching(/complete|pending/) });
-    expect(await admin.read.getPost(ctx, { postId: source.id })).toEqual({
+    expect(await backend.query(api.public.posts.getPost, {
+      scopeId: "scope:alpha",
+      viewerAuthenticated: true,
+      postId: source.id,
+    })).toEqual({
       contractVersion: 1,
       status: "merged",
       requestedPostId: source.id,
       canonicalPostId: canonical.id,
     });
-    expect(await admin.read.getPost(ctx, { postId: canonical.id })).toMatchObject({
+    expect(await backend.query(api.public.posts.getPost, {
+      scopeId: "scope:alpha",
+      viewerAuthenticated: true,
+      postId: canonical.id,
+    })).toMatchObject({
       status: "post",
       post: { id: canonical.id, voteCount: 1, commentCount: 1 },
     });
@@ -99,12 +109,18 @@ describe("duplicate merge lifecycle", () => {
       body: "Beta",
     });
     await expect(
-      alpha.admin.mergePost(ctx, {
+      backend.mutation(api.admin.merge.mergePost, {
+        scopeId: "scope:alpha",
+        actor: { externalKey: "alpha:admin" },
         sourcePostId: source.id,
         canonicalPostId: foreign.id,
       }),
     ).rejects.toMatchObject({ data: { code: "NOT_FOUND" } });
-    expect(await alpha.read.getPost(ctx, { postId: foreign.id })).toEqual({
+    expect(await backend.query(api.public.posts.getPost, {
+      scopeId: "scope:alpha",
+      viewerAuthenticated: true,
+      postId: foreign.id,
+    })).toEqual({
       contractVersion: 1,
       status: "notFound",
     });
