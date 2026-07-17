@@ -341,8 +341,10 @@ try {
   const abortJob = { scopeId: "abort", jobId: abortBegun.jobId };
   const abortPre = observable(await recordObservation(client, abortJob));
   await client.mutation(reference("step"), abortJob);
-  assert.equal((await client.mutation(reference("abortMerge"), abortJob)).state, "aborted");
-  assert.equal((await client.mutation(reference("abortMerge"), abortJob)).state, "aborted");
+  const firstAbort = await client.mutation(reference("abortMerge"), abortJob);
+  const repeatedAbort = await client.mutation(reference("abortMerge"), abortJob);
+  assert.equal(firstAbort.state, "aborted");
+  assert.equal(repeatedAbort.state, "aborted");
   assert.deepEqual(observable(await recordObservation(client, abortJob)), abortPre);
   await assert.rejects(
     client.mutation(reference("abortMerge"), job),

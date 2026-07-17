@@ -205,12 +205,14 @@ export async function toAdminChangelogEntryDto(
     postIds: [
       ...new Set(
         await Promise.all(
-          links.map(async (link) =>
-            String(
-              (await resolveCanonicalLinkedPost(ctx, entry.scopeId, link.postId))
-                ?._id ?? link.postId,
-            ),
-          ),
+          links.map(async (link) => {
+            const canonical = await resolveCanonicalLinkedPost(
+              ctx,
+              entry.scopeId,
+              link.postId,
+            );
+            return String(canonical?._id ?? link.postId);
+          }),
         ),
       ),
     ],

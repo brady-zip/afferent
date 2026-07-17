@@ -66,9 +66,11 @@ export const mergePost = mutation({
     const actorId = await upsertActor(ctx, args.scopeId, args.actor);
     const affected = await countAffectedMergeRelations(
       ctx,
-      args.scopeId,
-      source._id,
-      canonical._id,
+      {
+        scopeId: args.scopeId,
+        sourcePostId: source._id,
+        canonicalPostId: canonical._id,
+      },
     );
     const created = await createMergeJob(ctx, {
       scopeId: args.scopeId,
@@ -80,7 +82,8 @@ export const mergePost = mutation({
     if (affected <= 50) {
       const job = await ctx.db.get(created.jobId);
       if (!job) throw new Error("MERGE_JOB_INSERT_INVARIANT");
-      state = (await runAtomicMerge(ctx, job)).state;
+      const completed = await runAtomicMerge(ctx, job);
+      state = completed.state;
     } else {
       await ctx.db.patch(created.jobId, { continuationScheduled: true });
       await ctx.scheduler.runAfter(0, internal.jobs.merge.continueMerge, {
