@@ -120,6 +120,18 @@ D-43 is amended so authenticated adapter state requires a non-empty opaque `iden
 
 ---
 
+## Reactive Pagination Window Correction
+
+**Date:** 2026-07-17
+
+Plan 02-12 re-verification found that later page descriptors remained anchored to their original start cursors when an earlier unbounded page changed. Its real harness checked only generated-ID uniqueness and nonempty output, so it accepted shortened ordered ranges during front growth and replacement/split.
+
+The live peer selected cursor-bounded loaded-window semantics and rejected both downstream `continueCursor` rebasing/rebuilding and a fixed-N data-layer cap. Plan 02-13 ports the installed Convex-clone pagination model onto Afferent's non-throwing watch store: when loading more, atomically replace the tail with an `endCursor`-pinned copy plus a new tail beginning at the same cursor; keep every adjacent `endCursor[i] == cursor[i+1]`; allow insertions inside those fixed ranges to grow the visible loaded window; and leave any fixed-count presentation to the consuming view.
+
+`SplitRecommended` retains its complete page while an opportunistic two-window replacement loads. `SplitRequired` is never published before its two bounded children are complete, and a missing split cursor becomes typed error state. Empty windows collapse through an atomic adjacent-boundary merge. A mid-chain failure exposes only the maximal coherent prefix plus its typed error and recovers in place. Append, split, collapse, load-more, and recovery operations are serialized and generation-fenced. Mounted and real-backend tests must compare exact labels, order, and length against canonical server truth for the cursor-bounded window at every observed tick; Set uniqueness, nonempty output, ID deduplication, and fixed-count assertions are rejected.
+
+---
+
 ## the agent's Discretion
 
 - Exact Trending constants, field sizes, rate-limit values/windows, Complete recency window, inbox cap, lease/retry thresholds, and debounce defaults.
