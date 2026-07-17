@@ -19,7 +19,7 @@ SaaS teams can add deeply integrated product feedback to an existing Convex appl
 
 ## Current State
 
-Phase 1, Secure Installable Feedback Board, is complete and verified. The packed Convex component now supports provider-neutral trusted-host integration for Convex Auth, Clerk, and Better Auth; secure multi-board feedback; voting and flat discussion; actor anonymization; and clean-consumer release gates. Phase 2 is next: complete the feedback-to-roadmap-to-changelog workflow and expose it through the headless React contract.
+Phases 1 and 2 are complete and verified. The packed Convex component now supports provider-neutral trusted-host integration for Convex Auth, Clerk, and Better Auth; secure multi-board feedback; ranked and searchable discovery; participation and moderation; a status-driven roadmap; manually published linked changelog entries; in-app notifications and a host delivery outbox; and the complete framework-light headless React contract. Phase 3 is defining the accessible, responsive, source-owned shadcn interface and its registry distribution path.
 
 ## Requirements
 
@@ -30,13 +30,13 @@ Phase 1, Secure Installable Feedback Board, is complete and verified. The packed
 - [x] The host application owns authentication and admin authorization, then passes stable identity and authorization context into Afferent through typed app-level APIs. — Validated in Phase 1.
 - [x] One Afferent installation supports one product with multiple public feedback boards. — Validated in Phase 1.
 - [x] Visitors can browse feedback publicly while authenticated users can submit posts, vote, and comment under a configurable installation-wide access policy. — Validated in Phase 1.
+- [x] Administrators can moderate and organize feedback, manage workflow statuses, and move posts through the product lifecycle. — Validated in Phase 2: Complete Feedback-to-Changelog Workflow.
+- [x] Selected workflow statuses form a public, status-driven roadmap. — Validated in Phase 2.
+- [x] Administrators can manually create and publish changelog entries and optionally link them to completed feedback posts. — Validated in Phase 2.
+- [x] Developers can build custom interfaces using headless React hooks and providers. — Validated in Phase 2.
 
 ### Active
 
-- [ ] Administrators can moderate and organize feedback, manage workflow statuses, and move posts through the product lifecycle.
-- [ ] Selected workflow statuses form a public, status-driven roadmap.
-- [ ] Administrators can manually create and publish changelog entries and optionally link them to completed feedback posts.
-- [ ] Developers can build custom interfaces using headless React hooks and providers.
 - [ ] Developers can adopt complete user-facing and admin interfaces as source-owned shadcn components from both a shadcn registry and repository examples.
 - [ ] A publicly accessible Vite application demonstrates the complete integration using Convex Auth.
 - [ ] Each signed-in demo visitor receives a private, seeded admin sandbox that they can modify and reset without affecting other visitors.
@@ -51,7 +51,7 @@ Phase 1, Secure Installable Feedback Board, is complete and verified. The packed
 - Automatically generated changelog entries — v1 entries are written and published intentionally by administrators.
 - A shared or anonymous public admin sandbox — the demo isolates mutable data per signed-in visitor.
 
-AI duplicate detection, sentiment analysis, notifications, third-party integrations, imports, and analytics are intentionally unresolved rather than excluded. Domain research will determine whether any are required for a credible v1; otherwise they will be tracked as later capabilities.
+AI duplicate detection, sentiment analysis, named third-party integrations, imports, and analytics remain later capabilities rather than v1 requirements.
 
 ## Context
 
@@ -94,6 +94,10 @@ The repository itself is also the product showcase. Its Vite example must be pub
 | Use Convex Auth in the hosted example | Keeps the canonical demo within the Convex ecosystem while other auth providers remain documented and tested integrations | — Pending |
 | Provide private per-user demo sandboxes | Enables safe hands-on admin evaluation without shared-state vandalism or browser-session cleanup complexity | — Pending |
 | Publish under Apache-2.0 | Permits broad commercial use while providing an explicit patent grant | — Pending |
+| Keep roadmap grouping server-derived | The fixed Planned, In Progress, and Complete projection must stay consistent across consumers | ✓ Validated in Phase 2 |
+| Keep changelog publication manual and editorial | Status changes should not silently create public release notes | ✓ Validated in Phase 2 |
+| Expose domain hooks with a closed state and error vocabulary | Copied or custom UI can render every workflow without duplicating Convex access, auth gating, optimism, or pagination | ✓ Validated in Phase 2 |
+| Deliver notifications through an in-app inbox plus a leased host outbox | Hosts receive vendor-neutral events while external side effects remain in their trusted server boundary | ✓ Validated in Phase 2 |
 
 ## Evolution
 
@@ -113,4 +117,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-16 after Phase 1 completion*
+*Last updated: 2026-07-17 after Phase 2 completion*

@@ -4,11 +4,11 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 3
 current_phase_name: Source-Owned Product Interface
-status: verifying
-stopped_at: Completed 02-14-PLAN.md
-last_updated: "2026-07-17T20:32:50.382Z"
+status: ready_for_planning
+stopped_at: Phase 3 UI-SPEC approved
+last_updated: "2026-07-17T21:02:02.544Z"
 last_activity: 2026-07-17
-last_activity_desc: Phase 2 complete, transitioned to Phase 3
+last_activity_desc: Phase 3 context, research, and UI-SPEC approved
 progress:
   total_phases: 4
   completed_phases: 2
@@ -21,26 +21,26 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-07-16)
+See: .planning/PROJECT.md (updated 2026-07-17)
 
 **Core value:** SaaS teams can add deeply integrated product feedback to an existing Convex application while retaining native ownership of their data, identity, permissions, and user experience.
-**Current focus:** Phase 2 — Complete Feedback-to-Changelog Workflow
+**Current focus:** Phase 3 — Source-Owned Product Interface
 
 ## Current Position
 
 Phase: 3 — Source-Owned Product Interface
 Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-07-17 — Phase 2 complete, transitioned to Phase 3
+Status: Context, research, and UI-SPEC approved — ready to plan
+Last activity: 2026-07-17 — Phase 3 UI-SPEC approved
 
-Progress: [██████████] 100%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 34
-- Average duration: 50 min
+- Total plans completed: 22
+- Average duration: 45 min
 - Total execution time: 993 min
 
 **By Phase:**
@@ -48,8 +48,7 @@ Progress: [██████████] 100%
 | Phase    | Plans | Total   | Avg/Plan |
 | -------- | ----- | ------- | -------- |
 | Phase 01 | 8     | 299 min | 37 min   |
-| Phase 02 | 12    | 694 min | 58 min   |
-| 2 | 14 | - | - |
+| Phase 02 | 14    | 694 min | 50 min   |
 
 **Recent Trend:**
 
@@ -95,6 +94,9 @@ Recent decisions affecting current work:
 - [Roadmap]: Use four coarse, sequential vertical MVP slices.
 - [Phase 1]: Prove the packed component, provider-neutral security boundary, all three auth paths, and a usable feedback board together.
 - [Phase 2]: Complete the domain and headless React contract before freezing copied UI source.
+- [Phase 3]: Author one neutral shadcn-compatible UI source and deterministically emit both registry artifacts and byte-equivalent repository examples.
+- [Phase 3]: Keep copied hook consumers as route-agnostic client components; no SSR initial-data contract in v1.
+- [Phase 3]: Treat explicit keyboard, focus, announcement, contrast, zoom, and reflow evidence as a release artifact.
 - [Phase 4]: Keep normal installs single-product while the public demo uses separate showcase and server-scoped sandbox component instances.
 - [Phase 01]: Approved the exact 17-entry npm matrix before installation; provider packages remain fixture-only. — The 2026-07-15 registry and official-source audit found no SLOP or install lifecycle scripts.
 - [Phase 01]: Use @auth/core 0.41.2 with @convex-dev/auth 0.0.94 despite the stale latest dist-tag. — The selected version is legitimate and satisfies the auth package peer range.
@@ -163,8 +165,6 @@ None yet.
 
 ### Blockers/Concerns
 
-- [Phase 1]: Revalidate fast-moving Convex component, auth, packaging, and upgrade APIs during planning.
-- [Phase 2]: Prove search pagination and vote-counter behavior against real Convex before freezing the domain contract.
 - [Phase 4]: Prove every sandbox query, search, count, seed, reset, quota, and cleanup path is scope-complete.
 
 ## Deferred Items
@@ -177,6 +177,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-17T20:25:09.744Z
-Stopped at: Completed 02-14-PLAN.md
-Resume file: None
+Last session: 2026-07-17T21:02:02.535Z
+Stopped at: Phase 3 UI-SPEC approved
+Resume file: .planning/phases/03-source-owned-product-interface/03-UI-SPEC.md
