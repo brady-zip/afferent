@@ -5,7 +5,7 @@
   },
   {
     "path": "board/board-screen.tsx",
-    "sha256": "dfd2457e2c023173ae06e3ba74641f7e9e2ce783fcc2e0ff9efe4d5549c956f1"
+    "sha256": "cdd5408f000b4d0bafce113ca6bcc7e201f0ea6cc503eb342a7a134aba438390"
   },
   {
     "path": "core/afferent-ui-provider.tsx",

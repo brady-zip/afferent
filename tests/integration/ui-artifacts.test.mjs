@@ -52,11 +52,12 @@ test("registry catalog and emitted items use stable approved metadata", async ()
   assert.equal(catalog.$schema, "https://ui.shadcn.com/schema/registry.json");
   assert.deepEqual(
     catalog.items.map((item) => item.name),
-    [...catalog.items.map((item) => item.name)].sort(),
+    catalog.items.map((item) => item.name).sort(),
   );
   for (const name of ["afferent-ui-core", "afferent-board"]) {
     const path = join(root, `registry/r/${name}.json`);
-    assert.ok((await stat(path)).size > 0);
+    const itemStat = await stat(path);
+    assert.ok(itemStat.size > 0);
     const item = JSON.parse(await readFile(path, "utf8"));
     assert.equal(item.name, name);
     assert.doesNotMatch(

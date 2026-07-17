@@ -40,19 +40,21 @@ export function AfferentBoardView({
   const Link = navigation.Link;
   const content = (() => {
     switch (feed.status) {
-      case "loading":
+      case "loading": {
         return (
           <AfferentStateRegion title={`${copy.common.loading} feedback…`}>
             <p>{copy.board.description}</p>
           </AfferentStateRegion>
         );
-      case "empty":
+      }
+      case "empty": {
         return (
           <AfferentStateRegion title={copy.board.emptyHeading}>
             <p>{copy.board.emptyBody}</p>
           </AfferentStateRegion>
         );
-      case "error":
+      }
+      case "error": {
         return (
           <AfferentStateRegion
             title={copy.board.loadErrorHeading}
@@ -73,7 +75,8 @@ export function AfferentBoardView({
             </p>
           </AfferentStateRegion>
         );
-      case "ready":
+      }
+      case "ready": {
         return (
           <>
             <ol className="afferent-board__list" aria-label="Feedback">
@@ -129,8 +132,10 @@ export function AfferentBoardView({
             </p>
           </>
         );
-      default:
+      }
+      default: {
         return assertNever(feed);
+      }
     }
   })();
   const body = (
