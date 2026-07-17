@@ -28,6 +28,85 @@ function client(scopeId: string, actorKey: string, admin = false) {
 }
 
 describe("duplicate merge lifecycle", () => {
+  test("keeps every original untouched while a large merge is preparing", async () => {
+    vi.useFakeTimers();
+    const backend = withRateLimiter(convexTest(schema, modules));
+    const ctx = context(backend) as never;
+    const admin = client("scope:large", "large:admin", true);
+    const install = await admin.admin.configureInstallation(ctx, {
+      readPolicy: "public",
+      boards: [{ slug: "feedback", name: "Feedback" }],
+    });
+    const canonical = await admin.participation.createPost(ctx, {
+      boardId: install.boards[0].id,
+      title: "Canonical",
+      body: "Canonical body",
+    });
+    const source = await admin.participation.createPost(ctx, {
+      boardId: install.boards[0].id,
+      title: "Source",
+      body: "Source body",
+    });
+    await backend.run(async (runCtx) => {
+      const sourceId = runCtx.db.normalizeId("posts", source.id)!;
+      for (let index = 0; index < 51; index += 1) {
+        const actorId = await runCtx.db.insert("actors", {
+          scopeId: "scope:large",
+          externalKey: `large:voter:${index}`,
+        });
+        await runCtx.db.insert("votes", {
+          scopeId: "scope:large",
+          postId: sourceId,
+          actorId,
+        });
+      }
+      await runCtx.db.patch(sourceId, { voteCount: 51 });
+    });
+
+    expect(
+      await backend.mutation(api.admin.merge.mergePost, {
+        scopeId: "scope:large",
+        actor: { externalKey: "large:admin" },
+        sourcePostId: source.id,
+        canonicalPostId: canonical.id,
+      }),
+    ).toMatchObject({ status: "pending" });
+    expect(
+      await backend.query(api.public.posts.resolvePost, {
+        scopeId: "scope:large",
+        viewerAuthenticated: true,
+        postId: source.id,
+      }),
+    ).toMatchObject({ status: "post", post: { voteCount: 51 } });
+    expect(
+      await backend.run(async (runCtx) => {
+        const sourceId = runCtx.db.normalizeId("posts", source.id)!;
+        const [votes, job, stages] = await Promise.all([
+          runCtx.db
+            .query("votes")
+            .withIndex("by_scope_post_actor", (q) =>
+              q.eq("scopeId", "scope:large").eq("postId", sourceId),
+            )
+            .collect(),
+          runCtx.db
+            .query("mergeJobs")
+            .withIndex("by_scope_source", (q) =>
+              q.eq("scopeId", "scope:large").eq("sourcePostId", sourceId),
+            )
+            .unique(),
+          runCtx.db
+            .query("mergeStages")
+            .withIndex("by_scope_job_kind_key", (q) =>
+              q.eq("scopeId", "scope:large"),
+            )
+            .collect(),
+        ]);
+        return { votes: votes.length, state: job?.state, stages: stages.length };
+      }),
+    ).toEqual({ votes: 51, state: "preparing", stages: 0 });
+    vi.useRealTimers();
+  });
+
   test("preserves relation truth and exposes one flattened durable redirect", async () => {
     vi.useFakeTimers();
     const backend = withRateLimiter(convexTest(schema, modules));

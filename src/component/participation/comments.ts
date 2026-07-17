@@ -7,7 +7,7 @@ import { validateSafeMarkdown } from "../model/content.js";
 import { invalidInput } from "../model/errors.js";
 import { expectedFailure } from "../model/errors.js";
 import { consumeParticipationLimit } from "../model/rateLimits.js";
-import { requirePostInScope, requireScope } from "../model/scope.js";
+import { requireScope } from "../model/scope.js";
 import {
   commentMutationResultValidator,
   verifiedActorValidator,
@@ -19,6 +19,11 @@ import {
   listCurrentSubscriberActorIds,
 } from "../notifications/events.js";
 import { ensureAutoSubscription } from "./subscriptions.js";
+import {
+  fenceActiveMergeWrite,
+  mergeReadPostIds,
+  resolveMergeWritePost,
+} from "../model/merge.js";
 
 export const addComment = mutation({
   args: {
@@ -41,7 +46,7 @@ export const addComment = mutation({
     if (limited) return limited;
     let post;
     try {
-      post = await requirePostInScope(ctx, args.scopeId, args.postId);
+      post = await resolveMergeWritePost(ctx, args.scopeId, args.postId);
       if (post.lifecycleState !== "active" || post.archivedAt !== undefined) {
         invalidInput("hidden posts cannot be commented on");
       }
@@ -62,12 +67,18 @@ export const addComment = mutation({
     let parent;
     try {
       body = validateSafeMarkdown(args.body, "comment");
+      const equivalentPostIds = await mergeReadPostIds(
+        ctx,
+        args.scopeId,
+        post._id,
+      );
       parent =
         args.parentCommentId === undefined
           ? undefined
           : await requireRootParent(ctx, {
               scopeId: args.scopeId,
               postId: post._id,
+              equivalentPostIds,
               parentCommentId: args.parentCommentId,
             });
     } catch (error) {
@@ -86,6 +97,17 @@ export const addComment = mutation({
       actorId,
       body,
       ...(parent === undefined ? {} : { parentCommentId: parent._id }),
+    });
+    await fenceActiveMergeWrite(ctx, {
+      scopeId: args.scopeId,
+      postId: post._id,
+      writes: [
+        {
+          kind: "comment",
+          originalId: String(commentId),
+          logicalKey: String(commentId),
+        },
+      ],
     });
     await patchPostRanking(ctx, post, {
       commentCount: post.commentCount + 1,

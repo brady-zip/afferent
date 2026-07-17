@@ -13,6 +13,7 @@ import {
 import { isAnonymizedExternalKey } from "../model/actors.js";
 import { notificationEventTypeValidator } from "../validators.js";
 import { materializeRecipientRow } from "./fanout.js";
+import { fenceActiveMergeWrite } from "../model/merge.js";
 
 async function scheduleFanout(ctx: MutationCtx, jobId: Id<"notificationFanoutJobs">) {
   await ctx.scheduler.runAfter(0, internal.jobs.fanout.continueFanout, {
@@ -95,6 +96,19 @@ export async function captureNotificationEvent(
     occurredAt,
     guardKey: args.guardKey,
   });
+  if (args.postId !== undefined) {
+    await fenceActiveMergeWrite(ctx, {
+      scopeId: args.scopeId,
+      postId: args.postId,
+      writes: [
+        {
+          kind: "notification",
+          originalId: String(eventId),
+          logicalKey: String(eventId),
+        },
+      ],
+    });
+  }
   const recipientRows: Id<"notificationEventRecipients">[] = [];
   for (const actorId of recipients) {
     recipientRows.push(

@@ -26,6 +26,7 @@ import {
   captureNotificationEvent,
   listCurrentSubscriberActorIds,
 } from "../notifications/events.js";
+import { fenceActiveMergeWrite } from "../model/merge.js";
 
 async function insertNotificationGuard(
   ctx: MutationCtx,
@@ -45,9 +46,20 @@ async function insertNotificationGuard(
     )
     .unique();
   if (!existing) {
-    await ctx.db.insert("changelogNotificationGuards", {
+    const id = await ctx.db.insert("changelogNotificationGuards", {
       ...args,
       createdAt: Date.now(),
+    });
+    await fenceActiveMergeWrite(ctx, {
+      scopeId: args.scopeId,
+      postId: args.postId,
+      writes: [
+        {
+          kind: "notification_guard",
+          originalId: String(id),
+          logicalKey: String(args.entryId),
+        },
+      ],
     });
     return true;
   }
@@ -248,11 +260,22 @@ export const setChangelogLinks = mutation({
     }
     const existing = await listChangelogLinks(ctx, entry);
     const desired = new Set(posts.map((post) => String(post._id)));
-    await Promise.all(
-      existing
-        .filter((link) => !desired.has(String(link.postId)))
-        .map((link) => ctx.db.delete(link._id)),
-    );
+    for (const link of existing.filter(
+      (candidate) => !desired.has(String(candidate.postId)),
+    )) {
+      await ctx.db.delete(link._id);
+      await fenceActiveMergeWrite(ctx, {
+        scopeId: args.scopeId,
+        postId: link.postId,
+        writes: [
+          {
+            kind: "changelog_link",
+            originalId: String(link._id),
+            logicalKey: String(link.entryId),
+          },
+        ],
+      });
+    }
     for (const [sortOrder, post] of posts.entries()) {
       const link = existing.find((row) => row.postId === post._id);
       if (link) {
@@ -260,11 +283,22 @@ export const setChangelogLinks = mutation({
           await ctx.db.patch(link._id, { sortOrder });
         }
       } else {
-        await ctx.db.insert("changelogPostLinks", {
+        const linkId = await ctx.db.insert("changelogPostLinks", {
           scopeId: args.scopeId,
           entryId: entry._id,
           postId: post._id,
           sortOrder,
+        });
+        await fenceActiveMergeWrite(ctx, {
+          scopeId: args.scopeId,
+          postId: post._id,
+          writes: [
+            {
+              kind: "changelog_link",
+              originalId: String(linkId),
+              logicalKey: String(entry._id),
+            },
+          ],
         });
         if (entry.publishedAt !== undefined) {
           const inserted = await insertNotificationGuard(ctx, {

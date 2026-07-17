@@ -19,6 +19,7 @@ export async function requireRootParent(
   keys: {
     scopeId: string;
     postId: Id<"posts">;
+    equivalentPostIds?: readonly Id<"posts">[];
     parentCommentId: string | Id<"comments">;
   },
 ) {
@@ -30,7 +31,10 @@ export async function requireRootParent(
   if (!normalized) notFound("comment");
   const parent = await ctx.db.get(normalized);
   if (!parent || parent.scopeId !== keys.scopeId) notFound("comment");
-  if (parent.postId !== keys.postId) {
+  if (
+    parent.postId !== keys.postId &&
+    !keys.equivalentPostIds?.includes(parent.postId)
+  ) {
     invalidInput("parent comment must belong to the same post");
   }
   if (parent.parentCommentId !== undefined) {

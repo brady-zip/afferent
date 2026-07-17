@@ -3,7 +3,7 @@ import { ConvexError, v } from "convex/values";
 import { mutation } from "../_generated/server.js";
 import { upsertActor } from "../model/actors.js";
 import { expectedFailure, invalidInput } from "../model/errors.js";
-import { requirePostInScope, requireScope } from "../model/scope.js";
+import { requireScope } from "../model/scope.js";
 import { findVoteMembership, projectVoteState } from "../model/votes.js";
 import { toPostDto } from "../model/views.js";
 import {
@@ -12,6 +12,10 @@ import {
 } from "../validators.js";
 import { patchPostRanking } from "../model/scoring.js";
 import { consumeParticipationLimit } from "../model/rateLimits.js";
+import {
+  fenceActiveMergeWrite,
+  resolveMergeWritePost,
+} from "../model/merge.js";
 
 export const setVote = mutation({
   args: {
@@ -32,7 +36,7 @@ export const setVote = mutation({
     if (limited) return limited;
     let post;
     try {
-      post = await requirePostInScope(ctx, args.scopeId, args.postId);
+      post = await resolveMergeWritePost(ctx, args.scopeId, args.postId);
       if (post.lifecycleState !== "active" || post.archivedAt !== undefined) {
         invalidInput("hidden posts cannot be voted on");
       }
@@ -60,13 +64,31 @@ export const setVote = mutation({
     if (!projection.membershipChanged) return await toPostDto(ctx, post);
 
     if (args.desired) {
-      await ctx.db.insert("votes", {
+      const id = await ctx.db.insert("votes", {
         scopeId: args.scopeId,
         postId: post._id,
         actorId,
       });
+      await fenceActiveMergeWrite(ctx, {
+        scopeId: args.scopeId,
+        postId: post._id,
+        writes: [
+          { kind: "vote", originalId: String(id), logicalKey: String(actorId) },
+        ],
+      });
     } else if (membership) {
       await ctx.db.delete(membership._id);
+      await fenceActiveMergeWrite(ctx, {
+        scopeId: args.scopeId,
+        postId: post._id,
+        writes: [
+          {
+            kind: "vote",
+            originalId: String(membership._id),
+            logicalKey: String(actorId),
+          },
+        ],
+      });
     }
     const updated = await patchPostRanking(ctx, post, {
       voteCount: projection.voteCount,

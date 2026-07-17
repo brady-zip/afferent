@@ -128,24 +128,33 @@ export async function assertMergeIntent(
 
 function phaseKind(phase: MergePhase): MergeKind | null {
   switch (phase) {
-    case "votes":
+    case "votes": {
       return "vote";
-    case "subscriptions":
+    }
+    case "subscriptions": {
       return "subscription";
-    case "comments":
+    }
+    case "comments": {
       return "comment";
-    case "activity":
+    }
+    case "activity": {
       return "activity";
-    case "changelog_links":
+    }
+    case "changelog_links": {
       return "changelog_link";
-    case "notification_guards":
+    }
+    case "notification_guards": {
       return "notification_guard";
-    case "notifications":
+    }
+    case "notifications": {
       return "notification";
-    case "tags":
+    }
+    case "tags": {
       return "tag";
-    default:
+    }
+    default: {
       return null;
+    }
   }
 }
 
@@ -174,11 +183,8 @@ async function relationBatch(
   },
 ): Promise<MergeRelation[]> {
   const after = args.after ?? -1;
-  const filterAfter = <Query extends { filter: (builder: (q: never) => never) => Query }>(
-    query: Query,
-  ) => query;
   switch (args.phase) {
-    case "votes":
+    case "votes": {
       return await ctx.db
         .query("votes")
         .withIndex("by_scope_post_actor", (q) =>
@@ -187,7 +193,8 @@ async function relationBatch(
         .filter((q) => q.gt(q.field("_creationTime"), after))
         .order("asc")
         .take(args.limit);
-    case "subscriptions":
+    }
+    case "subscriptions": {
       return await ctx.db
         .query("postSubscriptions")
         .withIndex("by_scope_post_actor", (q) =>
@@ -196,7 +203,8 @@ async function relationBatch(
         .filter((q) => q.gt(q.field("_creationTime"), after))
         .order("asc")
         .take(args.limit);
-    case "comments":
+    }
+    case "comments": {
       return await ctx.db
         .query("comments")
         .withIndex("by_scope_post", (q) =>
@@ -205,7 +213,8 @@ async function relationBatch(
         .filter((q) => q.gt(q.field("_creationTime"), after))
         .order("asc")
         .take(args.limit);
-    case "activity":
+    }
+    case "activity": {
       return await ctx.db
         .query("postActivity")
         .withIndex("by_scope_post_occurred", (q) =>
@@ -214,7 +223,8 @@ async function relationBatch(
         .filter((q) => q.gt(q.field("_creationTime"), after))
         .order("asc")
         .take(args.limit);
-    case "changelog_links":
+    }
+    case "changelog_links": {
       return await ctx.db
         .query("changelogPostLinks")
         .withIndex("by_scope_post_entry", (q) =>
@@ -223,7 +233,8 @@ async function relationBatch(
         .filter((q) => q.gt(q.field("_creationTime"), after))
         .order("asc")
         .take(args.limit);
-    case "notification_guards":
+    }
+    case "notification_guards": {
       return await ctx.db
         .query("changelogNotificationGuards")
         .withIndex("by_scope_post_entry", (q) =>
@@ -232,7 +243,8 @@ async function relationBatch(
         .filter((q) => q.gt(q.field("_creationTime"), after))
         .order("asc")
         .take(args.limit);
-    case "notifications":
+    }
+    case "notifications": {
       return await ctx.db
         .query("notificationEvents")
         .withIndex("by_scope_post_time", (q) =>
@@ -241,7 +253,8 @@ async function relationBatch(
         .filter((q) => q.gt(q.field("_creationTime"), after))
         .order("asc")
         .take(args.limit);
-    case "tags":
+    }
+    case "tags": {
       return await ctx.db
         .query("postTags")
         .withIndex("by_scope_post_tag", (q) =>
@@ -250,23 +263,26 @@ async function relationBatch(
         .filter((q) => q.gt(q.field("_creationTime"), after))
         .order("asc")
         .take(args.limit);
-    default:
-      filterAfter;
+    }
+    default: {
       return [];
+    }
   }
 }
 
 export async function countAffectedMergeRelations(
   ctx: DatabaseCtx,
-  scopeId: string,
-  sourcePostId: Id<"posts">,
-  canonicalPostId: Id<"posts">,
+  args: {
+    scopeId: string;
+    sourcePostId: Id<"posts">;
+    canonicalPostId: Id<"posts">;
+  },
 ) {
   let total = 0;
   for (const phase of PREPARATION_PHASES) {
-    for (const postId of [sourcePostId, canonicalPostId]) {
+    for (const postId of [args.sourcePostId, args.canonicalPostId]) {
       const rows = await relationBatch(ctx, {
-        scopeId,
+        scopeId: args.scopeId,
         postId,
         phase,
         limit: MERGE_ATOMIC_LIMIT + 1,
@@ -344,11 +360,14 @@ export async function createMergeJob(
 
 async function insertStage(
   ctx: MutationCtx,
-  job: Doc<"mergeJobs">,
-  kind: MergeKind,
-  row: MergeRelation,
-  sourceSide: boolean,
+  args: {
+    job: Doc<"mergeJobs">;
+    kind: MergeKind;
+    row: MergeRelation;
+    sourceSide: boolean;
+  },
 ) {
+  const { job, kind, row, sourceSide } = args;
   const key = logicalKey(kind, row);
   const existing = await ctx.db
     .query("mergeStages")
@@ -391,7 +410,7 @@ function nextPhase(phase: MergePhase) {
   const index = PREPARATION_PHASES.indexOf(
     phase as (typeof PREPARATION_PHASES)[number],
   );
-  return index < 0 || index === PREPARATION_PHASES.length - 1
+  return index === -1 || index === PREPARATION_PHASES.length - 1
     ? null
     : PREPARATION_PHASES[index + 1];
 }
@@ -411,7 +430,12 @@ async function prepareBatch(ctx: MutationCtx, job: Doc<"mergeJobs">) {
   let voteIncrement = 0;
   let commentIncrement = 0;
   for (const row of rows) {
-    const increment = await insertStage(ctx, job, kind, row, sourceSide);
+    const increment = await insertStage(ctx, {
+      job,
+      kind,
+      row,
+      sourceSide,
+    });
     voteIncrement += increment.vote;
     commentIncrement += increment.comment;
   }
@@ -465,10 +489,13 @@ async function prepareBatch(ctx: MutationCtx, job: Doc<"mergeJobs">) {
 
 async function writeMergeHistory(
   ctx: MutationCtx,
-  job: Doc<"mergeJobs">,
-  source: Doc<"posts">,
-  now: number,
+  args: {
+    job: Doc<"mergeJobs">;
+    source: Doc<"posts">;
+    now: number;
+  },
 ) {
+  const { job, source, now } = args;
   const existing = await ctx.db
     .query("mergeHistories")
     .withIndex("by_scope_source", (q) =>
@@ -524,7 +551,7 @@ export async function cutoverMerge(
     return "preparing" as const;
   }
   const now = Date.now();
-  await writeMergeHistory(ctx, job, source, now);
+  await writeMergeHistory(ctx, { job, source, now });
   await ctx.db.patch(canonical._id, {
     voteCount: job.voteCount,
     commentCount: job.commentCount,
@@ -750,12 +777,24 @@ export async function continueMergeJob(
         q.eq("scopeId", job.scopeId).eq("mergeJobId", job._id),
       )
       .take(MERGE_BATCH_SIZE);
-    for (const delta of deltas) await ctx.db.delete(delta._id);
     if (deltas.length > 0) {
+      const staged = await ctx.db
+        .query("mergeStages")
+        .withIndex("by_scope_job_kind_key", (q) =>
+          q.eq("scopeId", job.scopeId).eq("mergeJobId", job._id),
+        )
+        .take(MERGE_BATCH_SIZE);
+      if (staged.length > 0) {
+        for (const row of staged) await ctx.db.delete(row._id);
+        return { state: "preparing" as const };
+      }
+      for (const delta of deltas) await ctx.db.delete(delta._id);
       await ctx.db.patch(job._id, {
         phase: "votes",
         phaseSide: "source",
         phaseCursor: undefined,
+        voteCount: 0,
+        commentCount: 0,
       });
       return { state: "preparing" as const };
     }
@@ -923,7 +962,7 @@ async function sourceRowsForAtomicMerge(
   ctx: DatabaseCtx,
   job: Doc<"mergeJobs">,
 ) {
-  const rows: Array<{ kind: MergeKind; row: MergeRelation }> = [];
+  const rows: { kind: MergeKind; row: MergeRelation }[] = [];
   for (const phase of PREPARATION_PHASES) {
     const kind = phaseKind(phase)!;
     const phaseRows = await relationBatch(ctx, {
@@ -1063,7 +1102,7 @@ export async function mergeObservation(
     job.state === "cutover_done" || job.state === "cleaning" || job.state === "done";
   const union = unionObservation(canonicalRows, sourceRows);
   const empty = unionObservation(sourceRows, sourceRows);
-  for (const key of Object.keys(empty) as Array<keyof typeof empty>) empty[key] = [];
+  for (const key of Object.keys(empty) as (keyof typeof empty)[]) empty[key] = [];
   return {
     scopeId,
     state: job.state,

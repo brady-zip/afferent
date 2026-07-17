@@ -3,6 +3,7 @@ import { ConvexError } from "convex/values";
 import type { Doc } from "../_generated/dataModel.js";
 import type { MutationCtx, QueryCtx } from "../_generated/server.js";
 import { toActorDto } from "./views.js";
+import { fenceActiveMergeWrite } from "./merge.js";
 
 export type ActivityType = Doc<"postActivity">["type"];
 
@@ -22,10 +23,18 @@ export async function appendPostActivity(
     changelogEntryId?: Doc<"changelogEntries">["_id"];
   },
 ) {
-  return await ctx.db.insert("postActivity", {
+  const id = await ctx.db.insert("postActivity", {
     ...args,
     occurredAt: Date.now(),
   });
+  await fenceActiveMergeWrite(ctx, {
+    scopeId: args.scopeId,
+    postId: args.postId,
+    writes: [
+      { kind: "activity", originalId: String(id), logicalKey: String(id) },
+    ],
+  });
+  return id;
 }
 
 export async function toPostActivityDto(

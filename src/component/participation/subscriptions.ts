@@ -12,6 +12,10 @@ import {
   postSubscriptionDtoValidator,
   verifiedActorValidator,
 } from "../validators.js";
+import {
+  fenceActiveMergeWrite,
+  resolveMergeWritePost,
+} from "../model/merge.js";
 
 type DatabaseCtx = Pick<QueryCtx | MutationCtx, "db">;
 
@@ -64,6 +68,17 @@ export async function ensureAutoSubscription(
     state: "subscribed",
     updatedAt: Date.now(),
   });
+  await fenceActiveMergeWrite(ctx, {
+    scopeId: args.scopeId,
+    postId: args.postId,
+    writes: [
+      {
+        kind: "subscription",
+        originalId: String(id),
+        logicalKey: String(args.actorId),
+      },
+    ],
+  });
   return (await ctx.db.get(id))!;
 }
 
@@ -88,7 +103,7 @@ export const getPostSubscription = query({
   returns: postSubscriptionDtoValidator,
   handler: async (ctx, args) => {
     requireScope(args.scopeId);
-    const post = await requirePostInScope(ctx, args.scopeId, args.postId);
+    const post = await resolveMergeWritePost(ctx, args.scopeId, args.postId);
     if (!isPostPubliclyVisible(post)) {
       return toSubscriptionDto(post._id, null);
     }
@@ -135,6 +150,17 @@ export const setSubscription = mutation({
     if (existing) {
       if (existing.state !== state) {
         await ctx.db.patch(existing._id, { state, updatedAt: Date.now() });
+        await fenceActiveMergeWrite(ctx, {
+          scopeId: args.scopeId,
+          postId: post._id,
+          writes: [
+            {
+              kind: "subscription",
+              originalId: String(existing._id),
+              logicalKey: String(actorId),
+            },
+          ],
+        });
       }
       return toSubscriptionDto(post._id, { ...existing, state });
     }
@@ -144,6 +170,17 @@ export const setSubscription = mutation({
       actorId,
       state,
       updatedAt: Date.now(),
+    });
+    await fenceActiveMergeWrite(ctx, {
+      scopeId: args.scopeId,
+      postId: post._id,
+      writes: [
+        {
+          kind: "subscription",
+          originalId: String(id),
+          logicalKey: String(actorId),
+        },
+      ],
     });
     return toSubscriptionDto(post._id, (await ctx.db.get(id))!);
   },
