@@ -132,6 +132,20 @@ The live peer selected cursor-bounded loaded-window semantics and rejected both 
 
 ---
 
+## Atomic Watch Snapshot Correction
+
+**Date:** 2026-07-17
+
+Plan 02-13 re-verification proved exact settled cursor windows but observed one falsifying intermediate publication during a cross-window reorder: `[a,b,back,f]` appeared between the exact prior `[a,b,e,back,f]` and exact current `[e,a,b,back,f]`. The store updated the triggering `PageDescriptor.result` and immediately concatenated sibling descriptor caches, so structural contiguity alone could not prevent a new page result from being combined with old siblings. The committed real harness inspected only selected settled snapshots and therefore missed the tick.
+
+The live peer and Codex selected the additive Plan 02-14 correction after inspecting Convex 1.42.2 client source. `OptimisticQueryResults.ingestQueryResultsFromServer` replaces and recomputes the complete local query-result map before `ConvexReactClient` invokes any changed-query listener. A page callback is therefore only a dirty signal: it must synchronously call `localQueryResult()` for every descriptor in the current committed or candidate page set, stage all results/errors, recheck generation and descriptor-set identity, and publish only after the entire set is available and structurally contiguous. It must never publish one updated descriptor beside cached siblings.
+
+The last coherent result array remains visible while a new load descriptor or split/collapse replacement is incomplete. Append, split, and collapse swap their descriptor set synchronously, then route the new current set through the same all-page reread before publication. A query error publishes only the maximal boundary-contiguous prefix collected by that reread plus its typed error; recovery rereads the full set. Every ordinary mutation notification must be exactly the prior or current canonical cursor-window view, never a mixed intermediate, while fault notifications use the separately exact prefix/error oracle. Settled exact-canonical checks remain required.
+
+A server transition watermark, schema field, and public DTO token were rejected as the primary design. A page query whose rows did not change might not advance with a changed sibling, so watermark equality could turn a coherent client transition into false loading or broad over-invalidation. Plan 02-14 first includes an empirical real-client probe that rereads all sibling watches inside every listener. Only if that probe disproves the inspected client ordering may execution stop and return to live radio to consider a private fallback scoped to one `(scope, domain)`; a global or public token remains out of scope.
+
+---
+
 ## the agent's Discretion
 
 - Exact Trending constants, field sizes, rate-limit values/windows, Complete recency window, inbox cap, lease/retry thresholds, and debounce defaults.
