@@ -35,8 +35,8 @@ Requirements for the first production-ready public release. Roadmap creation wil
 - [x] **DISC-04**: A visitor can search visible feedback by text relevance.
 - [x] **DISC-05**: A visitor can filter visible feedback by board, status, and admin-assigned tag.
 - [x] **DISC-06**: A user composing a new post can see deterministic similar-post suggestions before submission.
-- [ ] **DISC-07**: An authorized admin can merge a duplicate post into a canonical post while preserving actors, votes, comments, and activity history.
-- [ ] **DISC-08**: A request for a merged post resolves to a durable tombstone or redirect that identifies the canonical post.
+- [x] **DISC-07**: An authorized admin can merge a duplicate post into a canonical post while preserving actors, votes, comments, and activity history.
+- [x] **DISC-08**: A request for a merged post resolves to a durable tombstone or redirect that identifies the canonical post.
 
 ### Administration and Moderation
 
@@ -197,8 +197,8 @@ Every v1 requirement maps to exactly one roadmap phase.
 | DISC-04     | Phase 2 | Complete |
 | DISC-05     | Phase 2 | Complete |
 | DISC-06     | Phase 2 | Complete |
-| DISC-07     | Phase 2 | Pending  |
-| DISC-08     | Phase 2 | Pending  |
+| DISC-07     | Phase 2 | Complete |
+| DISC-08     | Phase 2 | Complete |
 | ADMN-01     | Phase 2 | Complete |
 | ADMN-02     | Phase 2 | Complete |
 | ADMN-03     | Phase 2 | Complete |

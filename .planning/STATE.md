@@ -4,17 +4,17 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 2
 current_phase_name: Complete Feedback-to-Changelog Workflow
-status: executing
-stopped_at: Completed 02-10-PLAN.md
-last_updated: "2026-07-17T11:35:06.647Z"
-last_activity: 2026-07-16
-last_activity_desc: Completed stable manual changelog lifecycle and headless editorial hooks
+status: verifying
+stopped_at: Completed 02-11-PLAN.md and corrective closure of 02-05-PLAN.md
+last_updated: "2026-07-17T17:29:06.221Z"
+last_activity: 2026-07-17
+last_activity_desc: Completed atomic large-merge correction and closed all 11 Phase 2 plans
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 19
-  completed_plans: 17
-  percent: 25
+  completed_plans: 19
+  percent: 50
 ---
 
 # Project State
@@ -28,12 +28,12 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 
 ## Current Position
 
-Phase: 2 (Complete Feedback-to-Changelog Workflow) — EXECUTING
-Plan: 10 of 10
-Status: Ready to execute
-Last activity: 2026-07-16 — Completed stable manual changelog lifecycle and headless editorial hooks
+Phase: 2 (Complete Feedback-to-Changelog Workflow) — VERIFYING
+Plan: 11 of 11
+Status: Phase complete — ready for verification
+Last activity: 2026-07-17 — Completed atomic large-merge correction and closed all 11 Phase 2 plans
 
-Progress: [████████░░] 78%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -78,6 +78,8 @@ _Updated after each plan completion_
 | Phase 02 P08 | 13min | 3 tasks | 29 files |
 | Phase 02 P09 | 31min | 3 tasks | 16 files |
 | Phase 02 P10 | 446min | 3 tasks | 21 files |
+| Phase 02 P05 | 55min | 3 tasks | 23 files |
+| Phase 02 P11 | 27min | 3 tasks | 20 files |
 
 ## Accumulated Context
 
@@ -141,6 +143,8 @@ Recent decisions affecting current work:
 - [Phase 02]: Keep sessionGeneration opaque and local to React query keys. — Account switches invalidate actor-sensitive state without sending a client authority fact to the backend.
 - [Phase 02]: Use string IDs and required pagination arguments at generated FunctionReference boundaries. — Convex function arguments are invariant and native paginated references require paginationOpts; brands remain on DTO and hook-facing types.
 - [Phase 02]: Normalize expected headless failures into AfferentResult while retaining backend AfferentActionResult compatibility. — Consumers get one stable error vocabulary without widening or breaking the shipped server contract.
+- [Phase 02]: Large duplicate merges stage invisible relation truth and publish exactly one OCC-fenced ready-to-cutover_done reader switch.
+- [Phase 02]: Every preparing or ready merge-aware writer touches the job row and forces a bounded staged rebuild before cutover.
 
 ### Pending Todos
 
@@ -162,6 +166,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-17T11:35:06.642Z
-Stopped at: Completed 02-10-PLAN.md
+Last session: 2026-07-17T17:28:58.827Z
+Stopped at: Completed 02-11-PLAN.md and corrective closure of 02-05-PLAN.md
 Resume file: None
