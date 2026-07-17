@@ -4,6 +4,7 @@ export type {
   ChangelogBindings,
   ChangelogEntryQueryReference,
   ChangelogFeedQueryReference,
+  CommentFeedQueryReference,
   FeedbackFeedQueryReference,
   FeedbackSearchQueryReference,
   PublicBindings,
@@ -23,7 +24,9 @@ export {
   DEFAULT_SEARCH_DEBOUNCE_MS,
   mapBoundedDiscoveryState,
   mapFeedbackFeedState,
+  mapCommentFeedState,
   useFeedbackFeed,
+  useComments,
   useFeedbackSearch,
   useSimilarPosts,
   mapPostLookupState,
@@ -77,6 +80,8 @@ export type {
 } from "./hooks/changelog.js";
 export type {
   BoundedDiscoveryState,
+  CommentFeedState,
+  CommentPaginationState,
   FeedbackFeedArgs,
   FeedbackFeedState,
   FeedbackPaginationState,

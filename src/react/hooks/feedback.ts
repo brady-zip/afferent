@@ -20,6 +20,7 @@ import type {
   PostDto,
 } from "../../client/contracts.js";
 import type {
+  CommentFeedQueryReference,
   FeedbackFeedQueryReference,
   ParticipationBindings,
 } from "../bindings.js";
@@ -183,6 +184,110 @@ export function useFeedbackFeed(args: FeedbackFeedArgs): FeedbackFeedState {
     initialNumItems: DEFAULT_PAGE_SIZE,
   });
   return mapFeedbackFeedState(pagination);
+}
+
+export type CommentFeedState =
+  | Readonly<{
+      status: "unsupported" | "loading" | "empty";
+      items: CommentDto[];
+      error?: undefined;
+      isLoadingMore: false;
+      canLoadMore: false;
+      loadMore: () => void;
+    }>
+  | Readonly<{
+      status: "ready";
+      items: CommentDto[];
+      error?: undefined;
+      isLoadingMore: boolean;
+      canLoadMore: boolean;
+      loadMore: () => void;
+    }>
+  | Readonly<{
+      status: "error";
+      items: CommentDto[];
+      error: AfferentError;
+      isLoadingMore: false;
+      canLoadMore: false;
+      loadMore: () => void;
+    }>;
+
+export interface CommentPaginationState {
+  results: CommentDto[];
+  status:
+    "LoadingFirstPage" | "CanLoadMore" | "LoadingMore" | "Exhausted" | "Error";
+  error?: AfferentError;
+  loadMore: (count: number) => void;
+}
+
+export function mapCommentFeedState(
+  pagination: CommentPaginationState,
+  configured = true,
+): CommentFeedState {
+  const loadMore = () => pagination.loadMore(DEFAULT_PAGE_SIZE);
+  if (!configured) {
+    return {
+      status: "unsupported",
+      items: [],
+      isLoadingMore: false,
+      canLoadMore: false,
+      loadMore,
+    };
+  }
+  if (pagination.status === "LoadingFirstPage") {
+    return {
+      status: "loading",
+      items: pagination.results,
+      isLoadingMore: false,
+      canLoadMore: false,
+      loadMore,
+    };
+  }
+  if (pagination.status === "Error") {
+    return {
+      status: "error",
+      items: pagination.results,
+      error:
+        pagination.error ?? mapAfferentError(new Error("Comment feed failed")),
+      isLoadingMore: false,
+      canLoadMore: false,
+      loadMore,
+    };
+  }
+  if (pagination.status === "Exhausted" && pagination.results.length === 0) {
+    return {
+      status: "empty",
+      items: pagination.results,
+      isLoadingMore: false,
+      canLoadMore: false,
+      loadMore,
+    };
+  }
+  return {
+    status: "ready",
+    items: pagination.results,
+    isLoadingMore: pagination.status === "LoadingMore",
+    canLoadMore:
+      pagination.status === "CanLoadMore" ||
+      pagination.status === "LoadingMore",
+    loadMore,
+  };
+}
+
+export function useComments(postId: PostId): CommentFeedState {
+  const { bindings, client, generation } = useAfferentContext();
+  const binding = bindings.public.listComments;
+  const pagination = usePaginatedWatchQuery<
+    CommentDto,
+    CommentFeedQueryReference
+  >({
+    client,
+    query: binding,
+    args: binding ? { postId, sessionGeneration: generation } : undefined,
+    generation,
+    initialNumItems: DEFAULT_PAGE_SIZE,
+  });
+  return mapCommentFeedState(pagination, binding !== undefined);
 }
 
 export interface FeedbackSearchArgs {

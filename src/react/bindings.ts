@@ -2,6 +2,7 @@ import type { DefaultFunctionArgs, FunctionReference } from "convex/server";
 
 import type {
   CommentDto,
+  CommentPageDto,
   AdminChangelogEntryDto,
   ChangelogPageDto,
   FeedbackOrder,
@@ -42,6 +43,17 @@ export type FeedbackFeedQueryReference = FunctionReference<
   FeedbackPageDto
 >;
 
+export type CommentFeedQueryReference = FunctionReference<
+  "query",
+  "public",
+  {
+    postId: string;
+    sessionGeneration: number;
+    paginationOpts: PaginationOptions;
+  },
+  CommentPageDto
+>;
+
 export type FeedbackSearchQueryReference = FunctionReference<
   "query",
   "public",
@@ -69,6 +81,7 @@ export type SimilarPostsQueryReference = FunctionReference<
 
 export interface PublicBindings {
   listFeedback: FeedbackFeedQueryReference;
+  listComments?: CommentFeedQueryReference;
   getPost?: FunctionReference<
     "query",
     "public",
