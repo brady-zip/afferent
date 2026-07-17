@@ -49,6 +49,17 @@ test("the real watch harness distinguishes setup failures from assertions", asyn
   assert.match(source, /assertExactSince/);
   assert.match(source, /allowedKeys\.includes/);
   assert.match(source, /cross-window sort movement/);
+  assert.match(source, /assertFaultSince/);
+  assert.match(source, /first-page failure/);
+  assert.match(source, /middle-page failure/);
+  assert.match(source, /tail-page failure/);
+  assert.match(source, /reverse cross-window sort movement/);
   assert.doesNotMatch(source, /new Set\(/);
   assert.doesNotMatch(source, /results\.length > 0/);
+
+  const querySource = await readFile(
+    join(repositoryRoot, "src/react/query.ts"),
+    "utf8",
+  );
+  assert.doesNotMatch(querySource, /\b(?:revision|watermark)\b/i);
 });

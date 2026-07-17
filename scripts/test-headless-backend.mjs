@@ -416,6 +416,25 @@ function recordEveryPublication(store) {
         );
       }
     },
+    assertFaultSince(mark, { expectedLabels, expectedCode, label }) {
+      const observed = publications.slice(mark);
+      assert.ok(observed.length > 0, `${label} must publish at least once`);
+      for (const publication of observed) {
+        assert.deepEqual(
+          publication.labels,
+          expectedLabels,
+          `${label} must retain the exact coherent prefix`,
+        );
+      }
+      assert.ok(
+        observed.some(
+          (publication) =>
+            publication.status === "Error" &&
+            publication.errorCode === expectedCode,
+        ),
+        `${label} must publish typed ${expectedCode} state`,
+      );
+    },
   };
 }
 
@@ -571,7 +590,9 @@ try {
       "first page",
     );
     await assertCanonicalWindow(http, canonical, tracking, first, ["a", "b"]);
+    let publicationMark = pagePublications.mark();
     await http.mutation(setMode, { mode: "later" });
+    pageStore.loadMore(2);
     pageStore.loadMore(2);
     const laterFailure = await waitFor(
       pageStore,
@@ -582,6 +603,15 @@ try {
       laterFailure.results.map((item) => item.label),
       ["a", "b"],
     );
+    pagePublications.assertFaultSince(
+      publicationMark,
+      {
+        expectedLabels: ["a", "b"],
+        expectedCode: "TRANSIENT",
+        label: "pending append failure",
+      },
+    );
+    publicationMark = pagePublications.mark();
     await http.mutation(setMode, { mode: "none" });
     const recovered = await waitFor(
       pageStore,
@@ -595,6 +625,14 @@ try {
       "c",
       "d",
     ]);
+    pagePublications.assertExactSince(
+      publicationMark,
+      [
+        ["a", "b"],
+        ["a", "b", "c", "d"],
+      ],
+      "pending append recovery",
+    );
 
     pageStore.loadMore(2);
     const threeWindows = await waitFor(
@@ -614,7 +652,43 @@ try {
       "f",
     ]);
 
-    let publicationMark = pagePublications.mark();
+    for (const [mode, expectedPrefix, label] of [
+      ["first", [], "first-page failure"],
+      ["middle", ["a", "b"], "middle-page failure"],
+      ["tail", ["a", "b", "c", "d"], "tail-page failure"],
+    ]) {
+      publicationMark = pagePublications.mark();
+      await http.mutation(setMode, { mode });
+      await waitFor(
+        pageStore,
+        (snapshot) =>
+          snapshot.status === "Error" &&
+          JSON.stringify(snapshot.results.map((item) => item.label)) ===
+            JSON.stringify(expectedPrefix),
+        label,
+      );
+      pagePublications.assertFaultSince(
+        publicationMark,
+        { expectedLabels: expectedPrefix, expectedCode: "TRANSIENT", label },
+      );
+      publicationMark = pagePublications.mark();
+      await http.mutation(setMode, { mode: "none" });
+      await waitFor(
+        pageStore,
+        (snapshot) =>
+          snapshot.status !== "Error" &&
+          JSON.stringify(snapshot.results.map((item) => item.label)) ===
+            JSON.stringify(["a", "b", "c", "d", "e", "f"]),
+        `${label} recovery`,
+      );
+      pagePublications.assertExactSince(
+        publicationMark,
+        [expectedPrefix, ["a", "b", "c", "d", "e", "f"]],
+        `${label} recovery`,
+      );
+    }
+
+    publicationMark = pagePublications.mark();
     await http.mutation(insertItem, { label: "zero", position: 5 });
     const grown = await waitFor(
       pageStore,
@@ -835,6 +909,31 @@ try {
       "cross-window sort movement",
     );
 
+    publicationMark = pagePublications.mark();
+    await http.mutation(moveItem, { label: "e", position: 50 });
+    const movedBack = await waitFor(
+      pageStore,
+      (snapshot) =>
+        JSON.stringify(snapshot.results.map((item) => item.label)) ===
+        JSON.stringify(["a", "b", "e", "back", "f"]),
+      "reverse cross-window sort movement",
+    );
+    await assertCanonicalWindow(http, canonical, tracking, movedBack, [
+      "a",
+      "b",
+      "e",
+      "back",
+      "f",
+    ]);
+    pagePublications.assertExactSince(
+      publicationMark,
+      [
+        ["e", "a", "b", "back", "f"],
+        ["a", "b", "e", "back", "f"],
+      ],
+      "reverse cross-window sort movement",
+    );
+
     const thresholdExpectations = [
       [1200, "SplitRequired", false],
       [1800, "SplitRequired", false],
@@ -864,12 +963,14 @@ try {
       generation: 2,
       initialNumItems: 2,
     });
-    const stopOpportunistic = opportunisticStore.subscribe(() => {});
+    const opportunisticPublications = recordEveryPublication(opportunisticStore);
+    const stopOpportunistic = opportunisticPublications.stop;
     await waitFor(
       opportunisticStore,
       (snapshot) => snapshot.results.length === 2,
       "opportunistic split seed",
     );
+    publicationMark = opportunisticPublications.mark();
     await http.mutation(insertItem, { label: "r1", position: 7 });
     await http.mutation(insertItem, { label: "r2", position: 8 });
     await http.mutation(insertItem, { label: "r3", position: 9 });
@@ -895,6 +996,16 @@ try {
       split,
       ["r1", "r2", "r3", "s1", "s2"],
     );
+    opportunisticPublications.assertExactSince(
+      publicationMark,
+      [
+        ["s1", "s2"],
+        ["r1", "s1", "s2"],
+        ["r1", "r2", "s1", "s2"],
+        ["r1", "r2", "r3", "s1", "s2"],
+      ],
+      "opportunistic split transition",
+    );
     stopOpportunistic();
     opportunisticStore.dispose();
 
@@ -909,7 +1020,9 @@ try {
       generation: 3,
       initialNumItems: 6,
     });
-    const stopRequired = requiredStore.subscribe(() => {});
+    const requiredPublications = recordEveryPublication(requiredStore);
+    const stopRequired = requiredPublications.stop;
+    publicationMark = requiredPublications.mark();
     const requiredSplit = await waitFor(
       requiredStore,
       (snapshot) =>
@@ -929,6 +1042,11 @@ try {
       "q5",
       "q6",
     ]);
+    requiredPublications.assertExactSince(
+      publicationMark,
+      [[], ["q1", "q2", "q3", "q4", "q5", "q6"]],
+      "required split transition",
+    );
     stopRequired();
     requiredStore.dispose();
 
@@ -940,7 +1058,9 @@ try {
       generation: 4,
       initialNumItems: 6,
     });
-    const stopMissingCursor = missingCursorStore.subscribe(() => {});
+    const missingCursorPublications = recordEveryPublication(missingCursorStore);
+    const stopMissingCursor = missingCursorPublications.stop;
+    publicationMark = missingCursorPublications.mark();
     const missingCursor = await waitFor(
       missingCursorStore,
       (snapshot) => snapshot.status === "Error",
@@ -948,6 +1068,15 @@ try {
     );
     assert.deepEqual(missingCursor.results, []);
     assert.equal(missingCursor.error?.code, "UNKNOWN");
+    missingCursorPublications.assertFaultSince(
+      publicationMark,
+      {
+        expectedLabels: [],
+        expectedCode: "UNKNOWN",
+        label: "required split missing-cursor failure",
+      },
+    );
+    publicationMark = missingCursorPublications.mark();
     await http.mutation(setMode, { mode: "none" });
     const missingCursorRecovered = await waitFor(
       missingCursorStore,
@@ -963,6 +1092,11 @@ try {
       tracking,
       missingCursorRecovered,
       ["q1", "q2"],
+    );
+    missingCursorPublications.assertExactSince(
+      publicationMark,
+      [[], ["q1", "q2"]],
+      "required split missing-cursor recovery",
     );
     stopMissingCursor();
     missingCursorStore.dispose();

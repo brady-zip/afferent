@@ -436,7 +436,12 @@ describe("mounted non-throwing headless reads", () => {
 });
 
 describe("mounted ordered pagination", () => {
-  test("publishes only the exact prior or current array when one transition changes sibling pages", () => {
+  test.each([
+    ["first-page listener first", [0, 1]],
+    ["middle-page listener first", [1, 0]],
+  ] as const)(
+    "publishes only the exact prior or current array when one transition changes sibling pages: %s",
+    (_label, listenerOrder) => {
     const client = new ControlledWatchClient();
     client.resolver = (name, args) => {
       if (name !== "headless:feed") return defaultQueryValue(name, args);
@@ -519,7 +524,7 @@ describe("mounted ordered pagination", () => {
           value: page([], { continueCursor: "after-e" }),
         },
       ],
-      [1, 0],
+      listenerOrder,
     );
 
     const previous = JSON.stringify(["a", "b", "e", "back", "f"]);
@@ -531,7 +536,8 @@ describe("mounted ordered pagination", () => {
     expect(publications.at(-1)).toEqual(["e", "a", "b", "back", "f"]);
     stop();
     store.dispose();
-  });
+    },
+  );
 
   test("pins each loaded tail and grows the exact cursor-bounded window", async () => {
     const client = new ControlledWatchClient();
