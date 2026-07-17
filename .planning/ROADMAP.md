@@ -156,8 +156,38 @@ Afferent reaches its first public release through four coarse vertical slices. T
 3. The shadcn registry and byte-equivalent mirrored repository examples come from one canonical source with a deterministic drift gate, and a clean consumer fixture installs the packed Afferent tarball plus generated registry items through the real shadcn path before typechecking and building against the supported package range.
 4. Supplied public and admin interfaces pass documented WCAG 2.2 AA-oriented keyboard, focus, announcement, contrast, 320 CSS-pixel reflow, 200% zoom, and phone/tablet/desktop layout checks with versioned evidence.
 
-**Plans:** TBD
 **UI hint**: yes
+**Plans:** 6 plans
+
+**Wave 1**
+
+- [ ] `03-01-PLAN.md` — Prove one canonical board item through packed tarball, real local shadcn install, and isolated exact dependency closure.
+
+**Wave 2** _(blocked on Wave 1 completion)_
+
+- [ ] `03-02-PLAN.md` — Complete the public feedback discovery, creation, deep-link, participation, and discussion interface.
+
+**Wave 3** _(blocked on Wave 2 completion)_
+
+- [ ] `03-03-PLAN.md` — Add exact roadmap, chronological changelog, and composable notification public surfaces.
+
+**Wave 4** _(blocked on Wave 3 completion)_
+
+- [ ] `03-04-PLAN.md` — Deliver keyboard-complete admin triage, moderation, merge, tag, status, and changelog publishing workflows.
+
+**Wave 5** _(blocked on Wave 4 completion)_
+
+- [ ] `03-05-PLAN.md` — Close the six-item deterministic registry/mirror and clean all-item consumer installation contract.
+
+**Wave 6** _(blocked on Wave 5 completion)_
+
+- [ ] `03-06-PLAN.md` — Produce browser accessibility/reflow/zoom evidence and the aggregate Phase 3 release gate.
+
+**Cross-cutting constraints:**
+
+- Every copied hook consumer imports only `afferent/react.js`, remains an explicit route-agnostic client component, and renders hook-owned closed state without recreating authority, queries, pagination, optimism, rollback, or toast behavior.
+- Canonical `ui/afferent/**` source alone emits stable namespaced registry JSON and byte-equivalent `examples/ui/afferent/**`; generated paths are never hand-edited and every clean-consumer proof installs the packed tarball before local shadcn items.
+- All Phase 3 package dependencies are committed once from the TypeScript 6 baseline; the user's TypeScript 7 manifest/lock experiment is restored unstaged and package files are untouched by later plans.
 
 ### Phase 4: Hosted Production Release
 
@@ -185,7 +215,7 @@ Phases execute sequentially: 1 -> 2 -> 3 -> 4
 | ------------------------------------------ | -------------- | ----------- | ---------- |
 | 1. Secure Installable Feedback Board       | 8/8            | Complete    | 2026-07-16 |
 | 2. Complete Feedback-to-Changelog Workflow | 14/14 | Complete    | 2026-07-17 |
-| 3. Source-Owned Product Interface          | 0/TBD          | Not started | -          |
+| 3. Source-Owned Product Interface          | 0/6            | Planned     | -          |
 | 4. Hosted Production Release               | 0/TBD          | Not started | -          |
 
 ---
