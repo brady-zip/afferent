@@ -318,22 +318,26 @@ try {
     });
     const grown = await waitFor(
       pageStore,
-      (snapshot) => snapshot.results.some((item) => item.label === "zero"),
+      (snapshot) =>
+        JSON.stringify(snapshot.results.map((item) => item.label)) ===
+        JSON.stringify(["zero", "a", "b", "c", "d"]),
       "reactive growth",
     );
-    assert.equal(
-      new Set(grown.results.map((item) => item.id)).size,
-      grown.results.length,
+    assert.deepEqual(
+      grown.results.map((item) => item.label),
+      ["zero", "a", "b", "c", "d"],
     );
     await http.mutation(replaceItems, { labels: ["a", "b", "c"] });
     const shrunk = await waitFor(
       pageStore,
-      (snapshot) => snapshot.results.every((item) => item.label !== "zero"),
+      (snapshot) =>
+        JSON.stringify(snapshot.results.map((item) => item.label)) ===
+        JSON.stringify(["a", "b", "c"]),
       "reactive shrink",
     );
-    assert.equal(
-      new Set(shrunk.results.map((item) => item.id)).size,
-      shrunk.results.length,
+    assert.deepEqual(
+      shrunk.results.map((item) => item.label),
+      ["a", "b", "c"],
     );
 
     await http.mutation(replaceItems, {
@@ -343,12 +347,13 @@ try {
     const split = await waitFor(
       pageStore,
       (snapshot) =>
-        snapshot.status !== "LoadingMore" && snapshot.results.length > 0,
+        JSON.stringify(snapshot.results.map((item) => item.label)) ===
+        JSON.stringify(["a", "b", "c", "d"]),
       "reactive split",
     );
-    assert.equal(
-      new Set(split.results.map((item) => item.id)).size,
-      split.results.length,
+    assert.deepEqual(
+      split.results.map((item) => item.label),
+      ["a", "b", "c", "d"],
     );
     await http.mutation(setMode, { mode: "none" });
 

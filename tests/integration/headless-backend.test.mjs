@@ -33,4 +33,8 @@ test("the real watch harness distinguishes setup failures from assertions", asyn
   assert.match(source, /watchQuery/);
   assert.match(source, /createDirectWatchStore/);
   assert.match(source, /createPaginatedWatchStore/);
+  assert.match(source, /assert\.deepEqual/);
+  assert.match(source, /results\.map\(\(item\) => item\.label\)/);
+  assert.doesNotMatch(source, /new Set\(/);
+  assert.doesNotMatch(source, /results\.length > 0/);
 });

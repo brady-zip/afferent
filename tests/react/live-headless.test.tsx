@@ -32,6 +32,7 @@ interface QueryRecord {
   value: unknown;
   error?: unknown;
   listeners: Set<() => void>;
+  disposeCount: number;
 }
 
 interface Deferred {
@@ -70,12 +71,15 @@ class ControlledWatchClient {
       value: this.resolver(name, args),
       error: this.defaultError,
       listeners: new Set(),
+      disposeCount: 0,
     };
     this.records.push(record);
     return {
       onUpdate: (listener: () => void) => {
         record.listeners.add(listener);
-        return () => record.listeners.delete(listener);
+        return () => {
+          if (record.listeners.delete(listener)) record.disposeCount += 1;
+        };
       },
       localQueryResult: () => {
         if (record.error !== undefined) throw record.error;
@@ -138,6 +142,10 @@ class ControlledWatchClient {
       record.error = error;
       for (const listener of record.listeners) listener();
     }
+  }
+
+  active(name: string) {
+    return this.matching(name).filter((record) => record.listeners.size > 0);
   }
 }
 
@@ -405,6 +413,128 @@ describe("mounted non-throwing headless reads", () => {
 });
 
 describe("mounted ordered pagination", () => {
+  test("pins each loaded tail and grows the exact cursor-bounded window", async () => {
+    const client = new ControlledWatchClient();
+    client.resolver = (name, args) => {
+      if (name !== "headless:feed") return defaultQueryValue(name, args);
+      const options = args.paginationOpts as {
+        cursor: string | null;
+        endCursor?: string;
+      };
+      if (options.cursor === null && options.endCursor === undefined) {
+        return page([{ id: "a" }, { id: "b" }], {
+          isDone: false,
+          continueCursor: "after-b",
+        });
+      }
+      return undefined;
+    };
+    const mounted = renderHarness(client, {
+      status: "authenticated",
+      identityToken: "actor-a",
+    } as never);
+    await act(async () => {});
+    expect(state(mounted.container).feedItems).toEqual(["a", "b"]);
+
+    act(() => {
+      feedProbe!.loadMore();
+      feedProbe!.loadMore();
+    });
+    const afterFirstLoad = client.active("headless:feed");
+    expect(
+      afterFirstLoad.filter((record) => {
+        const options = record.args.paginationOpts as {
+          cursor: string | null;
+          endCursor?: string;
+        };
+        return options.cursor === null && options.endCursor === "after-b";
+      }),
+    ).toHaveLength(1);
+    expect(
+      afterFirstLoad.filter((record) => {
+        const options = record.args.paginationOpts as {
+          cursor: string | null;
+          endCursor?: string;
+        };
+        return options.cursor === "after-b" && options.endCursor === undefined;
+      }),
+    ).toHaveLength(1);
+    expect(state(mounted.container).feedItems).toEqual(["a", "b"]);
+
+    act(() => {
+      client.update(
+        "headless:feed",
+        (args) =>
+          (args.paginationOpts as { endCursor?: string }).endCursor ===
+          "after-b",
+        page([{ id: "a" }, { id: "b" }], {
+          continueCursor: "after-b",
+        }),
+      );
+      client.update(
+        "headless:feed",
+        (args) => {
+          const options = args.paginationOpts as {
+            cursor: string | null;
+            endCursor?: string;
+          };
+          return (
+            options.cursor === "after-b" && options.endCursor === undefined
+          );
+        },
+        page([{ id: "c" }, { id: "d" }], {
+          isDone: false,
+          continueCursor: "after-d",
+        }),
+      );
+    });
+    expect(state(mounted.container).feedItems).toEqual(["a", "b", "c", "d"]);
+
+    act(() =>
+      client.update(
+        "headless:feed",
+        (args) =>
+          (args.paginationOpts as { endCursor?: string }).endCursor ===
+          "after-b",
+        page([{ id: "zero" }, { id: "a" }, { id: "b" }], {
+          continueCursor: "after-b",
+        }),
+      ),
+    );
+    expect(state(mounted.container).feedItems).toEqual([
+      "zero",
+      "a",
+      "b",
+      "c",
+      "d",
+    ]);
+
+    act(() => {
+      feedProbe!.loadMore();
+      feedProbe!.loadMore();
+    });
+    const afterSecondLoad = client.active("headless:feed");
+    expect(
+      afterSecondLoad.filter((record) => {
+        const options = record.args.paginationOpts as {
+          cursor: string | null;
+          endCursor?: string;
+        };
+        return options.cursor === "after-b" && options.endCursor === "after-d";
+      }),
+    ).toHaveLength(1);
+    expect(
+      afterSecondLoad.filter((record) => {
+        const options = record.args.paginationOpts as {
+          cursor: string | null;
+          endCursor?: string;
+        };
+        return options.cursor === "after-d" && options.endCursor === undefined;
+      }),
+    ).toHaveLength(1);
+    mounted.unmount();
+  });
+
   test("retains earlier pages across a later failure, blocks duplicate loads, and recovers", async () => {
     const client = new ControlledWatchClient();
     client.resolver = (name, args) => {
@@ -514,6 +644,136 @@ describe("mounted ordered pagination", () => {
       mounted.unmount();
     },
   );
+
+  test("fails closed when SplitRequired omits its split cursor", async () => {
+    const client = new ControlledWatchClient();
+    client.resolver = (name, args) =>
+      name === "headless:feed"
+        ? page([{ id: "incomplete" }], {
+            pageStatus: "SplitRequired",
+            splitCursor: null,
+          })
+        : defaultQueryValue(name, args);
+    const mounted = renderHarness(client, {
+      status: "authenticated",
+      identityToken: "actor-a",
+    } as never);
+    await act(async () => {});
+    expect(state(mounted.container)).toMatchObject({
+      feed: "error",
+      feedItems: [],
+    });
+    mounted.unmount();
+  });
+
+  test("publishes only the maximal coherent prefix through a middle-page failure and recovery", async () => {
+    const client = new ControlledWatchClient();
+    client.resolver = (name, args) => {
+      if (name !== "headless:feed") return defaultQueryValue(name, args);
+      const options = args.paginationOpts as {
+        cursor: string | null;
+        endCursor?: string;
+      };
+      if (options.cursor === null && options.endCursor === undefined) {
+        return page([{ id: "a" }], {
+          isDone: false,
+          continueCursor: "after-a",
+        });
+      }
+      return undefined;
+    };
+    const mounted = renderHarness(client, {
+      status: "authenticated",
+      identityToken: "actor-a",
+    } as never);
+    await act(async () => {});
+    act(() => feedProbe!.loadMore());
+    act(() => {
+      client.update(
+        "headless:feed",
+        (args) =>
+          (args.paginationOpts as { endCursor?: string }).endCursor ===
+          "after-a",
+        page([{ id: "a" }], { continueCursor: "after-a" }),
+      );
+      client.update(
+        "headless:feed",
+        (args) => {
+          const options = args.paginationOpts as {
+            cursor: string | null;
+            endCursor?: string;
+          };
+          return options.cursor === "after-a" && options.endCursor === undefined;
+        },
+        page([{ id: "b" }], {
+          isDone: false,
+          continueCursor: "after-b",
+        }),
+      );
+    });
+    act(() => feedProbe!.loadMore());
+    act(() => {
+      client.update(
+        "headless:feed",
+        (args) => {
+          const options = args.paginationOpts as {
+            cursor: string | null;
+            endCursor?: string;
+          };
+          return options.cursor === "after-a" && options.endCursor === "after-b";
+        },
+        page([{ id: "b" }], { continueCursor: "after-b" }),
+      );
+      client.update(
+        "headless:feed",
+        (args) => {
+          const options = args.paginationOpts as {
+            cursor: string | null;
+            endCursor?: string;
+          };
+          return options.cursor === "after-b" && options.endCursor === undefined;
+        },
+        page([{ id: "c" }]),
+      );
+    });
+    expect(state(mounted.container).feedItems).toEqual(["a", "b", "c"]);
+
+    act(() =>
+      client.fail(
+        "headless:feed",
+        (args) => {
+          const options = args.paginationOpts as {
+            cursor: string | null;
+            endCursor?: string;
+          };
+          return options.cursor === "after-a" && options.endCursor === "after-b";
+        },
+        new Error("middle failed"),
+      ),
+    );
+    expect(state(mounted.container)).toMatchObject({
+      feed: "error",
+      feedItems: ["a"],
+    });
+    act(() =>
+      client.update(
+        "headless:feed",
+        (args) => {
+          const options = args.paginationOpts as {
+            cursor: string | null;
+            endCursor?: string;
+          };
+          return options.cursor === "after-a" && options.endCursor === "after-b";
+        },
+        page([{ id: "b" }], { continueCursor: "after-b" }),
+      ),
+    );
+    expect(state(mounted.container)).toMatchObject({
+      feed: "ready",
+      feedItems: ["a", "b", "c"],
+    });
+    mounted.unmount();
+  });
 });
 
 describe("mounted identity-generation isolation", () => {
