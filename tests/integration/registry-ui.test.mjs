@@ -110,4 +110,5 @@ test("registry acceptance uses pinned local tooling and no moving package execut
     await readFile(join(root, "fixtures/registry-vite/package.json"), "utf8"),
   );
   assert.equal(fixture.dependencies?.afferent, undefined);
+  assert.equal(fixture.dependencies?.convex, "1.42.2");
 });
