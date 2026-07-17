@@ -24,6 +24,7 @@ describe("Phase 2 package and React exports", () => {
     for (const exported of [
       "AfferentProvider",
       "useFeedbackFeed",
+      "useComments",
       "useFeedbackSearch",
       "useSimilarPosts",
       "usePost",
@@ -45,6 +46,23 @@ describe("Phase 2 package and React exports", () => {
       expect(reactIndex).toContain(exported);
     }
     expect(reactIndex).not.toMatch(/useAfferent(?:Query|Mutation)/);
+  });
+
+  test("keeps comment reads on the shared injected pagination substrate", () => {
+    const feedbackSource = fs.readFileSync(
+      "src/react/hooks/feedback.ts",
+      "utf8",
+    );
+    const bindingsSource = fs.readFileSync("src/react/bindings.ts", "utf8");
+    expect(bindingsSource).toContain("CommentFeedQueryReference");
+    expect(bindingsSource).toContain("listComments?:");
+    expect(feedbackSource).toContain("useComments");
+    expect(feedbackSource).toContain(
+      "usePaginatedWatchQuery<CommentDto, CommentFeedQueryReference>",
+    );
+    expect(feedbackSource).not.toContain("client.read.listComments");
+    expect(feedbackSource).not.toMatch(/comment(?:Page)?Cache/i);
+    expect(feedbackSource).not.toMatch(/replies\s*:/);
   });
 
   test("has no auth-provider router toast design-system or source-root coupling", () => {

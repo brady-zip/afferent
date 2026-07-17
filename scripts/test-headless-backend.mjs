@@ -33,6 +33,15 @@ export default defineSchema({
   items: defineTable({ position: v.number(), label: v.string(), padding: v.string() })
     .index("by_position", ["position"])
     .index("by_label", ["label"]),
+  comments: defineTable({
+    postId: v.string(),
+    position: v.number(),
+    label: v.string(),
+    parentCommentId: v.optional(v.id("comments")),
+    padding: v.string(),
+  })
+    .index("by_post_position", ["postId", "position"])
+    .index("by_post_label", ["postId", "label"]),
 });
 `;
 
@@ -43,6 +52,10 @@ import { ConvexError, v } from "convex/values";
 
 async function mode(ctx) {
   return (await ctx.db.query("controls").withIndex("by_key", q => q.eq("key", "fault")).unique())?.mode ?? "none";
+}
+
+async function commentMode(ctx) {
+  return (await ctx.db.query("controls").withIndex("by_key", q => q.eq("key", "comment-fault")).unique())?.mode ?? "none";
 }
 
 async function revision(ctx) {
@@ -64,6 +77,17 @@ export const setMode = mutation({
     const row = await ctx.db.query("controls").withIndex("by_key", q => q.eq("key", "fault")).unique();
     if (row) await ctx.db.patch(row._id, { mode: args.mode });
     else await ctx.db.insert("controls", { key: "fault", mode: args.mode });
+    return null;
+  },
+});
+
+export const setCommentMode = mutation({
+  args: { mode: v.string() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const row = await ctx.db.query("controls").withIndex("by_key", q => q.eq("key", "comment-fault")).unique();
+    if (row) await ctx.db.patch(row._id, { mode: args.mode });
+    else await ctx.db.insert("controls", { key: "comment-fault", mode: args.mode });
     return null;
   },
 });
@@ -116,12 +140,101 @@ export const moveItem = mutation({
   },
 });
 
+async function commentByLabel(ctx, postId, label) {
+  return await ctx.db.query("comments").withIndex("by_post_label", q => q.eq("postId", postId).eq("label", label)).unique();
+}
+
+export const seedComments = mutation({
+  args: {
+    postId: v.string(),
+    rows: v.array(v.object({
+      label: v.string(),
+      position: v.number(),
+      parentLabel: v.optional(v.string()),
+    })),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    for (const comment of await ctx.db.query("comments").collect()) await ctx.db.delete(comment._id);
+    for (const row of args.rows) {
+      const parent = row.parentLabel === undefined
+        ? undefined
+        : await commentByLabel(ctx, args.postId, row.parentLabel);
+      if (row.parentLabel !== undefined && !parent) throw new Error("missing parent " + row.parentLabel);
+      await ctx.db.insert("comments", {
+        postId: args.postId,
+        position: row.position,
+        label: row.label,
+        ...(parent ? { parentCommentId: parent._id } : {}),
+        padding: "x".repeat(1024),
+      });
+    }
+    return null;
+  },
+});
+
+export const insertComment = mutation({
+  args: {
+    postId: v.string(),
+    label: v.string(),
+    position: v.number(),
+    parentLabel: v.optional(v.string()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const parent = args.parentLabel === undefined
+      ? undefined
+      : await commentByLabel(ctx, args.postId, args.parentLabel);
+    if (args.parentLabel !== undefined && !parent) throw new Error("missing parent " + args.parentLabel);
+    await ctx.db.insert("comments", {
+      postId: args.postId,
+      position: args.position,
+      label: args.label,
+      ...(parent ? { parentCommentId: parent._id } : {}),
+      padding: "x".repeat(1024),
+    });
+    return null;
+  },
+});
+
+export const deleteComment = mutation({
+  args: { postId: v.string(), label: v.string() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const target = await commentByLabel(ctx, args.postId, args.label);
+    if (!target) throw new Error("missing comment " + args.label);
+    await ctx.db.delete(target._id);
+    return null;
+  },
+});
+
 export const canonical = query({
   args: {},
   returns: v.any(),
   handler: async (ctx) => ({
     revision: await revision(ctx),
     labels: (await ctx.db.query("items").withIndex("by_position").collect()).map(item => item.label),
+  }),
+});
+
+function commentDto(comment) {
+  return {
+    contractVersion: 1,
+    id: String(comment._id),
+    postId: comment.postId,
+    body: comment.label,
+    author: { id: "actor:test", displayName: "Test Actor" },
+    ...(comment.parentCommentId === undefined
+      ? {}
+      : { parentCommentId: String(comment.parentCommentId) }),
+  };
+}
+
+export const canonicalComments = query({
+  args: { postId: v.string() },
+  returns: v.any(),
+  handler: async (ctx, args) => ({
+    rows: (await ctx.db.query("comments").withIndex("by_post_position", q => q.eq("postId", args.postId)).collect()).map(commentDto),
   }),
 });
 
@@ -167,6 +280,29 @@ export const list = query({
       revision: await revision(ctx),
       page: result.page.map(item => ({ id: String(item._id), label: item.label })),
     };
+  },
+});
+
+export const listComments = query({
+  args: { postId: v.string(), paginationOpts: paginationOptsValidator },
+  returns: v.any(),
+  handler: async (ctx, args) => {
+    const currentMode = await commentMode(ctx);
+    if (currentMode === "first" && args.paginationOpts.cursor === null) {
+      throw new ConvexError({ code: "TRANSIENT", message: "comment first fault" });
+    }
+    if (currentMode === "middle" && args.paginationOpts.cursor !== null && args.paginationOpts.endCursor !== undefined) {
+      throw new ConvexError({ code: "TRANSIENT", message: "comment middle fault" });
+    }
+    if (currentMode === "tail" && args.paginationOpts.cursor !== null && args.paginationOpts.endCursor === undefined) {
+      throw new ConvexError({ code: "TRANSIENT", message: "comment tail fault" });
+    }
+    const result = await ctx.db
+      .query("comments")
+      .withIndex("by_post_position", q => q.eq("postId", args.postId))
+      .paginate(args.paginationOpts);
+    const page = result.page.map(commentDto);
+    return { contractVersion: 1, ...result, page, comments: page };
   },
 });
 `;
@@ -317,14 +453,18 @@ function assertActiveBoundaries(tracker) {
     assert.equal(
       matches.length,
       1,
-      `expected one active page at cursor ${String(cursor)}: ${JSON.stringify(active.map(record => record.args.paginationOpts))}`,
+      `expected one active page at cursor ${String(cursor)}: ${JSON.stringify(active.map((record) => record.args.paginationOpts))}`,
     );
     const current = matches[0];
     ordered.push(current);
     cursor = current.args.paginationOpts.endCursor;
     if (cursor === undefined) break;
   }
-  assert.equal(ordered.length, active.length, "active pages must form one chain");
+  assert.equal(
+    ordered.length,
+    active.length,
+    "active pages must form one chain",
+  );
   for (let index = 0; index < ordered.length - 1; index += 1) {
     assert.equal(
       ordered[index].args.paginationOpts.endCursor,
@@ -361,13 +501,105 @@ async function assertCanonicalWindow(...args) {
   assert.deepEqual(labels, expected);
   const truth = await http.query(canonical, {});
   const terminal = labels.at(-1);
-  const terminalIndex = terminal === undefined ? -1 : truth.labels.indexOf(terminal);
+  const terminalIndex =
+    terminal === undefined ? -1 : truth.labels.indexOf(terminal);
   assert.deepEqual(
     labels,
     terminalIndex === -1 ? [] : truth.labels.slice(0, terminalIndex + 1),
     `revision ${truth.revision} must equal canonical truth through the active tail`,
   );
   assertActiveBoundaries(tracker);
+}
+
+async function assertCanonicalCommentWindow(
+  http,
+  canonicalComments,
+  tracker,
+  snapshot,
+  postId,
+  expectedBodies,
+) {
+  await waitUntil(() => {
+    try {
+      assertActiveBoundaries(tracker);
+      return true;
+    } catch {
+      return false;
+    }
+  }, "one settled comment cursor chain");
+  const bodies = snapshot.results.map((item) => item.body);
+  assert.deepEqual(bodies, expectedBodies);
+  const truth = await http.query(canonicalComments, { postId });
+  const terminal = bodies.at(-1);
+  const terminalIndex =
+    terminal === undefined
+      ? -1
+      : truth.rows.findIndex((row) => row.body === terminal);
+  assert.deepEqual(
+    snapshot.results,
+    terminalIndex === -1 ? [] : truth.rows.slice(0, terminalIndex + 1),
+    "comment feed must equal the exact closed canonical prefix",
+  );
+  for (const row of snapshot.results) {
+    assert.deepEqual(
+      Object.keys(row).sort(),
+      [
+        "author",
+        "body",
+        "contractVersion",
+        "id",
+        ...(row.parentCommentId === undefined ? [] : ["parentCommentId"]),
+        "postId",
+      ].sort(),
+    );
+  }
+  assertActiveBoundaries(tracker);
+}
+
+function recordEveryCommentPublication(store) {
+  const publications = [];
+  const stop = store.subscribe(() => {
+    const snapshot = store.getSnapshot();
+    publications.push({
+      bodies: snapshot.results.map((item) => item.body),
+      status: snapshot.status,
+      errorCode: snapshot.error?.code,
+    });
+  });
+  return {
+    mark: () => publications.length,
+    stop,
+    assertExactSince(mark, allowed, label) {
+      const observed = publications.slice(mark);
+      assert.ok(observed.length > 0, `${label} must publish at least once`);
+      const allowedKeys = allowed.map((bodies) => JSON.stringify(bodies));
+      for (const publication of observed) {
+        assert.ok(
+          allowedKeys.includes(JSON.stringify(publication.bodies)),
+          `${label} emitted a mixed comment publication: ${JSON.stringify(publication)}`,
+        );
+      }
+    },
+    assertFaultSince(mark, { expectedBodies, expectedCode, label }) {
+      const observed = publications.slice(mark);
+      assert.ok(observed.length > 0, `${label} must publish at least once`);
+      for (const publication of observed) {
+        assert.deepEqual(
+          publication.bodies,
+          expectedBodies,
+          `${label} must retain the exact comment prefix`,
+        );
+      }
+      assert.ok(
+        observed.some(
+          (publication) =>
+            publication.status === "Error" &&
+            publication.errorCode === expectedCode,
+        ),
+        `${label} must publish typed ${expectedCode} state`,
+      );
+    },
+  };
 }
 
 async function waitFor(store, predicate, label) {
@@ -525,6 +757,7 @@ try {
   const tracking = new TrackingWatchClient(react);
   assert.equal(typeof react.watchQuery, "function");
   const setMode = reference("setMode");
+  const setCommentMode = reference("setCommentMode");
   const seedItems = reference("seedItems");
   const insertItem = reference("insertItem");
   const deleteItem = reference("deleteItem");
@@ -532,6 +765,11 @@ try {
   const canonical = reference("canonical");
   const direct = reference("direct");
   const list = reference("list");
+  const seedComments = reference("seedComments");
+  const insertComment = reference("insertComment");
+  const deleteComment = reference("deleteComment");
+  const canonicalComments = reference("canonicalComments");
+  const listComments = reference("listComments");
   await http.mutation(seedItems, { labels: ["a", "b", "c", "d", "e", "f"] });
   setupComplete = true;
 
@@ -603,14 +841,11 @@ try {
       laterFailure.results.map((item) => item.label),
       ["a", "b"],
     );
-    pagePublications.assertFaultSince(
-      publicationMark,
-      {
-        expectedLabels: ["a", "b"],
-        expectedCode: "TRANSIENT",
-        label: "pending append failure",
-      },
-    );
+    pagePublications.assertFaultSince(publicationMark, {
+      expectedLabels: ["a", "b"],
+      expectedCode: "TRANSIENT",
+      label: "pending append failure",
+    });
     publicationMark = pagePublications.mark();
     await http.mutation(setMode, { mode: "none" });
     const recovered = await waitFor(
@@ -667,10 +902,11 @@ try {
             JSON.stringify(expectedPrefix),
         label,
       );
-      pagePublications.assertFaultSince(
-        publicationMark,
-        { expectedLabels: expectedPrefix, expectedCode: "TRANSIENT", label },
-      );
+      pagePublications.assertFaultSince(publicationMark, {
+        expectedLabels: expectedPrefix,
+        expectedCode: "TRANSIENT",
+        label,
+      });
       publicationMark = pagePublications.mark();
       await http.mutation(setMode, { mode: "none" });
       await waitFor(
@@ -749,7 +985,17 @@ try {
       pageStore,
       (snapshot) =>
         JSON.stringify(snapshot.results.map((item) => item.label)) ===
-        JSON.stringify(["zero", "a", "b", "c", "middle", "d", "e", "back", "f"]),
+        JSON.stringify([
+          "zero",
+          "a",
+          "b",
+          "c",
+          "middle",
+          "d",
+          "e",
+          "back",
+          "f",
+        ]),
       "back insertion",
     );
     await assertCanonicalWindow(http, canonical, tracking, backInserted, [
@@ -861,11 +1107,13 @@ try {
         JSON.stringify(snapshot.results.map((item) => item.label)) ===
           JSON.stringify(["a", "b", "e", "back", "f"]) &&
         snapshot.status !== "LoadingMore" &&
-        tracking.activePages().some(
-          (record) =>
-            record.args.paginationOpts.cursor === null &&
-            record.args.paginationOpts.numItems === 4,
-        ),
+        tracking
+          .activePages()
+          .some(
+            (record) =>
+              record.args.paginationOpts.cursor === null &&
+              record.args.paginationOpts.numItems === 4,
+          ),
       "empty middle-window collapse",
     );
     await assertCanonicalWindow(http, canonical, tracking, collapsed, [
@@ -942,7 +1190,11 @@ try {
       [4300, "SplitRequired", true],
       [8000, null, true],
     ];
-    for (const [maximumBytesRead, pageStatus, hasSplitCursor] of thresholdExpectations) {
+    for (const [
+      maximumBytesRead,
+      pageStatus,
+      hasSplitCursor,
+    ] of thresholdExpectations) {
       const probe = await http.query(list, {
         paginationOpts: { numItems: 10, cursor: null, maximumBytesRead },
       });
@@ -963,7 +1215,8 @@ try {
       generation: 2,
       initialNumItems: 2,
     });
-    const opportunisticPublications = recordEveryPublication(opportunisticStore);
+    const opportunisticPublications =
+      recordEveryPublication(opportunisticStore);
     const stopOpportunistic = opportunisticPublications.stop;
     await waitFor(
       opportunisticStore,
@@ -989,13 +1242,13 @@ try {
         snapshot.status !== "LoadingMore",
       "real null-status splitCursor opportunistic split",
     );
-    await assertCanonicalWindow(
-      http,
-      canonical,
-      tracking,
-      split,
-      ["r1", "r2", "r3", "s1", "s2"],
-    );
+    await assertCanonicalWindow(http, canonical, tracking, split, [
+      "r1",
+      "r2",
+      "r3",
+      "s1",
+      "s2",
+    ]);
     opportunisticPublications.assertExactSince(
       publicationMark,
       [
@@ -1058,7 +1311,8 @@ try {
       generation: 4,
       initialNumItems: 6,
     });
-    const missingCursorPublications = recordEveryPublication(missingCursorStore);
+    const missingCursorPublications =
+      recordEveryPublication(missingCursorStore);
     const stopMissingCursor = missingCursorPublications.stop;
     publicationMark = missingCursorPublications.mark();
     const missingCursor = await waitFor(
@@ -1068,14 +1322,11 @@ try {
     );
     assert.deepEqual(missingCursor.results, []);
     assert.equal(missingCursor.error?.code, "UNKNOWN");
-    missingCursorPublications.assertFaultSince(
-      publicationMark,
-      {
-        expectedLabels: [],
-        expectedCode: "UNKNOWN",
-        label: "required split missing-cursor failure",
-      },
-    );
+    missingCursorPublications.assertFaultSince(publicationMark, {
+      expectedLabels: [],
+      expectedCode: "UNKNOWN",
+      label: "required split missing-cursor failure",
+    });
     publicationMark = missingCursorPublications.mark();
     await http.mutation(setMode, { mode: "none" });
     const missingCursorRecovered = await waitFor(
@@ -1100,6 +1351,309 @@ try {
     );
     stopMissingCursor();
     missingCursorStore.dispose();
+
+    const commentPostId = "post:comments";
+    await http.mutation(seedComments, {
+      postId: commentPostId,
+      rows: [
+        { label: "root-a", position: 10 },
+        { label: "reply-a", position: 20, parentLabel: "root-a" },
+        { label: "root-b", position: 30 },
+        { label: "root-c", position: 40 },
+      ],
+    });
+    const commentStore = queryModule.createPaginatedWatchStore({
+      client: tracking,
+      query: listComments,
+      args: { postId: commentPostId },
+      generation: 10,
+      initialNumItems: 1,
+    });
+    const commentPublications = recordEveryCommentPublication(commentStore);
+    const stopComments = commentPublications.stop;
+    await waitFor(
+      commentStore,
+      (snapshot) => snapshot.status === "CanLoadMore",
+      "comment feed first root",
+    );
+    for (let loaded = 1; loaded < 4; loaded += 1) {
+      commentStore.loadMore(1);
+      await waitFor(
+        commentStore,
+        (snapshot) =>
+          snapshot.results.length === loaded + 1 &&
+          snapshot.status !== "LoadingMore",
+        `comment feed page ${loaded + 1}`,
+      );
+    }
+    let commentSnapshot = commentStore.getSnapshot();
+    await assertCanonicalCommentWindow(
+      http,
+      canonicalComments,
+      tracking,
+      commentSnapshot,
+      commentPostId,
+      ["root-a", "reply-a", "root-b", "root-c"],
+    );
+    const initialCommentTruth = await http.query(canonicalComments, {
+      postId: commentPostId,
+    });
+    assert.equal(initialCommentTruth.rows[0].parentCommentId, undefined);
+    assert.equal(
+      initialCommentTruth.rows[1].parentCommentId,
+      initialCommentTruth.rows[0].id,
+      "reply must preserve its exact root parentCommentId",
+    );
+
+    for (const [faultMode, expectedBodies, label] of [
+      ["first", [], "comment first-page failure"],
+      ["middle", ["root-a"], "comment middle-page failure"],
+      ["tail", ["root-a", "reply-a", "root-b"], "comment tail-page failure"],
+    ]) {
+      let commentMark = commentPublications.mark();
+      await http.mutation(setCommentMode, { mode: faultMode });
+      await waitFor(
+        commentStore,
+        (snapshot) =>
+          snapshot.status === "Error" &&
+          JSON.stringify(snapshot.results.map((item) => item.body)) ===
+            JSON.stringify(expectedBodies),
+        label,
+      );
+      commentPublications.assertFaultSince(commentMark, {
+        expectedBodies,
+        expectedCode: "TRANSIENT",
+        label,
+      });
+      commentMark = commentPublications.mark();
+      await http.mutation(setCommentMode, { mode: "none" });
+      await waitFor(
+        commentStore,
+        (snapshot) =>
+          snapshot.status !== "Error" &&
+          JSON.stringify(snapshot.results.map((item) => item.body)) ===
+            JSON.stringify(["root-a", "reply-a", "root-b", "root-c"]),
+        `${label} recovery`,
+      );
+      commentPublications.assertExactSince(
+        commentMark,
+        [expectedBodies, ["root-a", "reply-a", "root-b", "root-c"]],
+        `${label} recovery`,
+      );
+    }
+
+    let commentMark = commentPublications.mark();
+    await http.mutation(insertComment, {
+      postId: commentPostId,
+      label: "root-zero",
+      position: 5,
+    });
+    commentSnapshot = await waitFor(
+      commentStore,
+      (snapshot) =>
+        JSON.stringify(snapshot.results.map((item) => item.body)) ===
+        JSON.stringify(["root-zero", "root-a", "reply-a", "root-b", "root-c"]),
+      "comment root insertion",
+    );
+    await assertCanonicalCommentWindow(
+      http,
+      canonicalComments,
+      tracking,
+      commentSnapshot,
+      commentPostId,
+      ["root-zero", "root-a", "reply-a", "root-b", "root-c"],
+    );
+    commentPublications.assertExactSince(
+      commentMark,
+      [
+        ["root-a", "reply-a", "root-b", "root-c"],
+        ["root-zero", "root-a", "reply-a", "root-b", "root-c"],
+      ],
+      "comment root insertion",
+    );
+
+    commentMark = commentPublications.mark();
+    await http.mutation(insertComment, {
+      postId: commentPostId,
+      label: "reply-new",
+      position: 15,
+      parentLabel: "root-a",
+    });
+    commentSnapshot = await waitFor(
+      commentStore,
+      (snapshot) =>
+        JSON.stringify(snapshot.results.map((item) => item.body)) ===
+        JSON.stringify([
+          "root-zero",
+          "root-a",
+          "reply-new",
+          "reply-a",
+          "root-b",
+          "root-c",
+        ]),
+      "comment reply insertion",
+    );
+    await assertCanonicalCommentWindow(
+      http,
+      canonicalComments,
+      tracking,
+      commentSnapshot,
+      commentPostId,
+      ["root-zero", "root-a", "reply-new", "reply-a", "root-b", "root-c"],
+    );
+    commentPublications.assertExactSince(
+      commentMark,
+      [
+        ["root-zero", "root-a", "reply-a", "root-b", "root-c"],
+        ["root-zero", "root-a", "reply-new", "reply-a", "root-b", "root-c"],
+      ],
+      "comment reply insertion",
+    );
+
+    commentMark = commentPublications.mark();
+    await http.mutation(deleteComment, {
+      postId: commentPostId,
+      label: "root-b",
+    });
+    commentSnapshot = await waitFor(
+      commentStore,
+      (snapshot) =>
+        JSON.stringify(snapshot.results.map((item) => item.body)) ===
+        JSON.stringify([
+          "root-zero",
+          "root-a",
+          "reply-new",
+          "reply-a",
+          "root-c",
+        ]),
+      "comment middle deletion",
+    );
+    await assertCanonicalCommentWindow(
+      http,
+      canonicalComments,
+      tracking,
+      commentSnapshot,
+      commentPostId,
+      ["root-zero", "root-a", "reply-new", "reply-a", "root-c"],
+    );
+    commentPublications.assertExactSince(
+      commentMark,
+      [
+        ["root-zero", "root-a", "reply-new", "reply-a", "root-b", "root-c"],
+        ["root-zero", "root-a", "reply-new", "reply-a", "root-c"],
+      ],
+      "comment middle deletion",
+    );
+
+    stopComments();
+    commentStore.dispose();
+    const disposedCommentRecords = tracking.records.filter(
+      (record) => record.name === "harness:listComments",
+    );
+
+    const pendingPostId = "post:pending-comments";
+    await http.mutation(seedComments, {
+      postId: pendingPostId,
+      rows: [
+        { label: "pending-a", position: 10 },
+        { label: "pending-b", position: 20 },
+        { label: "pending-c", position: 30 },
+      ],
+    });
+    const pendingCommentStore = queryModule.createPaginatedWatchStore({
+      client: tracking,
+      query: listComments,
+      args: { postId: pendingPostId },
+      generation: 11,
+      initialNumItems: 1,
+    });
+    const pendingPublications =
+      recordEveryCommentPublication(pendingCommentStore);
+    const stopPendingComments = pendingPublications.stop;
+    await waitFor(
+      pendingCommentStore,
+      (snapshot) => snapshot.status === "CanLoadMore",
+      "pending comment first page",
+    );
+    const pendingMark = pendingPublications.mark();
+    pendingCommentStore.loadMore(1);
+    await http.mutation(insertComment, {
+      postId: pendingPostId,
+      label: "pending-new",
+      position: 15,
+    });
+    const pendingSnapshot = await waitFor(
+      pendingCommentStore,
+      (snapshot) =>
+        JSON.stringify(snapshot.results.map((item) => item.body)) ===
+          JSON.stringify(["pending-a", "pending-new", "pending-b"]) &&
+        snapshot.status !== "LoadingMore",
+      "pending comment load mutation",
+    );
+    await waitUntil(() => {
+      try {
+        assertActiveBoundaries(tracking);
+        return true;
+      } catch {
+        return false;
+      }
+    }, "pending comment structural replacement");
+    await assertCanonicalCommentWindow(
+      http,
+      canonicalComments,
+      tracking,
+      pendingSnapshot,
+      pendingPostId,
+      ["pending-a", "pending-new", "pending-b"],
+    );
+    pendingPublications.assertExactSince(
+      pendingMark,
+      [
+        ["pending-a"],
+        ["pending-a", "pending-b"],
+        ["pending-a", "pending-new", "pending-b"],
+      ],
+      "pending comment load mutation",
+    );
+    stopPendingComments();
+    pendingCommentStore.dispose();
+
+    const identityPostId = "post:identity-b";
+    await http.mutation(seedComments, {
+      postId: identityPostId,
+      rows: [{ label: "identity-b", position: 10 }],
+    });
+    const identityStore = queryModule.createPaginatedWatchStore({
+      client: tracking,
+      query: listComments,
+      args: { postId: identityPostId },
+      generation: 12,
+      initialNumItems: 1,
+    });
+    const stopIdentity = identityStore.subscribe(() => {});
+    const identitySnapshot = await waitFor(
+      identityStore,
+      (snapshot) =>
+        JSON.stringify(snapshot.results.map((item) => item.body)) ===
+        JSON.stringify(["identity-b"]),
+      "comment identity replacement",
+    );
+    await assertCanonicalCommentWindow(
+      http,
+      canonicalComments,
+      tracking,
+      identitySnapshot,
+      identityPostId,
+      ["identity-b"],
+    );
+    assert.ok(
+      disposedCommentRecords.every(
+        (record) => record.active === 0 && record.disposeCount === 1,
+      ),
+      "comment identity replacement must dispose every old generation watch exactly once",
+    );
+    stopIdentity();
+    identityStore.dispose();
 
     stopDirect();
     directStore.dispose();

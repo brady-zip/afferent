@@ -17,6 +17,7 @@ import {
   getPublishedChangelogBySlugIntentValidator,
   getUnreadNotificationCountIntentValidator,
   listFeedbackIntentValidator,
+  listCommentsIntentValidator,
   listNotificationsIntentValidator,
   listPostActivityIntentValidator,
   listPublishedChangelogIntentValidator,
@@ -161,6 +162,7 @@ describe("public contract privacy", () => {
   test("keeps the browser cache generation out of component intents", () => {
     for (const validator of [
       listFeedbackIntentValidator,
+      listCommentsIntentValidator,
       getPostIntentValidator,
       searchFeedbackIntentValidator,
       suggestSimilarPostsIntentValidator,
@@ -182,6 +184,23 @@ describe("public contract privacy", () => {
     );
     expect(wrapper).toContain("sessionGeneration: v.number()");
     expect(wrapper).toContain("withoutSessionGeneration(args)");
+  });
+
+  test("keeps the comment read intent narrow and the React shape flat", () => {
+    expect(Object.keys(listCommentsIntentValidator.fields).sort()).toEqual([
+      "paginationOpts",
+      "postId",
+    ]);
+    const bindingsSource = fs.readFileSync("src/react/bindings.ts", "utf8");
+    const feedbackSource = fs.readFileSync(
+      "src/react/hooks/feedback.ts",
+      "utf8",
+    );
+    expect(bindingsSource).toContain("CommentPageDto");
+    expect(bindingsSource).toContain("CommentFeedQueryReference");
+    expect(feedbackSource).toContain("CommentDto[]");
+    expect(feedbackSource).not.toMatch(/replies\s*:/);
+    expect(feedbackSource).not.toMatch(/client\.read\.listComments/);
   });
 
   test("freezes the exact versioned public post DTO shape", () => {

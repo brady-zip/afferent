@@ -11,6 +11,7 @@ import {
   useAdminCapability,
   useChangelogEntry,
   useChangelogFeed,
+  useComments,
   useFeedbackFeed,
   useFeedbackMutations,
   useFeedbackSearch,
@@ -142,7 +143,8 @@ class ControlledWatchClient {
       records[index].error = undefined;
       records[index].value = updates[index].value;
     }
-    for (const index of listenerOrder ?? records.map((_record, index) => index)) {
+    for (const index of listenerOrder ??
+      records.map((_record, index) => index)) {
       for (const listener of records[index].listeners) listener();
     }
   }
@@ -179,6 +181,7 @@ const mutation = (name: string) =>
 
 const refs = {
   feed: query("feed"),
+  comments: query("comments"),
   post: query("post"),
   search: query("search"),
   similar: query("similar"),
@@ -196,6 +199,7 @@ const refs = {
 const bindings = {
   public: {
     listFeedback: refs.feed,
+    listComments: refs.comments,
     getPost: refs.post,
     searchFeedback: refs.search,
     suggestSimilarPosts: refs.similar,
@@ -246,8 +250,20 @@ function page(items: Record<string, unknown>[], overrides = {}) {
   };
 }
 
+function commentPage(items: Record<string, unknown>[], overrides = {}) {
+  return {
+    contractVersion: 1,
+    page: items,
+    comments: items,
+    isDone: true,
+    continueCursor: "done",
+    ...overrides,
+  };
+}
+
 function defaultQueryValue(name: string) {
   if (name === "headless:feed") return page([]);
+  if (name === "headless:comments") return commentPage([]);
   if (name === "headless:post")
     return { contractVersion: 1, status: "notFound" };
   if (name === "headless:search" || name === "headless:similar")
@@ -284,9 +300,12 @@ class SentinelBoundary extends React.Component<
 
 let mutationProbe: ReturnType<typeof useFeedbackMutations> | undefined;
 let feedProbe: ReturnType<typeof useFeedbackFeed> | undefined;
+let commentsProbe: ReturnType<typeof useComments> | undefined;
+let commentPublications: { status: string; ids: string[] }[] = [];
 
 function AllHooksProbe() {
   const feed = useFeedbackFeed({ order: "newest" });
+  const comments = useComments("post:1" as never);
   const search = useFeedbackSearch({ query: "feedback", debounceMs: 0 });
   const similar = useSimilarPosts({ title: "feedback", debounceMs: 0 });
   const post = usePost("post:1" as never);
@@ -301,11 +320,21 @@ function AllHooksProbe() {
   const tags = useTags();
   mutationProbe = useFeedbackMutations();
   feedProbe = feed;
+  commentsProbe = comments;
+  commentPublications.push({
+    status: comments.status,
+    ids: comments.items.map((item) => String(item.id)),
+  });
   return (
     <output data-headless="state">
       {JSON.stringify({
         feed: feed.status,
         feedItems: feed.items.map((item) => item.id),
+        comments: comments.status,
+        commentItems: comments.items.map((item) => ({
+          id: item.id,
+          parentCommentId: item.parentCommentId,
+        })),
         search: search.status,
         similar: similar.status,
         post: post.status,
@@ -329,7 +358,11 @@ function AllHooksProbe() {
   );
 }
 
-function renderHarness(client: ControlledWatchClient, auth: AfferentAuthState) {
+function renderHarness(
+  client: ControlledWatchClient,
+  auth: AfferentAuthState,
+  activeBindings: AfferentBindings = bindings,
+) {
   const container = document.createElement("div");
   document.body.append(container);
   const root = createRoot(container);
@@ -338,7 +371,7 @@ function renderHarness(client: ControlledWatchClient, auth: AfferentAuthState) {
       <ConvexProvider client={client as never}>
         <SentinelBoundary>
           <AfferentProvider
-            {...({ bindings, auth: nextAuth, client } as never)}
+            {...({ bindings: activeBindings, auth: nextAuth, client } as never)}
           >
             <AllHooksProbe />
           </AfferentProvider>
@@ -370,6 +403,8 @@ beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   mutationProbe = undefined;
   feedProbe = undefined;
+  commentsProbe = undefined;
+  commentPublications = [];
 });
 
 afterEach(() => {
@@ -389,6 +424,7 @@ describe("mounted non-throwing headless reads", () => {
     const snapshot = state(mounted.container);
     for (const key of [
       "feed",
+      "comments",
       "search",
       "similar",
       "post",
@@ -435,6 +471,213 @@ describe("mounted non-throwing headless reads", () => {
   });
 });
 
+describe("mounted comment feed", () => {
+  test("omitted comment binding is inert and explicitly unsupported", async () => {
+    const client = new ControlledWatchClient();
+    const { listComments: _listComments, ...publicBindings } = bindings.public;
+    const mounted = renderHarness(client, { status: "unauthenticated" }, {
+      ...bindings,
+      public: publicBindings,
+    } as AfferentBindings);
+    await act(async () => {});
+    expect(state(mounted.container)).toMatchObject({
+      comments: "unsupported",
+      commentItems: [],
+    });
+    expect(client.matching("headless:comments")).toHaveLength(0);
+    act(() => commentsProbe!.loadMore());
+    expect(client.matching("headless:comments")).toHaveLength(0);
+    mounted.unmount();
+  });
+
+  test.each([
+    ["first comment listener first", [0, 1]],
+    ["tail comment listener first", [1, 0]],
+  ] as const)(
+    "publishes flat root and reply rows as exact coherent prefixes: %s",
+    async (_label, listenerOrder) => {
+      const root = {
+        contractVersion: 1,
+        id: "root-a",
+        postId: "post:1",
+        body: "Root A",
+        author: { id: "actor-a", displayName: "Actor A" },
+      };
+      const reply = {
+        contractVersion: 1,
+        id: "reply-a",
+        postId: "post:1",
+        body: "Reply A",
+        author: { id: "actor-b", displayName: "Actor B" },
+        parentCommentId: "root-a",
+      };
+      const tail = {
+        contractVersion: 1,
+        id: "root-b",
+        postId: "post:1",
+        body: "Root B",
+        author: { id: "actor-c" },
+      };
+      const inserted = {
+        contractVersion: 1,
+        id: "root-zero",
+        postId: "post:1",
+        body: "Root zero",
+        author: { id: "actor-zero" },
+      };
+      const client = new ControlledWatchClient();
+      client.resolver = (name, args) => {
+        if (name !== "headless:comments") return defaultQueryValue(name, args);
+        const options = args.paginationOpts as {
+          cursor: string | null;
+          endCursor?: string;
+        };
+        if (options.cursor === null && options.endCursor === undefined) {
+          return commentPage([root, reply], {
+            isDone: false,
+            continueCursor: "after-reply",
+          });
+        }
+        return undefined;
+      };
+      const mounted = renderHarness(client, {
+        status: "authenticated",
+        identityToken: "actor-a",
+      } as never);
+      await act(async () => {});
+      expect(state(mounted.container).commentItems).toEqual([
+        { id: "root-a" },
+        { id: "reply-a", parentCommentId: "root-a" },
+      ]);
+
+      act(() => commentsProbe!.loadMore());
+      act(() => {
+        client.updateTransaction(
+          "headless:comments",
+          [
+            {
+              predicate: (args) => {
+                const options = args.paginationOpts as {
+                  cursor: string | null;
+                  endCursor?: string;
+                };
+                return (
+                  options.cursor === null && options.endCursor === "after-reply"
+                );
+              },
+              value: commentPage([root, reply], {
+                continueCursor: "after-reply",
+              }),
+            },
+            {
+              predicate: (args) => {
+                const options = args.paginationOpts as {
+                  cursor: string | null;
+                  endCursor?: string;
+                };
+                return (
+                  options.cursor === "after-reply" &&
+                  options.endCursor === undefined
+                );
+              },
+              value: commentPage([tail]),
+            },
+          ],
+          listenerOrder,
+        );
+      });
+      expect(state(mounted.container).commentItems).toEqual([
+        { id: "root-a" },
+        { id: "reply-a", parentCommentId: "root-a" },
+        { id: "root-b" },
+      ]);
+
+      const mark = commentPublications.length;
+      act(() => {
+        client.update(
+          "headless:comments",
+          (args) =>
+            (args.paginationOpts as { endCursor?: string }).endCursor ===
+            "after-reply",
+          commentPage([inserted, root, reply], {
+            continueCursor: "after-reply",
+          }),
+        );
+      });
+      const previous = JSON.stringify(["root-a", "reply-a", "root-b"]);
+      const current = JSON.stringify([
+        "root-zero",
+        "root-a",
+        "reply-a",
+        "root-b",
+      ]);
+      for (const publication of commentPublications.slice(mark)) {
+        expect([previous, current]).toContain(JSON.stringify(publication.ids));
+      }
+      expect(state(mounted.container).commentItems).toEqual([
+        { id: "root-zero" },
+        { id: "root-a" },
+        { id: "reply-a", parentCommentId: "root-a" },
+        { id: "root-b" },
+      ]);
+
+      act(() => {
+        client.fail(
+          "headless:comments",
+          (args) =>
+            (args.paginationOpts as { cursor: string | null }).cursor ===
+            "after-reply",
+          new Error("comment tail failed"),
+        );
+      });
+      expect(state(mounted.container)).toMatchObject({
+        comments: "error",
+        commentItems: [
+          { id: "root-zero" },
+          { id: "root-a" },
+          { id: "reply-a", parentCommentId: "root-a" },
+        ],
+      });
+      act(() => {
+        client.update(
+          "headless:comments",
+          (args) =>
+            (args.paginationOpts as { cursor: string | null }).cursor ===
+            "after-reply",
+          commentPage([tail]),
+        );
+      });
+      expect(state(mounted.container)).toMatchObject({
+        comments: "ready",
+        commentItems: [
+          { id: "root-zero" },
+          { id: "root-a" },
+          { id: "reply-a", parentCommentId: "root-a" },
+          { id: "root-b" },
+        ],
+      });
+
+      const oldRecords = client.active("headless:comments");
+      mounted.rerender({
+        status: "authenticated",
+        identityToken: "actor-b",
+      } as never);
+      expect(state(mounted.container)).toMatchObject({
+        comments: "loading",
+        commentItems: [],
+      });
+      expect(oldRecords.every((record) => record.disposeCount === 1)).toBe(
+        true,
+      );
+      mounted.unmount();
+      for (const record of client.matching("headless:comments")) {
+        expect(record.listeners.size).toBe(0);
+        expect(record.disposeCount).toBe(1);
+      }
+    },
+  );
+});
+
 describe("mounted ordered pagination", () => {
   test.each([
     ["first-page listener first", [0, 1]],
@@ -442,100 +685,100 @@ describe("mounted ordered pagination", () => {
   ] as const)(
     "publishes only the exact prior or current array when one transition changes sibling pages: %s",
     (_label, listenerOrder) => {
-    const client = new ControlledWatchClient();
-    client.resolver = (name, args) => {
-      if (name !== "headless:feed") return defaultQueryValue(name, args);
-      const options = args.paginationOpts as {
-        cursor: string | null;
-        endCursor?: string;
-      };
-      if (options.cursor === null && options.endCursor === undefined) {
-        return page([{ id: "a" }, { id: "b" }], {
-          isDone: false,
-          continueCursor: "after-b",
-        });
-      }
-      if (options.cursor === null && options.endCursor === "after-b") {
-        return page([{ id: "a" }, { id: "b" }], {
-          continueCursor: "after-b",
-        });
-      }
-      if (options.cursor === "after-b" && options.endCursor === undefined) {
-        return page([{ id: "e" }], {
-          isDone: false,
-          continueCursor: "after-e",
-        });
-      }
-      if (options.cursor === "after-b" && options.endCursor === "after-e") {
-        return page([{ id: "e" }], { continueCursor: "after-e" });
-      }
-      if (options.cursor === "after-e" && options.endCursor === undefined) {
-        return page([{ id: "back" }, { id: "f" }]);
-      }
-      return undefined;
-    };
-    const store = createPaginatedWatchStore({
-      client: client as never,
-      query: refs.feed as never,
-      args: {} as never,
-      generation: 1,
-      initialNumItems: 2,
-    });
-    const publications: string[][] = [];
-    const stop = store.subscribe(() => {
-      publications.push(
-        store.getSnapshot().results.map((item) => String((item as { id: unknown }).id)),
-      );
-    });
-    store.loadMore(2);
-    store.loadMore(2);
-    expect(store.getSnapshot().results.map((item) => (item as { id: unknown }).id)).toEqual([
-      "a",
-      "b",
-      "e",
-      "back",
-      "f",
-    ]);
-    publications.length = 0;
-
-    client.updateTransaction(
-      "headless:feed",
-      [
-        {
-          predicate: (args) => {
-            const options = args.paginationOpts as {
-              cursor: string | null;
-              endCursor?: string;
-            };
-            return options.cursor === null && options.endCursor === "after-b";
-          },
-          value: page([{ id: "e" }, { id: "a" }, { id: "b" }], {
+      const client = new ControlledWatchClient();
+      client.resolver = (name, args) => {
+        if (name !== "headless:feed") return defaultQueryValue(name, args);
+        const options = args.paginationOpts as {
+          cursor: string | null;
+          endCursor?: string;
+        };
+        if (options.cursor === null && options.endCursor === undefined) {
+          return page([{ id: "a" }, { id: "b" }], {
+            isDone: false,
             continueCursor: "after-b",
-          }),
-        },
-        {
-          predicate: (args) => {
-            const options = args.paginationOpts as {
-              cursor: string | null;
-              endCursor?: string;
-            };
-            return options.cursor === "after-b" && options.endCursor === "after-e";
-          },
-          value: page([], { continueCursor: "after-e" }),
-        },
-      ],
-      listenerOrder,
-    );
+          });
+        }
+        if (options.cursor === null && options.endCursor === "after-b") {
+          return page([{ id: "a" }, { id: "b" }], {
+            continueCursor: "after-b",
+          });
+        }
+        if (options.cursor === "after-b" && options.endCursor === undefined) {
+          return page([{ id: "e" }], {
+            isDone: false,
+            continueCursor: "after-e",
+          });
+        }
+        if (options.cursor === "after-b" && options.endCursor === "after-e") {
+          return page([{ id: "e" }], { continueCursor: "after-e" });
+        }
+        if (options.cursor === "after-e" && options.endCursor === undefined) {
+          return page([{ id: "back" }, { id: "f" }]);
+        }
+        return undefined;
+      };
+      const store = createPaginatedWatchStore({
+        client: client as never,
+        query: refs.feed as never,
+        args: {} as never,
+        generation: 1,
+        initialNumItems: 2,
+      });
+      const publications: string[][] = [];
+      const stop = store.subscribe(() => {
+        publications.push(
+          store
+            .getSnapshot()
+            .results.map((item) => String((item as { id: unknown }).id)),
+        );
+      });
+      store.loadMore(2);
+      store.loadMore(2);
+      expect(
+        store.getSnapshot().results.map((item) => (item as { id: unknown }).id),
+      ).toEqual(["a", "b", "e", "back", "f"]);
+      publications.length = 0;
 
-    const previous = JSON.stringify(["a", "b", "e", "back", "f"]);
-    const current = JSON.stringify(["e", "a", "b", "back", "f"]);
-    expect(publications.length).toBeGreaterThan(0);
-    for (const publication of publications) {
-      expect([previous, current]).toContain(JSON.stringify(publication));
-    }
-    expect(publications.at(-1)).toEqual(["e", "a", "b", "back", "f"]);
-    stop();
-    store.dispose();
+      client.updateTransaction(
+        "headless:feed",
+        [
+          {
+            predicate: (args) => {
+              const options = args.paginationOpts as {
+                cursor: string | null;
+                endCursor?: string;
+              };
+              return options.cursor === null && options.endCursor === "after-b";
+            },
+            value: page([{ id: "e" }, { id: "a" }, { id: "b" }], {
+              continueCursor: "after-b",
+            }),
+          },
+          {
+            predicate: (args) => {
+              const options = args.paginationOpts as {
+                cursor: string | null;
+                endCursor?: string;
+              };
+              return (
+                options.cursor === "after-b" && options.endCursor === "after-e"
+              );
+            },
+            value: page([], { continueCursor: "after-e" }),
+          },
+        ],
+        listenerOrder,
+      );
+
+      const previous = JSON.stringify(["a", "b", "e", "back", "f"]);
+      const current = JSON.stringify(["e", "a", "b", "back", "f"]);
+      expect(publications.length).toBeGreaterThan(0);
+      for (const publication of publications) {
+        expect([previous, current]).toContain(JSON.stringify(publication));
+      }
+      expect(publications.at(-1)).toEqual(["e", "a", "b", "back", "f"]);
+      stop();
+      store.dispose();
     },
   );
 
@@ -829,7 +1072,9 @@ describe("mounted ordered pagination", () => {
             cursor: string | null;
             endCursor?: string;
           };
-          return options.cursor === "after-a" && options.endCursor === undefined;
+          return (
+            options.cursor === "after-a" && options.endCursor === undefined
+          );
         },
         page([{ id: "b" }], {
           isDone: false,
@@ -846,7 +1091,9 @@ describe("mounted ordered pagination", () => {
             cursor: string | null;
             endCursor?: string;
           };
-          return options.cursor === "after-a" && options.endCursor === "after-b";
+          return (
+            options.cursor === "after-a" && options.endCursor === "after-b"
+          );
         },
         page([{ id: "b" }], { continueCursor: "after-b" }),
       );
@@ -857,7 +1104,9 @@ describe("mounted ordered pagination", () => {
             cursor: string | null;
             endCursor?: string;
           };
-          return options.cursor === "after-b" && options.endCursor === undefined;
+          return (
+            options.cursor === "after-b" && options.endCursor === undefined
+          );
         },
         page([{ id: "c" }]),
       );
@@ -872,7 +1121,9 @@ describe("mounted ordered pagination", () => {
             cursor: string | null;
             endCursor?: string;
           };
-          return options.cursor === "after-a" && options.endCursor === "after-b";
+          return (
+            options.cursor === "after-a" && options.endCursor === "after-b"
+          );
         },
         new Error("middle failed"),
       ),
@@ -889,7 +1140,9 @@ describe("mounted ordered pagination", () => {
             cursor: string | null;
             endCursor?: string;
           };
-          return options.cursor === "after-a" && options.endCursor === "after-b";
+          return (
+            options.cursor === "after-a" && options.endCursor === "after-b"
+          );
         },
         page([{ id: "b" }], { continueCursor: "after-b" }),
       ),
@@ -946,7 +1199,9 @@ describe("mounted ordered pagination", () => {
             cursor: string | null;
             endCursor?: string;
           };
-          return options.cursor === "after-b" && options.endCursor === undefined;
+          return (
+            options.cursor === "after-b" && options.endCursor === undefined
+          );
         },
         page([{ id: "c" }, { id: "d" }]),
       );
@@ -1014,8 +1269,8 @@ describe("mounted ordered pagination", () => {
         identityToken: "actor-a",
       } as never);
       await act(async () => {});
-      const oldGeneration = client.matching("headless:feed")[0].args
-        .sessionGeneration;
+      const oldGeneration =
+        client.matching("headless:feed")[0].args.sessionGeneration;
 
       act(() => feedProbe!.loadMore());
       const staleRecords = client.matching(
@@ -1052,9 +1307,9 @@ describe("mounted ordered pagination", () => {
       });
       expect(state(mounted.container).feedItems).toEqual([]);
 
-      const fresh = client.active("headless:feed").find(
-        (record) => record.args.sessionGeneration !== oldGeneration,
-      );
+      const fresh = client
+        .active("headless:feed")
+        .find((record) => record.args.sessionGeneration !== oldGeneration);
       expect(fresh).toBeDefined();
       act(() =>
         client.update(

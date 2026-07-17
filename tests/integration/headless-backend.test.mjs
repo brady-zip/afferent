@@ -54,6 +54,12 @@ test("the real watch harness distinguishes setup failures from assertions", asyn
   assert.match(source, /middle-page failure/);
   assert.match(source, /tail-page failure/);
   assert.match(source, /reverse cross-window sort movement/);
+  assert.match(source, /seedComments/);
+  assert.match(source, /insertComment/);
+  assert.match(source, /deleteComment/);
+  assert.match(source, /parentCommentId/);
+  assert.match(source, /comment feed/);
+  assert.match(source, /comment identity replacement/);
   assert.doesNotMatch(source, /new Set\(/);
   assert.doesNotMatch(source, /results\.length > 0/);
 
