@@ -185,6 +185,13 @@ interface StructuralOperation<T> {
   error?: AfferentError;
 }
 
+interface StagedPage<T> {
+  page: PageDescriptor<T>;
+  result?: PageResult<T>;
+  error?: AfferentError;
+  invalidCursor?: true;
+}
+
 interface PaginatedStoreOptions<
   Item,
   Query extends FunctionReference<"query", "public", any, PageResult<Item>>,
@@ -213,7 +220,7 @@ export function createPaginatedWatchStore<
   };
   const serverSnapshot = snapshot;
   let pages: PageDescriptor<Item>[] = [];
-  let retainedResults: Item[] = [];
+  let lastCoherentResults: Item[] = [];
   let disposed = false;
   let storeEpoch = 0;
   let nextPageKey = 0;
@@ -270,63 +277,173 @@ export function createPaginatedWatchStore<
     return undefined;
   }
 
-  function coherentPrefix() {
-    const results: Item[] = [];
-    const boundaryError = chainError(pages);
-    if (boundaryError) return { results, error: boundaryError, pending: false };
-    for (const page of pages) {
-      if (page.error) {
-        return { results, error: page.error, pending: false };
-      }
-      if (!page.result || page.result.pageStatus === "SplitRequired") {
-        return { results, pending: true };
-      }
-      results.push(...page.result.page);
-    }
-    return { results, pending: false };
-  }
-
-  function visibleResults() {
-    const coherent = coherentPrefix();
-    return coherent.results.length > 0 || pages[0]?.result !== undefined
-      ? coherent.results
-      : retainedResults;
-  }
-
-  function refreshSnapshot() {
+  function publishRetained(error?: AfferentError) {
     if (disposed) return;
-    const coherent = coherentPrefix();
-    const results =
-      coherent.results.length > 0 || pages[0]?.result !== undefined
-        ? coherent.results
-        : retainedResults;
-    const error = coherent.error ?? operation?.error;
     if (error) {
-      publish({ results, status: "Error", error, loadMore, retry });
-      return;
-    }
-    const first = pages[0];
-    if (!first || first.result === undefined) {
       publish({
-        results,
-        status: pages.length > 1 ? "LoadingMore" : "LoadingFirstPage",
+        results: lastCoherentResults,
+        status: "Error",
+        error,
         loadMore,
         retry,
       });
       return;
     }
-    if (coherent.pending || operation) {
-      publish({ results, status: "LoadingMore", loadMore, retry });
+    publish({
+      results: lastCoherentResults,
+      status:
+        pages.length === 1 && pages[0]?.result === undefined
+          ? "LoadingFirstPage"
+          : "LoadingMore",
+      loadMore,
+      retry,
+    });
+  }
+
+  function splitRequested(result: PageResult<Item>) {
+    return (
+      result.pageStatus === "SplitRecommended" ||
+      result.pageStatus === "SplitRequired" ||
+      result.page.length > options.initialNumItems * 2
+    );
+  }
+
+  function stageChain(chain: PageDescriptor<Item>[]): StagedPage<Item>[] {
+    return chain.map((page) => {
+      if (page.watch === undefined) return { page };
+      try {
+        return { page, result: page.watch.localQueryResult() };
+      } catch (error) {
+        if (isInvalidCursorError(error)) return { page, invalidCursor: true };
+        return { page, error: mapAfferentError(error) };
+      }
+    });
+  }
+
+  function commitStaged(staged: StagedPage<Item>[]) {
+    for (const entry of staged) {
+      if (entry.error) {
+        entry.page.error = entry.error;
+        continue;
+      }
+      if (!entry.result) continue;
+      entry.page.error = undefined;
+      if (entry.result.pageStatus === "SplitRequired") {
+        entry.page.splitResult = entry.result;
+      } else {
+        entry.page.result = entry.result;
+        entry.page.splitResult = undefined;
+      }
+    }
+  }
+
+  function stagedOutcome(staged: StagedPage<Item>[]) {
+    const results: Item[] = [];
+    for (const entry of staged) {
+      if (entry.error) return { results, error: entry.error };
+      if (!entry.result || entry.result.pageStatus === "SplitRequired") {
+        return { results, pending: true as const };
+      }
+      results.push(...entry.result.page);
+    }
+    return { results };
+  }
+
+  function queueInvalidCursorRestart(capturedEpoch: number) {
+    queueMicrotask(() => {
+      if (!disposed && capturedEpoch === storeEpoch) restart(true);
+    });
+  }
+
+  function publishStagedError(
+    staged: StagedPage<Item>[],
+    error: AfferentError,
+  ) {
+    const prefix = stagedOutcome(staged).results;
+    publish({ results: prefix, status: "Error", error, loadMore, retry });
+  }
+
+  function rereadCommitted(
+    capturedPages: PageDescriptor<Item>[],
+    capturedEpoch: number,
+  ) {
+    if (
+      disposed ||
+      capturedEpoch !== storeEpoch ||
+      pages !== capturedPages ||
+      operation
+    ) {
       return;
     }
-    retainedResults = [];
-    const last = pages.at(-1)?.result;
+    const boundaryError = chainError(capturedPages);
+    if (boundaryError) {
+      publishRetained(boundaryError);
+      return;
+    }
+    const staged = stageChain(capturedPages);
+    if (
+      disposed ||
+      capturedEpoch !== storeEpoch ||
+      pages !== capturedPages ||
+      operation
+    ) {
+      return;
+    }
+    if (staged.some((entry) => entry.invalidCursor)) {
+      queueInvalidCursorRestart(capturedEpoch);
+      return;
+    }
+    const missingCursor = staged.find(
+      (entry) =>
+        entry.result?.pageStatus === "SplitRequired" &&
+        !entry.result.splitCursor,
+    );
+    if (missingCursor) {
+      const error = invariantError("SplitRequired omitted splitCursor");
+      missingCursor.error = error;
+      missingCursor.result = undefined;
+      commitStaged(staged);
+      publishStagedError(staged, error);
+      return;
+    }
+    const outcome = stagedOutcome(staged);
+    if (outcome.error) {
+      commitStaged(staged);
+      publish({
+        results: outcome.results,
+        status: "Error",
+        error: outcome.error,
+        loadMore,
+        retry,
+      });
+      return;
+    }
+    if (outcome.pending) {
+      if (staged.every((entry) => entry.result || entry.error)) {
+        commitStaged(staged);
+        queueStructuralScan();
+      }
+      publishRetained();
+      return;
+    }
+    commitStaged(staged);
+    lastCoherentResults = outcome.results;
+    const last = staged.at(-1)?.result;
     publish({
-      results,
+      results: outcome.results,
       status: last?.isDone ? "Exhausted" : "CanLoadMore",
       loadMore,
       retry,
     });
+    if (
+      staged.some(
+        (entry) =>
+          entry.result &&
+          (splitRequested(entry.result) || entry.result.page.length === 0),
+      )
+    ) {
+      queueStructuralScan();
+    }
   }
 
   function splitDescriptors(page: PageDescriptor<Item>, splitCursor: string) {
@@ -371,22 +488,7 @@ export function createPaginatedWatchStore<
     return chainError(current.replacements, current.kind);
   }
 
-  function commitOperation(current: StructuralOperation<Item>) {
-    if (
-      disposed ||
-      operation !== current ||
-      current.epoch !== storeEpoch ||
-      current.error ||
-      current.replacements.some((page) => !page.result || page.error)
-    ) {
-      return;
-    }
-    const validationError = validateReplacement(current);
-    if (validationError) {
-      current.error = validationError;
-      refreshSnapshot();
-      return;
-    }
+  function candidateChain(current: StructuralOperation<Item>) {
     const firstIndex = pages.indexOf(current.originals[0]);
     if (
       firstIndex === -1 ||
@@ -394,16 +496,50 @@ export function createPaginatedWatchStore<
         (page, offset) => pages[firstIndex + offset] !== page,
       )
     ) {
+      return undefined;
+    }
+    return [
+      ...pages.slice(0, firstIndex),
+      ...current.replacements,
+      ...pages.slice(firstIndex + current.originals.length),
+    ];
+  }
+
+  function commitOperation(input: {
+    current: StructuralOperation<Item>;
+    capturedPages: PageDescriptor<Item>[];
+    capturedReplacements: PageDescriptor<Item>[];
+    candidate: PageDescriptor<Item>[];
+    staged: StagedPage<Item>[];
+  }) {
+    const {
+      current,
+      capturedPages,
+      capturedReplacements,
+      candidate,
+      staged,
+    } = input;
+    if (
+      disposed ||
+      operation !== current ||
+      current.epoch !== storeEpoch ||
+      pages !== capturedPages ||
+      current.replacements !== capturedReplacements ||
+      current.error
+    ) {
       return;
     }
+    const validationError = validateReplacement(current);
+    if (validationError) {
+      current.error = validationError;
+      publishRetained(validationError);
+      return;
+    }
+    commitStaged(staged);
     for (const original of current.originals) stopPage(original);
-    pages.splice(
-      firstIndex,
-      current.originals.length,
-      ...current.replacements,
-    );
+    pages = candidate;
     operation = undefined;
-    refreshSnapshot();
+    rereadCommitted(pages, storeEpoch);
     queueStructuralScan();
   }
 
@@ -416,70 +552,109 @@ export function createPaginatedWatchStore<
     if (index === -1) return;
     const children = splitDescriptors(page, splitCursor);
     stopPage(page);
-    current.replacements.splice(index, 1, ...children);
-    for (const child of children) attach(child, true);
+    current.replacements = [
+      ...current.replacements.slice(0, index),
+      ...children,
+      ...current.replacements.slice(index + 1),
+    ];
+    for (const child of children) attach(child);
   }
 
-  function read(page: PageDescriptor<Item>, candidate = false) {
-    if (disposed || page.epoch !== storeEpoch || page.watch === undefined) {
+  function rereadOperation(current: StructuralOperation<Item>) {
+    if (
+      disposed ||
+      operation !== current ||
+      current.epoch !== storeEpoch
+    ) {
       return;
     }
-    try {
-      const result = page.watch.localQueryResult();
-      if (result === undefined) return;
-      page.error = undefined;
-      const splitRequested =
-        result.pageStatus === "SplitRecommended" ||
-        result.pageStatus === "SplitRequired" ||
-        result.page.length > options.initialNumItems * 2;
-      if (result.pageStatus === "SplitRequired" && !result.splitCursor) {
-        const error = invariantError("SplitRequired omitted splitCursor");
-        if (candidate && operation) operation.error = error;
-        else page.error = error;
-        refreshSnapshot();
-        return;
-      }
-      const pendingCandidate =
-        candidate && operation?.replacements.includes(page) === true;
-      if (candidate && !pendingCandidate && !pages.includes(page)) return;
-      if (pendingCandidate) {
-        if (splitRequested && result.splitCursor) {
-          replaceCandidate(operation!, page, result.splitCursor);
-          refreshSnapshot();
-          return;
-        }
-        page.result = result;
-        operation!.error = operation!.replacements
-          .map((replacement) => replacement.error)
-          .find((error): error is AfferentError => error !== undefined);
-        commitOperation(operation!);
-        refreshSnapshot();
-        return;
-      }
-      if (result.pageStatus === "SplitRequired") page.splitResult = result;
-      else {
-        page.result = result;
-        page.splitResult = undefined;
-      }
-      if (splitRequested && result.splitCursor) queueStructuralScan();
-    } catch (error) {
-      if (isInvalidCursorError(error)) {
-        const capturedEpoch = storeEpoch;
-        queueMicrotask(() => {
-          if (!disposed && capturedEpoch === storeEpoch) restart(true);
-        });
-        return;
-      }
-      const mapped = mapAfferentError(error);
-      if (candidate && operation?.replacements.includes(page)) {
-        page.error = mapped;
-        operation.error = mapped;
-      } else {
-        page.error = mapped;
-      }
+    const capturedPages = pages;
+    const capturedReplacements = current.replacements;
+    const candidate = candidateChain(current);
+    if (!candidate) return;
+    const boundaryError = chainError(candidate, current.kind);
+    if (boundaryError) {
+      current.error = boundaryError;
+      publishRetained(boundaryError);
+      return;
     }
-    refreshSnapshot();
-    queueStructuralScan();
+    const staged = stageChain(candidate);
+    if (
+      disposed ||
+      operation !== current ||
+      current.epoch !== storeEpoch ||
+      pages !== capturedPages ||
+      current.replacements !== capturedReplacements
+    ) {
+      return;
+    }
+    if (staged.some((entry) => entry.invalidCursor)) {
+      queueInvalidCursorRestart(current.epoch);
+      return;
+    }
+    const missingCursor = staged.find(
+      (entry) =>
+        current.replacements.includes(entry.page) &&
+        entry.result?.pageStatus === "SplitRequired" &&
+        !entry.result.splitCursor,
+    );
+    if (missingCursor) {
+      const error = invariantError("SplitRequired omitted splitCursor");
+      missingCursor.error = error;
+      missingCursor.result = undefined;
+      current.error = error;
+      commitStaged(staged);
+      publishStagedError(staged, error);
+      return;
+    }
+    const nestedSplit = staged.find(
+      (entry) =>
+        current.replacements.includes(entry.page) &&
+        entry.result !== undefined &&
+        splitRequested(entry.result) &&
+        Boolean(entry.result.splitCursor),
+    );
+    if (nestedSplit?.result?.splitCursor) {
+      replaceCandidate(current, nestedSplit.page, nestedSplit.result.splitCursor);
+      publishRetained();
+      return;
+    }
+    current.error = undefined;
+    const outcome = stagedOutcome(staged);
+    if (outcome.error) {
+      current.error = outcome.error;
+      commitStaged(staged);
+      publish({
+        results: outcome.results,
+        status: "Error",
+        error: outcome.error,
+        loadMore,
+        retry,
+      });
+      return;
+    }
+    if (outcome.pending) {
+      publishRetained();
+      return;
+    }
+    commitOperation({
+      current,
+      capturedPages,
+      capturedReplacements,
+      candidate,
+      staged,
+    });
+  }
+
+  function dirty(page: PageDescriptor<Item>) {
+    if (disposed || page.epoch !== storeEpoch) return;
+    if (operation) {
+      if (pages.includes(page) || operation.replacements.includes(page)) {
+        rereadOperation(operation);
+      }
+      return;
+    }
+    if (pages.includes(page)) rereadCommitted(pages, storeEpoch);
   }
 
   function descriptor(input: {
@@ -497,7 +672,7 @@ export function createPaginatedWatchStore<
     };
   }
 
-  function attach(page: PageDescriptor<Item>, candidate = false) {
+  function attach(page: PageDescriptor<Item>) {
     if (disposed || page.epoch !== storeEpoch || page.watch) return;
     const paginationOpts = {
       numItems: page.numItems,
@@ -509,8 +684,8 @@ export function createPaginatedWatchStore<
       ...options.args,
       paginationOpts,
     } as Query["_args"]) as unknown as Watch<PageResult<Item>>;
-    page.stop = page.watch.onUpdate(() => read(page, candidate));
-    read(page, candidate);
+    page.stop = page.watch.onUpdate(() => dirty(page));
+    dirty(page);
   }
 
   function beginOperation(
@@ -526,9 +701,9 @@ export function createPaginatedWatchStore<
       replacements,
     };
     operation = current;
-    refreshSnapshot();
-    for (const replacement of replacements) attach(replacement, true);
-    commitOperation(current);
+    publishRetained();
+    for (const replacement of replacements) attach(replacement);
+    rereadOperation(current);
     return true;
   }
 
@@ -617,7 +792,6 @@ export function createPaginatedWatchStore<
     });
     pages = [first];
     attach(first);
-    refreshSnapshot();
   }
 
   function requestMore(count: number) {
@@ -642,13 +816,13 @@ export function createPaginatedWatchStore<
 
   function restart(retain: boolean) {
     if (disposed) return;
-    if (retain) retainedResults = visibleResults();
+    lastCoherentResults = retain ? [...snapshot.results] : [];
     for (const page of pages) stopPage(page);
     stopOperation();
     pages = [];
     storeEpoch += 1;
     publish({
-      results: retainedResults,
+      results: lastCoherentResults,
       status: "LoadingFirstPage",
       loadMore,
       retry,
@@ -667,6 +841,7 @@ export function createPaginatedWatchStore<
           for (const page of pages) stopPage(page);
           stopOperation();
           pages = [];
+          lastCoherentResults = [];
           storeEpoch += 1;
         }
       };

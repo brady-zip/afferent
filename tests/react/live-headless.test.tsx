@@ -127,11 +127,11 @@ class ControlledWatchClient {
 
   updateTransaction(
     name: string,
-    updates: ReadonlyArray<{
+    updates: readonly {
       predicate: (args: Record<string, unknown>) => boolean;
       value: unknown;
-    }>,
-    listenerOrder?: ReadonlyArray<number>,
+    }[],
+    listenerOrder?: readonly number[],
   ) {
     const records = updates.map(({ predicate }) => {
       const matches = this.matching(name, predicate);

@@ -429,7 +429,13 @@ async function waitUntil(predicate, label) {
   throw new Error(`Timed out waiting for ${label}`);
 }
 
-async function proveAtomicClientTransition(react, http, list, insertItem, deleteItem) {
+async function proveAtomicClientTransition({
+  react,
+  http,
+  list,
+  insertItem,
+  deleteItem,
+}) {
   const watches = [1, 2, 3].map((numItems, index) =>
     react.watchQuery(list, {
       paginationOpts: { numItems, cursor: null, id: 90_000 + index },
@@ -511,13 +517,13 @@ try {
   setupComplete = true;
 
   try {
-    await proveAtomicClientTransition(
+    await proveAtomicClientTransition({
       react,
       http,
       list,
       insertItem,
       deleteItem,
-    );
+    });
     await http.mutation(setMode, { mode: "direct" });
     const directStore = queryModule.createDirectWatchStore({
       client: tracking,
