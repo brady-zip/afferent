@@ -97,3 +97,22 @@ test("repository root remains a registry author rather than a shadcn app", async
   assert.equal(fixture.tailwind.config, "");
   assert.equal(fixture.rsc, false);
 });
+
+test("board source closes every feed state with deterministic accessible recovery", async () => {
+  const source = await readFile(
+    join(canonicalRoot, "board/board-screen.tsx"),
+    "utf8",
+  );
+  assert.match(source, /^"use client";/);
+  for (const state of ["loading", "empty", "error", "ready"]) {
+    assert.match(source, new RegExp(`case ["']${state}["']`));
+  }
+  assert.match(source, /assertNever\(feed\)/);
+  assert.match(source, /copy\.common\.tryLoadingAgain/);
+  assert.match(source, /onClick=\{feed\.loadMore\}/);
+  assert.match(source, /navigation\.href\.post\(post\.id\)/);
+  assert.doesNotMatch(
+    source,
+    /window\.|Date\.|Math\.random|matchMedia|dangerouslySetInnerHTML/,
+  );
+});
