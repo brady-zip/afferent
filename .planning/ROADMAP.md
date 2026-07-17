@@ -79,7 +79,7 @@ Afferent reaches its first public release through four coarse vertical slices. T
 
 ### Phase 2: Complete Feedback-to-Changelog Workflow
 
-**Goal:** Teams can run the complete feedback-to-roadmap-to-changelog loop through provider-neutral headless React APIs.
+**Goal:** As a developer integrating Afferent into my existing Convex + React application, I want to run the complete provider-neutral feedback-to-roadmap-to-changelog workflow -- ranked, searchable, and filterable discovery with admin duplicate merges; authenticated participation; admin moderation with a status-driven roadmap; manually published changelog entries linked to feedback; and in-app notifications backed by a host-consumable delivery outbox -- through tested component APIs and framework-light headless React hooks with explicit async, auth, and error states, so that my users and admins can complete the entire feedback lifecycle while I retain ownership of identity, authorization, and my own presentation.
 **Mode:** mvp
 **Depends on:** Phase 1
 **Requirements:** DISC-01, DISC-02, DISC-03, DISC-04, DISC-05, DISC-06, DISC-07, DISC-08, ADMN-01, ADMN-02, ADMN-03, ADMN-04, ADMN-05, ADMN-06, ADMN-07, ADMN-08, ADMN-09, ADMN-10, RMAP-01, RMAP-02, RMAP-03, CHLG-01, CHLG-02, CHLG-03, CHLG-04, CHLG-05, CHLG-06, NOTF-01, NOTF-02, NOTF-03, NOTF-04, NOTF-05, NOTF-06, NOTF-07, UI-01, UI-02, UI-03, QUAL-01
