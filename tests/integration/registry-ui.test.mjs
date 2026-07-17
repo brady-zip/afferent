@@ -1,9 +1,8 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { cp, mkdtemp, readFile, rm } from "node:fs/promises";
-import { createServer } from "node:http";
 import { tmpdir } from "node:os";
-import { basename, dirname, extname, join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
@@ -37,42 +36,12 @@ function run(command, args, { cwd = root } = {}) {
   });
 }
 
-async function serveRegistry() {
-  const directory = join(root, "registry/r");
-  const server = createServer(async (request, response) => {
-    const name = basename(
-      new URL(request.url ?? "/", "http://registry.local").pathname,
-    );
-    if (extname(name) !== ".json") {
-      response.writeHead(404).end();
-      return;
-    }
-    try {
-      const body = await readFile(join(directory, name));
-      response.writeHead(200, { "content-type": "application/json" }).end(body);
-    } catch {
-      response.writeHead(404).end();
-    }
-  });
-  await new Promise((resolveListen) =>
-    server.listen(0, "127.0.0.1", resolveListen),
-  );
-  const address = server.address();
-  if (!address || typeof address === "string")
-    throw new Error("registry server did not bind");
-  return {
-    url: `http://127.0.0.1:${address.port}`,
-    close: () => new Promise((resolveClose) => server.close(resolveClose)),
-  };
-}
-
 test(
   "packed Afferent and the local board registry item typecheck and build in a clean consumer",
   { timeout: 300_000 },
   async () => {
     const temporaryRoot = await mkdtemp(join(tmpdir(), "afferent-registry-"));
     const consumer = join(temporaryRoot, "consumer");
-    let registry;
     try {
       await cp(join(root, "fixtures/registry-vite"), consumer, {
         recursive: true,
@@ -94,10 +63,14 @@ test(
         ["install", "--ignore-scripts", "--save-exact", tarball],
         { cwd: consumer },
       );
-      registry = await serveRegistry();
+      await Promise.all(
+        ["afferent-ui-core.json", "afferent-board.json"].map((name) =>
+          cp(join(root, "registry/r", name), join(consumer, name)),
+        ),
+      );
       await run(
         join(root, "node_modules/.bin/shadcn"),
-        ["add", "--yes", "--overwrite", `${registry.url}/afferent-board.json`],
+        ["add", "--yes", "--overwrite", "./afferent-board.json"],
         { cwd: consumer },
       );
       await run("npm", ["run", "typecheck"], { cwd: consumer });
@@ -117,7 +90,6 @@ test(
       );
       assert.doesNotMatch(installed, /\.\.\/\.\.\/|\/Users\//);
     } finally {
-      await registry?.close();
       await rm(temporaryRoot, { recursive: true, force: true });
     }
   },

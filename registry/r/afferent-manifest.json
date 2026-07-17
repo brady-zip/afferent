@@ -1,0 +1,34 @@
+[
+  {
+    "path": "afferent.css",
+    "sha256": "9126f2316efcb30d8e8d17721779c1d5a7f1606b15e389e9fe98ca53cedfd8e8"
+  },
+  {
+    "path": "board/board-screen.tsx",
+    "sha256": "0ef7fea0844299b5e59d98e38a28528bf81e2f235329fec6180ff201d2e8411a"
+  },
+  {
+    "path": "core/afferent-ui-provider.tsx",
+    "sha256": "1946dcd864403cfcad08eaa5871160aba980a14451772c4f5436311801e75aea"
+  },
+  {
+    "path": "core/copy.ts",
+    "sha256": "91729a0a1ec94403f57628d37b30de950f3545b9bd26477d393d3cc1cd13d1dd"
+  },
+  {
+    "path": "core/icons.tsx",
+    "sha256": "356a9fbfebc831b142c10191ef7d345e8369e00edd60a7fb806b3b9b308cbb65"
+  },
+  {
+    "path": "core/navigation.tsx",
+    "sha256": "7338fd430e8bd383b97df41ccc23bb9183a295d58a6744ccbc1e1484ea00dc2d"
+  },
+  {
+    "path": "core/state-region.tsx",
+    "sha256": "2ea42a167288943a7a8e3c421abff47449fd42d821c242560a60e0d8b5ea7514"
+  },
+  {
+    "path": "core/utils.ts",
+    "sha256": "d1f1e0d62cb8d8d1e04c26e14de842d8a151f75812d81b046c65b5d1fe8e4b27"
+  }
+]

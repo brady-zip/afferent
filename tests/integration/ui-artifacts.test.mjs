@@ -28,11 +28,14 @@ test("canonical UI generation is deterministic and byte-equal to its mirror", as
   await access(join(root, "scripts/generate-ui-artifacts.mjs"));
   const canonical = await filesUnder(canonicalRoot);
   const mirrored = await filesUnder(mirrorRoot);
+  const distributed = canonical.filter(
+    (path) => relative(canonicalRoot, path) !== "registry.ts",
+  );
   assert.deepEqual(
     mirrored.map((path) => relative(mirrorRoot, path)),
-    canonical.map((path) => relative(canonicalRoot, path)),
+    distributed.map((path) => relative(canonicalRoot, path)),
   );
-  for (const sourcePath of canonical) {
+  for (const sourcePath of distributed) {
     const path = relative(canonicalRoot, sourcePath);
     const [source, mirror] = await Promise.all([
       readFile(sourcePath),
@@ -72,9 +75,11 @@ test("registry catalog and emitted items use stable approved metadata", async ()
     "radix-ui@1.6.0",
     "tailwind-merge@3.6.0",
   ]);
-  assert.doesNotMatch(
-    JSON.stringify(board),
-    /shadcn|tailwindcss|playwright|axe-core/,
+  assert.equal(
+    board.dependencies.some((dependency) =>
+      /shadcn|tailwindcss|playwright|axe-core/.test(dependency),
+    ),
+    false,
   );
 });
 

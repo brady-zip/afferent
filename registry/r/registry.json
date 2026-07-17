@@ -1,0 +1,81 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "homepage": "https://github.com/bradywatkinson/afferent",
+  "items": [
+    {
+      "dependencies": [
+        "class-variance-authority@0.7.1",
+        "clsx@2.1.1",
+        "lucide-react@1.20.0",
+        "radix-ui@1.6.0",
+        "tailwind-merge@3.6.0"
+      ],
+      "description": "Source-owned public feedback board over Afferent hooks.",
+      "files": [
+        {
+          "path": "ui/afferent/board/board-screen.tsx",
+          "target": "components/afferent/board/board-screen.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "name": "afferent-board",
+      "registryDependencies": [
+        "./afferent-ui-core.json"
+      ],
+      "title": "afferent-board",
+      "type": "registry:block"
+    },
+    {
+      "dependencies": [
+        "class-variance-authority@0.7.1",
+        "clsx@2.1.1",
+        "lucide-react@1.20.0",
+        "radix-ui@1.6.0",
+        "tailwind-merge@3.6.0"
+      ],
+      "description": "Shared source-owned Afferent UI adapters and tokens.",
+      "files": [
+        {
+          "path": "ui/afferent/afferent.css",
+          "target": "components/afferent/afferent.css",
+          "type": "registry:style"
+        },
+        {
+          "path": "ui/afferent/core/afferent-ui-provider.tsx",
+          "target": "components/afferent/core/afferent-ui-provider.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "ui/afferent/core/copy.ts",
+          "target": "components/afferent/core/copy.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "ui/afferent/core/icons.tsx",
+          "target": "components/afferent/core/icons.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "ui/afferent/core/navigation.tsx",
+          "target": "components/afferent/core/navigation.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "ui/afferent/core/state-region.tsx",
+          "target": "components/afferent/core/state-region.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "ui/afferent/core/utils.ts",
+          "target": "components/afferent/core/utils.ts",
+          "type": "registry:lib"
+        }
+      ],
+      "name": "afferent-ui-core",
+      "registryDependencies": [],
+      "title": "afferent-ui-core",
+      "type": "registry:block"
+    }
+  ],
+  "name": "afferent"
+}
