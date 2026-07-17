@@ -12,7 +12,7 @@ Afferent reaches its first public release through four coarse vertical slices. T
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
 - [x] **Phase 1: Secure Installable Feedback Board** - A clean consumer can install the packed artifact, connect any supported auth provider, and run the core multi-board feedback loop safely. (completed 2026-07-16)
-- [x] **Phase 2: Complete Feedback-to-Changelog Workflow** - Users and admins can complete discovery, moderation, roadmap, changelog, and notification workflows through tested headless React APIs. (completed 2026-07-17)
+- [ ] **Phase 2: Complete Feedback-to-Changelog Workflow** - Users and admins can complete discovery, moderation, roadmap, changelog, and notification workflows through tested headless React APIs. (reopened for additive Plan 02-15; 14 plans verified 2026-07-17)
 - [ ] **Phase 3: Source-Owned Product Interface** - Consumers can install accessible, responsive public and admin shadcn interfaces from one canonical source.
 - [ ] **Phase 4: Hosted Production Release** - The published package, registry, documentation, and isolated public demo work together against real Convex.
 
@@ -91,7 +91,11 @@ Afferent reaches its first public release through four coarse vertical slices. T
 4. Users can manage subscriptions, receive and read the defined in-app status, admin-reply, comment-reply, mention, and changelog notifications, while hosts can consume the same events through a typed vendor-neutral delivery contract.
 5. A React developer can exercise every public, participation, roadmap, changelog, notification, and admin workflow through injected host function references with explicit loading, pagination, pending, empty, and error states, backed by automated invariant and security tests.
 
-**Plans:** 14/14 plans complete
+**Plans:** 14/15 plans complete
+
+**Wave 15** _(additive headless correction; required before Phase 3 Plan 03-02)_
+
+- [ ] 02-15-PLAN.md — Complete bounded flat comment reads through the atomic headless React pagination contract.
 
 - [x] 02-14-PLAN.md
 
@@ -170,7 +174,7 @@ Afferent reaches its first public release through four coarse vertical slices. T
 
 - [x] `03-01-PLAN.md` — Prove one canonical board item through packed tarball, real local shadcn install, and isolated exact dependency closure.
 
-**Wave 2** _(blocked on Wave 1 completion)_
+**Wave 2** _(blocked on Wave 1 and additive Phase 2 Plan 02-15 completion)_
 
 - [ ] `03-02-PLAN.md` — Complete the public feedback discovery, creation, deep-link, participation, and discussion interface.
 
@@ -221,7 +225,7 @@ Phases execute sequentially: 1 -> 2 -> 3 -> 4
 | Phase                                      | Plans Complete | Status      | Completed  |
 | ------------------------------------------ | -------------- | ----------- | ---------- |
 | 1. Secure Installable Feedback Board       | 8/8            | Complete    | 2026-07-16 |
-| 2. Complete Feedback-to-Changelog Workflow | 14/14          | Complete    | 2026-07-17 |
+| 2. Complete Feedback-to-Changelog Workflow | 14/15          | Gap closure | -          |
 | 3. Source-Owned Product Interface          | 1/6            | In Progress | -          |
 | 4. Hosted Production Release               | 0/TBD          | Not started | -          |
 

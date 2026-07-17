@@ -146,6 +146,18 @@ A server transition watermark, schema field, and public DTO token were rejected 
 
 ---
 
+## React Comment Read-Surface Gap
+
+**Date:** 2026-07-17
+
+While preparing Phase 3 Plan 03-02, Codex paused execution because the planned copied discussion UI had no supported React read path. The component and server client already expose bounded indexed `listComments`, the participation binding already exposes `addComment`, and the public `CommentDto` is already a closed version-1 flat row with optional `parentCommentId`. `PublicBindings` and the exported feedback hooks, however, contain no comment query reference or `useComments` hook. Continuing would force copied UI either to bypass the headless contract or to render writes without a coherent read model.
+
+The live peer selected one dedicated additive Phase 2 prerequisite rather than widening Phase 3 or rewriting a completed plan. Plan 02-15 adds a narrow `CommentFeedQueryReference`, optional `public.listComments` capability whose omission maps to `unsupported`, and `useComments(postId)` over exactly the non-throwing `watchQuery`/`useSyncExternalStore` pagination substrate completed by Plans 02-12 through 02-14. It reuses generation fencing, end-cursor-pinned loaded windows, last-coherent retention, and every-notification all-descriptor atomic publication; it adds no comment-specific cache, transition token, schema field, recursive tree, raw document, generic CRUD API, or direct UI client access.
+
+The acceptance boundary is exact and temporal. Mounted and disposable-real-Convex tests must record every publication and compare exact creation-ordered flat prefixes through root insert, reply insert with `parentCommentId`, delete, mutation while `loadMore` is incomplete, first/middle/tail error and recovery, and identity replacement. The packed host proves that numeric generation is validated and stripped before the existing scoped client operation. Phase 3 Plan 03-02 depends on the completed 02-15 summary and renders discussion only through `useComments`; all 14 completed Phase 2 plans remain preserved as historical completed work.
+
+---
+
 ## the agent's Discretion
 
 - Exact Trending constants, field sizes, rate-limit values/windows, Complete recency window, inbox cap, lease/retry thresholds, and debounce defaults.

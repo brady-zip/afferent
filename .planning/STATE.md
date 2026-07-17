@@ -5,16 +5,16 @@ milestone_name: milestone
 current_phase: 3
 current_phase_name: Source-Owned Product Interface
 status: in_progress
-stopped_at: Completed 03-01-PLAN.md; ready for 03-02
-last_updated: "2026-07-17T21:37:40.996Z"
+stopped_at: Completed 03-01-PLAN.md; 03-02 is blocked on additive Phase 2 Plan 02-15
+last_updated: "2026-07-17T21:48:55.000Z"
 last_activity: 2026-07-17
 last_activity_desc: Completed 03-01 canonical registry board slice
 progress:
   total_phases: 4
-  completed_phases: 2
-  total_plans: 28
+  completed_phases: 1
+  total_plans: 29
   completed_plans: 23
-  percent: 82
+  percent: 79
 ---
 
 # Project State
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-07-17)
 ## Current Position
 
 Phase: 3 — Source-Owned Product Interface
-Plan: 03-02 of 6
-Status: In progress
+Plan: 03-02 of 6 (blocked on additive Phase 2 Plan 02-15)
+Status: In progress — execute 02-15 before 03-02
 Last activity: 2026-07-17 — Completed 03-01 canonical registry board slice
 
-Progress: [████████░░] 82%
+Progress: [████████░░] 79%
 
 ## Performance Metrics
 
@@ -170,6 +170,7 @@ None yet.
 
 ### Blockers/Concerns
 
+- [Phase 2/3]: The backend/client `listComments` read and `addComment` write exist, but the React public binding/hook is absent. Execute additive Plan 02-15 before Phase 3 Plan 03-02; preserve all 14 completed Phase 2 plans.
 - [Phase 4]: Prove every sandbox query, search, count, seed, reset, quota, and cleanup path is scope-complete.
 
 ## Deferred Items
@@ -182,6 +183,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-17T21:37:40.989Z
-Stopped at: Completed 03-01-PLAN.md; ready for 03-02
-Resume file: .planning/phases/03-source-owned-product-interface/03-02-PLAN.md
+Last session: 2026-07-17T21:48:55.000Z
+Stopped at: Completed 03-01-PLAN.md; 03-02 is blocked on additive Phase 2 Plan 02-15
+Resume file: .planning/phases/02-complete-feedback-to-changelog-workflow/02-15-PLAN.md
