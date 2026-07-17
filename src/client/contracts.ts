@@ -1049,7 +1049,8 @@ export interface ReadCapabilities<Context> {
     ctx: Context,
     args: { title: string; body?: string; limit?: number },
   ): Promise<SimilarPostResultDto>;
-  getPost(ctx: Context, args: { postId: PostId }): Promise<PostLookupResult>;
+  getPost(ctx: Context, args: { postId: PostId }): Promise<PostDto>;
+  resolvePost(ctx: Context, args: { postId: PostId }): Promise<PostLookupResult>;
   countPosts(ctx: Context, args: { boardId: BoardId }): Promise<PostCountDto>;
   listComments(
     ctx: Context,

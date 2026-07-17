@@ -64,7 +64,7 @@ describe("duplicate merge lifecycle", () => {
     });
     await backend.finishAllScheduledFunctions(() => vi.runAllTimers());
     expect(result).toMatchObject({ status: expect.stringMatching(/complete|pending/) });
-    expect(await backend.query(api.public.posts.getPost, {
+    expect(await backend.query(api.public.posts.resolvePost, {
       scopeId: "scope:alpha",
       viewerAuthenticated: true,
       postId: source.id,
@@ -74,7 +74,7 @@ describe("duplicate merge lifecycle", () => {
       requestedPostId: source.id,
       canonicalPostId: canonical.id,
     });
-    expect(await backend.query(api.public.posts.getPost, {
+    expect(await backend.query(api.public.posts.resolvePost, {
       scopeId: "scope:alpha",
       viewerAuthenticated: true,
       postId: canonical.id,
@@ -116,7 +116,7 @@ describe("duplicate merge lifecycle", () => {
         canonicalPostId: foreign.id,
       }),
     ).rejects.toMatchObject({ data: { code: "NOT_FOUND" } });
-    expect(await backend.query(api.public.posts.getPost, {
+    expect(await backend.query(api.public.posts.resolvePost, {
       scopeId: "scope:alpha",
       viewerAuthenticated: true,
       postId: foreign.id,

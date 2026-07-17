@@ -172,6 +172,14 @@ export function createClientWithScope(
           scopeId,
           postId: args.postId,
           viewerAuthenticated: await viewerAuthenticated(options, ctx),
+        })) as unknown as PostDto;
+      },
+      async resolvePost(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        return (await ctx.runQuery(component.public.posts.resolvePost, {
+          scopeId,
+          postId: args.postId,
+          viewerAuthenticated: await viewerAuthenticated(options, ctx),
         })) as unknown as PostLookupResult;
       },
       async countPosts(ctx, args) {

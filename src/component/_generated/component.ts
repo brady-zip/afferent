@@ -915,46 +915,20 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         "query",
         "internal",
         { postId: string; scopeId: string; viewerAuthenticated: boolean },
-        | {
-            contractVersion: 1;
-            post: {
-              author: { avatarUrl?: string; displayName?: string; id: string };
-              board: { id: string; name: string; slug: string };
-              boardId: string;
-              body: string;
-              commentCount: number;
-              contractVersion: 2;
-              id: string;
-              status: {
-                key:
-                  | "open"
-                  | "under_review"
-                  | "planned"
-                  | "in_progress"
-                  | "complete"
-                  | "closed";
-                label:
-                  | "Open"
-                  | "Under Review"
-                  | "Planned"
-                  | "In Progress"
-                  | "Complete"
-                  | "Closed";
-              };
-              tags: Array<{ contractVersion: 1; id: string; name: string }>;
-              title: string;
-              totals: { comments: number; votes: number };
-              voteCount: number;
-            };
-            status: "post";
-          }
-        | {
-            canonicalPostId: string;
-            contractVersion: 1;
-            requestedPostId: string;
-            status: "merged";
-          }
-        | { contractVersion: 1; status: "notFound" },
+        {
+          author: { avatarUrl?: string; displayName?: string; id: string };
+          board: { id: string; name: string; slug: string };
+          boardId: string;
+          body: string;
+          commentCount: number;
+          contractVersion: 1;
+          id: string;
+          status: { key: "open"; label: "Open" };
+          tags: Array<string>;
+          title: string;
+          totals: { comments: number; votes: number };
+          voteCount: number;
+        },
         Name
       >;
       getPostSubscription: FunctionReference<
@@ -1626,6 +1600,52 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         "internal",
         { name: string; scopeId: string; tagId: string },
         { contractVersion: 1; id: string; name: string },
+        Name
+      >;
+      resolvePost: FunctionReference<
+        "query",
+        "internal",
+        { postId: string; scopeId: string; viewerAuthenticated: boolean },
+        | {
+            contractVersion: 1;
+            post: {
+              author: { avatarUrl?: string; displayName?: string; id: string };
+              board: { id: string; name: string; slug: string };
+              boardId: string;
+              body: string;
+              commentCount: number;
+              contractVersion: 2;
+              id: string;
+              status: {
+                key:
+                  | "open"
+                  | "under_review"
+                  | "planned"
+                  | "in_progress"
+                  | "complete"
+                  | "closed";
+                label:
+                  | "Open"
+                  | "Under Review"
+                  | "Planned"
+                  | "In Progress"
+                  | "Complete"
+                  | "Closed";
+              };
+              tags: Array<{ contractVersion: 1; id: string; name: string }>;
+              title: string;
+              totals: { comments: number; votes: number };
+              voteCount: number;
+            };
+            status: "post";
+          }
+        | {
+            canonicalPostId: string;
+            contractVersion: 1;
+            requestedPostId: string;
+            status: "merged";
+          }
+        | { contractVersion: 1; status: "notFound" },
         Name
       >;
       searchFeedback: FunctionReference<
@@ -2791,50 +2811,20 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           "query",
           "internal",
           { postId: string; scopeId: string; viewerAuthenticated: boolean },
-          | {
-              contractVersion: 1;
-              post: {
-                author: {
-                  avatarUrl?: string;
-                  displayName?: string;
-                  id: string;
-                };
-                board: { id: string; name: string; slug: string };
-                boardId: string;
-                body: string;
-                commentCount: number;
-                contractVersion: 2;
-                id: string;
-                status: {
-                  key:
-                    | "open"
-                    | "under_review"
-                    | "planned"
-                    | "in_progress"
-                    | "complete"
-                    | "closed";
-                  label:
-                    | "Open"
-                    | "Under Review"
-                    | "Planned"
-                    | "In Progress"
-                    | "Complete"
-                    | "Closed";
-                };
-                tags: Array<{ contractVersion: 1; id: string; name: string }>;
-                title: string;
-                totals: { comments: number; votes: number };
-                voteCount: number;
-              };
-              status: "post";
-            }
-          | {
-              canonicalPostId: string;
-              contractVersion: 1;
-              requestedPostId: string;
-              status: "merged";
-            }
-          | { contractVersion: 1; status: "notFound" },
+          {
+            author: { avatarUrl?: string; displayName?: string; id: string };
+            board: { id: string; name: string; slug: string };
+            boardId: string;
+            body: string;
+            commentCount: number;
+            contractVersion: 1;
+            id: string;
+            status: { key: "open"; label: "Open" };
+            tags: Array<string>;
+            title: string;
+            totals: { comments: number; votes: number };
+            voteCount: number;
+          },
           Name
         >;
         listPosts: FunctionReference<
@@ -2888,6 +2878,56 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             }>;
             splitCursor?: string | null;
           },
+          Name
+        >;
+        resolvePost: FunctionReference<
+          "query",
+          "internal",
+          { postId: string; scopeId: string; viewerAuthenticated: boolean },
+          | {
+              contractVersion: 1;
+              post: {
+                author: {
+                  avatarUrl?: string;
+                  displayName?: string;
+                  id: string;
+                };
+                board: { id: string; name: string; slug: string };
+                boardId: string;
+                body: string;
+                commentCount: number;
+                contractVersion: 2;
+                id: string;
+                status: {
+                  key:
+                    | "open"
+                    | "under_review"
+                    | "planned"
+                    | "in_progress"
+                    | "complete"
+                    | "closed";
+                  label:
+                    | "Open"
+                    | "Under Review"
+                    | "Planned"
+                    | "In Progress"
+                    | "Complete"
+                    | "Closed";
+                };
+                tags: Array<{ contractVersion: 1; id: string; name: string }>;
+                title: string;
+                totals: { comments: number; votes: number };
+                voteCount: number;
+              };
+              status: "post";
+            }
+          | {
+              canonicalPostId: string;
+              contractVersion: 1;
+              requestedPostId: string;
+              status: "merged";
+            }
+          | { contractVersion: 1; status: "notFound" },
           Name
         >;
       };

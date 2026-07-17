@@ -8,7 +8,7 @@ export {
   setSubscription,
 } from "./participation/subscriptions.js";
 export { listBoards } from "./public/boards.js";
-export { countPosts, getPost, listPosts } from "./public/posts.js";
+export { countPosts, getPost, listPosts, resolvePost } from "./public/posts.js";
 export { listFeedback } from "./public/feeds.js";
 export { searchFeedback, suggestSimilarPosts } from "./public/search.js";
 export { listRoadmapGroup } from "./public/roadmap.js";

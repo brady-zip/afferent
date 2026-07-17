@@ -5,6 +5,7 @@ import { v } from "convex/values";
 import { query } from "../_generated/server.js";
 import {
   countDtoValidator,
+  postDtoValidator,
   postPageDtoValidator,
 } from "../validators.js";
 import schema from "../schema.js";
@@ -15,6 +16,7 @@ import {
   requireScope,
 } from "../model/scope.js";
 import { isPostPubliclyVisible } from "../model/visibility.js";
+import { requireVisiblePost } from "../model/visibility.js";
 import { requirePostInScope } from "../model/scope.js";
 import { toFeedbackPostDto, toPostDto } from "../model/views.js";
 import { postLookupResultValidator } from "../validators.js";
@@ -73,6 +75,21 @@ export const listPosts = query({
 });
 
 export const getPost = query({
+  args: {
+    scopeId: v.string(),
+    postId: v.string(),
+    viewerAuthenticated: v.boolean(),
+  },
+  returns: postDtoValidator,
+  handler: async (ctx, args) => {
+    requireScope(args.scopeId);
+    await requireReadPolicy(ctx, args.scopeId, args.viewerAuthenticated);
+    const post = await requireVisiblePost(ctx, args.scopeId, args.postId);
+    return await toPostDto(ctx, post);
+  },
+});
+
+export const resolvePost = query({
   args: {
     scopeId: v.string(),
     postId: v.string(),
