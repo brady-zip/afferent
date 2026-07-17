@@ -1,11 +1,11 @@
 [
   {
     "path": "afferent.css",
-    "sha256": "9126f2316efcb30d8e8d17721779c1d5a7f1606b15e389e9fe98ca53cedfd8e8"
+    "sha256": "9aa7e507d8ec5d46fdd84001c92fa06ef043d4e31a57537af02eb147ed68ed9a"
   },
   {
     "path": "board/board-screen.tsx",
-    "sha256": "0ef7fea0844299b5e59d98e38a28528bf81e2f235329fec6180ff201d2e8411a"
+    "sha256": "dfd2457e2c023173ae06e3ba74641f7e9e2ce783fcc2e0ff9efe4d5549c956f1"
   },
   {
     "path": "core/afferent-ui-provider.tsx",

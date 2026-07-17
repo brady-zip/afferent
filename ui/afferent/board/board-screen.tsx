@@ -7,7 +7,10 @@ import {
 } from "afferent/react.js";
 
 import { useAfferentUi } from "@/components/afferent/core/afferent-ui-provider";
-import { AfferentStateRegion } from "@/components/afferent/core/state-region";
+import {
+  AfferentStateRegion,
+  assertNever,
+} from "@/components/afferent/core/state-region";
 
 export type AfferentBoardScreenProps = Readonly<{
   feedArgs?: FeedbackFeedArgs;
@@ -51,7 +54,19 @@ export function AfferentBoardView({
         );
       case "error":
         return (
-          <AfferentStateRegion title={copy.board.loadErrorHeading} tone="error">
+          <AfferentStateRegion
+            title={copy.board.loadErrorHeading}
+            tone="error"
+            action={
+              <button
+                type="button"
+                className="afferent-button afferent-button--secondary"
+                onClick={feed.loadMore}
+              >
+                {copy.common.tryLoadingAgain}
+              </button>
+            }
+          >
             <p>{copy.board.loadErrorBody}</p>
             <p>
               {"message" in feed.error ? feed.error.message : feed.error.code}
@@ -109,8 +124,13 @@ export function AfferentBoardView({
                   : copy.board.loadMore}
               </button>
             ) : null}
+            <p className="afferent-sr-only" role="status" aria-live="polite">
+              {feed.isLoadingMore ? copy.board.loadingMore : ""}
+            </p>
           </>
         );
+      default:
+        return assertNever(feed);
     }
   })();
   const body = (
