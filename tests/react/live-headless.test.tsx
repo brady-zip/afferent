@@ -526,8 +526,10 @@ describe("mounted comment feed", () => {
         author: { id: "actor-zero" },
       };
       const client = new ControlledWatchClient();
+      let serveComments = true;
       client.resolver = (name, args) => {
         if (name !== "headless:comments") return defaultQueryValue(name, args);
+        if (!serveComments) return undefined;
         const options = args.paginationOpts as {
           cursor: string | null;
           endCursor?: string;
@@ -658,6 +660,7 @@ describe("mounted comment feed", () => {
       });
 
       const oldRecords = client.active("headless:comments");
+      serveComments = false;
       mounted.rerender({
         status: "authenticated",
         identityToken: "actor-b",

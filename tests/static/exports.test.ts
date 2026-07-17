@@ -57,8 +57,8 @@ describe("Phase 2 package and React exports", () => {
     expect(bindingsSource).toContain("CommentFeedQueryReference");
     expect(bindingsSource).toContain("listComments?:");
     expect(feedbackSource).toContain("useComments");
-    expect(feedbackSource).toContain(
-      "usePaginatedWatchQuery<CommentDto, CommentFeedQueryReference>",
+    expect(feedbackSource).toMatch(
+      /usePaginatedWatchQuery<\s*CommentDto,\s*CommentFeedQueryReference\s*>/,
     );
     expect(feedbackSource).not.toContain("client.read.listComments");
     expect(feedbackSource).not.toMatch(/comment(?:Page)?Cache/i);

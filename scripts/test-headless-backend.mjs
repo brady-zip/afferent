@@ -511,14 +511,14 @@ async function assertCanonicalWindow(...args) {
   assertActiveBoundaries(tracker);
 }
 
-async function assertCanonicalCommentWindow(
+async function assertCanonicalCommentWindow({
   http,
   canonicalComments,
   tracker,
   snapshot,
   postId,
   expectedBodies,
-) {
+}) {
   await waitUntil(() => {
     try {
       assertActiveBoundaries(tracker);
@@ -1387,14 +1387,14 @@ try {
       );
     }
     let commentSnapshot = commentStore.getSnapshot();
-    await assertCanonicalCommentWindow(
+    await assertCanonicalCommentWindow({
       http,
       canonicalComments,
-      tracking,
-      commentSnapshot,
-      commentPostId,
-      ["root-a", "reply-a", "root-b", "root-c"],
-    );
+      tracker: tracking,
+      snapshot: commentSnapshot,
+      postId: commentPostId,
+      expectedBodies: ["root-a", "reply-a", "root-b", "root-c"],
+    });
     const initialCommentTruth = await http.query(canonicalComments, {
       postId: commentPostId,
     });
@@ -1455,14 +1455,14 @@ try {
         JSON.stringify(["root-zero", "root-a", "reply-a", "root-b", "root-c"]),
       "comment root insertion",
     );
-    await assertCanonicalCommentWindow(
+    await assertCanonicalCommentWindow({
       http,
       canonicalComments,
-      tracking,
-      commentSnapshot,
-      commentPostId,
-      ["root-zero", "root-a", "reply-a", "root-b", "root-c"],
-    );
+      tracker: tracking,
+      snapshot: commentSnapshot,
+      postId: commentPostId,
+      expectedBodies: ["root-zero", "root-a", "reply-a", "root-b", "root-c"],
+    });
     commentPublications.assertExactSince(
       commentMark,
       [
@@ -1493,14 +1493,21 @@ try {
         ]),
       "comment reply insertion",
     );
-    await assertCanonicalCommentWindow(
+    await assertCanonicalCommentWindow({
       http,
       canonicalComments,
-      tracking,
-      commentSnapshot,
-      commentPostId,
-      ["root-zero", "root-a", "reply-new", "reply-a", "root-b", "root-c"],
-    );
+      tracker: tracking,
+      snapshot: commentSnapshot,
+      postId: commentPostId,
+      expectedBodies: [
+        "root-zero",
+        "root-a",
+        "reply-new",
+        "reply-a",
+        "root-b",
+        "root-c",
+      ],
+    });
     commentPublications.assertExactSince(
       commentMark,
       [
@@ -1528,14 +1535,14 @@ try {
         ]),
       "comment middle deletion",
     );
-    await assertCanonicalCommentWindow(
+    await assertCanonicalCommentWindow({
       http,
       canonicalComments,
-      tracking,
-      commentSnapshot,
-      commentPostId,
-      ["root-zero", "root-a", "reply-new", "reply-a", "root-c"],
-    );
+      tracker: tracking,
+      snapshot: commentSnapshot,
+      postId: commentPostId,
+      expectedBodies: ["root-zero", "root-a", "reply-new", "reply-a", "root-c"],
+    });
     commentPublications.assertExactSince(
       commentMark,
       [
@@ -1598,14 +1605,14 @@ try {
         return false;
       }
     }, "pending comment structural replacement");
-    await assertCanonicalCommentWindow(
+    await assertCanonicalCommentWindow({
       http,
       canonicalComments,
-      tracking,
-      pendingSnapshot,
-      pendingPostId,
-      ["pending-a", "pending-new", "pending-b"],
-    );
+      tracker: tracking,
+      snapshot: pendingSnapshot,
+      postId: pendingPostId,
+      expectedBodies: ["pending-a", "pending-new", "pending-b"],
+    });
     pendingPublications.assertExactSince(
       pendingMark,
       [
@@ -1638,14 +1645,14 @@ try {
         JSON.stringify(["identity-b"]),
       "comment identity replacement",
     );
-    await assertCanonicalCommentWindow(
+    await assertCanonicalCommentWindow({
       http,
       canonicalComments,
-      tracking,
-      identitySnapshot,
-      identityPostId,
-      ["identity-b"],
-    );
+      tracker: tracking,
+      snapshot: identitySnapshot,
+      postId: identityPostId,
+      expectedBodies: ["identity-b"],
+    });
     assert.ok(
       disposedCommentRecords.every(
         (record) => record.active === 0 && record.disposeCount === 1,
