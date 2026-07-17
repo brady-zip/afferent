@@ -123,7 +123,12 @@ export const begin = mutation({
     const sourcePostId = ctx.db.normalizeId("posts", args.sourcePostId);
     const canonicalPostId = ctx.db.normalizeId("posts", args.canonicalPostId);
     if (!actorId || !sourcePostId || !canonicalPostId) throw new Error("bad ids");
-    const result = await createMergeJob(ctx, { ...args, actorId, sourcePostId, canonicalPostId });
+    const result = await createMergeJob(ctx, {
+      scopeId: args.scopeId,
+      actorId,
+      sourcePostId,
+      canonicalPostId,
+    });
     return { jobId: String(result.jobId), state: result.state };
   },
 });
@@ -302,7 +307,7 @@ try {
   const begun = await client.mutation(reference("begin"), { scopeId: "alpha", ...seeded });
   const job = { scopeId: "alpha", jobId: begun.jobId };
   const preSnapshot = await recordObservation(client, job);
-  const pre = observable(preSnapshot);
+  const initialPre = observable(preSnapshot);
 
   await advanceTo(client, job, "ready");
   await stopBackend();
@@ -314,11 +319,14 @@ try {
     client.mutation(reference("concurrentWrite"), { scopeId: "alpha", jobId: job.jobId, postId: seeded.sourcePostId, suffix: "source" }),
     client.mutation(reference("concurrentWrite"), { scopeId: "alpha", jobId: job.jobId, postId: seeded.canonicalPostId, suffix: "canonical" }),
   ]);
+  const fencedPre = observable(await recordObservation(client, job));
+  assert.notDeepEqual(fencedPre, initialPre);
+  observations.length = 0;
   await advanceTo(client, job, "ready");
   await client.mutation(reference("step"), { scopeId: "alpha", jobId: job.jobId });
   const postSnapshot = await recordObservation(client, job);
   const post = observable(postSnapshot);
-  assert.notDeepEqual(post, pre);
+  assert.notDeepEqual(post, fencedPre);
 
   await stopBackend();
   await startBackend();
@@ -343,7 +351,11 @@ try {
 
   const betaBegun = await client.mutation(reference("begin"), { scopeId: "beta", ...beta });
   assert.notEqual(betaBegun.jobId, job.jobId);
-  assertPreOrPostOnly(observations.filter((sample) => sample.scopeId === "alpha"), pre, post);
+  assertPreOrPostOnly(
+    observations.filter((sample) => sample.scopeId === "alpha"),
+    fencedPre,
+    post,
+  );
 } finally {
   await stopBackend();
   await rm(temporaryRoot, { force: true, recursive: true });

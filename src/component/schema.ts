@@ -333,8 +333,12 @@ export default defineSchema({
     canonicalPostId: v.id("posts"),
     actorId: v.id("actors"),
     state: v.union(
-      v.literal("pending"),
-      v.literal("complete"),
+      v.literal("preparing"),
+      v.literal("ready"),
+      v.literal("cutover_done"),
+      v.literal("cleaning"),
+      v.literal("done"),
+      v.literal("aborted"),
     ),
     phase: v.union(
       v.literal("votes"),
@@ -345,15 +349,83 @@ export default defineSchema({
       v.literal("notification_guards"),
       v.literal("notifications"),
       v.literal("tags"),
-      v.literal("finalize"),
+      v.literal("cutover"),
+      v.literal("cleanup"),
     ),
+    phaseSide: v.union(v.literal("source"), v.literal("canonical")),
+    phaseCursor: v.optional(v.number()),
+    generation: v.number(),
+    continuationScheduled: v.boolean(),
     createdAt: v.number(),
     voteCount: v.number(),
     commentCount: v.number(),
+    cutoverAt: v.optional(v.number()),
+    abortedAt: v.optional(v.number()),
     completedAt: v.optional(v.number()),
   })
     .index("by_scope_source", ["scopeId", "sourcePostId"])
+    .index("by_scope_canonical", ["scopeId", "canonicalPostId"])
     .index("by_scope_state_created", ["scopeId", "state", "createdAt"]),
+  mergeStages: defineTable({
+    scopeId: v.string(),
+    mergeJobId: v.id("mergeJobs"),
+    sourcePostId: v.id("posts"),
+    canonicalPostId: v.id("posts"),
+    kind: v.union(
+      v.literal("vote"),
+      v.literal("subscription"),
+      v.literal("comment"),
+      v.literal("activity"),
+      v.literal("changelog_link"),
+      v.literal("notification_guard"),
+      v.literal("notification"),
+      v.literal("tag"),
+    ),
+    originalId: v.string(),
+    logicalKey: v.string(),
+    sourceSide: v.boolean(),
+    generation: v.number(),
+  })
+    .index("by_scope_job_kind_key", [
+      "scopeId",
+      "mergeJobId",
+      "kind",
+      "logicalKey",
+    ])
+    .index("by_scope_job_kind_original", [
+      "scopeId",
+      "mergeJobId",
+      "kind",
+      "originalId",
+    ])
+    .index("by_scope_job_original", [
+      "scopeId",
+      "mergeJobId",
+      "originalId",
+    ]),
+  mergeDeltas: defineTable({
+    scopeId: v.string(),
+    mergeJobId: v.id("mergeJobs"),
+    kind: v.union(
+      v.literal("vote"),
+      v.literal("subscription"),
+      v.literal("comment"),
+      v.literal("activity"),
+      v.literal("changelog_link"),
+      v.literal("notification_guard"),
+      v.literal("notification"),
+      v.literal("tag"),
+    ),
+    originalId: v.string(),
+    logicalKey: v.string(),
+    generation: v.number(),
+  })
+    .index("by_scope_job", ["scopeId", "mergeJobId"])
+    .index("by_scope_job_original", [
+      "scopeId",
+      "mergeJobId",
+      "originalId",
+    ]),
   notificationEvents: defineTable({
     scopeId: v.string(),
     type: v.union(

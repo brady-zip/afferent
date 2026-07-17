@@ -2,12 +2,7 @@ import { v } from "convex/values";
 
 import { internal } from "../_generated/api.js";
 import { internalMutation } from "../_generated/server.js";
-import {
-  MERGE_BATCH_SIZE,
-  NEXT_MERGE_PHASE,
-  finalizeMerge,
-  processMergePhase,
-} from "../model/merge.js";
+import { continueMergeJob } from "../model/merge.js";
 
 export const continueMerge = internalMutation({
   args: { jobId: v.string() },
@@ -16,19 +11,16 @@ export const continueMerge = internalMutation({
     const id = ctx.db.normalizeId("mergeJobs", args.jobId);
     if (!id) return null;
     const job = await ctx.db.get(id);
-    if (!job || job.state === "complete") return null;
-    if (job.phase === "finalize") {
-      await finalizeMerge(ctx, job);
+    if (!job || job.state === "done" || job.state === "aborted") return null;
+    await continueMergeJob(ctx, job.scopeId, args.jobId);
+    const updated = await ctx.db.get(id);
+    if (!updated || updated.state === "done" || updated.state === "aborted") {
       return null;
     }
-    const result = await processMergePhase(ctx, job);
-    const patch = {
-      voteCount: job.voteCount + result.movedVotes,
-      commentCount: job.commentCount + result.movedComments,
-      ...(result.processed < MERGE_BATCH_SIZE ? { phase: NEXT_MERGE_PHASE[job.phase] } : {}),
-    };
-    await ctx.db.patch(job._id, patch);
-    await ctx.scheduler.runAfter(0, internal.jobs.merge.continueMerge, { jobId: args.jobId });
+    await ctx.db.patch(id, { continuationScheduled: true });
+    await ctx.scheduler.runAfter(0, internal.jobs.merge.continueMerge, {
+      jobId: args.jobId,
+    });
     return null;
   },
 });

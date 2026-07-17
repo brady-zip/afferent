@@ -202,7 +202,18 @@ export async function toAdminChangelogEntryDto(
     ...(entry.publishedAt === undefined
       ? {}
       : { publishedAt: entry.publishedAt }),
-    postIds: links.map((link) => String(link.postId)),
+    postIds: [
+      ...new Set(
+        await Promise.all(
+          links.map(async (link) =>
+            String(
+              (await resolveCanonicalLinkedPost(ctx, entry.scopeId, link.postId))
+                ?._id ?? link.postId,
+            ),
+          ),
+        ),
+      ),
+    ],
   };
 }
 

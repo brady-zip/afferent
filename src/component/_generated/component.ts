@@ -260,6 +260,22 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         >;
       };
       merge: {
+        abortMerge: FunctionReference<
+          "mutation",
+          "internal",
+          { jobId: string; scopeId: string },
+          {
+            contractVersion: 1;
+            state:
+              | "preparing"
+              | "ready"
+              | "cutover_done"
+              | "cleaning"
+              | "done"
+              | "aborted";
+          },
+          Name
+        >;
         mergePost: FunctionReference<
           "mutation",
           "internal",
@@ -278,6 +294,22 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             contractVersion: 1;
             sourcePostId: string;
             status: "pending" | "complete";
+          },
+          Name
+        >;
+        resumeMerge: FunctionReference<
+          "mutation",
+          "internal",
+          { jobId: string; scopeId: string },
+          {
+            contractVersion: 1;
+            state:
+              | "preparing"
+              | "ready"
+              | "cutover_done"
+              | "cleaning"
+              | "done"
+              | "aborted";
           },
           Name
         >;
@@ -599,6 +631,22 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
       };
     };
     feedback: {
+      abortMerge: FunctionReference<
+        "mutation",
+        "internal",
+        { jobId: string; scopeId: string },
+        {
+          contractVersion: 1;
+          state:
+            | "preparing"
+            | "ready"
+            | "cutover_done"
+            | "cleaning"
+            | "done"
+            | "aborted";
+        },
+        Name
+      >;
       ackDelivery: FunctionReference<
         "mutation",
         "internal",
@@ -1717,6 +1765,22 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             status: "merged";
           }
         | { contractVersion: 1; status: "notFound" },
+        Name
+      >;
+      resumeMerge: FunctionReference<
+        "mutation",
+        "internal",
+        { jobId: string; scopeId: string },
+        {
+          contractVersion: 1;
+          state:
+            | "preparing"
+            | "ready"
+            | "cutover_done"
+            | "cleaning"
+            | "done"
+            | "aborted";
+        },
         Name
       >;
       searchFeedback: FunctionReference<
