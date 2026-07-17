@@ -2,11 +2,15 @@ import { readFile } from "node:fs/promises";
 import { describe, expect, test } from "vitest";
 
 describe("real-backend merge harness", () => {
-  test("keeps the disposable backend probe wired to bounded resume assertions", async () => {
+  test("uses a disposable Convex deployment and continuous observation oracle", async () => {
     const source = await readFile("scripts/test-merge-backend.mjs", "utf8");
-    expect(source).toContain("MERGE_BATCH_SIZE");
-    expect(source).toContain("continueMerge");
-    expect(source).toContain("crashBoundary");
-    expect(source).toContain("uniqueActors");
+    expect(source).toContain("ConvexHttpClient");
+    expect(source).toContain("CONVEX_AGENT_MODE");
+    expect(source).toContain("startBackend");
+    expect(source).toContain("stopBackend");
+    expect(source).toContain("recordObservation");
+    expect(source).toContain("assertPreOrPostOnly");
+    expect(source).toContain("abortMerge");
+    expect(source).not.toContain('readFile("src/component/model/merge.ts"');
   });
 });
