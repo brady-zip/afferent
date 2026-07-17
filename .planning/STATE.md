@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 2
 current_phase_name: Complete Feedback-to-Changelog Workflow
 status: executing
-stopped_at: Completed 02-08-PLAN.md
-last_updated: "2026-07-16T23:46:48.544Z"
+stopped_at: Completed 02-09-PLAN.md
+last_updated: "2026-07-17T02:10:04.081Z"
 last_activity: 2026-07-16
 last_activity_desc: Completed stable manual changelog lifecycle and headless editorial hooks
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 18
-  completed_plans: 15
+  total_plans: 19
+  completed_plans: 16
   percent: 25
 ---
 
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 ## Current Position
 
 Phase: 2 (Complete Feedback-to-Changelog Workflow) — EXECUTING
-Plan: 8 of 10
+Plan: 9 of 10
 Status: Ready to execute
 Last activity: 2026-07-16 — Completed stable manual changelog lifecycle and headless editorial hooks
 
@@ -76,6 +76,7 @@ _Updated after each plan completion_
 | Phase 02 P06 | 8min     | 3 tasks | 14 files |
 | Phase 02 P07 | 13min    | 3 tasks | 20 files |
 | Phase 02 P08 | 13min | 3 tasks | 29 files |
+| Phase 02 P09 | 31min | 3 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -133,6 +134,9 @@ Recent decisions affecting current work:
 - [Phase 02]: Fan out ten or fewer recipients inline and use one 50-row continuation chain for larger events — This keeps scheduler work bounded and retry-safe.
 - [Phase 02]: Cap each actor inbox at 500 rows with an exact unread projection — Inbox signals stay bounded without discarding immutable event truth.
 - [Phase 02]: Use sessionGeneration only as browser query identity — Account switches reset helper pages and optimism without conferring authority.
+- [Phase 02]: Use the logical notification event ID as the stable host idempotency key while keeping delivery ordering explicitly best effort. — Hosts dedupe retries without relying on a strict delivery order.
+- [Phase 02]: Fence outbox ack and release by scope, row, owner, and incrementing lease version; release attempt eight parks the row. — Expired workers cannot mutate reclaimed work and poison rows remain bounded.
+- [Phase 02]: Expose delivery only through afferent/server.js with per-call scope resolution and host-owned authorizeDelivery. — External side effects remain inside the consuming application's trusted server boundary.
 
 ### Pending Todos
 
@@ -154,6 +158,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-16T23:46:48.537Z
-Stopped at: Completed 02-08-PLAN.md
+Last session: 2026-07-17T02:10:04.076Z
+Stopped at: Completed 02-09-PLAN.md
 Resume file: None

@@ -73,7 +73,7 @@ Requirements for the first production-ready public release. Roadmap creation wil
 - [x] **NOTF-03**: A subscribed user receives an in-app notification when an admin replies to the feedback post.
 - [x] **NOTF-04**: An authenticated user receives an in-app notification when another comment replies to or mentions them.
 - [x] **NOTF-05**: A subscribed user receives an in-app notification when a linked changelog entry is published.
-- [ ] **NOTF-06**: A host application can consume typed delivery events for supported notification events without adopting a built-in email or push vendor.
+- [x] **NOTF-06**: A host application can consume typed delivery events for supported notification events without adopting a built-in email or push vendor.
 - [x] **NOTF-07**: A user can mark individual in-app notifications as read.
 
 ### Component and Auth Integration
@@ -223,7 +223,7 @@ Every v1 requirement maps to exactly one roadmap phase.
 | NOTF-03     | Phase 2 | Complete |
 | NOTF-04     | Phase 2 | Complete |
 | NOTF-05     | Phase 2 | Complete |
-| NOTF-06     | Phase 2 | Pending  |
+| NOTF-06     | Phase 2 | Complete |
 | NOTF-07     | Phase 2 | Complete |
 | COMP-01     | Phase 4 | Pending  |
 | COMP-02     | Phase 1 | Complete |
