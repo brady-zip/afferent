@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 2
 current_phase_name: Complete Feedback-to-Changelog Workflow
 status: verifying
-stopped_at: Completed 02-13-PLAN.md
-last_updated: "2026-07-17T19:55:14.486Z"
+stopped_at: Completed 02-14-PLAN.md
+last_updated: "2026-07-17T20:25:34.183Z"
 last_activity: 2026-07-17
-last_activity_desc: Completed contiguous cursor-window closure and closed all 13 Phase 2 plans
+last_activity_desc: Completed atomic watch snapshot closure and closed all 14 Phase 2 plans
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 21
-  completed_plans: 21
+  total_plans: 22
+  completed_plans: 22
   percent: 50
 ---
 
@@ -29,9 +29,9 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 ## Current Position
 
 Phase: 2 (Complete Feedback-to-Changelog Workflow) — VERIFYING
-Plan: 13 of 13
+Plan: 14 of 14
 Status: Phase complete — ready for verification
-Last activity: 2026-07-17 — Completed contiguous cursor-window closure and closed all 13 Phase 2 plans
+Last activity: 2026-07-17 — Completed atomic watch snapshot closure and closed all 14 Phase 2 plans
 
 Progress: [██████████] 100%
 
@@ -82,6 +82,7 @@ _Updated after each plan completion_
 | Phase 02 P11 | 27min | 3 tasks | 20 files |
 | Phase 02 P12 | 34min | 3 tasks | 28 files |
 | Phase 02 P13 | 47min | 3 tasks | 4 files |
+| Phase 02 P14 | 14min | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -151,6 +152,9 @@ Recent decisions affecting current work:
 - [Phase 02]: Require opaque identity tokens only to advance a synchronous local generation; never serialize them or treat them as authority.
 - [Phase 02]: Validate numeric cache generations in host wrappers and strip them before component operations.
 - [Phase 02]: Use real backend splitCursor signals for cursor-window restructuring — Convex 1.42.2 emits null-status splitCursor as its opportunistic signal; Required without a cursor remains a typed invariant error, and no status or cursor is fabricated.
+- [Phase 02]: Use Convex's atomically installed local query-result map as the coherence source; add no schema field, DTO member, public token, revision, or watermark.
+- [Phase 02]: Treat every page callback as a dirty signal and synchronously stage the complete committed or candidate descriptor chain before one atomic cache/publication decision.
+- [Phase 02]: Retain the last coherent result array while any descriptor is unavailable, and publish errors only with the maximal same-reread boundary-contiguous prefix.
 
 ### Pending Todos
 
@@ -172,6 +176,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-17T19:55:00.973Z
-Stopped at: Completed 02-13-PLAN.md
+Last session: 2026-07-17T20:25:09.744Z
+Stopped at: Completed 02-14-PLAN.md
 Resume file: None
