@@ -106,14 +106,18 @@ async function startBackend() {
   await Promise.race([
     ready,
     new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Timed out starting Convex backend")), 30_000),
+      setTimeout(
+        () => reject(new Error("Timed out starting Convex backend")),
+        30_000,
+      ),
     ),
   ]);
 }
 
 function deploymentUrl(envFile) {
   const match = /^CONVEX_URL=(?<url>.+)$/mu.exec(envFile);
-  if (!match) throw new Error("Convex local deployment did not write CONVEX_URL");
+  if (!match)
+    throw new Error("Convex local deployment did not write CONVEX_URL");
   return match.groups.url.trim();
 }
 
@@ -128,11 +132,18 @@ async function rejectedData(promise) {
 
 try {
   await mkdir(join(temporaryRoot, "convex"), { recursive: true });
-  await cp(join(repositoryRoot, "src/component"), join(temporaryRoot, "component"), {
-    recursive: true,
-    filter: (source) => !source.includes("/_generated"),
-  });
-  await symlink(join(repositoryRoot, "node_modules"), join(temporaryRoot, "node_modules"));
+  await cp(
+    join(repositoryRoot, "src/component"),
+    join(temporaryRoot, "component"),
+    {
+      recursive: true,
+      filter: (source) => !source.includes("/_generated"),
+    },
+  );
+  await symlink(
+    join(repositoryRoot, "node_modules"),
+    join(temporaryRoot, "node_modules"),
+  );
   await writeFile(
     join(temporaryRoot, "package.json"),
     '{"type":"module","dependencies":{"convex":"1.42.2","convex-helpers":"0.1.120"}}\n',
@@ -163,6 +174,7 @@ try {
 
   const scopes = ["real-alpha", "real-beta"];
   const boardsByScope = new Map();
+  const actorsByPostId = new Map();
   for (const scopeId of scopes) {
     const configured = await client.mutation(configure, {
       scopeId,
@@ -174,13 +186,16 @@ try {
     });
     boardsByScope.set(scopeId, configured.boards);
     for (let index = 0; index < 50; index += 1) {
-      await client.mutation(create, {
+      const actor = { externalKey: `fixture:${scopeId}:${index}` };
+      const created = await client.mutation(create, {
         scopeId,
-        actor: { externalKey: `fixture:${scopeId}` },
+        actor,
         boardId: configured.boards[index % 2].id,
         title: `${scopeId}-${index.toString().padStart(2, "0")}`,
         body: scopeId,
       });
+      assert.ok("id" in created, `seed post ${scopeId}:${index} was rejected`);
+      actorsByPostId.set(created.id, actor);
     }
   }
 
@@ -197,20 +212,20 @@ try {
 
   const inserted = await client.mutation(create, {
     scopeId: "real-alpha",
-    actor: { externalKey: "fixture:real-alpha" },
+    actor: { externalKey: "fixture:real-alpha:reactive" },
     boardId: alphaBoard.id,
     title: "real-alpha-reactive-insert",
     body: "real-alpha",
   });
   await client.mutation(edit, {
     scopeId: "real-alpha",
-    actor: { externalKey: "fixture:real-alpha" },
+    actor: actorsByPostId.get(first.page[0].id),
     postId: first.page[0].id,
     title: "real-alpha-reactive-edit",
   });
   await client.mutation(withdraw, {
     scopeId: "real-alpha",
-    actor: { externalKey: "fixture:real-alpha" },
+    actor: actorsByPostId.get(first.page[1].id),
     postId: first.page[1].id,
   });
 
