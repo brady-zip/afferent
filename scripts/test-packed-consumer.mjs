@@ -9,6 +9,7 @@ const consumerFlag = process.argv.indexOf("--consumer-dir");
 const consumerDir =
   consumerFlag === -1 ? null : resolve(process.argv[consumerFlag + 1] ?? "");
 const printJson = process.argv.includes("--json");
+const packedFixtureContract = "fixtures/packed-vite-convex";
 
 if (!consumerDir) throw new Error("--consumer-dir <path> is required");
 
@@ -99,6 +100,7 @@ for (const suite of [
   "test:auth-conformance",
   "test:scope",
   "test:backend",
+  "test:react",
 ]) {
   await run("npm", ["run", suite], { cwd: repositoryRoot });
 }
@@ -125,6 +127,8 @@ for (const required of [
   "dist/client/index.d.ts",
   "dist/client/server.js",
   "dist/client/server.d.ts",
+  "dist/react/index.js",
+  "dist/react/index.d.ts",
   "dist/client/adapters/convex-auth.js",
   "dist/client/adapters/convex-auth.d.ts",
   "dist/client/adapters/clerk.js",
@@ -158,14 +162,7 @@ const anonymousEnv = {
 // Tsconfig, so Convex cannot re-typecheck that third-party artifact in place.
 await run(
   convex,
-  [
-    "dev",
-    "--once",
-    "--typecheck",
-    "enable",
-    "--tail-logs",
-    "disable",
-  ],
+  ["dev", "--once", "--typecheck", "enable", "--tail-logs", "disable"],
   { cwd: materializedConsumer, env: anonymousEnv },
 );
 await run(convex, ["codegen", "--typecheck", "enable"], {
@@ -176,6 +173,7 @@ await run(convex, ["codegen", "--typecheck", "enable"], {
 const smoke = [
   "afferent",
   "afferent/server.js",
+  "afferent/react.js",
   "afferent/adapters/convex-auth.js",
   "afferent/adapters/clerk.js",
   "afferent/adapters/better-auth.js",
@@ -224,6 +222,7 @@ if (
 const expectedExports = [
   ".",
   "./server.js",
+  "./react.js",
   "./adapters/convex-auth.js",
   "./adapters/clerk.js",
   "./adapters/better-auth.js",
@@ -250,6 +249,8 @@ const resolvedPaths = await Promise.all(
     "dist/client/index.d.ts",
     "dist/client/server.js",
     "dist/client/server.d.ts",
+    "dist/react/index.js",
+    "dist/react/index.d.ts",
     "dist/client/adapters/convex-auth.js",
     "dist/client/adapters/convex-auth.d.ts",
     "dist/client/adapters/clerk.js",
@@ -298,6 +299,7 @@ const transcript = {
     licensePath,
     resolvedPaths,
     exports: expectedExports,
+    fixtureContract: packedFixtureContract,
   },
   interaction,
 };

@@ -1,24 +1,19 @@
 import type { DefaultFunctionArgs, FunctionReference } from "convex/server";
 
 import type {
-  BoardId,
   CommentDto,
   AdminChangelogEntryDto,
-  ChangelogId,
   ChangelogPageDto,
   FeedbackOrder,
   FeedbackPageDto,
   PaginationOptions,
   PostStatusKey,
-  TagId,
   SearchResultDto,
   SimilarPostResultDto,
   FeedbackPostDto,
   PostDto,
   PostActivityPageDto,
-  PostId,
   NotificationDto,
-  NotificationId,
   NotificationPageDto,
   PostSubscriptionDto,
   UnreadNotificationCountDto,
@@ -38,9 +33,9 @@ export type FeedbackFeedQueryReference = FunctionReference<
   "public",
   {
     order: FeedbackOrder;
-    boardId?: BoardId;
+    boardId?: string;
     status?: PostStatusKey;
-    tagId?: TagId;
+    tagId?: string;
     paginationOpts: PaginationOptions;
   },
   FeedbackPageDto
@@ -51,9 +46,9 @@ export type FeedbackSearchQueryReference = FunctionReference<
   "public",
   {
     query: string;
-    boardId?: BoardId;
+    boardId?: string;
     status?: PostStatusKey;
-    tagId?: TagId;
+    tagId?: string;
   },
   SearchResultDto
 >;
@@ -70,7 +65,7 @@ export interface PublicBindings {
   getPost?: FunctionReference<
     "query",
     "public",
-    { postId: PostId },
+    { postId: string },
     PostLookupResult
   >;
   searchFeedback?: FeedbackSearchQueryReference;
@@ -81,31 +76,31 @@ export interface ParticipationBindings {
   createPost: FunctionReference<
     "mutation",
     "public",
-    { boardId: BoardId; title: string; body: string },
+    { boardId: string; title: string; body: string },
     AfferentActionResult<PostDto>
   >;
   editPost: FunctionReference<
     "mutation",
     "public",
-    { postId: PostId; title?: string; body?: string },
+    { postId: string; title?: string; body?: string },
     AfferentActionResult<PostDto>
   >;
   withdrawPost: FunctionReference<
     "mutation",
     "public",
-    { postId: PostId },
+    { postId: string },
     PostDto
   >;
   setVote: FunctionReference<
     "mutation",
     "public",
-    { postId: PostId; desired: boolean },
+    { postId: string; desired: boolean },
     AfferentActionResult<PostDto>
   >;
   addComment: FunctionReference<
     "mutation",
     "public",
-    { postId: PostId; body: string; parentCommentId?: CommentDto["id"] },
+    { postId: string; body: string; parentCommentId?: string },
     AfferentActionResult<CommentDto>
   >;
 }
@@ -115,7 +110,7 @@ export type RoadmapGroupQueryReference = FunctionReference<
   "public",
   {
     status: RoadmapStatusKey;
-    boardId?: BoardId;
+    boardId?: string;
     sessionGeneration?: string;
     paginationOpts: PaginationOptions;
   },
@@ -149,13 +144,13 @@ export interface NotificationBindings {
   getPostSubscription: FunctionReference<
     "query",
     "public",
-    { postId: PostId; sessionGeneration?: string },
+    { postId: string; sessionGeneration?: string },
     PostSubscriptionDto
   >;
   setPostSubscription: FunctionReference<
     "mutation",
     "public",
-    { postId: PostId; desired: boolean },
+    { postId: string; desired: boolean },
     AfferentActionResult<PostSubscriptionDto>
   >;
   listNotifications: FunctionReference<
@@ -173,7 +168,7 @@ export interface NotificationBindings {
   markNotificationRead: FunctionReference<
     "mutation",
     "public",
-    { notificationId: NotificationId },
+    { notificationId: string },
     NotificationDto
   >;
 }
@@ -191,25 +186,25 @@ export interface AdminBindings {
     boolean
   >;
   editPost: AdminMutationReference<{
-    postId: PostId;
+    postId: string;
     title?: string;
     body?: string;
   }>;
-  movePost: AdminMutationReference<{ postId: PostId; boardId: BoardId }>;
+  movePost: AdminMutationReference<{ postId: string; boardId: string }>;
   setPostStatus: AdminMutationReference<{
-    postId: PostId;
+    postId: string;
     status: PostStatusKey;
   }>;
   setDiscussionLock: AdminMutationReference<{
-    postId: PostId;
+    postId: string;
     locked: boolean;
   }>;
-  setArchived: AdminMutationReference<{ postId: PostId; archived: boolean }>;
+  setArchived: AdminMutationReference<{ postId: string; archived: boolean }>;
   listPostActivity: FunctionReference<
     "query",
     "public",
     {
-      postId: PostId;
+      postId: string;
       sessionGeneration?: string;
       paginationOpts: PaginationOptions;
     },
@@ -222,15 +217,15 @@ export interface AdminBindings {
     TagListDto
   >;
   createTag: AdminMutationReference<{ name: string }, TagDto>;
-  renameTag: AdminMutationReference<{ tagId: TagId; name: string }, TagDto>;
+  renameTag: AdminMutationReference<{ tagId: string; name: string }, TagDto>;
   setPostTag: AdminMutationReference<{
-    postId: PostId;
-    tagId: TagId;
+    postId: string;
+    tagId: string;
     desired: boolean;
   }>;
-  deleteTag: AdminMutationReference<{ tagId: TagId }, TagDeleteResultDto>;
+  deleteTag: AdminMutationReference<{ tagId: string }, TagDeleteResultDto>;
   mergePost?: AdminMutationReference<
-    { sourcePostId: PostId; canonicalPostId: PostId },
+    { sourcePostId: string; canonicalPostId: string },
     MergePostResult
   >;
   createChangelogDraft?: AdminMutationReference<
@@ -239,7 +234,7 @@ export interface AdminBindings {
   >;
   editChangelog?: AdminMutationReference<
     {
-      entryId: ChangelogId;
+      entryId: string;
       title?: string;
       body?: string;
       slug?: string;
@@ -247,15 +242,15 @@ export interface AdminBindings {
     AdminChangelogEntryDto
   >;
   setChangelogLinks?: AdminMutationReference<
-    { entryId: ChangelogId; postIds: PostId[] },
+    { entryId: string; postIds: string[] },
     AdminChangelogEntryDto
   >;
   publishChangelog?: AdminMutationReference<
-    { entryId: ChangelogId },
+    { entryId: string },
     AdminChangelogEntryDto
   >;
   unpublishChangelog?: AdminMutationReference<
-    { entryId: ChangelogId },
+    { entryId: string },
     AdminChangelogEntryDto
   >;
 }

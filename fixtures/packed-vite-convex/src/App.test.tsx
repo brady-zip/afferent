@@ -2,12 +2,28 @@ import { writeFile } from "node:fs/promises";
 
 import { convexTest } from "convex-test";
 import { register } from "afferent/test";
+import * as headless from "afferent/react.js";
 import { expect, test } from "vitest";
 
 import { api } from "../convex/_generated/api.js";
 import { submitFeedback } from "./App.js";
 
 const modules = import.meta.glob("../convex/**/*.ts");
+
+test("the packed React subpath exposes the complete headless workflow", () => {
+  for (const exported of [
+    "AfferentProvider",
+    "useFeedbackFeed",
+    "useFeedbackMutations",
+    "useAdminCapability",
+    "useRoadmap",
+    "useChangelogFeed",
+    "useNotifications",
+    "mapAfferentError",
+  ]) {
+    expect(headless[exported as keyof typeof headless]).toBeTypeOf("function");
+  }
+});
 
 test("the form submit handler writes through the host wrapper and renders the public DTO", async () => {
   const backend = convexTest(undefined, modules);

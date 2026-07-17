@@ -510,9 +510,78 @@ export const setArchivedIntentValidator = v.object({
 });
 export const listPostActivityIntentValidator = v.object({
   postId: v.string(),
+  sessionGeneration: v.optional(v.string()),
   paginationOpts: v.optional(paginationOptsValidator),
 });
-export const listTagsIntentValidator = v.object({});
+export const publicPostStatusKeyValidator = v.union(
+  v.literal("open"),
+  v.literal("under_review"),
+  v.literal("planned"),
+  v.literal("in_progress"),
+  v.literal("complete"),
+  v.literal("closed"),
+);
+export const postActivityTypeResultValidator = v.union(
+  v.literal("create"),
+  v.literal("edit"),
+  v.literal("status_change"),
+  v.literal("board_move"),
+  v.literal("tag_add"),
+  v.literal("tag_remove"),
+  v.literal("lock"),
+  v.literal("unlock"),
+  v.literal("archive"),
+  v.literal("restore"),
+  v.literal("merge"),
+  v.literal("changelog_publish"),
+  v.literal("changelog_unpublish"),
+);
+export const postActivityResultValidator = v.object({
+  contractVersion: v.literal(1),
+  id: v.string(),
+  postId: v.string(),
+  type: postActivityTypeResultValidator,
+  occurredAt: v.number(),
+  actor: v.optional(
+    v.object({
+      id: v.string(),
+      displayName: v.optional(v.string()),
+      avatarUrl: v.optional(v.string()),
+    }),
+  ),
+  changedFields: v.optional(v.array(v.string())),
+  fromStatus: v.optional(publicPostStatusKeyValidator),
+  toStatus: v.optional(publicPostStatusKeyValidator),
+  fromBoardId: v.optional(v.string()),
+  toBoardId: v.optional(v.string()),
+  tagId: v.optional(v.string()),
+  changelogEntryId: v.optional(v.string()),
+});
+export const postActivityPageResultValidator = v.object({
+  contractVersion: v.literal(1),
+  page: v.array(postActivityResultValidator),
+  isDone: v.boolean(),
+  continueCursor: v.string(),
+  splitCursor: v.optional(v.union(v.string(), v.null())),
+  pageStatus: v.optional(
+    v.union(
+      v.literal("SplitRecommended"),
+      v.literal("SplitRequired"),
+      v.null(),
+    ),
+  ),
+});
+export const listTagsIntentValidator = v.object({
+  sessionGeneration: v.optional(v.string()),
+});
+export const adminCapabilityIntentValidator = v.object({
+  sessionGeneration: v.optional(v.string()),
+});
+export const adminCapabilityResultValidator = v.boolean();
+export const mergePostIntentValidator = v.object({
+  sourcePostId: v.string(),
+  canonicalPostId: v.string(),
+});
 export const createTagIntentValidator = v.object({ name: v.string() });
 export const renameTagIntentValidator = v.object({
   tagId: v.string(),
@@ -771,6 +840,10 @@ export const postSubscriptionResultValidator = v.object({
   subscribed: v.boolean(),
   explicitOptOut: v.boolean(),
 });
+export const postSubscriptionActionResultValidator = v.union(
+  postSubscriptionResultValidator,
+  publicParticipationFailureValidator,
+);
 
 export const notificationEventTypeResultValidator = v.union(
   v.literal("status_changed"),
