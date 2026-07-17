@@ -108,6 +108,18 @@ The accepted additive correction is Plan 02-11: retain the one-transaction path 
 
 ---
 
+## Headless Query and Identity Correction
+
+**Date:** 2026-07-17
+
+Phase verification found that the public hook error branches were synthetic: Convex `useQuery` and the selected pagination helper throw query failures during render before Afferent can map them. It also found that optional `sessionGeneration` collapses authenticated users into `authenticated:default`, while effect-only clearing and unfenced promises can expose one actor's state after an account switch.
+
+The live peer rejected a library-owned React error boundary. The accepted additive correction is Plan 02-12: inject the host's Convex watch client into `AfferentProvider`; implement direct and per-page `watchQuery` stores consumed through `useSyncExternalStore`; catch `localQueryResult` failures into the closed typed state; retain successful pages across later-page errors; and atomically replace split pages only after both replacements load. Mounted tests and a disposable real Convex backend must prove initial/refetch failure, recovery, later-page retention, growth, shrink, and split behavior for the published domain hooks.
+
+D-43 is amended so authenticated adapter state requires a non-empty opaque `identityToken` that is stable within one identity and distinct across identities. The provider synchronously derives and advances a browser-local generation whenever auth status or token changes, including logout/login and A-to-B-to-A; there is no default authenticated identity. The token itself is never serialized. Where a distinct Convex query key is required for page or optimistic isolation, the derived generation is a validated cache discriminator that host wrappers explicitly strip or ignore; it never supplies actor, scope, or admin authority. Query/page state, pending/error/retry state, and native optimistic projections are generation-owned; every async operation captures its start generation and drops stale completion-side work. This amendment makes D-51 and D-52 enforceable without changing their explicit-state and account-clearing outcomes.
+
+---
+
 ## the agent's Discretion
 
 - Exact Trending constants, field sizes, rate-limit values/windows, Complete recency window, inbox cap, lease/retry thresholds, and debounce defaults.
