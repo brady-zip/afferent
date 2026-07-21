@@ -1,9 +1,15 @@
 "use client";
 
-import type { NotificationDto, NotificationTarget } from "afferent";
+import type {
+  AfferentError,
+  NotificationDto,
+  NotificationId,
+  NotificationTarget,
+} from "afferent";
 import {
   useNotifications,
   useUnreadNotificationCount,
+  type NotificationFeedState,
 } from "afferent/react.js";
 
 import { useAfferentUi } from "@/components/afferent/core/afferent-ui-provider";
@@ -21,7 +27,7 @@ export function AfferentNotificationsList({
   pageOwner = true,
 }: Readonly<{ pageOwner?: boolean }>) {
   const { copy } = useAfferentUi();
-  const notifications = useNotifications();
+  const notifications = useNotifications() as NotificationControllerState;
   const unread = useUnreadNotificationCount();
   const body = (
     <div
@@ -45,9 +51,15 @@ export function AfferentNotificationsList({
   return pageOwner ? <main>{body}</main> : body;
 }
 
-function renderNotifications(
-  notifications: ReturnType<typeof useNotifications>,
-) {
+type NotificationControllerState = NotificationFeedState &
+  Readonly<{
+    pending: Readonly<Record<string, boolean>>;
+    errors: Readonly<Record<string, AfferentError | undefined>>;
+    markRead: (notificationId: NotificationId) => Promise<unknown>;
+    reset: (notificationId: NotificationId) => void;
+  }>;
+
+function renderNotifications(notifications: NotificationControllerState) {
   const { copy } = useAfferentUi();
   switch (notifications.status) {
     case "unsupported": {
@@ -124,7 +136,7 @@ function renderNotifications(
 
 function NotificationRows({
   notifications,
-}: Readonly<{ notifications: ReturnType<typeof useNotifications> }>) {
+}: Readonly<{ notifications: NotificationControllerState }>) {
   const { copy, navigation } = useAfferentUi();
   return (
     <ol className="afferent-notifications__list">

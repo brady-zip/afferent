@@ -97,7 +97,7 @@
   },
   {
     "path": "notifications/notifications-list.tsx",
-    "sha256": "438fc4e19c277170f420651576b13ea898ddb0db9663bcf75dbbe3004dfa756d"
+    "sha256": "b73bab691694d12f48c16070d2a27a95b51e9b96b23d5ab2990f0e91f2f3c930"
   },
   {
     "path": "notifications/notifications-popover.tsx",
