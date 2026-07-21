@@ -11,5 +11,43 @@
 }
 
 body {
+  background: var(--background);
+  color: var(--foreground);
   margin: 0;
+}
+
+.evidence-source {
+  display: block;
+  font:
+    600 14px/1.4 ui-sans-serif,
+    system-ui,
+    sans-serif;
+  padding: 8px 16px 0;
+}
+
+.evidence-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 16px;
+}
+
+.evidence-nav button,
+.evidence-popover-surface button {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--foreground);
+  min-height: 44px;
+  padding: 8px 16px;
+}
+
+.evidence-nav button[aria-current="page"] {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.evidence-popover-surface {
+  color: var(--foreground);
+  padding: 32px 16px;
 }

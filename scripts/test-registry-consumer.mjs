@@ -13,6 +13,13 @@ const featureItems = [
   "notifications",
   "admin",
 ];
+const runtimeDependencies = [
+  "class-variance-authority",
+  "clsx",
+  "lucide-react",
+  "radix-ui",
+  "tailwind-merge",
+];
 
 function run(command, args, cwd) {
   return new Promise((resolveRun, rejectRun) => {
@@ -37,7 +44,7 @@ function run(command, args, cwd) {
   });
 }
 
-export async function testRegistryConsumer(root = defaultRoot) {
+export async function prepareRegistryConsumer(root = defaultRoot) {
   const temporaryRoot = await mkdtemp(join(tmpdir(), "afferent-registry-all-"));
   const consumer = join(temporaryRoot, "consumer");
   const transcript = [];
@@ -94,14 +101,7 @@ export async function testRegistryConsumer(root = defaultRoot) {
     const manifest = JSON.parse(
       await readFile(join(consumer, "package.json"), "utf8"),
     );
-    const runtime = [
-      "class-variance-authority",
-      "clsx",
-      "lucide-react",
-      "radix-ui",
-      "tailwind-merge",
-    ];
-    for (const dependency of runtime)
+    for (const dependency of runtimeDependencies)
       assert.ok(manifest.dependencies?.[dependency]);
     for (const tool of [
       "@axe-core/playwright",
@@ -128,14 +128,32 @@ export async function testRegistryConsumer(root = defaultRoot) {
       );
     }
     return {
+      consumer,
       featureItems,
-      runtime,
+      runtime: runtimeDependencies,
       transcript: transcript
         .join("\n")
         .replaceAll(temporaryRoot, "<temporary>"),
+      async cleanup() {
+        await rm(temporaryRoot, { recursive: true, force: true });
+      },
+    };
+  } catch (error) {
+    await rm(temporaryRoot, { recursive: true, force: true });
+    throw error;
+  }
+}
+
+export async function testRegistryConsumer(root = defaultRoot) {
+  const prepared = await prepareRegistryConsumer(root);
+  try {
+    return {
+      featureItems: prepared.featureItems,
+      runtime: prepared.runtime,
+      transcript: prepared.transcript,
     };
   } finally {
-    await rm(temporaryRoot, { recursive: true, force: true });
+    await prepared.cleanup();
   }
 }
 
