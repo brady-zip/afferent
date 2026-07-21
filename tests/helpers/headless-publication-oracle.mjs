@@ -189,6 +189,7 @@ export function createDeferredWatchTransport(
 ) {
   let pending;
   const held = [];
+  const heldListeners = [];
   const deferredDeliveries = [];
   return {
     client: {
@@ -208,10 +209,12 @@ export function createDeferredWatchTransport(
               if (
                 pending &&
                 pending.generation === generation &&
-                pending.kind === kind
+                pending.kind === kind &&
+                (pending.predicate === undefined || pending.predicate(args))
               ) {
                 held.push({ listener, originGeneration: generation, kind });
                 pending = undefined;
+                for (const heldListener of heldListeners) heldListener();
                 return;
               }
               listener();
@@ -221,9 +224,9 @@ export function createDeferredWatchTransport(
         };
       },
     },
-    deferNext({ generation, kind }) {
+    deferNext({ generation, kind, predicate }) {
       assert.equal(pending, undefined, "a deferred delivery is already armed");
-      pending = { generation, kind };
+      pending = { generation, kind, predicate };
     },
     releaseNext(observe) {
       const delivery = held.shift();
@@ -240,6 +243,26 @@ export function createDeferredWatchTransport(
       return evidence;
     },
     heldCount: () => held.length,
+    awaitHeld(deadline, label, minimumCount = 1) {
+      if (held.length >= minimumCount) return Promise.resolve();
+      return new Promise((resolve, reject) => {
+        const stop = () => {
+          const index = heldListeners.indexOf(onHeld);
+          if (index !== -1) heldListeners.splice(index, 1);
+        };
+        const onHeld = () => {
+          if (held.length < minimumCount) return;
+          clearTimeout(timeout);
+          stop();
+          resolve();
+        };
+        heldListeners.push(onHeld);
+        const timeout = setTimeout(() => {
+          stop();
+          reject(new Error(`Timed out waiting for ${label}`));
+        }, Math.max(0, deadline - Date.now()));
+      });
+    },
     deferredDeliveries,
   };
 }

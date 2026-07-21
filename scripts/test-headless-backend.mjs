@@ -18,6 +18,16 @@ import { ConvexHttpClient } from "convex/browser";
 import { ConvexReactClient } from "convex/react";
 import { getFunctionName, makeFunctionReference } from "convex/server";
 
+import {
+  assertExactDescriptorChain,
+  assertExactPublicationSequence,
+  awaitNextPublication,
+  createDeferredWatchTransport,
+  createExpectedPublicationModel,
+  createPublicationRecorder,
+  extractDescriptorChain,
+} from "../tests/helpers/headless-publication-oracle.mjs";
+
 const repositoryRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const temporaryRoot = await mkdtemp(
   join(tmpdir(), "afferent-headless-backend-"),
@@ -1001,100 +1011,157 @@ function productIds(snapshot) {
   return snapshot.results.map((item) => `${item.id}@${item.postId}`);
 }
 
-function exactPrefixes(...sequences) {
-  const prefixes = [];
-  for (const sequence of sequences) {
-    for (let length = 0; length <= sequence.length; length += 1) {
-      const prefix = sequence.slice(0, length);
-      if (
-        !prefixes.some(
-          (candidate) => JSON.stringify(candidate) === JSON.stringify(prefix),
-        )
-      ) {
-        prefixes.push(prefix);
-      }
-    }
-  }
-  return prefixes;
+function productPageIds(result) {
+  return (result?.page ?? []).map((item) => `${item.id}@${item.postId}`);
 }
 
-function recordEveryProductPublication(store) {
-  const publications = [];
+function productChains(records) {
+  const chains = [];
+  const visit = (cursor, chain) => {
+    for (const record of records.filter(
+      (candidate) => candidate.args.paginationOpts.cursor === cursor,
+    )) {
+      if (chain.includes(record)) continue;
+      const next = [...chain, record];
+      const endCursor = record.args.paginationOpts.endCursor;
+      if (endCursor === undefined) chains.push(next);
+      else visit(endCursor, next);
+    }
+  };
+  visit(null, []);
+  return chains;
+}
+
+function activeProductBoundaries(tracking, { name, scopeId, snapshot }) {
+  const active = tracking.records.filter(
+    (record) =>
+      record.active > 0 &&
+      record.name === name &&
+      record.args.scopeId === scopeId &&
+      record.args.paginationOpts,
+  );
+  assert.ok(active.length > 0, "expected active installed product watches");
+  const sessionId = active[0].args.paginationOpts.id;
+  assert.ok(
+    active.every((record) => record.args.paginationOpts.id === sessionId),
+    "one store must use one pagination session",
+  );
+  const chains = productChains(active);
+  if (chains.length === 1 && active.length === chains[0].length) {
+    return extractDescriptorChain(tracking.records, {
+      name,
+      scopeId,
+      sessionId: active[0].args.paginationOpts.id,
+    });
+  }
+  const wanted = productIds(snapshot);
+  const candidates = chains.filter((chain) => {
+    if (chain.some((record) => record.result === undefined && !record.error)) {
+      return false;
+    }
+    const ids = chain.flatMap((record) => productPageIds(record.result));
+    return JSON.stringify(ids) === JSON.stringify(wanted);
+  });
+  assert.equal(
+    candidates.length,
+    1,
+    `expected one exact active descriptor chain for ${name}`,
+  );
+  return assertExactDescriptorChain(
+    candidates[0].map((record) => record.args.paginationOpts),
+  );
+}
+
+function recordExactProductPublications({
+  store,
+  tracking,
+  reader,
+  generation,
+  name,
+  scopeId,
+}) {
+  const recorder = createPublicationRecorder();
   const stop = store.subscribe(() => {
     const snapshot = store.getSnapshot();
-    publications.push({
-      ids: productIds(snapshot),
+    recorder.push({
+      reader,
+      generation,
       status: snapshot.status,
-      errorCode: snapshot.error?.code,
+      ids: productIds(snapshot),
+      boundaries: activeProductBoundaries(tracking, {
+        name,
+        scopeId,
+        snapshot,
+      }),
+      ...(snapshot.error?.code === undefined
+        ? {}
+        : { errorCode: snapshot.error.code }),
     });
   });
+  return { recorder, stop, cursor: 0, expected: [], reader, generation };
+}
+
+function expectedProductPublication(state, publication) {
   return {
-    mark: () => publications.length,
-    stop,
-    assertPrefixesSince(mark, sequences, label, options = {}) {
-      const observed = publications.slice(mark);
-      if (options.requirePublication !== false) {
-        assert.ok(observed.length > 0, `${label} must publish at least once`);
-      }
-      const allowed = exactPrefixes(...sequences);
-      for (const publication of observed) {
-        assert.ok(
-          allowed.some(
-            (prefix) =>
-              JSON.stringify(prefix) === JSON.stringify(publication.ids),
-          ),
-          `${label} emitted a non-canonical product publication: ${JSON.stringify(publication)}`,
-        );
-      }
-      if (options.errorCode !== undefined) {
-        assert.ok(
-          observed.some(
-            (publication) =>
-              publication.status === "Error" &&
-              publication.errorCode === options.errorCode,
-          ),
-          `${label} must publish typed ${options.errorCode} state`,
-        );
-      }
-    },
+    reader: state.reader,
+    generation: state.generation,
+    ...publication,
   };
+}
+
+async function expectExactProductPublication(state, publication, label) {
+  const expected = expectedProductPublication(state, publication);
+  const next = await awaitNextPublication(
+    state.recorder,
+    state.cursor,
+    Date.now() + 20_000,
+    label,
+  );
+  assertExactPublicationSequence(
+    [next.publication],
+    createExpectedPublicationModel({
+      reader: state.reader,
+      generation: state.generation,
+      publications: [expected],
+    }),
+  );
+  state.cursor = next.cursor;
+  state.expected.push(expected);
+}
+
+function assertCompleteProductSequence(state, deferredDeliveries = []) {
+  assertExactPublicationSequence(
+    state.recorder.publications,
+    createExpectedPublicationModel({
+      reader: state.reader,
+      generation: state.generation,
+      publications: state.expected,
+      deferredDeliveries,
+    }),
+    deferredDeliveries,
+  );
 }
 
 async function productTruth(http, truthReference, args, reader) {
   return (await http.query(truthReference, args))[reader];
 }
 
-async function settleProductStore({
+async function exactProductTruthPublication({
   http,
   truthReference,
-  store,
   args,
-  reader,
+  state,
+  boundaries,
+  status,
   label,
 }) {
-  const deadline = Date.now() + 20_000;
-  let requestedMore = false;
-  while (Date.now() < deadline) {
-    const expected = await productTruth(http, truthReference, args, reader);
-    const snapshot = store.getSnapshot();
-    if (
-      snapshot.status !== "Error" &&
-      snapshot.status !== "LoadingMore" &&
-      JSON.stringify(productIds(snapshot)) === JSON.stringify(expected)
-    ) {
-      return { expected, snapshot };
-    }
-    if (snapshot.status === "CanLoadMore" && !requestedMore) {
-      requestedMore = true;
-      store.loadMore(2);
-    } else if (snapshot.status !== "LoadingMore") {
-      requestedMore = false;
-    }
-    await new Promise((resolve) => setTimeout(resolve, 20));
-  }
-  throw new Error(
-    `Timed out waiting for ${label}: ${JSON.stringify(store.getSnapshot())}`,
+  const ids = await productTruth(http, truthReference, args, state.reader);
+  await expectExactProductPublication(
+    state,
+    { status, ids, boundaries },
+    label,
   );
+  return ids;
 }
 
 async function advanceProductMerge(http, references, job, wanted) {
@@ -1107,6 +1174,7 @@ async function advanceProductMerge(http, references, job, wanted) {
 }
 
 async function proveInstalledProductWatches({
+  react,
   http,
   queryModule,
   tracking,
@@ -1128,9 +1196,19 @@ async function proveInstalledProductWatches({
     scopeId: "product-beta",
     postId: beta.canonicalPostId,
   };
-  const makeStore = (reader, args, generation, initialNumItems = 2) =>
+  const readerName = (reader) =>
+    reader === "comments"
+      ? "harness:listProductComments"
+      : "harness:listProductActivity";
+  const makeStore = (
+    reader,
+    args,
+    generation,
+    initialNumItems = 50,
+    client = tracking,
+  ) =>
     queryModule.createPaginatedWatchStore({
-      client: tracking,
+      client,
       query:
         reader === "comments"
           ? references.listComments
@@ -1139,34 +1217,40 @@ async function proveInstalledProductWatches({
       generation,
       initialNumItems,
     });
-
-  const commentStore = makeStore("comments", alphaArgs, 100);
-  const activityStore = makeStore("activity", alphaArgs, 100);
-  const commentPublications = recordEveryProductPublication(commentStore);
-  const activityPublications = recordEveryProductPublication(activityStore);
-  const preComments = (
-    await settleProductStore({
+  const lifecycle = new Map();
+  for (const [reader, generation] of [
+    ["comments", 100],
+    ["activity", 101],
+  ]) {
+    const store = makeStore(reader, alphaArgs, generation);
+    const publications = recordExactProductPublications({
+      store,
+      tracking,
+      reader,
+      generation,
+      name: readerName(reader),
+      scopeId: alphaArgs.scopeId,
+    });
+    lifecycle.set(reader, { store, publications });
+    const boundaries = [{ cursor: null, numItems: 50 }];
+    await expectExactProductPublication(
+      publications,
+      { status: "LoadingFirstPage", ids: [], boundaries },
+      `installed product ${reader} loading publication`,
+    );
+    const ids = await exactProductTruthPublication({
       http,
       truthReference: references.truth,
-      store: commentStore,
       args: alphaArgs,
-      reader: "comments",
-      label: "installed product comments before merge",
-    })
-  ).expected;
-  const preActivity = (
-    await settleProductStore({
-      http,
-      truthReference: references.truth,
-      store: activityStore,
-      args: alphaArgs,
-      reader: "activity",
-      label: "installed product activity before merge",
-    })
-  ).expected;
+      state: publications,
+      boundaries,
+      status: "Exhausted",
+      label: `installed product ${reader} initial publication`,
+    });
+    lifecycle.get(reader).ids = ids;
+    lifecycle.get(reader).boundaries = boundaries;
+  }
 
-  let commentMark = commentPublications.mark();
-  let activityMark = activityPublications.mark();
   const begun = await http.mutation(references.begin, {
     scopeId: "product-alpha",
     adminId: alpha.adminId,
@@ -1176,112 +1260,58 @@ async function proveInstalledProductWatches({
   const job = { scopeId: "product-alpha", jobId: begun.jobId };
   await advanceProductMerge(http, references, job, "ready");
   await http.mutation(references.step, job);
-  const cutoverComments = (
-    await settleProductStore({
+  for (const reader of ["comments", "activity"]) {
+    const current = lifecycle.get(reader);
+    const before = current.ids;
+    current.ids = await exactProductTruthPublication({
       http,
       truthReference: references.truth,
-      store: commentStore,
       args: alphaArgs,
-      reader: "comments",
-      label: "product merge length 1 to 2 comments",
-    })
-  ).expected;
-  const cutoverActivity = (
-    await settleProductStore({
-      http,
-      truthReference: references.truth,
-      store: activityStore,
-      args: alphaArgs,
-      reader: "activity",
-      label: "product merge length 1 to 2 activity",
-    })
-  ).expected;
-  assert.ok(cutoverComments.length > preComments.length);
-  assert.ok(cutoverActivity.length > preActivity.length);
-  commentPublications.assertPrefixesSince(
-    commentMark,
-    [preComments, cutoverComments],
-    "product merge length 1 to 2 comments",
-  );
-  activityPublications.assertPrefixesSince(
-    activityMark,
-    [preActivity, cutoverActivity],
-    "product merge length 1 to 2 activity",
-  );
-
-  for (const [reader, store, publications] of [
-    ["comments", commentStore, commentPublications],
-    ["activity", activityStore, activityPublications],
-  ]) {
-    for (const mode of ["first", "middle", "tail"]) {
-      const baseline = await productTruth(
-        http,
-        references.truth,
-        alphaArgs,
-        reader,
-      );
-      let mark = publications.mark();
-      await http.mutation(references.setMode, { reader, mode });
-      await waitFor(
-        store,
-        (snapshot) => snapshot.status === "Error",
-        `installed product ${reader} ${mode}-page failure`,
-      );
-      publications.assertPrefixesSince(
-        mark,
-        [baseline],
-        `installed product ${reader} ${mode}-page failure`,
-        { errorCode: "TRANSIENT" },
-      );
-      mark = publications.mark();
-      await http.mutation(references.setMode, { reader, mode: "none" });
-      await settleProductStore({
-        http,
-        truthReference: references.truth,
-        store,
-        args: alphaArgs,
-        reader,
-        label: `installed product ${reader} ${mode}-page recovery`,
-      });
-      publications.assertPrefixesSince(
-        mark,
-        [baseline],
-        `installed product ${reader} ${mode}-page recovery`,
-      );
-    }
+      state: current.publications,
+      boundaries: current.boundaries,
+      status: "Exhausted",
+      label: `product merge length 1 to 2 ${reader}`,
+    });
+    assert.ok(current.ids.length > before.length);
+    await http.mutation(references.setMode, { reader, mode: "first" });
+    await expectExactProductPublication(
+      current.publications,
+      {
+        status: "Error",
+        ids: [],
+        boundaries: current.boundaries,
+        errorCode: "TRANSIENT",
+      },
+      `installed product ${reader} coupled error`,
+    );
+    await http.mutation(references.setMode, { reader, mode: "none" });
+    await expectExactProductPublication(
+      current.publications,
+      {
+        status: "Exhausted",
+        ids: current.ids,
+        boundaries: current.boundaries,
+      },
+      `installed product ${reader} coupled recovery`,
+    );
   }
 
-  let previousComments = await productTruth(
-    http,
-    references.truth,
-    alphaArgs,
-    "comments",
-  );
-  commentMark = commentPublications.mark();
   await http.mutation(references.insert, {
     scopeId: "product-alpha",
     postId: alpha.sourcePostId,
     kind: "comment",
     label: "product inserted root",
   });
-  const insertedComments = (
-    await settleProductStore({
-      http,
-      truthReference: references.truth,
-      store: commentStore,
-      args: alphaArgs,
-      reader: "comments",
-      label: "installed product root comment insertion",
-    })
-  ).expected;
-  commentPublications.assertPrefixesSince(
-    commentMark,
-    [previousComments, insertedComments],
-    "installed product root comment insertion",
-  );
-
-  previousComments = insertedComments;
-  commentMark = commentPublications.mark();
+  let current = lifecycle.get("comments");
+  current.ids = await exactProductTruthPublication({
+    http,
+    truthReference: references.truth,
+    args: alphaArgs,
+    state: current.publications,
+    boundaries: current.boundaries,
+    status: "Exhausted",
+    label: "installed product root comment insertion",
+  });
   await http.mutation(references.insert, {
     scopeId: "product-alpha",
     postId: alpha.sourcePostId,
@@ -1289,265 +1319,295 @@ async function proveInstalledProductWatches({
     label: "product inserted reply",
     parentCommentId: alpha.rootCommentId,
   });
-  const repliedComments = (
-    await settleProductStore({
-      http,
-      truthReference: references.truth,
-      store: commentStore,
-      args: alphaArgs,
-      reader: "comments",
-      label: "installed product reply insertion",
-    })
-  ).expected;
-  commentPublications.assertPrefixesSince(
-    commentMark,
-    [previousComments, repliedComments],
-    "installed product reply insertion",
-  );
-
-  let previousActivity = await productTruth(
+  current.ids = await exactProductTruthPublication({
     http,
-    references.truth,
-    alphaArgs,
-    "activity",
-  );
-  activityMark = activityPublications.mark();
+    truthReference: references.truth,
+    args: alphaArgs,
+    state: current.publications,
+    boundaries: current.boundaries,
+    status: "Exhausted",
+    label: "installed product reply insertion",
+  });
   await http.mutation(references.insert, {
     scopeId: "product-alpha",
     postId: alpha.sourcePostId,
     kind: "activity",
     label: "product inserted activity",
   });
-  const insertedActivity = (
-    await settleProductStore({
-      http,
-      truthReference: references.truth,
-      store: activityStore,
-      args: alphaArgs,
-      reader: "activity",
-      label: "installed product activity insertion",
-    })
-  ).expected;
-  activityPublications.assertPrefixesSince(
-    activityMark,
-    [previousActivity, insertedActivity],
-    "installed product activity insertion",
-  );
+  current = lifecycle.get("activity");
+  current.ids = await exactProductTruthPublication({
+    http,
+    truthReference: references.truth,
+    args: alphaArgs,
+    state: current.publications,
+    boundaries: current.boundaries,
+    status: "Exhausted",
+    label: "installed product activity insertion",
+  });
 
-  previousComments = repliedComments;
-  commentMark = commentPublications.mark();
+  current = lifecycle.get("comments");
   await http.mutation(references.delete, {
     scopeId: "product-alpha",
     kind: "comment",
-    id: previousComments[Math.floor(previousComments.length / 2)].split("@")[0],
+    id: current.ids[Math.floor(current.ids.length / 2)].split("@")[0],
   });
-  const deletedComments = (
-    await settleProductStore({
-      http,
-      truthReference: references.truth,
-      store: commentStore,
-      args: alphaArgs,
-      reader: "comments",
-      label: "installed product middle comment deletion",
-    })
-  ).expected;
-  commentPublications.assertPrefixesSince(
-    commentMark,
-    [previousComments, deletedComments],
-    "installed product middle comment deletion",
-  );
+  current.ids = await exactProductTruthPublication({
+    http,
+    truthReference: references.truth,
+    args: alphaArgs,
+    state: current.publications,
+    boundaries: current.boundaries,
+    status: "Exhausted",
+    label: "installed product middle comment deletion",
+  });
 
-  previousActivity = insertedActivity;
-  activityMark = activityPublications.mark();
+  current = lifecycle.get("activity");
   await http.mutation(references.delete, {
     scopeId: "product-alpha",
     kind: "activity",
-    id: previousActivity[Math.floor(previousActivity.length / 2)].split("@")[0],
+    id: current.ids[Math.floor(current.ids.length / 2)].split("@")[0],
   });
-  const deletedActivity = (
-    await settleProductStore({
-      http,
-      truthReference: references.truth,
-      store: activityStore,
-      args: alphaArgs,
-      reader: "activity",
-      label: "installed product middle activity deletion",
-    })
-  ).expected;
-  activityPublications.assertPrefixesSince(
-    activityMark,
-    [previousActivity, deletedActivity],
-    "installed product middle activity deletion",
-  );
-
-  for (const reader of ["comments", "activity"]) {
-    const pendingStore = makeStore(
-      reader,
-      alphaArgs,
-      reader === "comments" ? 101 : 102,
-      1,
-    );
-    const pendingPublications = recordEveryProductPublication(pendingStore);
-    await waitFor(
-      pendingStore,
-      (snapshot) => snapshot.status === "CanLoadMore",
-      `installed product ${reader} pending first page`,
-    );
-    const before = await productTruth(
-      http,
-      references.truth,
-      alphaArgs,
-      reader,
-    );
-    const mark = pendingPublications.mark();
-    pendingStore.loadMore(1);
-    await http.mutation(references.insert, {
-      scopeId: "product-alpha",
-      postId: alpha.canonicalPostId,
-      kind: reader === "comments" ? "comment" : "activity",
-      label: `product pending ${reader}`,
-    });
-    const after = (
-      await settleProductStore({
-        http,
-        truthReference: references.truth,
-        store: pendingStore,
-        args: alphaArgs,
-        reader,
-        label: `installed product ${reader} mutation while loadMore incomplete`,
-      })
-    ).expected;
-    pendingPublications.assertPrefixesSince(
-      mark,
-      [before, after],
-      `installed product ${reader} mutation while loadMore incomplete`,
-    );
-    pendingPublications.stop();
-    pendingStore.dispose();
-  }
+  current.ids = await exactProductTruthPublication({
+    http,
+    truthReference: references.truth,
+    args: alphaArgs,
+    state: current.publications,
+    boundaries: current.boundaries,
+    status: "Exhausted",
+    label: "installed product middle activity deletion",
+  });
 
   let state = await http.query(references.state, job);
   assert.equal(state.state, "cutover_done");
   await http.mutation(references.step, job);
   state = await http.query(references.state, job);
   assert.equal(state.state, "cleaning");
+  const cleanupPublications = { comments: 0, activity: 0 };
   while (state.state === "cleaning") {
-    const beforeComments = await productTruth(
-      http,
-      references.truth,
-      alphaArgs,
-      "comments",
-    );
-    const beforeActivity = await productTruth(
-      http,
-      references.truth,
-      alphaArgs,
-      "activity",
-    );
-    commentMark = commentPublications.mark();
-    activityMark = activityPublications.mark();
+    const before = {
+      comments: lifecycle.get("comments").ids,
+      activity: lifecycle.get("activity").ids,
+    };
     await http.mutation(references.step, job);
     state = await http.query(references.state, job);
-    const afterComments = (
-      await settleProductStore({
+    for (const reader of ["comments", "activity"]) {
+      const next = await productTruth(
         http,
-        truthReference: references.truth,
-        store: commentStore,
-        args: alphaArgs,
-        reader: "comments",
-        label:
+        references.truth,
+        alphaArgs,
+        reader,
+      );
+      if (JSON.stringify(next) !== JSON.stringify(before[reader])) {
+        current = lifecycle.get(reader);
+        await expectExactProductPublication(
+          current.publications,
+          {
+            status: "Exhausted",
+            ids: next,
+            boundaries: current.boundaries,
+          },
           state.state === "done"
-            ? "product merge length 2 to 1 comments"
-            : "product merge cleaning repoint comments",
-      })
-    ).expected;
-    const afterActivity = (
-      await settleProductStore({
-        http,
-        truthReference: references.truth,
-        store: activityStore,
-        args: alphaArgs,
-        reader: "activity",
-        label:
-          state.state === "done"
-            ? "product merge length 2 to 1 activity"
-            : "product merge cleaning repoint activity",
-      })
-    ).expected;
-    commentPublications.assertPrefixesSince(
-      commentMark,
-      [beforeComments, afterComments],
-      state.state === "done"
-        ? "product merge length 2 to 1 comments"
-        : "product merge cleaning repoint comments",
-      { requirePublication: false },
-    );
-    activityPublications.assertPrefixesSince(
-      activityMark,
-      [beforeActivity, afterActivity],
-      state.state === "done"
-        ? "product merge length 2 to 1 activity"
-        : "product merge cleaning repoint activity",
-      { requirePublication: false },
-    );
+            ? `product merge length 2 to 1 ${reader}`
+            : `product merge cleaning repoint ${reader}`,
+        );
+        current.ids = next;
+        if (state.state !== "done") cleanupPublications[reader] += 1;
+      }
+    }
   }
   assert.equal(state.state, "done");
+  assert.ok(cleanupPublications.comments > 0);
+  assert.ok(cleanupPublications.activity > 0);
+  for (const { store, publications } of lifecycle.values()) {
+    assertCompleteProductSequence(publications);
+    publications.stop();
+    store.dispose();
+  }
 
-  commentPublications.stop();
-  activityPublications.stop();
-  commentStore.dispose();
-  activityStore.dispose();
-  const alphaRecords = tracking.records.filter(
-    (record) =>
-      (record.name === "harness:listProductComments" ||
-        record.name === "harness:listProductActivity") &&
-      record.args.scopeId === alphaArgs.scopeId,
-  );
-
-  for (const reader of ["comments", "activity"]) {
-    const betaStore = makeStore(reader, betaArgs, 200, 2);
-    const stopBeta = betaStore.subscribe(() => {});
-    await settleProductStore({
-      http,
-      truthReference: references.truth,
-      store: betaStore,
-      args: betaArgs,
+  for (const [reader, generation] of [
+    ["comments", 300],
+    ["activity", 301],
+  ]) {
+    const store = makeStore(reader, alphaArgs, generation, 2);
+    const publications = recordExactProductPublications({
+      store,
+      tracking,
       reader,
-      label: `product ${reader} identity B`,
+      generation,
+      name: readerName(reader),
+      scopeId: alphaArgs.scopeId,
     });
-    assert.ok(
-      alphaRecords.every(
-        (record) => record.active === 0 && record.disposeCount === 1,
-      ),
-      `product ${reader} identity A watches must be disposed before B`,
+    const first = (await productTruth(
+      http,
+      references.truth,
+      alphaArgs,
+      reader,
+    )).slice(0, 2);
+    const firstBoundary = [{ cursor: null, numItems: 2 }];
+    await expectExactProductPublication(
+      publications,
+      {
+        status: "LoadingFirstPage",
+        ids: [],
+        boundaries: firstBoundary,
+      },
+      `installed product ${reader} first-page loading`,
+    );
+    await expectExactProductPublication(
+      publications,
+      { status: "CanLoadMore", ids: first, boundaries: firstBoundary },
+      `installed product ${reader} first page`,
+    );
+    let baseline = first;
+    let settledBoundaries = firstBoundary;
+    for (let append = 1; append <= 2; append += 1) {
+      store.loadMore(2);
+      for (let loading = 0; loading < 5; loading += 1) {
+        await expectExactProductPublication(
+          publications,
+          {
+            status: "LoadingMore",
+            ids: baseline,
+            boundaries: settledBoundaries,
+          },
+          `installed product ${reader} append ${append} loading ${loading + 1}`,
+        );
+      }
+      await waitFor(
+        store,
+        (snapshot) =>
+          snapshot.status === "CanLoadMore" &&
+          productIds(snapshot).length === 2 + append * 2,
+        `installed product ${reader} append ${append} completion`,
+      );
+      const snapshot = store.getSnapshot();
+      baseline = productIds(snapshot);
+      settledBoundaries = activeProductBoundaries(tracking, {
+        name: readerName(reader),
+        scopeId: alphaArgs.scopeId,
+        snapshot,
+      });
+      await expectExactProductPublication(
+        publications,
+        {
+          status: "CanLoadMore",
+          ids: baseline,
+          boundaries: settledBoundaries,
+        },
+        `installed product ${reader} append ${append} settled`,
+      );
+    }
+    assert.equal(baseline.length, 6);
+    for (const [mode, prefixLength] of [
+      ["first", 0],
+      ["middle", 2],
+      ["tail", 4],
+    ]) {
+      await http.mutation(references.setMode, { reader, mode });
+      await expectExactProductPublication(
+        publications,
+        {
+          status: "Error",
+          ids: baseline.slice(0, prefixLength),
+          boundaries: settledBoundaries,
+          errorCode: "TRANSIENT",
+        },
+        `installed product ${reader} ${mode}-page failure`,
+      );
+      await http.mutation(references.setMode, { reader, mode: "none" });
+      await expectExactProductPublication(
+        publications,
+        {
+          status: "CanLoadMore",
+          ids: baseline,
+          boundaries: settledBoundaries,
+        },
+        `installed product ${reader} ${mode}-page recovery`,
+      );
+    }
+    assertCompleteProductSequence(publications);
+    publications.stop();
+    store.dispose();
+  }
+
+  for (const [reader, generation] of [
+    ["comments", 400],
+    ["activity", 401],
+  ]) {
+    const deferred = createDeferredWatchTransport(react, {
+      generationOf: () => generation,
+    });
+    const oldTracking = new TrackingWatchClient(deferred.client);
+    const oldStore = makeStore(
+      reader,
+      alphaArgs,
+      generation,
+      50,
+      oldTracking,
+    );
+    const stopOld = oldStore.subscribe(() => {});
+    await waitFor(
+      oldStore,
+      (snapshot) => snapshot.status === "Exhausted",
+      `installed stale ${reader} old A ready`,
+    );
+    deferred.deferNext({ generation, kind: "result" });
+    await http.mutation(references.insert, {
+      scopeId: alphaArgs.scopeId,
+      postId: alpha.canonicalPostId,
+      kind: reader === "comments" ? "comment" : "activity",
+      label: `stale ${reader} result`,
+    });
+    await deferred.awaitHeld(Date.now() + 20_000, `held ${reader} result`);
+    deferred.deferNext({ generation, kind: "error" });
+    await http.mutation(references.setMode, { reader, mode: "first" });
+    await deferred.awaitHeld(Date.now() + 20_000, `held ${reader} error`, 2);
+    stopOld();
+    oldStore.dispose();
+    await http.mutation(references.setMode, { reader, mode: "none" });
+
+    const betaStore = makeStore(reader, betaArgs, generation + 10);
+    const stopBeta = betaStore.subscribe(() => {});
+    await waitFor(
+      betaStore,
+      (snapshot) => snapshot.status === "Exhausted",
+      `product ${reader} identity B`,
     );
     stopBeta();
     betaStore.dispose();
-    const alphaAgainStore = makeStore(reader, alphaArgs, 201, 2);
-    const stopAlphaAgain = alphaAgainStore.subscribe(() => {});
-    await settleProductStore({
-      http,
-      truthReference: references.truth,
-      store: alphaAgainStore,
-      args: alphaArgs,
-      reader,
-      label: `product ${reader} identity A again`,
-    });
-    stopAlphaAgain();
-    alphaAgainStore.dispose();
+    const currentStore = makeStore(reader, alphaArgs, generation + 20);
+    const stopCurrent = currentStore.subscribe(() => {});
+    await waitFor(
+      currentStore,
+      (snapshot) => snapshot.status === "Exhausted",
+      `product ${reader} identity A again`,
+    );
+    const observe = () => {
+      const snapshot = currentStore.getSnapshot();
+      return {
+        ids: productIds(snapshot),
+        status: snapshot.status,
+        errorCode: snapshot.error?.code,
+        boundaries: activeProductBoundaries(tracking, {
+          name: readerName(reader),
+          scopeId: alphaArgs.scopeId,
+          snapshot,
+        }),
+      };
+    };
+    deferred.releaseNext(observe);
+    deferred.releaseNext(observe);
+    assert.deepEqual(deferred.deferredDeliveries, [
+      { originGeneration: generation, kind: "result", rejected: true },
+      { originGeneration: generation, kind: "error", rejected: true },
+    ]);
+    stopCurrent();
+    currentStore.dispose();
     assert.ok(
-      tracking.records
-        .filter(
-          (record) =>
-            record.name ===
-              (reader === "comments"
-                ? "harness:listProductComments"
-                : "harness:listProductActivity") &&
-            (record.args.scopeId === betaArgs.scopeId ||
-              record.args.scopeId === alphaArgs.scopeId),
-        )
-        .every((record) => record.active === 0 && record.disposeCount === 1),
-      `product ${reader} identity A to B to A must dispose each watch exactly once`,
+      oldTracking.records.every(
+        (record) => record.active === 0 && record.disposeCount === 1,
+      ),
+      `product ${reader} stale A watches must be disposed exactly once`,
     );
   }
   // Product comment identity A to B to A
@@ -2582,6 +2642,7 @@ try {
     identityStore.dispose();
 
     await proveInstalledProductWatches({
+      react,
       http,
       queryModule,
       tracking,
