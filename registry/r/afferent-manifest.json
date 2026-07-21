@@ -1,7 +1,31 @@
 [
   {
+    "path": "admin/admin-screen.tsx",
+    "sha256": "553c84e121c5e4f67ec1436f7052e404d1f838f207d1e186ad0b8d51f92c869a"
+  },
+  {
+    "path": "admin/changelog-editor.tsx",
+    "sha256": "5456d489f65e5631857dc6bd2ebd020d5c2e3b5d8e9683ae522a3e7718f38daa"
+  },
+  {
+    "path": "admin/feedback-queue.tsx",
+    "sha256": "8968fadffa7f927edbbd49e2bc4fdd4e029a4c501186a9e03e803f8082f0dda8"
+  },
+  {
+    "path": "admin/merge-dialog.tsx",
+    "sha256": "d8f55f526fc2038389367c44809748667be345d1571537252419747acf951d00"
+  },
+  {
+    "path": "admin/moderation-form.tsx",
+    "sha256": "180d19da149256b1056adc88fb4b0c97eba36e22f7ee8b05ff35dea9d333c8fe"
+  },
+  {
+    "path": "admin/tag-manager.tsx",
+    "sha256": "b10c187cdc4bdc7e1e3ed0baa8918c09135decaa4ed57695f444ca5526ee09f9"
+  },
+  {
     "path": "afferent.css",
-    "sha256": "1d61019b138a8ab64319903ff0a0daa956f95d54968143acee58a28c0f614405"
+    "sha256": "c2e99b30a94fcfc2612f0647544c8f67af30504920af75dec350477d7a20e643"
   },
   {
     "path": "board/activity.tsx",
@@ -49,7 +73,7 @@
   },
   {
     "path": "core/copy.ts",
-    "sha256": "dceb50f0b612e9ac1a6fd64514f1b2d96b43bfc8ad1c7b11ee4e3d2d4abb822c"
+    "sha256": "fc81ce0ad9781d7ce99d4b0675509886ed7696364f4653bf20f89c56844adbbe"
   },
   {
     "path": "core/icons.tsx",

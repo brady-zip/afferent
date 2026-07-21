@@ -57,6 +57,43 @@ export const afferentRegistry = {
       ],
     },
     {
+      name: "afferent-admin",
+      description: "Source-owned feedback administration over Afferent hooks.",
+      registryDependencies: ["./afferent-ui-core.json"],
+      files: [
+        {
+          path: "ui/afferent/admin/admin-screen.tsx",
+          type: "registry:component",
+          target: "components/afferent/admin/admin-screen.tsx",
+        },
+        {
+          path: "ui/afferent/admin/feedback-queue.tsx",
+          type: "registry:component",
+          target: "components/afferent/admin/feedback-queue.tsx",
+        },
+        {
+          path: "ui/afferent/admin/moderation-form.tsx",
+          type: "registry:component",
+          target: "components/afferent/admin/moderation-form.tsx",
+        },
+        {
+          path: "ui/afferent/admin/tag-manager.tsx",
+          type: "registry:component",
+          target: "components/afferent/admin/tag-manager.tsx",
+        },
+        {
+          path: "ui/afferent/admin/merge-dialog.tsx",
+          type: "registry:component",
+          target: "components/afferent/admin/merge-dialog.tsx",
+        },
+        {
+          path: "ui/afferent/admin/changelog-editor.tsx",
+          type: "registry:component",
+          target: "components/afferent/admin/changelog-editor.tsx",
+        },
+      ],
+    },
+    {
       name: "afferent-roadmap",
       description: "Source-owned public roadmap over Afferent hooks.",
       registryDependencies: ["./afferent-ui-core.json"],

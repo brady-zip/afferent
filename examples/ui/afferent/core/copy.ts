@@ -156,6 +156,12 @@ export type AfferentUiCopy = Readonly<{
   }>;
   admin: Readonly<{
     title: string;
+    queueHeading: string;
+    moderationHeading: string;
+    manageTags: string;
+    changelogHeading: string;
+    loadError: string;
+    loadMore: string;
     emptyHeading: string;
     emptyBody: string;
     saveModeration: string;
@@ -354,6 +360,12 @@ export const englishAfferentUiCopy: AfferentUiCopy = {
   },
   admin: {
     title: "Feedback management",
+    queueHeading: "Feedback queue",
+    moderationHeading: "Moderation",
+    manageTags: "Manage tags",
+    changelogHeading: "Changelog publishing",
+    loadError: "We couldn't load feedback management",
+    loadMore: "Load more managed feedback",
     emptyHeading: "No feedback to review",
     emptyBody: "Feedback matching this queue will appear here.",
     saveModeration: "Save moderation changes",

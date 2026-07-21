@@ -37,7 +37,7 @@ function run(command, args, { cwd = root } = {}) {
 }
 
 test(
-  "packed Afferent and the local board registry item typecheck and build in a clean consumer",
+  "packed Afferent and the local public and admin registry items typecheck and build in a clean consumer",
   { timeout: 300_000 },
   async () => {
     const temporaryRoot = await mkdtemp(join(tmpdir(), "afferent-registry-"));
@@ -64,13 +64,22 @@ test(
         { cwd: consumer },
       );
       await Promise.all(
-        ["afferent-ui-core.json", "afferent-board.json"].map((name) =>
+        [
+          "afferent-ui-core.json",
+          "afferent-board.json",
+          "afferent-admin.json",
+        ].map((name) =>
           cp(join(root, "registry/r", name), join(consumer, name)),
         ),
       );
       await run(
         join(root, "node_modules/.bin/shadcn"),
         ["add", "--yes", "--overwrite", "./afferent-board.json"],
+        { cwd: consumer },
+      );
+      await run(
+        join(root, "node_modules/.bin/shadcn"),
+        ["add", "--yes", "--overwrite", "./afferent-admin.json"],
         { cwd: consumer },
       );
       await run("npm", ["run", "typecheck"], { cwd: consumer });
@@ -89,6 +98,16 @@ test(
         /from ["'](?:convex|react-router|next\/|@clerk|sonner|toast)/,
       );
       assert.doesNotMatch(installed, /\.\.\/\.\.\/|\/Users\//);
+      const installedAdmin = await readFile(
+        join(consumer, "src/components/afferent/admin/admin-screen.tsx"),
+        "utf8",
+      );
+      assert.match(installedAdmin, /^"use client";/);
+      assert.match(installedAdmin, /useAdminCapability/);
+      assert.doesNotMatch(
+        installedAdmin,
+        /from ["'](?:convex|react-router|next\/|@clerk|sonner|toast)/,
+      );
       const app = await readFile(join(consumer, "src/App.tsx"), "utf8");
       assert.match(app, /AfferentProvider/);
       assert.match(app, /AfferentBoardScreen/);

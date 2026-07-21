@@ -10,6 +10,54 @@
         "radix-ui@1.6.0",
         "tailwind-merge@3.6.0"
       ],
+      "description": "Source-owned feedback administration over Afferent hooks.",
+      "files": [
+        {
+          "path": "ui/afferent/admin/admin-screen.tsx",
+          "target": "components/afferent/admin/admin-screen.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "ui/afferent/admin/changelog-editor.tsx",
+          "target": "components/afferent/admin/changelog-editor.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "ui/afferent/admin/feedback-queue.tsx",
+          "target": "components/afferent/admin/feedback-queue.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "ui/afferent/admin/merge-dialog.tsx",
+          "target": "components/afferent/admin/merge-dialog.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "ui/afferent/admin/moderation-form.tsx",
+          "target": "components/afferent/admin/moderation-form.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "ui/afferent/admin/tag-manager.tsx",
+          "target": "components/afferent/admin/tag-manager.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "name": "afferent-admin",
+      "registryDependencies": [
+        "./afferent-ui-core.json"
+      ],
+      "title": "afferent-admin",
+      "type": "registry:block"
+    },
+    {
+      "dependencies": [
+        "class-variance-authority@0.7.1",
+        "clsx@2.1.1",
+        "lucide-react@1.20.0",
+        "radix-ui@1.6.0",
+        "tailwind-merge@3.6.0"
+      ],
       "description": "Source-owned public feedback board over Afferent hooks.",
       "files": [
         {
