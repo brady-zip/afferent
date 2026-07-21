@@ -195,14 +195,22 @@ Plans:
 
 ### Phase 02.3: Admin Read and Projection Completion (INSERTED)
 
-**Goal:** [Urgent work - to be planned]
-**Requirements**: TBD
+**Goal:** Source-owned administration receives complete server-authorized moderation, changelog, and readable activity state through bounded presentation-ready contracts.
+**Requirements**: ADMN-11
 **Depends on:** Phase 02.2
-**Plans:** 0 plans
+**Success Criteria** (what must be TRUE):
+
+1. Authorized admins can page visible or hidden feedback and directly retrieve archived records with exact discussion-lock, archive, lifecycle, and merge disposition; non-admin denial occurs before component invocation.
+2. Authorized admins can page draft, published, and unpublished changelog entries through a scope-leading index, binding, and complete headless state contract.
+3. Admin changelog entries expose ordered canonical linked feedback id/title/status summaries, with no bare-ID or browser N+1 resolution path.
+4. Activity DTOs expose readable board names/slugs, tag names, and changelog titles/slugs that survive deletion or unlisting, without leaking relation IDs.
+5. Exact DTO/page versions, trusted authority matrices, index/no-scan guards, packed/headless consumption, and the complete Phase 2 regression prove all five locked gaps.
+
+**Plans:** 0/1 plans complete
 
 Plans:
 
-- [ ] TBD (run /gsd-plan-phase 02.3 to break down)
+- [ ] `02.3-01-PLAN.md` — Add indexed authorized admin reads, complete moderation/changelog projections, and snapshot-backed readable activity.
 
 ### Phase 3: Source-Owned Product Interface
 
@@ -285,7 +293,7 @@ Phases execute sequentially: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 3 -> 4
 | 2. Complete Feedback-to-Changelog Workflow | 17/17 | Complete    | 2026-07-21 |
 | 2.1 Server-Derived Viewer Capability Contract | 1/1 | Complete   | 2026-07-21 |
 | 2.2 Notification Navigation Target Contract | 0/1 | Ready to execute | -          |
-| 2.3 Admin Read and Projection Completion   | 0/TBD          | Not started      | -          |
+| 2.3 Admin Read and Projection Completion   | 0/1            | Planned; blocked on 02.2 | -          |
 | 3. Source-Owned Product Interface          | 2/6            | In progress      | -          |
 | 4. Hosted Production Release               | 0/TBD          | Not started      | -          |
 
