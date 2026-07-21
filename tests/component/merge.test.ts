@@ -27,6 +27,18 @@ function client(scopeId: string, actorKey: string, admin = false) {
   }) as any;
 }
 
+function corruptInnerCursor(cursor: string) {
+  const prefix = "afferent-page:v1:";
+  expect(cursor.startsWith(prefix)).toBe(true);
+  const envelope = JSON.parse(
+    Buffer.from(cursor.slice(prefix.length), "base64url").toString("utf8"),
+  ) as Record<string, unknown>;
+  return `${prefix}${Buffer.from(
+    JSON.stringify({ ...envelope, position: "not-json" }),
+    "utf8",
+  ).toString("base64url")}`;
+}
+
 describe("duplicate merge lifecycle", () => {
   test("pages exact merged comment and activity ties with pinned reset-safe cursors", async () => {
     vi.useFakeTimers();
@@ -94,6 +106,47 @@ describe("duplicate merge lifecycle", () => {
       await runCtx.db.patch(sourceId, { commentCount: 4, voteCount: 51 });
     });
 
+    const assertCorruptInnerResets = async (
+      reference:
+        | typeof api.public.comments.listComments
+        | typeof api.admin.activity.listPostActivity,
+      postId: string,
+      extra: Record<string, unknown>,
+    ) => {
+      const first = await backend.query(reference as any, {
+        scopeId: "scope:pagination",
+        postId,
+        ...extra,
+        paginationOpts: { numItems: 2, cursor: null },
+      });
+      const corrupt = corruptInnerCursor(first.continueCursor);
+      for (const paginationOpts of [
+        { numItems: 2, cursor: corrupt },
+        { numItems: 2, cursor: null, endCursor: corrupt },
+      ]) {
+        const reset = await backend.query(reference as any, {
+          scopeId: "scope:pagination",
+          postId,
+          ...extra,
+          paginationOpts,
+        });
+        expect(reset.page.map((row: { id: string }) => row.id)).toEqual(
+          first.page.map((row: { id: string }) => row.id),
+        );
+      }
+    };
+
+    await assertCorruptInnerResets(
+      api.public.comments.listComments,
+      canonical.id,
+      { viewerAuthenticated: true },
+    );
+    await assertCorruptInnerResets(
+      api.admin.activity.listPostActivity,
+      canonical.id,
+      {},
+    );
+
     await backend.mutation(api.admin.merge.mergePost, {
       scopeId: "scope:pagination",
       actor: { externalKey: "pagination:admin" },
@@ -126,6 +179,17 @@ describe("duplicate merge lifecycle", () => {
         (await runCtx.db.get(runCtx.db.normalizeId("mergeJobs", jobId)!))!.state,
       ),
     ).toBe("cutover_done");
+
+    await assertCorruptInnerResets(
+      api.public.comments.listComments,
+      canonical.id,
+      { viewerAuthenticated: true },
+    );
+    await assertCorruptInnerResets(
+      api.admin.activity.listPostActivity,
+      canonical.id,
+      {},
+    );
 
     const expected = await backend.run(async (runCtx) => {
       const canonicalId = runCtx.db.normalizeId("posts", canonical.id)!;
