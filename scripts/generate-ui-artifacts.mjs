@@ -74,6 +74,7 @@ await rm(mirrorRoot, { recursive: true, force: true });
 const sourceFiles = new Set(
   items.flatMap((item) => item.files.map((file) => file.path)),
 );
+sourceFiles.add("ui/afferent/README.md");
 const manifest = [];
 for (const sourcePath of [...sourceFiles].sort()) {
   const absoluteSource = resolve(root, sourcePath);
@@ -91,3 +92,4 @@ for (const sourcePath of [...sourceFiles].sort()) {
   });
 }
 await writeFile(join(outputRoot, "afferent-manifest.json"), json(manifest));
+await writeFile(join(mirrorRoot, "manifest.json"), json(manifest));

@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { execFile } from "node:child_process";
 import { access, readFile, readdir, stat } from "node:fs/promises";
+import { promisify } from "node:util";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
@@ -8,6 +10,7 @@ import test from "node:test";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const canonicalRoot = join(root, "ui/afferent");
 const mirrorRoot = join(root, "examples/ui/afferent");
+const execFileAsync = promisify(execFile);
 
 async function filesUnder(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -24,6 +27,38 @@ function digest(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
 }
 
+async function distributionDigest() {
+  const files = [
+    ...(await filesUnder(join(root, "registry"))),
+    ...(await filesUnder(mirrorRoot)),
+  ];
+  const contents = await Promise.all(files.map((path) => readFile(path)));
+  return digest(Buffer.concat(contents));
+}
+
+test(
+  "two consecutive generations are byte-identical",
+  { timeout: 120_000 },
+  async () => {
+    await execFileAsync(
+      process.execPath,
+      ["scripts/generate-ui-artifacts.mjs"],
+      {
+        cwd: root,
+      },
+    );
+    const first = await distributionDigest();
+    await execFileAsync(
+      process.execPath,
+      ["scripts/generate-ui-artifacts.mjs"],
+      {
+        cwd: root,
+      },
+    );
+    assert.equal(await distributionDigest(), first);
+  },
+);
+
 test("canonical UI generation is deterministic and byte-equal to its mirror", async () => {
   await access(join(root, "scripts/generate-ui-artifacts.mjs"));
   const canonical = await filesUnder(canonicalRoot);
@@ -32,7 +67,9 @@ test("canonical UI generation is deterministic and byte-equal to its mirror", as
     (path) => relative(canonicalRoot, path) !== "registry.ts",
   );
   assert.deepEqual(
-    mirrored.map((path) => relative(mirrorRoot, path)),
+    mirrored
+      .map((path) => relative(mirrorRoot, path))
+      .filter((path) => path !== "manifest.json"),
     distributed.map((path) => relative(canonicalRoot, path)),
   );
   for (const sourcePath of distributed) {
