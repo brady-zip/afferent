@@ -50,7 +50,7 @@ Requirements for the first production-ready public release. Roadmap creation wil
 - [x] **ADMN-08**: Participation mutations enforce documented rate limits and return actionable errors when a limit is reached.
 - [x] **ADMN-09**: Afferent accepts and returns user-authored content through a documented safe-content contract that prevents stored script execution in conforming consumers.
 - [x] **ADMN-10**: A post exposes append-only activity entries for creation, edits, status changes, board moves, tag changes, locks, archive or restore, merges, and linked changelog publication.
-- [x] **ADMN-11**: Authorized admin reads expose hidden/archived moderation truth plus paginated presentation-ready changelog and activity projections without browser authority, internal relation IDs, or client-side N+1 resolution.
+- [ ] **ADMN-11**: Authorized admin reads expose hidden/archived moderation truth plus paginated presentation-ready changelog and activity projections without browser authority, internal relation IDs, or client-side N+1 resolution.
 
 ### Roadmap
 
@@ -215,7 +215,7 @@ Every v1 requirement maps to exactly one roadmap phase.
 | ADMN-08     | Phase 2 | Complete |
 | ADMN-09     | Phase 2 | Complete |
 | ADMN-10     | Phase 2 | Complete |
-| ADMN-11     | Phase 2.3 | Complete |
+| ADMN-11     | Phase 2.3 | Pending |
 | RMAP-01     | Phase 2 | Complete |
 | RMAP-02     | Phase 2 | Complete |
 | RMAP-03     | Phase 2 | Complete |
