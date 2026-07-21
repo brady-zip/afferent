@@ -13,6 +13,7 @@ Afferent reaches its first public release through four coarse vertical slices. T
 
 - [x] **Phase 1: Secure Installable Feedback Board** - A clean consumer can install the packed artifact, connect any supported auth provider, and run the core multi-board feedback loop safely. (completed 2026-07-16)
 - [x] **Phase 2: Complete Feedback-to-Changelog Workflow** - All 17 plans are implemented and independently verified at 64/64 must-haves. (completed 2026-07-21)
+- [ ] **Phase 2.1: Server-Derived Viewer Capability Contract** - Add server-derived vote membership and edit/withdraw capabilities required by the copied UI without accepting client authority facts. (INSERTED)
 - [ ] **Phase 3: Source-Owned Product Interface** - Consumers can install accessible, responsive public and admin shadcn interfaces from one canonical source.
 - [ ] **Phase 4: Hosted Production Release** - The published package, registry, documentation, and isolated public demo work together against real Convex.
 
@@ -155,11 +156,22 @@ Afferent reaches its first public release through four coarse vertical slices. T
 
 **UI hint**: yes
 
+### Phase 02.1: Server-Derived Viewer Capability Contract (INSERTED)
+
+**Goal:** [Urgent work - to be planned]
+**Requirements**: TBD
+**Depends on:** Phase 2
+**Plans:** 0 plans
+
+Plans:
+
+- [ ] TBD (run /gsd-plan-phase 02.1 to break down)
+
 ### Phase 3: Source-Owned Product Interface
 
 **Goal:** As a developer adopting Afferent, I want to install and restyle source-owned public and admin shadcn interfaces from one canonical registry-backed source, so that my users and administrators can complete the feedback lifecycle through accessible, responsive screens without replacing the headless behavior layer.
 **Mode:** mvp
-**Depends on:** Phase 2
+**Depends on:** Phase 02.1
 **Requirements:** UI-04, UI-05, UI-06, UI-07, QUAL-04, QUAL-07, QUAL-08
 **Success Criteria** (what must be TRUE):
 
@@ -228,12 +240,13 @@ Afferent reaches its first public release through four coarse vertical slices. T
 ## Progress
 
 **Execution Order:**
-Phases execute sequentially: 1 -> 2 -> 3 -> 4
+Phases execute sequentially: 1 -> 2 -> 2.1 -> 3 -> 4
 
 | Phase                                      | Plans Complete | Status           | Completed  |
 | ------------------------------------------ | -------------- | ---------------- | ---------- |
 | 1. Secure Installable Feedback Board       | 8/8            | Complete         | 2026-07-16 |
 | 2. Complete Feedback-to-Changelog Workflow | 17/17 | Complete    | 2026-07-21 |
+| 2.1 Server-Derived Viewer Capability Contract | 0/TBD | Ready to plan | - |
 | 3. Source-Owned Product Interface          | 1/6            | In progress      | -          |
 | 4. Hosted Production Release               | 0/TBD          | Not started      | -          |
 

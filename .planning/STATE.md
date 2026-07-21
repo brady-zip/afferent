@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 03
-current_phase_name: Source-Owned Product Interface
-status: executing
-stopped_at: Phase 02 verified at 64/64 and completed; ready to execute Phase 03 Plan 03-02
-last_updated: "2026-07-21T16:00:52.943Z"
+current_phase: 02.1
+current_phase_name: Server-Derived Viewer Capability Contract
+status: planning
+stopped_at: Urgent Phase 02.1 inserted; ready to plan the server-derived viewer capability contract
+last_updated: "2026-07-21T16:10:14.475Z"
 last_activity: 2026-07-21
-last_activity_desc: Phase 02 complete, transitioned to Phase 03
+last_activity_desc: Inserted urgent Phase 02.1 as the blocking contract prerequisite for Phase 03
 progress:
-  total_phases: 4
+  total_phases: 5
   completed_phases: 2
   total_plans: 31
   completed_plans: 26
-  percent: 84
+  percent: 40
 ---
 
 # Project State
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-17)
 
 **Core value:** SaaS teams can add deeply integrated product feedback to an existing Convex application while retaining native ownership of their data, identity, permissions, and user experience.
-**Current focus:** Phase 3 — Source-Owned Product Interface
+**Current focus:** Phase 02.1 — Server-Derived Viewer Capability Contract
 
 ## Current Position
 
-Phase: 03 — Source-Owned Product Interface
-Plan: 03-02 of 6
-Status: Ready to execute
-Last activity: 2026-07-21 — Phase 02 complete, transitioned to Phase 03
+Phase: 02.1 — Server-Derived Viewer Capability Contract
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-07-21 — Inserted urgent Phase 02.1 as the blocking contract prerequisite for Phase 03
 
 Progress: [████████░░] 84%
 
@@ -182,6 +182,10 @@ None yet.
 
 - [Phase 4]: Prove every sandbox query, search, count, seed, reset, quota, and cleanup path is scope-complete.
 
+### Roadmap Evolution
+
+- Phase 02.1 inserted after Phase 2: Server-Derived Viewer Capability Contract (URGENT)
+
 ## Deferred Items
 
 Items acknowledged and carried forward from initial requirements:
@@ -193,5 +197,5 @@ Items acknowledged and carried forward from initial requirements:
 ## Session Continuity
 
 Last session: 2026-07-21T16:00:52.943Z
-Stopped at: Phase 02 verified at 64/64 and completed; ready to execute Phase 03 Plan 03-02
+Stopped at: Urgent Phase 02.1 inserted; ready to plan the server-derived viewer capability contract
 Resume file: None
