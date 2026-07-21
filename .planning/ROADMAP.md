@@ -13,7 +13,7 @@ Afferent reaches its first public release through four coarse vertical slices. T
 
 - [x] **Phase 1: Secure Installable Feedback Board** - A clean consumer can install the packed artifact, connect any supported auth provider, and run the core multi-board feedback loop safely. (completed 2026-07-16)
 - [x] **Phase 2: Complete Feedback-to-Changelog Workflow** - All 17 plans are implemented and independently verified at 64/64 must-haves. (completed 2026-07-21)
-- [ ] **Phase 2.1: Server-Derived Viewer Capability Contract** - Add server-derived vote membership and edit/withdraw capabilities required by the copied UI without accepting client authority facts. (INSERTED)
+- [x] **Phase 2.1: Server-Derived Viewer Capability Contract** - Add server-derived vote membership and edit/withdraw capabilities required by the copied UI without accepting client authority facts. (INSERTED) (completed 2026-07-21)
 - [ ] **Phase 3: Source-Owned Product Interface** - Consumers can install accessible, responsive public and admin shadcn interfaces from one canonical source.
 - [ ] **Phase 4: Hosted Production Release** - The published package, registry, documentation, and isolated public demo work together against real Convex.
 
@@ -167,11 +167,11 @@ Afferent reaches its first public release through four coarse vertical slices. T
 2. Versioned post DTOs expose indexed vote membership and server-computed author edit/withdraw capabilities with anonymous-safe false values and exact mutation-policy parity.
 3. Headless feed/detail hooks surface and optimistically maintain the fields without UI-local authority state, and packed/static/adversarial tests reject spoofing, scans, drift, and stale capability behavior.
 
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
 
-- [ ] `02.1-01-PLAN.md` — Add the trusted viewer resolver, indexed vote/action projection, explicit DTO versioning, exact headless optimism, and adversarial packed/full-regression proof.
+- [x] `02.1-01-PLAN.md` — Add the trusted viewer resolver, indexed vote/action projection, explicit DTO versioning, exact headless optimism, and adversarial packed/full-regression proof.
 
 ### Phase 3: Source-Owned Product Interface
 
@@ -252,8 +252,8 @@ Phases execute sequentially: 1 -> 2 -> 2.1 -> 3 -> 4
 | ------------------------------------------ | -------------- | ---------------- | ---------- |
 | 1. Secure Installable Feedback Board       | 8/8            | Complete         | 2026-07-16 |
 | 2. Complete Feedback-to-Changelog Workflow | 17/17 | Complete    | 2026-07-21 |
-| 2.1 Server-Derived Viewer Capability Contract | 0/1 | Ready to execute | - |
-| 3. Source-Owned Product Interface          | 1/6            | Blocked on 02.1-01 | -          |
+| 2.1 Server-Derived Viewer Capability Contract | 1/1 | Complete   | 2026-07-21 |
+| 3. Source-Owned Product Interface          | 1/6            | In progress      | -          |
 | 4. Hosted Production Release               | 0/TBD          | Not started      | -          |
 
 ---

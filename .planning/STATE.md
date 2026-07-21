@@ -3,18 +3,18 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_phase: 02.1
-current_phase_name: Server-Derived Viewer Capability Contract
-status: in_progress
-stopped_at: Planned 02.1-01; ready to execute the server-derived viewer capability contract
-last_updated: "2026-07-21T16:21:59.330Z"
+status: completed
+stopped_at: Completed 02.1-01; Phase 3 Plan 03-02 is unblocked
+last_updated: "2026-07-21T17:33:03.901Z"
 last_activity: 2026-07-21
-last_activity_desc: Planned red-first 02.1-01 as the blocking contract prerequisite for Phase 03
+last_activity_desc: Phase 02.1 marked complete
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 32
-  completed_plans: 26
-  percent: 40
+  completed_plans: 27
+  percent: 84
+current_phase_name: Server-Derived Viewer Capability Contract
 ---
 
 # Project State
@@ -28,20 +28,20 @@ See: .planning/PROJECT.md (updated 2026-07-17)
 
 ## Current Position
 
-Phase: 02.1 — Server-Derived Viewer Capability Contract
+Phase: 02.1 — COMPLETE
 Plan: 02.1-01 of 1
-Status: Ready to execute
-Last activity: 2026-07-21 — Planned red-first 02.1-01 as the blocking contract prerequisite for Phase 03
+Status: Phase 02.1 complete
+Last activity: 2026-07-21 — Phase 02.1 marked complete
 
-Progress: [████████░░] 81%
+Progress: [████████░░] 84%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 26
+- Total plans completed: 27
 - Average duration: 45 min
-- Total execution time: 1137 min
+- Total execution time: 1205 min
 
 **By Phase:**
 
@@ -49,12 +49,13 @@ Progress: [████████░░] 81%
 | -------- | ----- | ------- | -------- |
 | Phase 01 | 8     | 299 min | 37 min   |
 | Phase 02 | 17    | 854 min | 50 min   |
+| Phase 02.1 | 1   | 68 min  | 68 min   |
 | Phase 03 | 1     | 14 min  | 14 min   |
 
 **Recent Trend:**
 
-- Last 5 plans: 47 min, 14 min, 14 min, 100 min, 30 min
-- Trend: Phase 2 exact-oracle closure completed in 30 minutes with repeatable pinned real-backend evidence
+- Last 5 plans: 14 min, 14 min, 100 min, 30 min, 68 min
+- Trend: The inserted server-derived viewer contract closed in 68 minutes with the complete Phase 2 regression green
 
 _Updated after each plan completion_
 
@@ -88,6 +89,7 @@ _Updated after each plan completion_
 | Phase 02 P15 | 100min   | 3 tasks | 11 files |
 | Phase 02 P16 | 17min    | 3 tasks | 9 files  |
 | Phase 02 P17 | 30min    | 3 tasks | 5 files  |
+| Phase 02.1 P01 | 68min  | 3 tasks | 31 files |
 
 ## Accumulated Context
 
@@ -173,6 +175,9 @@ Recent decisions affecting current work:
 - [Phase 02]: Bind opaque cursor positions to reader, order, and hashed stream-set identity; any mismatch resets cursor and endCursor together instead of attempting partial reuse.
 - [Phase 02]: Keep comments ordered by _creationTime,_id and activity ordered by occurredAt,_creationTime,_id so cleanup repoints never change cursor position.
 - [Phase 02]: Attach the replacement pagination descriptor before publishing restart loading state. — Every headless notification must expose one exact active descriptor chain; descriptorless transient states are invalid.
+- [Phase 02.1]: Resolve optional viewer identity only in trusted host reads and look up existing component actors by scope and external key without writes or scans. — Browser state never becomes authority and authenticated viewers without actor rows remain anonymous-safe.
+- [Phase 02.1]: Project vote membership through the exact scope/post/actor index and share edit/withdraw predicates with mutation enforcement. — UI action availability cannot drift from backend policy.
+- [Phase 02.1]: Apply desired-state vote optimism to both feed and detail caches from server viewerHasVoted truth. — Repeated Vote or Remove vote requests stay idempotent across current-generation caches.
 
 ### Pending Todos
 
@@ -196,6 +201,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-21T16:21:59.330Z
-Stopped at: Planned 02.1-01; ready to execute the server-derived viewer capability contract
+Last session: 2026-07-21T17:32:03Z
+Stopped at: Completed 02.1-01; Phase 3 Plan 03-02 is unblocked
 Resume file: None

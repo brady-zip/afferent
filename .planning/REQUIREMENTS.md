@@ -95,7 +95,7 @@ Requirements for the first production-ready public release. Roadmap creation wil
 - [ ] **UI-05**: A developer can install source-owned shadcn components for feedback administration, moderation, roadmap status management, and changelog publishing.
 - [x] **UI-06**: A developer can obtain the canonical UI source from both a shadcn registry and mirrored repository examples.
 - [x] **UI-07**: Registry artifacts and repository examples are generated or checked against one canonical UI source to prevent incompatible copies.
-- [ ] **UI-08**: Post-bearing headless reads expose server-derived current-viewer vote membership and author edit/withdraw capabilities without accepting browser identity or authority facts.
+- [x] **UI-08**: Post-bearing headless reads expose server-derived current-viewer vote membership and author edit/withdraw capabilities without accepting browser identity or authority facts.
 
 ### Hosted Example
 
@@ -240,7 +240,7 @@ Every v1 requirement maps to exactly one roadmap phase.
 | UI-05       | Phase 3 | Pending  |
 | UI-06       | Phase 3 | Complete |
 | UI-07       | Phase 3 | Complete |
-| UI-08       | Phase 2.1 | Pending  |
+| UI-08       | Phase 2.1 | Complete |
 | DEMO-01     | Phase 4 | Pending  |
 | DEMO-02     | Phase 4 | Pending  |
 | DEMO-03     | Phase 4 | Pending  |
