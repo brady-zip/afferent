@@ -3,6 +3,9 @@ import {
   adminCapabilityIntentValidator,
   adminCapabilityResultValidator,
   adminChangelogEntryResultValidator,
+  adminChangelogPageResultValidator,
+  adminFeedbackPageResultValidator,
+  adminFeedbackPostResultValidator,
   adminEditPostIntentValidator,
   changelogPageResultValidator,
   commentPageResultValidator,
@@ -16,11 +19,14 @@ import {
   editPostIntentValidator,
   feedbackPageResultValidator,
   getPostIntentValidator,
+  getAdminPostIntentValidator,
   getPostSubscriptionIntentValidator,
   getPublishedChangelogBySlugIntentValidator,
   getUnreadNotificationCountIntentValidator,
   installationResultValidator,
   listFeedbackIntentValidator,
+  listAdminChangelogIntentValidator,
+  listAdminFeedbackIntentValidator,
   listCommentsIntentValidator,
   listNotificationsIntentValidator,
   listPostActivityIntentValidator,
@@ -40,7 +46,6 @@ import {
   postSubscriptionResultValidator,
   postSubscriptionActionResultValidator,
   publicCommentActionResultValidator,
-  publicFeedbackPostDtoValidator,
   publicPostActionResultValidator,
   publishChangelogIntentValidator,
   publishedChangelogLookupResultValidator,
@@ -286,33 +291,62 @@ export const adminCapability = query({
   handler: () => authorizeAdmin(),
 });
 
+export const listAdminFeedback = query({
+  args: {
+    ...listAdminFeedbackIntentValidator.fields,
+    ...cacheGenerationValidator,
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: adminFeedbackPageResultValidator,
+  handler: (ctx, args) =>
+    client.admin.listAdminFeedback(ctx, withoutSessionGeneration(args) as never),
+});
+
+export const getAdminPost = query({
+  args: { ...getAdminPostIntentValidator.fields, ...cacheGenerationValidator },
+  returns: adminFeedbackPostResultValidator,
+  handler: (ctx, args) =>
+    client.admin.getAdminPost(ctx, withoutSessionGeneration(args) as never),
+});
+
+export const listAdminChangelog = query({
+  args: {
+    ...listAdminChangelogIntentValidator.fields,
+    ...cacheGenerationValidator,
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: adminChangelogPageResultValidator,
+  handler: (ctx, args) =>
+    client.admin.listAdminChangelog(ctx, withoutSessionGeneration(args)),
+});
+
 export const adminEditPost = mutation({
   args: adminEditPostIntentValidator.fields,
-  returns: publicFeedbackPostDtoValidator,
+  returns: adminFeedbackPostResultValidator,
   handler: (ctx, args) => client.admin.editPost(ctx, args as never),
 });
 
 export const movePost = mutation({
   args: movePostIntentValidator.fields,
-  returns: publicFeedbackPostDtoValidator,
+  returns: adminFeedbackPostResultValidator,
   handler: (ctx, args) => client.admin.movePost(ctx, args as never),
 });
 
 export const setPostStatus = mutation({
   args: setPostStatusIntentValidator.fields,
-  returns: publicFeedbackPostDtoValidator,
+  returns: adminFeedbackPostResultValidator,
   handler: (ctx, args) => client.admin.setPostStatus(ctx, args as never),
 });
 
 export const setDiscussionLock = mutation({
   args: setDiscussionLockIntentValidator.fields,
-  returns: publicFeedbackPostDtoValidator,
+  returns: adminFeedbackPostResultValidator,
   handler: (ctx, args) => client.admin.setDiscussionLock(ctx, args as never),
 });
 
 export const setArchived = mutation({
   args: setArchivedIntentValidator.fields,
-  returns: publicFeedbackPostDtoValidator,
+  returns: adminFeedbackPostResultValidator,
   handler: (ctx, args) => client.admin.setArchived(ctx, args as never),
 });
 
@@ -347,7 +381,7 @@ export const renameTag = mutation({
 
 export const setPostTag = mutation({
   args: setPostTagIntentValidator.fields,
-  returns: publicFeedbackPostDtoValidator,
+  returns: adminFeedbackPostResultValidator,
   handler: (ctx, args) => client.admin.setPostTag(ctx, args as never),
 });
 

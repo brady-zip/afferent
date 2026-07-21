@@ -46,6 +46,9 @@ export async function toAdminFeedbackPostDto(
   ctx: QueryCtx | MutationCtx,
   post: Doc<"posts">,
 ) {
+  let disposition: "active" | "withdrawn" | "merged" = "active";
+  if (post.mergedIntoPostId !== undefined) disposition = "merged";
+  else if (post.lifecycleState === "withdrawn") disposition = "withdrawn";
   return {
     contractVersion: 1 as const,
     feedback: await toFeedbackPostDto(ctx, post),
@@ -53,12 +56,7 @@ export async function toAdminFeedbackPostDto(
       contractVersion: 1 as const,
       discussionLocked: post.discussionLocked ?? false,
       archived: post.archivedAt !== undefined,
-      disposition:
-        post.mergedIntoPostId !== undefined
-          ? ("merged" as const)
-          : post.lifecycleState === "withdrawn"
-            ? ("withdrawn" as const)
-            : ("active" as const),
+      disposition,
       ...(post.mergedIntoPostId === undefined
         ? {}
         : { mergedIntoPostId: String(post.mergedIntoPostId) }),

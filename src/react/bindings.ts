@@ -4,6 +4,9 @@ import type {
   CommentDto,
   CommentPageDto,
   AdminChangelogEntryDto,
+  AdminChangelogPageDto,
+  AdminFeedbackPageDto,
+  AdminFeedbackPostDto,
   ChangelogPageDto,
   FeedbackOrder,
   FeedbackPageDto,
@@ -11,7 +14,6 @@ import type {
   PostStatusKey,
   SearchResultDto,
   SimilarPostResultDto,
-  FeedbackPostDto,
   PostDto,
   PostActivityPageDto,
   NotificationDto,
@@ -195,8 +197,33 @@ export interface NotificationBindings {
 
 type AdminMutationReference<
   Args extends DefaultFunctionArgs,
-  Result = FeedbackPostDto,
+  Result = AdminFeedbackPostDto,
 > = FunctionReference<"mutation", "public", Args, Result>;
+
+export type AdminFeedbackQueryReference = FunctionReference<
+  "query",
+  "public",
+  {
+    visibility: "visible" | "hidden";
+    sessionGeneration: number;
+    paginationOpts: PaginationOptions;
+  },
+  AdminFeedbackPageDto
+>;
+
+export type AdminPostQueryReference = FunctionReference<
+  "query",
+  "public",
+  { postId: string; sessionGeneration: number },
+  AdminFeedbackPostDto
+>;
+
+export type AdminChangelogQueryReference = FunctionReference<
+  "query",
+  "public",
+  { sessionGeneration: number; paginationOpts: PaginationOptions },
+  AdminChangelogPageDto
+>;
 
 export interface AdminBindings {
   capability: FunctionReference<
@@ -205,6 +232,9 @@ export interface AdminBindings {
     { sessionGeneration: number },
     boolean
   >;
+  listAdminFeedback?: AdminFeedbackQueryReference;
+  getAdminPost?: AdminPostQueryReference;
+  listAdminChangelog?: AdminChangelogQueryReference;
   editPost: AdminMutationReference<{
     postId: string;
     title?: string;

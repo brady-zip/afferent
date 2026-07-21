@@ -1,6 +1,9 @@
 export type {
   AfferentBindings,
   AdminBindings,
+  AdminChangelogQueryReference,
+  AdminFeedbackQueryReference,
+  AdminPostQueryReference,
   ChangelogBindings,
   ChangelogEntryQueryReference,
   ChangelogFeedQueryReference,
@@ -47,17 +50,23 @@ export {
   changelogActionKey,
   mapChangelogEntryState,
   mapChangelogFeedState,
+  mapAdminChangelogState,
+  useAdminChangelog,
   useChangelogEditor,
   useChangelogEntry,
   useChangelogFeed,
 } from "./hooks/changelog.js";
 export {
   mapAdminCapabilityState,
+  mapAdminFeedbackState,
+  mapAdminPostState,
   mapModerationError,
   mapTagListState,
   moderationActionKey,
   tagActionKey,
   useAdminCapability,
+  useAdminFeedback,
+  useAdminPost,
   usePostActivity,
   usePostModeration,
   useTagManagement,
@@ -65,6 +74,9 @@ export {
   useMergePost,
 } from "./hooks/admin.js";
 export type {
+  AdminFeedbackPaginationState,
+  AdminFeedbackState,
+  AdminPostState,
   AdminCapabilityState,
   ModerationAction,
   ModerationError,
@@ -73,6 +85,8 @@ export type {
   TagManagementAction,
 } from "./hooks/admin.js";
 export type {
+  AdminChangelogPaginationState,
+  AdminChangelogState,
   ChangelogEditorAction,
   ChangelogEntryState,
   ChangelogFeedState,

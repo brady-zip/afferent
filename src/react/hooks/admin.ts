@@ -5,8 +5,8 @@ import { useMemo } from "react";
 
 import type {
   AfferentErrorDto,
+  AdminFeedbackPostDto,
   BoardId,
-  FeedbackPostDto,
   PostActivityDto,
   PostId,
   PostStatusKey,
@@ -16,7 +16,7 @@ import type {
   TagListDto,
   MergePostResult,
 } from "../../client/contracts.js";
-import type { AdminBindings } from "../bindings.js";
+import type { AdminBindings, AdminFeedbackQueryReference } from "../bindings.js";
 import { useAfferentContext } from "../provider.js";
 import { useDirectWatchQuery, usePaginatedWatchQuery } from "../query.js";
 import { mapAfferentError, useMutationController } from "./mutations.js";
@@ -58,6 +58,90 @@ export function useAdminCapability(): AdminCapabilityState {
   );
 }
 
+export interface AdminFeedbackPaginationState {
+  results: AdminFeedbackPostDto[];
+  status: "LoadingFirstPage" | "CanLoadMore" | "LoadingMore" | "Exhausted" | "Error";
+  error?: ModerationError;
+  loadMore: (count: number) => void;
+}
+
+export type AdminFeedbackState = Readonly<{
+  status: "unsupported" | "loading" | "not-authorized" | "empty" | "ready" | "loading-more" | "error";
+  items: AdminFeedbackPostDto[];
+  canLoadMore: boolean;
+  loadMore: () => void;
+  error?: ModerationError;
+}>;
+
+export function mapAdminFeedbackState(
+  pagination: AdminFeedbackPaginationState,
+  unsupported = false,
+): AdminFeedbackState {
+  const loadMore = () => pagination.loadMore(20);
+  if (unsupported) return { status: "unsupported", items: [], canLoadMore: false, loadMore };
+  if (pagination.status === "LoadingFirstPage") return { status: "loading", items: pagination.results, canLoadMore: false, loadMore };
+  if (pagination.status === "Error") return { status: "error", items: pagination.results, canLoadMore: false, loadMore, error: pagination.error };
+  if (pagination.status === "Exhausted" && pagination.results.length === 0) return { status: "empty", items: [], canLoadMore: false, loadMore };
+  return {
+    status: pagination.status === "LoadingMore" ? "loading-more" : "ready",
+    items: pagination.results,
+    canLoadMore: pagination.status === "CanLoadMore" || pagination.status === "LoadingMore",
+    loadMore,
+  };
+}
+
+export function useAdminFeedback(
+  visibility: "visible" | "hidden",
+): AdminFeedbackState {
+  const { bindings, auth, client, generation } = useAfferentContext();
+  const binding = bindings.admin?.listAdminFeedback;
+  const page = usePaginatedWatchQuery<AdminFeedbackPostDto, AdminFeedbackQueryReference>({
+    client,
+    query: binding,
+    args: binding && auth.status === "authenticated"
+      ? { visibility, sessionGeneration: generation }
+      : undefined,
+    generation,
+    initialNumItems: 20,
+  });
+  if (!binding) return mapAdminFeedbackState(page, true);
+  if (auth.status === "loading") return { status: "loading", items: [], canLoadMore: false, loadMore: () => page.loadMore(20) };
+  if (auth.status === "unauthenticated") return { status: "not-authorized", items: [], canLoadMore: false, loadMore: () => page.loadMore(20) };
+  return mapAdminFeedbackState(page);
+}
+
+export type AdminPostState =
+  | Readonly<{ status: "unsupported" | "loading" | "not-authorized" }>
+  | Readonly<{ status: "ready"; post: AdminFeedbackPostDto }>
+  | Readonly<{ status: "error"; error: ModerationError }>;
+
+export function mapAdminPostState(
+  value: AdminFeedbackPostDto | undefined,
+  configured: boolean,
+): AdminPostState {
+  if (!configured) return { status: "unsupported" };
+  if (value === undefined) return { status: "loading" };
+  return { status: "ready", post: value };
+}
+
+export function useAdminPost(postId: PostId): AdminPostState {
+  const { bindings, auth, client, generation } = useAfferentContext();
+  const binding = bindings.admin?.getAdminPost;
+  const query = useDirectWatchQuery({
+    client,
+    query: binding,
+    args: binding && auth.status === "authenticated"
+      ? { postId, sessionGeneration: generation }
+      : undefined,
+    generation,
+  });
+  if (!binding) return { status: "unsupported" };
+  if (auth.status === "loading") return { status: "loading" };
+  if (auth.status === "unauthenticated") return { status: "not-authorized" };
+  if (query.status === "error") return query;
+  return mapAdminPostState(query.status === "ready" ? query.value : undefined, true);
+}
+
 export type ModerationAction =
   "edit" | "move" | "status" | "lock" | "archive" | "merge";
 
@@ -80,7 +164,7 @@ function unavailableAdminError(message: string): ModerationError {
 }
 
 type ModerationResult =
-  | Readonly<{ ok: true; data: FeedbackPostDto }>
+  | Readonly<{ ok: true; data: AdminFeedbackPostDto }>
   | Readonly<{ ok: false; error: ModerationError }>;
 
 export function usePostModeration() {
@@ -114,7 +198,7 @@ export function usePostModeration() {
   async function run(
     postId: PostId,
     action: ModerationAction,
-    invoke: () => Promise<FeedbackPostDto>,
+    invoke: () => Promise<AdminFeedbackPostDto>,
   ): Promise<ModerationResult> {
     const key = moderationActionKey(postId, action);
     return await controller.run(key, invoke, unavailable);
@@ -309,7 +393,7 @@ export function useTagManagement() {
       renameTag: (args: { tagId: TagId; name: string }) =>
         run<TagDto>(tagActionKey(args.tagId, "rename"), () => renameTag(args)),
       setPostTag: (args: { postId: PostId; tagId: TagId; desired: boolean }) =>
-        run<FeedbackPostDto>(
+        run<AdminFeedbackPostDto>(
           tagActionKey(
             `${args.postId}:${args.tagId}`,
             args.desired ? "assign" : "remove",

@@ -13,6 +13,7 @@ import type {
   PublishedChangelogLookupDto,
 } from "../../client/contracts.js";
 import type {
+  AdminChangelogQueryReference,
   AdminBindings,
   ChangelogFeedQueryReference,
 } from "../bindings.js";
@@ -157,6 +158,56 @@ export function useChangelogEntry(slug: string): ChangelogEntryState {
     value.status === "ready" ? value.value : undefined,
     binding !== undefined,
   );
+}
+
+export interface AdminChangelogPaginationState {
+  results: AdminChangelogEntryDto[];
+  status: "LoadingFirstPage" | "CanLoadMore" | "LoadingMore" | "Exhausted" | "Error";
+  error?: AfferentError;
+  loadMore: (count: number) => void;
+}
+
+export type AdminChangelogState = Readonly<{
+  status: "unsupported" | "loading" | "not-authorized" | "empty" | "ready" | "loading-more" | "error";
+  items: AdminChangelogEntryDto[];
+  canLoadMore: boolean;
+  loadMore: () => void;
+  error?: AfferentError;
+}>;
+
+export function mapAdminChangelogState(
+  pagination: AdminChangelogPaginationState,
+  unsupported = false,
+): AdminChangelogState {
+  const loadMore = () => pagination.loadMore(DEFAULT_CHANGELOG_PAGE_SIZE);
+  if (unsupported) return { status: "unsupported", items: [], canLoadMore: false, loadMore };
+  if (pagination.status === "LoadingFirstPage") return { status: "loading", items: pagination.results, canLoadMore: false, loadMore };
+  if (pagination.status === "Error") return { status: "error", items: pagination.results, canLoadMore: false, loadMore, error: pagination.error };
+  if (pagination.status === "Exhausted" && pagination.results.length === 0) return { status: "empty", items: [], canLoadMore: false, loadMore };
+  return {
+    status: pagination.status === "LoadingMore" ? "loading-more" : "ready",
+    items: pagination.results,
+    canLoadMore: pagination.status === "CanLoadMore" || pagination.status === "LoadingMore",
+    loadMore,
+  };
+}
+
+export function useAdminChangelog(): AdminChangelogState {
+  const { bindings, auth, client, generation } = useAfferentContext();
+  const binding = bindings.admin?.listAdminChangelog;
+  const page = usePaginatedWatchQuery<AdminChangelogEntryDto, AdminChangelogQueryReference>({
+    client,
+    query: binding,
+    args: binding && auth.status === "authenticated"
+      ? { sessionGeneration: generation }
+      : undefined,
+    generation,
+    initialNumItems: DEFAULT_CHANGELOG_PAGE_SIZE,
+  });
+  if (!binding) return mapAdminChangelogState(page, true);
+  if (auth.status === "loading") return { status: "loading", items: [], canLoadMore: false, loadMore: () => page.loadMore(DEFAULT_CHANGELOG_PAGE_SIZE) };
+  if (auth.status === "unauthenticated") return { status: "not-authorized", items: [], canLoadMore: false, loadMore: () => page.loadMore(DEFAULT_CHANGELOG_PAGE_SIZE) };
+  return mapAdminChangelogState(page);
 }
 
 export type ChangelogEditorAction =

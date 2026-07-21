@@ -13,6 +13,9 @@ import type {
 import {
   AfferentProvider,
   useAdminCapability,
+  useAdminChangelog,
+  useAdminFeedback,
+  useAdminPost,
   useChangelogEditor,
   useChangelogEntry,
   useChangelogFeed,
@@ -62,6 +65,9 @@ const headlessBindings = {
   },
   admin: {
     capability: api.afferent.adminCapability,
+    listAdminFeedback: api.afferent.listAdminFeedback,
+    getAdminPost: api.afferent.getAdminPost,
+    listAdminChangelog: api.afferent.listAdminChangelog,
     editPost: api.afferent.adminEditPost,
     movePost: api.afferent.movePost,
     setPostStatus: api.afferent.setPostStatus,
@@ -90,6 +96,9 @@ function HeadlessWorkflow({ postId }: Readonly<{ postId?: PostId }>) {
   const direct = usePost(postId ?? ("missing" as PostId));
   const participation = useFeedbackMutations();
   const admin = useAdminCapability();
+  const adminFeedback = useAdminFeedback("visible");
+  const adminPost = useAdminPost(postId ?? ("missing" as PostId));
+  const adminChangelog = useAdminChangelog();
   const moderation = usePostModeration();
   const tags = useTags();
   const tagManagement = useTagManagement();
@@ -114,6 +123,9 @@ function HeadlessWorkflow({ postId }: Readonly<{ postId?: PostId }>) {
           direct: direct.status,
           participation: participation.status,
           admin: admin.status,
+          adminFeedback: adminFeedback.status,
+          adminPost: adminPost.status,
+          adminChangelog: adminChangelog.status,
           moderation: moderation.status,
           tags: tags.status,
           tagManagement: tagManagement.status,
