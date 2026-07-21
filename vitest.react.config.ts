@@ -5,10 +5,10 @@ export default defineConfig({
   resolve: {
     alias: {
       "@/components/afferent": fileURLToPath(
-        new URL("./ui/afferent", import.meta.url),
+        new URL("ui/afferent", import.meta.url),
       ),
       "afferent/react.js": fileURLToPath(
-        new URL("./src/react/index.ts", import.meta.url),
+        new URL("src/react/index.ts", import.meta.url),
       ),
     },
   },

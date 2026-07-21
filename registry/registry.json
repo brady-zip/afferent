@@ -13,8 +13,43 @@
       "description": "Source-owned public feedback board over Afferent hooks.",
       "files": [
         {
+          "path": "ui/afferent/board/activity.tsx",
+          "target": "components/afferent/board/activity.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "ui/afferent/board/board-screen.tsx",
           "target": "components/afferent/board/board-screen.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "ui/afferent/board/discussion.tsx",
+          "target": "components/afferent/board/discussion.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "ui/afferent/board/feedback-card.tsx",
+          "target": "components/afferent/board/feedback-card.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "ui/afferent/board/feedback-composer.tsx",
+          "target": "components/afferent/board/feedback-composer.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "ui/afferent/board/feedback-list.tsx",
+          "target": "components/afferent/board/feedback-list.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "ui/afferent/board/post-detail.tsx",
+          "target": "components/afferent/board/post-detail.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "ui/afferent/board/similar-feedback.tsx",
+          "target": "components/afferent/board/similar-feedback.tsx",
           "type": "registry:component"
         }
       ],

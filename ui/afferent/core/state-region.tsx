@@ -10,7 +10,7 @@ export function AfferentStateRegion({
   className,
 }: Readonly<{
   title: string;
-  children: ReactNode;
+  children?: ReactNode;
   action?: ReactNode;
   tone?: "neutral" | "error";
   className?: string;
@@ -30,4 +30,12 @@ export function AfferentStateRegion({
 
 export function assertNever(value: never): never {
   throw new Error(`Unhandled Afferent state: ${JSON.stringify(value)}`);
+}
+
+export function afferentErrorText(error: Readonly<{ code: string }> & object) {
+  if ("message" in error && typeof error.message === "string") {
+    return error.message;
+  }
+  if (error.code === "RATE_LIMITED") return "Please wait before trying again.";
+  return error.code;
 }

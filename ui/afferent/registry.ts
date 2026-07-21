@@ -15,9 +15,44 @@ export const afferentRegistry = {
       registryDependencies: ["./afferent-ui-core.json"],
       files: [
         {
+          path: "ui/afferent/board/activity.tsx",
+          type: "registry:component",
+          target: "components/afferent/board/activity.tsx",
+        },
+        {
           path: "ui/afferent/board/board-screen.tsx",
           type: "registry:component",
           target: "components/afferent/board/board-screen.tsx",
+        },
+        {
+          path: "ui/afferent/board/discussion.tsx",
+          type: "registry:component",
+          target: "components/afferent/board/discussion.tsx",
+        },
+        {
+          path: "ui/afferent/board/feedback-card.tsx",
+          type: "registry:component",
+          target: "components/afferent/board/feedback-card.tsx",
+        },
+        {
+          path: "ui/afferent/board/feedback-composer.tsx",
+          type: "registry:component",
+          target: "components/afferent/board/feedback-composer.tsx",
+        },
+        {
+          path: "ui/afferent/board/feedback-list.tsx",
+          type: "registry:component",
+          target: "components/afferent/board/feedback-list.tsx",
+        },
+        {
+          path: "ui/afferent/board/post-detail.tsx",
+          type: "registry:component",
+          target: "components/afferent/board/post-detail.tsx",
+        },
+        {
+          path: "ui/afferent/board/similar-feedback.tsx",
+          type: "registry:component",
+          target: "components/afferent/board/similar-feedback.tsx",
         },
       ],
     },

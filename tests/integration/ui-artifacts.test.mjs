@@ -100,10 +100,10 @@ test("repository root remains a registry author rather than a shadcn app", async
 });
 
 test("board source closes every feed state with deterministic accessible recovery", async () => {
-  const source = await readFile(
-    join(canonicalRoot, "board/board-screen.tsx"),
-    "utf8",
-  );
+  const [source, cardSource] = await Promise.all([
+    readFile(join(canonicalRoot, "board/board-screen.tsx"), "utf8"),
+    readFile(join(canonicalRoot, "board/feedback-card.tsx"), "utf8"),
+  ]);
   assert.match(source, /^"use client";/);
   for (const state of ["loading", "empty", "error", "ready"]) {
     assert.match(source, new RegExp(`case ["']${state}["']`));
@@ -111,9 +111,9 @@ test("board source closes every feed state with deterministic accessible recover
   assert.match(source, /assertNever\(feed\)/);
   assert.match(source, /copy\.common\.tryLoadingAgain/);
   assert.match(source, /onClick=\{feed\.loadMore\}/);
-  assert.match(source, /navigation\.href\.post\(post\.id\)/);
+  assert.match(cardSource, /navigation\.href\.post\(post\.id\)/);
   assert.doesNotMatch(
-    source,
+    `${source}\n${cardSource}`,
     /window\.|Date\.|Math\.random|matchMedia|dangerouslySetInnerHTML/,
   );
 });

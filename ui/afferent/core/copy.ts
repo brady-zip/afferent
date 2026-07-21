@@ -56,6 +56,57 @@ export type AfferentUiCopy = Readonly<{
     voteCount: (count: number) => string;
     commentCount: (count: number) => string;
   }>;
+  detail: Readonly<{
+    loading: string;
+    loadErrorHeading: string;
+    notFoundHeading: string;
+    notFoundBody: string;
+    returnToFeedback: string;
+    mergedHeading: string;
+    mergedBody: string;
+    viewCanonical: string;
+    votes: string;
+    comments: string;
+    author: string;
+    signInBody: string;
+    vote: string;
+    removeVote: string;
+    subscribe: string;
+    unsubscribe: string;
+    edit: string;
+    withdraw: string;
+    editTitle: string;
+    editBody: string;
+    saveChanges: string;
+    returnToPost: string;
+    withdrawTitle: (title: string) => string;
+    withdrawBody: string;
+    keepFeedback: string;
+  }>;
+  discussion: Readonly<{
+    heading: string;
+    loading: string;
+    emptyHeading: string;
+    emptyBody: string;
+    loadErrorHeading: string;
+    loadMore: string;
+    loadingMore: string;
+    anonymousAuthor: string;
+    reply: string;
+    commentLabel: string;
+    replyLabel: string;
+    postComment: string;
+    postReply: string;
+    returnToCommenting: string;
+    signInBody: string;
+  }>;
+  activity: Readonly<{
+    heading: string;
+    loading: string;
+    loadMore: string;
+    loadingMore: string;
+    event: (type: string, actor?: string) => string;
+  }>;
   roadmap: Readonly<{
     title: string;
     emptyGroup: (groupName: string) => string;
@@ -158,6 +209,58 @@ export const englishAfferentUiCopy: AfferentUiCopy = {
     loadingMore: "Loading more feedback…",
     voteCount: (count) => `${count} ${count === 1 ? "vote" : "votes"}`,
     commentCount: (count) => `${count} ${count === 1 ? "comment" : "comments"}`,
+  },
+  detail: {
+    loading: "Loading feedback detail…",
+    loadErrorHeading: "We couldn't load feedback detail",
+    notFoundHeading: "Feedback not found",
+    notFoundBody: "It may have been withdrawn, archived, or made unavailable.",
+    returnToFeedback: "Return to feedback",
+    mergedHeading: "This feedback was merged",
+    mergedBody: "Continue to the canonical feedback post.",
+    viewCanonical: "View canonical feedback",
+    votes: "Votes",
+    comments: "Comments",
+    author: "Author",
+    signInBody: "Sign in through this application to participate in feedback.",
+    vote: "Vote for feedback",
+    removeVote: "Remove feedback vote",
+    subscribe: "Subscribe to updates",
+    unsubscribe: "Unsubscribe from updates",
+    edit: "Edit feedback",
+    withdraw: "Withdraw feedback",
+    editTitle: "Feedback title",
+    editBody: "Feedback details",
+    saveChanges: "Save feedback changes",
+    returnToPost: "Return to feedback detail",
+    withdrawTitle: (title) => `Withdraw “${title}”?`,
+    withdrawBody: "It will no longer appear in public feedback views.",
+    keepFeedback: "Keep feedback",
+  },
+  discussion: {
+    heading: "Discussion",
+    loading: "Loading discussion…",
+    emptyHeading: "Start the discussion",
+    emptyBody: "Be the first to add a comment to this feedback.",
+    loadErrorHeading: "We couldn't load discussion",
+    loadMore: "Load more comments",
+    loadingMore: "Loading more comments…",
+    anonymousAuthor: "Anonymous contributor",
+    reply: "Reply",
+    commentLabel: "Add a comment",
+    replyLabel: "Add a reply",
+    postComment: "Post comment",
+    postReply: "Post reply",
+    returnToCommenting: "Return to commenting",
+    signInBody: "Sign in through this application to comment on feedback.",
+  },
+  activity: {
+    heading: "Activity",
+    loading: "Loading activity…",
+    loadMore: "Load more activity",
+    loadingMore: "Loading more activity…",
+    event: (type, actor) =>
+      `${actor ?? "Someone"} recorded ${type.replaceAll("_", " ")}.`,
   },
   roadmap: {
     title: "Roadmap",

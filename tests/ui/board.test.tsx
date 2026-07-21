@@ -116,6 +116,110 @@ describe("public feedback board", () => {
     expect(comments[1].getAttribute("data-parent-comment-id")).toBe(
       "comment:root",
     );
+
+    click(
+      [...mounted.container.querySelectorAll("button")].find(
+        (button) => button.textContent?.trim() === "Vote for feedback",
+      )!,
+    );
+    click(
+      [...mounted.container.querySelectorAll("button")].find(
+        (button) => button.textContent?.trim() === "Subscribe to updates",
+      )!,
+    );
+    const comment = mounted.container.querySelector<HTMLTextAreaElement>(
+      "textarea[name='comment']",
+    )!;
+    setInput(comment, "A new root comment");
+    click(
+      [...mounted.container.querySelectorAll("button")].find(
+        (button) => button.textContent?.trim() === "Post comment",
+      )!,
+    );
+    await act(async () => {});
+    click(
+      [...mounted.container.querySelectorAll("button")].find(
+        (button) => button.textContent?.trim() === "Reply",
+      )!,
+    );
+    const reply = mounted.container.querySelector<HTMLTextAreaElement>(
+      "textarea[name='reply']",
+    )!;
+    setInput(reply, "A flat reply");
+    click(
+      [...mounted.container.querySelectorAll("button")].find(
+        (button) => button.textContent?.trim() === "Post reply",
+      )!,
+    );
+    await act(async () => {});
+    expect(mounted.client.mutationCalls).toEqual(
+      expect.arrayContaining([
+        {
+          name: "ui:setVote",
+          args: { postId: feedbackPost.id, desired: true },
+        },
+        {
+          name: "ui:setSubscription",
+          args: { postId: feedbackPost.id, desired: true },
+        },
+        {
+          name: "ui:addComment",
+          args: { postId: feedbackPost.id, body: "A new root comment" },
+        },
+        {
+          name: "ui:addComment",
+          args: {
+            postId: feedbackPost.id,
+            body: "A flat reply",
+            parentCommentId: "comment:root",
+          },
+        },
+      ]),
+    );
+    mounted.unmount();
+  });
+
+  test("edit and withdraw confirmation preserve server capability and focus", async () => {
+    const mounted = renderUi(
+      <AfferentBoardScreen boards={[board]} postId={feedbackPost.id} />,
+    );
+    await act(async () => {});
+    click(
+      [...mounted.container.querySelectorAll("button")].find(
+        (button) => button.textContent?.trim() === "Edit feedback",
+      )!,
+    );
+    const editTitle = mounted.container.querySelector<HTMLInputElement>(
+      "input[name='edit-title']",
+    )!;
+    setInput(editTitle, "Keyboard navigation");
+    click(
+      [...mounted.container.querySelectorAll("button")].find(
+        (button) => button.textContent?.trim() === "Save feedback changes",
+      )!,
+    );
+    await act(async () => {});
+    expect(mounted.client.mutationCalls).toContainEqual({
+      name: "ui:editPost",
+      args: {
+        postId: feedbackPost.id,
+        title: "Keyboard navigation",
+        body: feedbackPost.body,
+      },
+    });
+
+    const withdraw = [...mounted.container.querySelectorAll("button")].find(
+      (button) => button.textContent?.trim() === "Withdraw feedback",
+    )! as HTMLButtonElement;
+    click(withdraw);
+    expect(mounted.container.querySelector("dialog[open]")).not.toBeNull();
+    click(
+      [...mounted.container.querySelectorAll("button")].find(
+        (button) => button.textContent?.trim() === "Keep feedback",
+      )!,
+    );
+    await act(async () => {});
+    expect(document.activeElement).toBe(withdraw);
     mounted.unmount();
   });
 
@@ -161,9 +265,10 @@ describe("public feedback board", () => {
     );
     expect(merged.container.textContent).toContain("This feedback was merged");
     expect(
-      merged.container.querySelector("a[href='/feedback/post:one']")
-        ?.textContent,
-    ).toBe("View canonical feedback");
+      [
+        ...merged.container.querySelectorAll("a[href='/feedback/post:one']"),
+      ].some((link) => link.textContent === "View canonical feedback"),
+    ).toBe(true);
     act(() =>
       merged.client.publish("post", { contractVersion: 2, status: "notFound" }),
     );

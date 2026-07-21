@@ -12,9 +12,11 @@ import {
 
 import { AfferentFeedbackComposer } from "@/components/afferent/board/feedback-composer";
 import { AfferentFeedbackList } from "@/components/afferent/board/feedback-list";
+import { AfferentPostDetail } from "@/components/afferent/board/post-detail";
 import { useAfferentUi } from "@/components/afferent/core/afferent-ui-provider";
 import {
   AfferentStateRegion,
+  afferentErrorText,
   assertNever,
 } from "@/components/afferent/core/state-region";
 
@@ -30,10 +32,12 @@ export function AfferentBoardScreen({
   boards = [],
   feedArgs = { order: "top" },
   pageOwner = true,
-  postId: _postId,
+  postId,
   title,
 }: AfferentBoardScreenProps) {
-  const [boardId, setBoardId] = useState(feedArgs.boardId ?? boards[0]?.id);
+  const [boardId, setBoardId] = useState<BoardDto["id"] | undefined>(
+    feedArgs.boardId ?? boards[0]?.id,
+  );
   const [order, setOrder] = useState(feedArgs.order);
   const [status, setStatus] = useState<PostStatusKey | undefined>(
     feedArgs.status,
@@ -63,6 +67,7 @@ export function AfferentBoardScreen({
       feed={feed}
       search={search}
       composing={composing}
+      postId={postId}
       pageOwner={pageOwner}
       title={title}
       onBoardChange={setBoardId}
@@ -85,6 +90,7 @@ type BoardViewProps = Readonly<{
   composing?: boolean;
   pageOwner?: boolean;
   title?: string;
+  postId?: PostId;
   onBoardChange?: (boardId: BoardDto["id"] | undefined) => void;
   onOrderChange?: (order: FeedbackFeedArgs["order"]) => void;
   onStatusChange?: (status: PostStatusKey | undefined) => void;
@@ -103,6 +109,7 @@ export function AfferentBoardView({
   composing = false,
   pageOwner = true,
   title,
+  postId,
   onBoardChange,
   onOrderChange,
   onStatusChange,
@@ -233,13 +240,16 @@ export function AfferentBoardView({
           onClose={() => onComposingChange?.(false)}
         />
       ) : null}
-      <section
-        className="afferent-board__results"
-        aria-labelledby="afferent-results-heading"
-      >
-        <h2 id="afferent-results-heading">{copy.board.resultsHeading}</h2>
-        {content}
-      </section>
+      <div className={postId ? "afferent-board__workspace" : undefined}>
+        <section
+          className="afferent-board__results"
+          aria-labelledby="afferent-results-heading"
+        >
+          <h2 id="afferent-results-heading">{copy.board.resultsHeading}</h2>
+          {content}
+        </section>
+        {postId ? <AfferentPostDetail postId={postId} /> : null}
+      </div>
     </div>
   );
   if (!pageOwner) return body;
@@ -272,7 +282,7 @@ function renderFeed(
       return (
         <AfferentStateRegion title={copy.board.loadErrorHeading} tone="error">
           <p>{copy.board.loadErrorBody}</p>
-          <p>{feed.error.message ?? feed.error.code}</p>
+          <p>{afferentErrorText(feed.error)}</p>
           <button type="button" onClick={feed.loadMore}>
             {copy.common.tryLoadingAgain}
           </button>
@@ -335,7 +345,7 @@ function renderSearch(
     case "error": {
       return (
         <AfferentStateRegion title={copy.board.searchErrorHeading} tone="error">
-          <p>{state.error.message ?? state.error.code}</p>
+          <p>{afferentErrorText(state.error)}</p>
         </AfferentStateRegion>
       );
     }
