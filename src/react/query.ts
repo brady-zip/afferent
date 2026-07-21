@@ -836,12 +836,6 @@ export function createPaginatedWatchStore<
     stopOperation();
     pages = [];
     storeEpoch += 1;
-    publish({
-      results: lastCoherentResults,
-      status: "LoadingFirstPage",
-      loadMore,
-      retry,
-    });
     start();
   }
 
