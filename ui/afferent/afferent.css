@@ -88,6 +88,71 @@
   margin-bottom: 32px;
 }
 
+.afferent-board__controls,
+.afferent-board__results,
+.afferent-composer,
+.afferent-similar {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.afferent-controls-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.afferent-controls-grid label,
+.afferent-field {
+  display: grid;
+  font-size: 14px;
+  font-weight: 600;
+  gap: 8px;
+}
+
+.afferent-controls-grid input,
+.afferent-controls-grid select,
+.afferent-field input,
+.afferent-field textarea {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--foreground);
+  font: 400 16px/1.5 var(--font-sans);
+  min-height: 44px;
+  padding: 8px 16px;
+}
+
+.afferent-field textarea {
+  min-height: 144px;
+  resize: vertical;
+}
+
+.afferent-field p,
+.afferent-feedback-card__board {
+  color: var(--muted-foreground);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.afferent-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.afferent-actions .afferent-button--secondary {
+  margin-top: 0;
+}
+
+.afferent-inline-error {
+  border: 1px solid var(--destructive);
+  border-radius: var(--radius);
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+}
+
 .afferent-board h1 {
   font-size: 28px;
   font-weight: 600;
@@ -227,6 +292,16 @@
   .afferent-feedback-card {
     grid-template-columns: minmax(0, 1fr) auto;
     padding: 24px;
+  }
+
+  .afferent-controls-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .afferent-board {
+    max-width: 1200px;
   }
 }
 

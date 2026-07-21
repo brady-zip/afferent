@@ -5,7 +5,14 @@ import React, { act } from "react";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 import { AfferentBoardScreen } from "../../ui/afferent/board/board-screen.js";
-import { board, click, feedbackPost, renderUi, setInput } from "./harness.js";
+import {
+  ControlledUiClient,
+  board,
+  click,
+  feedbackPost,
+  renderUi,
+  setInput,
+} from "./harness.js";
 
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -112,10 +119,13 @@ describe("public feedback board", () => {
     mounted.unmount();
   });
 
-  test("closed states use approved recovery copy and real merged links", async () => {
-    const loading = renderUi(<AfferentBoardScreen boards={[board]} />);
+  test("closed states use approved feedback recovery copy", async () => {
+    const client = new ControlledUiClient();
+    client.values.set("ui:feed", undefined);
+    const loading = renderUi(<AfferentBoardScreen boards={[board]} />, {
+      client,
+    });
     await act(async () => {});
-    act(() => loading.client.publish("feed", undefined));
     expect(loading.container.textContent).toContain("Loading feedback…");
     act(() =>
       loading.client.publish("feed", {
@@ -134,7 +144,9 @@ describe("public feedback board", () => {
     );
     expect(loading.container.textContent).toContain("Try loading again");
     loading.unmount();
+  });
 
+  test("merged and not-found detail states use a real canonical link", async () => {
     const merged = renderUi(
       <AfferentBoardScreen boards={[board]} postId={"post:old" as never} />,
     );

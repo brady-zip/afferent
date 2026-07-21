@@ -22,7 +22,7 @@ export function AfferentStateRegion({
       aria-live={tone === "error" ? "assertive" : "polite"}
     >
       <h2>{title}</h2>
-      <div>{children}</div>
+      {children ? <div>{children}</div> : null}
       {action ? <div className="afferent-state__action">{action}</div> : null}
     </section>
   );

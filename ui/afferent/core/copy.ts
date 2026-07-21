@@ -7,13 +7,43 @@ export type AfferentUiCopy = Readonly<{
     unsupportedHeading: string;
     unsupportedBody: string;
     loading: string;
+    loadingParticipation: string;
     tryLoadingAgain: string;
+    dismissError: string;
   }>;
   board: Readonly<{
     title: string;
     description: string;
     createFeedback: string;
     postFeedback: string;
+    returnToFeedback: string;
+    postingFeedback: string;
+    browseHeading: string;
+    resultsHeading: string;
+    boardLabel: string;
+    allBoards: string;
+    searchLabel: string;
+    statusLabel: string;
+    allStatuses: string;
+    sortLabel: string;
+    titleLabel: string;
+    titleHelp: string;
+    bodyLabel: string;
+    bodyHelp: string;
+    createHelp: string;
+    signInToCreate: string;
+    createErrorHeading: string;
+    similarHeading: string;
+    similarHelp: string;
+    loadingSimilar: string;
+    noSimilarHeading: string;
+    noSimilarBody: string;
+    similarErrorHeading: string;
+    loadingSearch: string;
+    searchErrorHeading: string;
+    searchResultsLabel: string;
+    skipToFeedback: string;
+    resultCount: (count: number) => string;
     emptyHeading: string;
     emptyBody: string;
     noMatchesHeading: string;
@@ -77,13 +107,45 @@ export const englishAfferentUiCopy: AfferentUiCopy = {
     unsupportedBody:
       "The application needs to provide the required Afferent function references.",
     loading: "Loading",
+    loadingParticipation: "Loading participation…",
     tryLoadingAgain: "Try loading again",
+    dismissError: "Dismiss error",
   },
   board: {
     title: "Feedback",
     description: "Share ideas and see what other people are requesting.",
     createFeedback: "Create feedback",
     postFeedback: "Post feedback",
+    returnToFeedback: "Return to feedback",
+    postingFeedback: "Posting feedback…",
+    browseHeading: "Browse feedback",
+    resultsHeading: "Feedback results",
+    boardLabel: "Board",
+    allBoards: "All boards",
+    searchLabel: "Search feedback",
+    statusLabel: "Status",
+    allStatuses: "All statuses",
+    sortLabel: "Sort feedback",
+    titleLabel: "Feedback title",
+    titleHelp: "Summarize the idea in a few words.",
+    bodyLabel: "Feedback details",
+    bodyHelp: "Describe the problem and the outcome you need.",
+    createHelp:
+      "Share enough detail for others to understand and discuss the idea.",
+    signInToCreate: "Sign in through this application to create feedback.",
+    createErrorHeading: "Feedback wasn't posted",
+    similarHeading: "Similar feedback",
+    similarHelp: "Review related feedback before posting a duplicate.",
+    loadingSimilar: "Loading similar feedback…",
+    noSimilarHeading: "No similar feedback found",
+    noSimilarBody: "Continue creating your feedback post.",
+    similarErrorHeading: "We couldn't load similar feedback",
+    loadingSearch: "Loading feedback search…",
+    searchErrorHeading: "We couldn't search feedback",
+    searchResultsLabel: "Feedback search results",
+    skipToFeedback: "Skip to feedback",
+    resultCount: (count) =>
+      `${count} feedback ${count === 1 ? "result" : "results"}`,
     emptyHeading: "No feedback yet",
     emptyBody: "Start the conversation by creating the first feedback post.",
     noMatchesHeading: "No matching feedback",

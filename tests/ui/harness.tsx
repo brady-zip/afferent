@@ -10,13 +10,13 @@ import {
 } from "../../src/react/index.js";
 import { AfferentUiProvider } from "../../ui/afferent/core/afferent-ui-provider.js";
 
-type QueryRecord = {
+interface QueryRecord {
   name: string;
   args: Record<string, unknown>;
   value: unknown;
   error?: unknown;
   listeners: Set<() => void>;
-};
+}
 
 const query = (name: string) => makeFunctionReference<"query">(`ui:${name}`);
 const mutation = (name: string) =>
