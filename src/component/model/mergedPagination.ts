@@ -1,5 +1,6 @@
 import type { PaginationOptions, PaginationResult } from "convex/server";
 import { mergedStream, stream } from "convex-helpers/server/stream";
+import { jsonToConvex } from "convex/values";
 
 import type { Doc, Id } from "../_generated/dataModel.js";
 import type { QueryCtx } from "../_generated/server.js";
@@ -79,6 +80,14 @@ function encodeCursor(position: string, identity: CursorIdentity) {
   return `${CURSOR_PREFIX}${encodeBase64Url(JSON.stringify(envelope))}`;
 }
 
+function isHelperCursorPosition(position: string) {
+  try {
+    return Array.isArray(jsonToConvex(JSON.parse(position)));
+  } catch {
+    return false;
+  }
+}
+
 function decodeCursor(
   cursor: string,
   identity: CursorIdentity,
@@ -93,7 +102,8 @@ function decodeCursor(
       parsed.reader !== identity.reader ||
       parsed.order !== identity.order ||
       parsed.streams !== identity.streams ||
-      typeof parsed.position !== "string"
+      typeof parsed.position !== "string" ||
+      !isHelperCursorPosition(parsed.position)
     ) {
       return undefined;
     }
