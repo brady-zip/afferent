@@ -111,6 +111,10 @@ test("KF-01 public board, search, create, detail, vote, and comment are keyboard
   const submit = page.getByRole("button", { name: "Post feedback" });
   await submit.focus();
   await page.keyboard.press("Enter");
+  await expect(
+    page.locator("[data-afferent-composer] + [role='status']"),
+  ).toContainText("Feedback posted");
+  await expect(submit).toBeFocused();
 
   const search = page.getByRole("searchbox", { name: "Search feedback" });
   await search.focus();

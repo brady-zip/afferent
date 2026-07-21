@@ -17,7 +17,7 @@
   },
   {
     "path": "admin/merge-dialog.tsx",
-    "sha256": "d8f55f526fc2038389367c44809748667be345d1571537252419747acf951d00"
+    "sha256": "fc2e9861a668576bb43aed296b414264d8a02a695a5b314a560f2b9b3c4afa7b"
   },
   {
     "path": "admin/moderation-form.tsx",
@@ -29,7 +29,7 @@
   },
   {
     "path": "afferent.css",
-    "sha256": "c2e99b30a94fcfc2612f0647544c8f67af30504920af75dec350477d7a20e643"
+    "sha256": "e98d25a0fb1a50f99ccdd47ad2293a612f78ada3ab5429ac79879100d5ce2f00"
   },
   {
     "path": "board/activity.tsx",
@@ -41,7 +41,7 @@
   },
   {
     "path": "board/discussion.tsx",
-    "sha256": "01ab0e62f2c327304bc9eed35ad26b028b0513aae0f47f3476b2c45b4bfc3a5d"
+    "sha256": "ca4cc48dcef34b78218046027c01d6333949c5a95f85210e101b7866255832e3"
   },
   {
     "path": "board/feedback-card.tsx",
@@ -49,7 +49,7 @@
   },
   {
     "path": "board/feedback-composer.tsx",
-    "sha256": "4dc266c015ac73fd460ac7632aabe87943bba07aeb758347735df2bf81ec62b0"
+    "sha256": "68ae729d82dc5b2588ca7fc4736d84dffe3938ddd4a5b11dc6aa05865c2cb908"
   },
   {
     "path": "board/feedback-list.tsx",
@@ -57,7 +57,7 @@
   },
   {
     "path": "board/post-detail.tsx",
-    "sha256": "f613a2e9cfa18a05eb91c3b7c4be6f18bca8f9c7cf1e3391edafcfdb68a50aa6"
+    "sha256": "19896c1b6c192552d0e1004df32c51876c1146aa00eb29e1b4f0ac37e54198b0"
   },
   {
     "path": "board/similar-feedback.tsx",
@@ -77,7 +77,7 @@
   },
   {
     "path": "core/copy.ts",
-    "sha256": "fc81ce0ad9781d7ce99d4b0675509886ed7696364f4653bf20f89c56844adbbe"
+    "sha256": "af7f9e1ad3bc1e34d0cb7153fb2e75865c78d5f5e7d98869c1eb00ace26b87f8"
   },
   {
     "path": "core/icons.tsx",
@@ -89,7 +89,7 @@
   },
   {
     "path": "core/state-region.tsx",
-    "sha256": "e87af4e7044b2a017e8048bd5a5c445584536f92ee47fb1f0c0a74cfa8fe63ce"
+    "sha256": "772176b9cb025f469d9e29cf2aa28e0a2a8a4f619e549e215debed276741c9bc"
   },
   {
     "path": "core/utils.ts",

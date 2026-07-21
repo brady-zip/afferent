@@ -34,18 +34,19 @@ export function contrastRatio(foreground: string, background: string) {
 
 function tokens(block: string) {
   return Object.fromEntries(
-    [...block.matchAll(/--([\w-]+):\s*(#[\da-f]{6});/gi)].map((match) => [
-      match[1],
-      match[2].toLowerCase(),
-    ]),
+    [...block.matchAll(/--(?<name>[\w-]+):\s*(?<value>#[\da-f]{6});/gi)].map(
+      (match) => [match.groups?.name, match.groups?.value.toLowerCase()],
+    ),
   );
 }
 
 const css = readFileSync("ui/afferent/afferent.css", "utf8");
-const light = tokens(css.match(/:root\s*\{([^}]+)\}/)?.[1] ?? "");
+const light = tokens(
+  css.match(/:root\s*\{(?<body>[^}]+)\}/)?.groups?.body ?? "",
+);
 const dark = {
   ...light,
-  ...tokens(css.match(/\.dark\s*\{([^}]+)\}/)?.[1] ?? ""),
+  ...tokens(css.match(/\.dark\s*\{(?<body>[^}]+)\}/)?.groups?.body ?? ""),
 };
 
 const checks = [
@@ -70,9 +71,17 @@ const checks = [
 ] as const;
 
 describe("exact default token contrast", () => {
-  test.each(checks)(
-    "%s meets WCAG %s without rounded-threshold acceptance",
-    (name, foreground, background, minimum) => {
+  test.each(
+    checks.map(([name, foreground, background, minimum, criterion]) => ({
+      name,
+      foreground,
+      background,
+      minimum,
+      criterion,
+    })),
+  )(
+    "$name meets WCAG $criterion without rounded-threshold acceptance",
+    ({ name, foreground, background, minimum }) => {
       expect(foreground, `${name} foreground token`).toBeTruthy();
       expect(background, `${name} background token`).toBeTruthy();
       const actual = contrastRatio(foreground, background);

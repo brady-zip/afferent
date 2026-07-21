@@ -9,8 +9,8 @@ function expandScript(name, seen = new Set()) {
   if (seen.has(name)) return "";
   seen.add(name);
   const command = manifest.scripts[name];
-  return `${command} ${[...command.matchAll(/npm run ([\w:-]+)/g)]
-    .map((match) => expandScript(match[1], seen))
+  return `${command} ${[...command.matchAll(/npm run (?<name>[\w:-]+)/g)]
+    .map((match) => expandScript(match.groups.name, seen))
     .join(" ")}`;
 }
 
@@ -29,7 +29,7 @@ test("test:phase3 composes every release gate and the Phase 2 regression", () =>
     "npm run test:phase2",
     "tests/integration/phase3-gate.test.mjs",
   ]) {
-    assert.match(command, new RegExp(required.replaceAll(".", "\\.")));
+    assert.match(command, new RegExp(required.replaceAll(".", String.raw`\.`)));
   }
 });
 

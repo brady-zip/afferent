@@ -116,10 +116,13 @@ describe("public feedback board", () => {
     expect(comments[1].getAttribute("data-parent-comment-id")).toBe(
       "comment:root",
     );
-    const results = mounted.container.querySelector(".afferent-board__results")!;
+    const results = mounted.container.querySelector(
+      ".afferent-board__results",
+    )!;
     const detail = mounted.container.querySelector(".afferent-post-detail")!;
     expect(
-      results.compareDocumentPosition(detail) & Node.DOCUMENT_POSITION_FOLLOWING,
+      results.compareDocumentPosition(detail) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
 
     click(
@@ -217,9 +220,10 @@ describe("public feedback board", () => {
       (button) => button.textContent?.trim() === "Withdraw feedback",
     )! as HTMLButtonElement;
     click(withdraw);
-    expect(mounted.container.querySelector("dialog[open]")).not.toBeNull();
+    await act(async () => {});
+    expect(document.body.querySelector("[role='dialog']")).not.toBeNull();
     click(
-      [...mounted.container.querySelectorAll("button")].find(
+      [...document.body.querySelectorAll("button")].find(
         (button) => button.textContent?.trim() === "Keep feedback",
       )!,
     );

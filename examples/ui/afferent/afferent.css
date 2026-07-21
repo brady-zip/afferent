@@ -670,11 +670,18 @@
 }
 
 @media (pointer: coarse) {
-  .afferent-button,
-  .afferent-public-header select,
-  .afferent-notification button {
+  [data-afferent-screen] button,
+  [data-afferent-screen] input:not([type="checkbox"]),
+  [data-afferent-screen] select,
+  [data-afferent-screen] textarea,
+  [data-afferent-screen] a {
     min-height: 44px;
     min-width: 44px;
+  }
+
+  [data-afferent-screen] a {
+    align-items: center;
+    display: inline-flex;
   }
 }
 

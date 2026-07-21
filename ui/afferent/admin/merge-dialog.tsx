@@ -77,10 +77,10 @@ export function AfferentMergeDialog({
               })
             }
           >
-            Merge feedback permanently
+            {copy.admin.mergeDuplicate}
           </button>
           <Dialog.Close asChild>
-            <button type="button">Cancel merge</button>
+            <button type="button">{copy.detail.keepFeedback}</button>
           </Dialog.Close>
         </Dialog.Content>
       </Dialog.Portal>

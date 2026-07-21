@@ -55,16 +55,19 @@ export function AfferentDiscussionView({
   const { copy } = useAfferentUi();
   const [body, setBody] = useState("");
   const [replyingTo, setReplyingTo] = useState<CommentId | undefined>();
+  const [announcement, setAnnouncement] = useState("");
   const fieldId = useId();
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!body.trim()) return;
-    await addComment({
+    setAnnouncement("");
+    const result = await addComment({
       postId,
       body: body.trim(),
       ...(replyingTo ? { parentCommentId: replyingTo } : {}),
     });
+    if (result.ok) setAnnouncement(copy.discussion.postedComment);
   }
 
   const rows = (() => {
@@ -220,6 +223,9 @@ export function AfferentDiscussionView({
         </button>
       ) : null}
       {composer}
+      <p className="afferent-sr-only" role="status" aria-live="polite">
+        {pending ? `${copy.common.loadingParticipation}` : announcement}
+      </p>
     </section>
   );
 }

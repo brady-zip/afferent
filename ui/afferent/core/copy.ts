@@ -16,6 +16,7 @@ export type AfferentUiCopy = Readonly<{
     description: string;
     createFeedback: string;
     postFeedback: string;
+    postedFeedback: string;
     returnToFeedback: string;
     postingFeedback: string;
     browseHeading: string;
@@ -97,6 +98,7 @@ export type AfferentUiCopy = Readonly<{
     replyLabel: string;
     postComment: string;
     postReply: string;
+    postedComment: string;
     returnToCommenting: string;
     signInBody: string;
   }>;
@@ -203,6 +205,7 @@ export const englishAfferentUiCopy: AfferentUiCopy = {
     description: "Share ideas and see what other people are requesting.",
     createFeedback: "Create feedback",
     postFeedback: "Post feedback",
+    postedFeedback: "Feedback posted.",
     returnToFeedback: "Return to feedback",
     postingFeedback: "Posting feedback…",
     browseHeading: "Browse feedback",
@@ -287,6 +290,7 @@ export const englishAfferentUiCopy: AfferentUiCopy = {
     replyLabel: "Add a reply",
     postComment: "Post comment",
     postReply: "Post reply",
+    postedComment: "Comment posted.",
     returnToCommenting: "Return to commenting",
     signInBody: "Sign in through this application to comment on feedback.",
   },

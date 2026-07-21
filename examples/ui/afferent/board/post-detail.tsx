@@ -2,6 +2,7 @@
 
 import { useRef, useState, type FormEvent } from "react";
 import type { FeedbackPostDto, PostId } from "afferent";
+import { Dialog } from "radix-ui";
 import {
   feedbackMutationKey,
   useFeedbackMutations,
@@ -142,13 +143,57 @@ function Post({ post }: Readonly<{ post: FeedbackPostDto }>) {
           </button>
         ) : null}
         {post.viewerCanWithdraw ? (
-          <button
-            ref={withdrawInvoker}
-            type="button"
-            onClick={() => setConfirmingWithdraw(true)}
+          <Dialog.Root
+            open={confirmingWithdraw}
+            onOpenChange={(open) => {
+              setConfirmingWithdraw(open);
+              if (!open) queueMicrotask(() => withdrawInvoker.current?.focus());
+            }}
           >
-            {copy.detail.withdraw}
-          </button>
+            <Dialog.Trigger asChild>
+              <button ref={withdrawInvoker} type="button">
+                {copy.detail.withdraw}
+              </button>
+            </Dialog.Trigger>
+            <Dialog.Portal>
+              <Dialog.Overlay className="afferent-dialog-overlay" />
+              <Dialog.Content
+                className="afferent-dialog"
+                onCloseAutoFocus={(event) => {
+                  event.preventDefault();
+                  withdrawInvoker.current?.focus();
+                }}
+              >
+                <Dialog.Title asChild>
+                  <h3>{copy.detail.withdrawTitle(post.title)}</h3>
+                </Dialog.Title>
+                <Dialog.Description>
+                  {copy.detail.withdrawBody}
+                </Dialog.Description>
+                <div className="afferent-actions">
+                  <button
+                    type="button"
+                    className="afferent-button afferent-button--destructive"
+                    disabled={mutations.pending[withdrawKey] ?? false}
+                    onClick={async () => {
+                      await mutations.withdrawPost(post.id);
+                      closeWithdraw();
+                    }}
+                  >
+                    {copy.detail.withdraw}
+                  </button>
+                  <Dialog.Close asChild>
+                    <button
+                      type="button"
+                      className="afferent-button afferent-button--secondary"
+                    >
+                      {copy.detail.keepFeedback}
+                    </button>
+                  </Dialog.Close>
+                </div>
+              </Dialog.Content>
+            </Dialog.Portal>
+          </Dialog.Root>
         ) : null}
       </div>
     );
@@ -218,34 +263,6 @@ function Post({ post }: Readonly<{ post: FeedbackPostDto }>) {
             </button>
           </div>
         </form>
-      ) : null}
-      {confirmingWithdraw ? (
-        <dialog open aria-labelledby="afferent-withdraw-heading">
-          <h3 id="afferent-withdraw-heading">
-            {copy.detail.withdrawTitle(post.title)}
-          </h3>
-          <p>{copy.detail.withdrawBody}</p>
-          <div className="afferent-actions">
-            <button
-              type="button"
-              className="afferent-button afferent-button--destructive"
-              disabled={mutations.pending[withdrawKey] ?? false}
-              onClick={async () => {
-                await mutations.withdrawPost(post.id);
-                closeWithdraw();
-              }}
-            >
-              {copy.detail.withdraw}
-            </button>
-            <button
-              type="button"
-              className="afferent-button afferent-button--secondary"
-              onClick={closeWithdraw}
-            >
-              {copy.detail.keepFeedback}
-            </button>
-          </div>
-        </dialog>
       ) : null}
       <AfferentDiscussion postId={post.id} />
       <AfferentPostActivity postId={post.id} />

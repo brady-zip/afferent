@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState, type FormEvent } from "react";
+import { useId, useRef, useState, type FormEvent } from "react";
 import type { BoardId } from "afferent";
 import { feedbackMutationKey, useFeedbackMutations } from "afferent/react.js";
 
@@ -19,8 +19,10 @@ export function AfferentFeedbackComposer({
   const mutations = useFeedbackMutations();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [announcement, setAnnouncement] = useState("");
   const titleHelpId = useId();
   const bodyHelpId = useId();
+  const submitButton = useRef<HTMLButtonElement>(null);
   const key = feedbackMutationKey("post", "create");
   const pending = mutations.pending[key] ?? false;
   const error = mutations.errors[key];
@@ -29,11 +31,22 @@ export function AfferentFeedbackComposer({
     event.preventDefault();
     if (!boardId || title.trim().length === 0 || body.trim().length === 0)
       return;
-    await mutations.createPost({
+    const ownerDocument = event.currentTarget.ownerDocument;
+    const restoreSubmitFocus =
+      ownerDocument.activeElement === submitButton.current;
+    setAnnouncement("");
+    const result = await mutations.createPost({
       boardId,
       title: title.trim(),
       body: body.trim(),
     });
+    if (result.ok) setAnnouncement(copy.board.postedFeedback);
+    if (
+      restoreSubmitFocus &&
+      ownerDocument.activeElement === ownerDocument.body
+    ) {
+      submitButton.current?.focus();
+    }
   }
 
   if (mutations.status === "loading") {
@@ -106,6 +119,7 @@ export function AfferentFeedbackComposer({
         ) : null}
         <div className="afferent-actions">
           <button
+            ref={submitButton}
             type="submit"
             className="afferent-button"
             disabled={pending || !boardId}
@@ -122,7 +136,7 @@ export function AfferentFeedbackComposer({
         </div>
       </form>
       <p className="afferent-sr-only" role="status" aria-live="polite">
-        {pending ? copy.board.postingFeedback : ""}
+        {pending ? copy.board.postingFeedback : announcement}
       </p>
     </section>
   );

@@ -18,8 +18,9 @@ export function AfferentStateRegion({
   return (
     <section
       className={cn("afferent-state", className)}
-      role={tone === "error" ? "alert" : "status"}
-      aria-live={tone === "error" ? "assertive" : "polite"}
+      data-tone={tone}
+      role="status"
+      aria-live="polite"
     >
       <h2>{title}</h2>
       {children ? <div>{children}</div> : null}
