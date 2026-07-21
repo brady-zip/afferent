@@ -414,7 +414,7 @@ describe("duplicate merge lifecycle", () => {
       viewerAuthenticated: true,
       postId: source.id,
     })).toEqual({
-      contractVersion: 1,
+      contractVersion: 2,
       status: "merged",
       requestedPostId: source.id,
       canonicalPostId: canonical.id,
@@ -466,7 +466,7 @@ describe("duplicate merge lifecycle", () => {
       viewerAuthenticated: true,
       postId: foreign.id,
     })).toEqual({
-      contractVersion: 1,
+      contractVersion: 2,
       status: "notFound",
     });
   });

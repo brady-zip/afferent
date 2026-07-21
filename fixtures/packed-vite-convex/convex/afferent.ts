@@ -64,7 +64,8 @@ import {
   unpublishChangelogIntentValidator,
   withdrawPostIntentValidator,
 } from "afferent";
-import type { BoardId } from "afferent";
+import type { AfferentClientOptions, BoardId } from "afferent";
+import { normalizeClerkIdentity } from "afferent/adapters/clerk.js";
 import type { ComponentApi } from "afferent/_generated/component.js";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
@@ -74,13 +75,22 @@ import { mutation, query } from "./_generated/server.js";
 
 const installedComponent: ComponentApi = components.afferent;
 const authorizeAdmin = async () => true;
+async function resolveTrustedViewer(
+  ctx:
+    | Parameters<AfferentClientOptions["resolveActor"]>[0]
+    | Parameters<
+        NonNullable<AfferentClientOptions["resolveViewerActor"]>
+      >[0],
+) {
+  const identity = await ctx.auth.getUserIdentity();
+  return identity === null ? null : normalizeClerkIdentity(identity);
+}
 const client = createAfferentClient(installedComponent, {
-  resolveActor: async () => ({
-    externalKey: "fixture:trusted-user",
-    displayName: "Fixture User",
-  }),
+  resolveActor: resolveTrustedViewer,
+  resolveViewerActor: resolveTrustedViewer,
   authorizeAdmin,
-  isAuthenticated: async () => true,
+  isAuthenticated: async (ctx) =>
+    (await ctx.auth.getUserIdentity()) !== null,
 });
 
 const cacheGenerationValidator = { sessionGeneration: v.number() };

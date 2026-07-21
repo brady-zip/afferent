@@ -6,7 +6,7 @@ import * as headless from "afferent/react.js";
 import { expect, test } from "vitest";
 
 import { api } from "../convex/_generated/api.js";
-import { submitFeedback } from "./App.js";
+import { feedbackActionLabels, submitFeedback } from "./App.js";
 
 const modules = import.meta.glob("../convex/**/*.ts");
 
@@ -41,7 +41,12 @@ test("the form submit handler writes through the host wrapper and renders the pu
   const backend = convexTest(undefined, modules);
   register(backend, "afferent");
 
-  const configured = await backend.mutation(
+  const authenticated = backend.withIdentity({
+    issuer: "https://fixture.example",
+    subject: "trusted-user",
+    name: "Fixture User",
+  });
+  const configured = await authenticated.mutation(
     api.afferent.configureInstallation,
     {
       readPolicy: "public",
@@ -56,9 +61,9 @@ test("the form submit handler writes through the host wrapper and renders the pu
   };
 
   const createdPost = await submitFeedback(browserArgs, {
-    createPost: (args) => backend.mutation(api.afferent.createPost, args),
+    createPost: (args) => authenticated.mutation(api.afferent.createPost, args),
   });
-  const listed = await backend.query(api.afferent.listPosts, {
+  const listed = await authenticated.query(api.afferent.listPosts, {
     boardId: board.id,
   });
   const readPost = listed.posts[0];
@@ -72,6 +77,11 @@ test("the form submit handler writes through the host wrapper and renders the pu
     viewerHasVoted: false,
     viewerCanEdit: true,
     viewerCanWithdraw: true,
+  });
+  expect(feedbackActionLabels(readPost)).toEqual({
+    vote: "Vote for feedback",
+    edit: "Edit feedback",
+    withdraw: "Withdraw feedback",
   });
 
   const transcriptPath = process.env.AFFERENT_TRANSCRIPT_PATH;

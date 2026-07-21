@@ -222,7 +222,12 @@ export function runFactoryAuthorityConformance(
       const persisted = await runWithContext(backend, null, (ctx) =>
         client.read.getPost(ctx, { postId: created.id }),
       );
-      expect(persisted).toEqual(created);
+      expect(persisted).toEqual({
+        ...created,
+        viewerHasVoted: false,
+        viewerCanEdit: false,
+        viewerCanWithdraw: false,
+      });
     });
 
     test("a cross-scope board identifier fails without persisting a post", async () => {

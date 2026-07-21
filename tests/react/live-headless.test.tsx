@@ -1456,6 +1456,58 @@ describe("mounted identity-generation isolation", () => {
         viewerHasVoted: true,
       },
     });
+
+    writes.length = 0;
+    const alreadyVoted = {
+      ...feedbackPost,
+      viewerHasVoted: true,
+    };
+    optimistic!(
+      {
+        getAllQueries: () => [
+          {
+            args: { sessionGeneration: 1 },
+            value: page([alreadyVoted]),
+          },
+        ],
+        getQuery: () => ({
+          contractVersion: 2,
+          status: "post",
+          post: alreadyVoted,
+        }),
+        setQuery: (_reference: unknown, _args: unknown, value: unknown) =>
+          writes.push(value),
+      },
+      { postId: "post:1", desired: true },
+    );
+    for (const value of writes) {
+      expect(JSON.stringify(value)).toContain('"voteCount":4');
+      expect(JSON.stringify(value)).toContain('"viewerHasVoted":true');
+    }
+
+    writes.length = 0;
+    optimistic!(
+      {
+        getAllQueries: () => [
+          {
+            args: { sessionGeneration: 1 },
+            value: page([alreadyVoted]),
+          },
+        ],
+        getQuery: () => ({
+          contractVersion: 2,
+          status: "post",
+          post: alreadyVoted,
+        }),
+        setQuery: (_reference: unknown, _args: unknown, value: unknown) =>
+          writes.push(value),
+      },
+      { postId: "post:1", desired: false },
+    );
+    for (const value of writes) {
+      expect(JSON.stringify(value)).toContain('"voteCount":3');
+      expect(JSON.stringify(value)).toContain('"viewerHasVoted":false');
+    }
     mounted.unmount();
   });
 

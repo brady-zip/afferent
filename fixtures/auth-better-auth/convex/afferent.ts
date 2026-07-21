@@ -20,6 +20,10 @@ export function createBetterAuthAfferentFixture(
   return createAfferentClient(component, {
     resolveActor: async (ctx) =>
       normalizeBetterAuthUser(await authComponent.getAuthUser(ctx)),
+    resolveViewerActor: async (ctx) => {
+      const user = await authComponent.safeGetAuthUser(ctx);
+      return user === undefined ? null : normalizeBetterAuthUser(user);
+    },
     isAuthenticated: async (ctx) =>
       (await authComponent.safeGetAuthUser(ctx)) !== undefined,
     authorizeAdmin,

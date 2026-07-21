@@ -16,11 +16,15 @@ export function createConvexAuthAfferentFixture(
   authorizeAdmin: AuthorizeAdmin,
   resolveUserId: ResolveConvexAuthUserId = getAuthUserId,
 ): AfferentClient {
+  const resolveVerifiedActor = async (
+    ctx: Parameters<AuthorizeAdmin>[0],
+  ) => {
+    const userId = await resolveUserId(ctx);
+    return userId === null ? null : normalizeConvexAuthUserId(userId);
+  };
   return createAfferentClient(component, {
-    resolveActor: async (ctx) => {
-      const userId = await resolveUserId(ctx);
-      return userId === null ? null : normalizeConvexAuthUserId(userId);
-    },
+    resolveActor: resolveVerifiedActor,
+    resolveViewerActor: resolveVerifiedActor,
     isAuthenticated: async (ctx) => (await resolveUserId(ctx)) !== null,
     authorizeAdmin,
   });

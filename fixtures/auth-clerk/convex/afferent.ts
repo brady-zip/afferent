@@ -13,11 +13,15 @@ export function createClerkAfferentFixture(
   component: ComponentApi,
   authorizeAdmin: AuthorizeAdmin,
 ): AfferentClient {
+  const resolveVerifiedActor = async (
+    ctx: Parameters<AuthorizeAdmin>[0],
+  ) => {
+    const identity = await ctx.auth.getUserIdentity();
+    return identity === null ? null : normalizeClerkIdentity(identity);
+  };
   return createAfferentClient(component, {
-    resolveActor: async (ctx) => {
-      const identity = await ctx.auth.getUserIdentity();
-      return identity === null ? null : normalizeClerkIdentity(identity);
-    },
+    resolveActor: resolveVerifiedActor,
+    resolveViewerActor: resolveVerifiedActor,
     isAuthenticated: async (ctx) =>
       (await ctx.auth.getUserIdentity()) !== null,
     authorizeAdmin,

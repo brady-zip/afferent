@@ -15,11 +15,13 @@ describe("packed walking skeleton component", () => {
   test("configures a fixed-scope board and creates and lists one safe post DTO", async () => {
     const backend = withRateLimiter(convexTest(schema, modules));
     const component = api as unknown as ComponentApi;
+    const actor = {
+      externalKey: "fixture:test-actor",
+      displayName: "Test Actor",
+    };
     const client = createAfferentClient(component, {
-      resolveActor: async () => ({
-        externalKey: "fixture:test-actor",
-        displayName: "Test Actor",
-      }),
+      resolveActor: async () => actor,
+      resolveViewerActor: async () => actor,
       authorizeAdmin: async () => true,
     });
     const ctx = {
@@ -61,7 +63,7 @@ describe("packed walking skeleton component", () => {
 
     expect(listed.posts).toEqual([created]);
     expect(created).toMatchObject({
-      contractVersion: 1,
+      contractVersion: 2,
       boardId: board.id,
       title: "A safer feedback loop",
       status: { key: "open", label: "Open" },

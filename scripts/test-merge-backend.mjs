@@ -613,7 +613,7 @@ try {
       scopeId: "alpha",
       postId: seeded.sourcePostId,
     }),
-    { contractVersion: 1, status: "notFound" },
+    { contractVersion: 2, status: "notFound" },
   );
   assertPreOrPostOnly(
     observations.filter((sample) => sample.scopeId === "alpha"),

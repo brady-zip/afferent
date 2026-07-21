@@ -23,6 +23,7 @@ import type {
   CommentFeedQueryReference,
   FeedbackFeedQueryReference,
   ParticipationBindings,
+  PublicBindings,
 } from "../bindings.js";
 import { useAfferentContext } from "../provider.js";
 import { useDirectWatchQuery, usePaginatedWatchQuery } from "../query.js";
@@ -459,9 +460,16 @@ function applyVoteOptimism(options: {
   mutation: ReturnType<typeof useMutation>;
   binding: ParticipationBindings["setVote"] | undefined;
   feedBinding: FeedbackFeedQueryReference;
+  detailBinding: PublicBindings["getPost"];
   sessionGeneration: number;
 }) {
-  const { mutation, binding, feedBinding, sessionGeneration } = options;
+  const {
+    mutation,
+    binding,
+    feedBinding,
+    detailBinding,
+    sessionGeneration,
+  } = options;
   const candidate = mutation as typeof mutation & {
     withOptimisticUpdate?: (
       handler: (store: any, args: { postId: PostId; desired: boolean }) => void,
@@ -469,24 +477,39 @@ function applyVoteOptimism(options: {
   };
   if (!candidate.withOptimisticUpdate || !binding) return mutation;
   return candidate.withOptimisticUpdate((store, args) => {
+    const update = (post: FeedbackPostDto) => {
+      if (post.id !== args.postId) return post;
+      const delta =
+        (args.desired ? 1 : 0) - (post.viewerHasVoted ? 1 : 0);
+      const voteCount = Math.max(0, post.voteCount + delta);
+      return {
+        ...post,
+        voteCount,
+        totals: { ...post.totals, votes: voteCount },
+        viewerHasVoted: args.desired,
+      };
+    };
     for (const query of store.getAllQueries(feedBinding)) {
       if (query.args.sessionGeneration !== sessionGeneration) continue;
       if (!query.value) continue;
-      const update = (post: FeedbackPostDto) => {
-        if (post.id !== args.postId) return post;
-        const delta = args.desired ? 1 : -1;
-        const voteCount = Math.max(0, post.voteCount + delta);
-        return {
-          ...post,
-          voteCount,
-          totals: { ...post.totals, votes: voteCount },
-        };
-      };
       store.setQuery(feedBinding, query.args, {
         ...query.value,
         page: query.value.page.map(update),
         posts: query.value.posts.map(update),
       });
+    }
+    if (detailBinding) {
+      const detailArgs = {
+        postId: args.postId,
+        sessionGeneration,
+      };
+      const lookup = store.getQuery(detailBinding, detailArgs);
+      if (lookup?.status === "post") {
+        store.setQuery(detailBinding, detailArgs, {
+          ...lookup,
+          post: update(lookup.post),
+        });
+      }
     }
   });
 }
@@ -514,6 +537,7 @@ export function useFeedbackMutations() {
     mutation: rawVote,
     binding: participation?.setVote,
     feedBinding: bindings.public.listFeedback,
+    detailBinding: bindings.public.getPost,
     sessionGeneration: generation,
   });
   const addComment = useMutation(

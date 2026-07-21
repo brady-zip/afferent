@@ -147,6 +147,21 @@ export async function submitFeedback(
   return await actions.createPost(intent);
 }
 
+export function feedbackActionLabels(
+  post: Pick<
+    PostDto,
+    "viewerHasVoted" | "viewerCanEdit" | "viewerCanWithdraw"
+  >,
+) {
+  return {
+    vote: post.viewerHasVoted
+      ? "Remove feedback vote"
+      : "Vote for feedback",
+    edit: post.viewerCanEdit ? "Edit feedback" : undefined,
+    withdraw: post.viewerCanWithdraw ? "Withdraw feedback" : undefined,
+  };
+}
+
 export function App() {
   const convex = useConvex();
   const configureInstallation = useMutation(api.afferent.configureInstallation);
@@ -212,6 +227,15 @@ export function App() {
               <p>{post.body}</p>
               <span>{post.voteCount} votes</span>
               <span>{post.commentCount} comments</span>
+              <button type="button">{feedbackActionLabels(post).vote}</button>
+              {feedbackActionLabels(post).edit ? (
+                <button type="button">{feedbackActionLabels(post).edit}</button>
+              ) : null}
+              {feedbackActionLabels(post).withdraw ? (
+                <button type="button">
+                  {feedbackActionLabels(post).withdraw}
+                </button>
+              ) : null}
             </li>
           ))}
         </ul>

@@ -7,7 +7,7 @@ import { AfferentUiProvider } from "@/components/afferent/core/afferent-ui-provi
 
 const fixturePost = {
   id: "feedback_fixture",
-  contractVersion: 2,
+  contractVersion: 3,
   title: "Ship source-owned feedback",
   body: "Install this screen through the local registry.",
   status: { key: "planned", label: "Planned" },
@@ -18,6 +18,9 @@ const fixturePost = {
   commentCount: 2,
   totals: { votes: 7, comments: 2 },
   tags: [],
+  viewerHasVoted: false,
+  viewerCanEdit: true,
+  viewerCanWithdraw: true,
 };
 
 const bindings = {
@@ -32,7 +35,7 @@ const client = {
       },
       localQueryResult() {
         return {
-          contractVersion: 2,
+          contractVersion: 3,
           page: [fixturePost],
           posts: [fixturePost],
           isDone: true,
