@@ -85,8 +85,8 @@ test("the real watch harness drives installed merged comment and activity public
   assert.match(source, /product merge length 1 to 2/);
   assert.match(source, /product merge cleaning repoint/);
   assert.match(source, /product merge length 2 to 1/);
-  assert.match(source, /product comment identity A to B to A/);
-  assert.match(source, /product activity identity A to B to A/);
+  assert.match(source, /product comment identity A to B to A/i);
+  assert.match(source, /product activity identity A to B to A/i);
 });
 
 test("the packed fixture wires the optional comment feed through trusted host boundaries", async () => {

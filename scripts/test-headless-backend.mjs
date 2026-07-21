@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
+/* eslint-disable max-params, unicorn/no-await-expression-member -- The disposable oracle favors explicit call-site context. */
 import { spawn } from "node:child_process";
 import {
+  cp,
   mkdir,
   mkdtemp,
   readFile,
@@ -45,10 +47,241 @@ export default defineSchema({
 });
 `;
 
+const productProbeSource = `
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server.js";
+import {
+  countAffectedMergeRelations,
+  continueMergeJob,
+  createMergeJob,
+  mergeReadPostIds,
+  runAtomicMerge,
+} from "./model/merge.js";
+
+export const seedProduct = mutation({
+  args: { scopeId: v.string(), relationCount: v.number() },
+  returns: v.any(),
+  handler: async (ctx, args) => {
+    await ctx.db.insert("installations", {
+      scopeId: args.scopeId,
+      readPolicy: "public",
+    });
+    const adminId = await ctx.db.insert("actors", {
+      scopeId: args.scopeId,
+      externalKey: args.scopeId + ":admin",
+      displayName: "Admin " + args.scopeId,
+    });
+    const boardId = await ctx.db.insert("boards", {
+      scopeId: args.scopeId,
+      slug: "feedback",
+      name: "Feedback",
+      sortOrder: 0,
+    });
+    const base = {
+      scopeId: args.scopeId,
+      boardId,
+      actorId: adminId,
+      body: "body",
+      searchText: "body",
+      lifecycleState: "active",
+      statusKey: "open",
+      voteCount: 0,
+      commentCount: 0,
+      createdAt: 1,
+      currentStatusSince: 1,
+      trendingScore: 1,
+      visibilityKey: "visible",
+    };
+    const canonicalPostId = await ctx.db.insert("posts", {
+      ...base,
+      title: "Canonical " + args.scopeId,
+      orderId: args.scopeId + ":canonical",
+    });
+    const sourcePostId = await ctx.db.insert("posts", {
+      ...base,
+      title: "Source " + args.scopeId,
+      orderId: args.scopeId + ":source",
+    });
+    let rootCommentId;
+    for (let index = 0; index < args.relationCount; index += 1) {
+      const actorId = await ctx.db.insert("actors", {
+        scopeId: args.scopeId,
+        externalKey: args.scopeId + ":actor:" + index,
+        displayName: "Actor " + index,
+      });
+      const postId = index % 2 === 0 ? canonicalPostId : sourcePostId;
+      await ctx.db.insert("votes", { scopeId: args.scopeId, postId, actorId });
+      if (index < 8) {
+        const commentId = await ctx.db.insert("comments", {
+          scopeId: args.scopeId,
+          postId,
+          actorId,
+          body: args.scopeId + ":comment:" + index,
+          ...(index === 1 && rootCommentId
+            ? { parentCommentId: rootCommentId }
+            : {}),
+        });
+        if (index === 0) rootCommentId = commentId;
+        await ctx.db.insert("postActivity", {
+          scopeId: args.scopeId,
+          postId,
+          actorId,
+          type: "edit",
+          occurredAt: 10_000 - index,
+          changedFields: [args.scopeId + ":field:" + index],
+        });
+      }
+    }
+    const [canonicalComments, sourceComments] = await Promise.all([
+      ctx.db.query("comments").withIndex("by_scope_post", q => q.eq("scopeId", args.scopeId).eq("postId", canonicalPostId)).collect(),
+      ctx.db.query("comments").withIndex("by_scope_post", q => q.eq("scopeId", args.scopeId).eq("postId", sourcePostId)).collect(),
+    ]);
+    await ctx.db.patch(canonicalPostId, { commentCount: canonicalComments.length });
+    await ctx.db.patch(sourcePostId, { commentCount: sourceComments.length });
+    return {
+      adminId: String(adminId),
+      canonicalPostId: String(canonicalPostId),
+      sourcePostId: String(sourcePostId),
+      rootCommentId: String(rootCommentId),
+    };
+  },
+});
+
+export const beginProductMerge = mutation({
+  args: {
+    scopeId: v.string(),
+    adminId: v.string(),
+    sourcePostId: v.string(),
+    canonicalPostId: v.string(),
+  },
+  returns: v.any(),
+  handler: async (ctx, args) => {
+    const actorId = ctx.db.normalizeId("actors", args.adminId);
+    const sourcePostId = ctx.db.normalizeId("posts", args.sourcePostId);
+    const canonicalPostId = ctx.db.normalizeId("posts", args.canonicalPostId);
+    if (!actorId || !sourcePostId || !canonicalPostId) throw new Error("bad ids");
+    const result = await createMergeJob(ctx, {
+      scopeId: args.scopeId,
+      actorId,
+      sourcePostId,
+      canonicalPostId,
+    });
+    const affected = await countAffectedMergeRelations(ctx, {
+      scopeId: args.scopeId,
+      sourcePostId,
+      canonicalPostId,
+    });
+    if (affected <= 50) {
+      const job = await ctx.db.get(result.jobId);
+      if (!job) throw new Error("missing merge job");
+      return { jobId: String(result.jobId), state: (await runAtomicMerge(ctx, job)).state };
+    }
+    return { jobId: String(result.jobId), state: result.state };
+  },
+});
+
+export const stepProductMerge = mutation({
+  args: { scopeId: v.string(), jobId: v.string() },
+  returns: v.any(),
+  handler: (ctx, args) => continueMergeJob(ctx, args.scopeId, args.jobId),
+});
+
+export const productMergeState = query({
+  args: { scopeId: v.string(), jobId: v.string() },
+  returns: v.any(),
+  handler: async (ctx, args) => {
+    const id = ctx.db.normalizeId("mergeJobs", args.jobId);
+    const job = id ? await ctx.db.get(id) : null;
+    if (!job || job.scopeId !== args.scopeId) throw new Error("missing merge job");
+    return { state: job.state };
+  },
+});
+
+export const productTruth = query({
+  args: { scopeId: v.string(), postId: v.string() },
+  returns: v.any(),
+  handler: async (ctx, args) => {
+    const postId = ctx.db.normalizeId("posts", args.postId);
+    if (!postId) throw new Error("bad post id");
+    const postIds = await mergeReadPostIds(ctx, args.scopeId, postId);
+    const comments = (await Promise.all(postIds.map(id =>
+      ctx.db.query("comments").withIndex("by_scope_post", q => q.eq("scopeId", args.scopeId).eq("postId", id)).collect()
+    ))).flat().sort((left, right) => left._creationTime - right._creationTime || String(left._id).localeCompare(String(right._id)));
+    const activity = (await Promise.all(postIds.map(id =>
+      ctx.db.query("postActivity").withIndex("by_scope_post_occurred", q => q.eq("scopeId", args.scopeId).eq("postId", id)).collect()
+    ))).flat().sort((left, right) => right.occurredAt - left.occurredAt || right._creationTime - left._creationTime || String(right._id).localeCompare(String(left._id)));
+    return {
+      comments: comments.map(row => String(row._id) + "@" + String(row.postId)),
+      activity: activity.map(row => String(row._id) + "@" + String(row.postId)),
+    };
+  },
+});
+
+export const insertProductRow = mutation({
+  args: {
+    scopeId: v.string(),
+    postId: v.string(),
+    kind: v.union(v.literal("comment"), v.literal("activity")),
+    label: v.string(),
+    parentCommentId: v.optional(v.string()),
+  },
+  returns: v.string(),
+  handler: async (ctx, args) => {
+    const postId = ctx.db.normalizeId("posts", args.postId);
+    const parentCommentId = args.parentCommentId === undefined
+      ? undefined
+      : ctx.db.normalizeId("comments", args.parentCommentId);
+    if (!postId || (args.parentCommentId !== undefined && !parentCommentId)) throw new Error("bad row ids");
+    if (args.kind === "comment") {
+      const actorId = await ctx.db.insert("actors", {
+        scopeId: args.scopeId,
+        externalKey: args.scopeId + ":insert:" + args.label,
+        displayName: args.label,
+      });
+      const id = await ctx.db.insert("comments", {
+        scopeId: args.scopeId,
+        postId,
+        actorId,
+        body: args.label,
+        ...(parentCommentId ? { parentCommentId } : {}),
+      });
+      return String(id);
+    }
+    const id = await ctx.db.insert("postActivity", {
+      scopeId: args.scopeId,
+      postId,
+      type: "edit",
+      occurredAt: Date.now(),
+      changedFields: [args.label],
+    });
+    return String(id);
+  },
+});
+
+export const deleteProductRow = mutation({
+  args: {
+    scopeId: v.string(),
+    kind: v.union(v.literal("comment"), v.literal("activity")),
+    id: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const table = args.kind === "comment" ? "comments" : "postActivity";
+    const id = ctx.db.normalizeId(table, args.id);
+    const row = id ? await ctx.db.get(id) : null;
+    if (!row || row.scopeId !== args.scopeId) throw new Error("missing product row");
+    await ctx.db.delete(row._id);
+    return null;
+  },
+});
+`;
+
 const harnessSource = `
 import { mutation, query } from "./_generated/server.js";
-import { paginationOptsValidator } from "convex/server";
+import { componentsGeneric, paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
+
+const components = componentsGeneric();
 
 async function mode(ctx) {
   return (await ctx.db.query("controls").withIndex("by_key", q => q.eq("key", "fault")).unique())?.mode ?? "none";
@@ -56,6 +289,19 @@ async function mode(ctx) {
 
 async function commentMode(ctx) {
   return (await ctx.db.query("controls").withIndex("by_key", q => q.eq("key", "comment-fault")).unique())?.mode ?? "none";
+}
+
+async function productMode(ctx, reader) {
+  return (await ctx.db.query("controls").withIndex("by_key", q => q.eq("key", "product-fault:" + reader)).unique())?.mode ?? "none";
+}
+
+function productFault(reader, currentMode, paginationOpts) {
+  const first = paginationOpts.cursor === null;
+  const middle = paginationOpts.cursor !== null && paginationOpts.endCursor !== undefined;
+  const tail = paginationOpts.cursor !== null && paginationOpts.endCursor === undefined;
+  if ((currentMode === "first" && first) || (currentMode === "middle" && middle) || (currentMode === "tail" && tail)) {
+    throw new ConvexError({ code: "TRANSIENT", message: reader + " product fault" });
+  }
 }
 
 async function revision(ctx) {
@@ -88,6 +334,18 @@ export const setCommentMode = mutation({
     const row = await ctx.db.query("controls").withIndex("by_key", q => q.eq("key", "comment-fault")).unique();
     if (row) await ctx.db.patch(row._id, { mode: args.mode });
     else await ctx.db.insert("controls", { key: "comment-fault", mode: args.mode });
+    return null;
+  },
+});
+
+export const setProductMode = mutation({
+  args: { reader: v.union(v.literal("comments"), v.literal("activity")), mode: v.string() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const key = "product-fault:" + args.reader;
+    const row = await ctx.db.query("controls").withIndex("by_key", q => q.eq("key", key)).unique();
+    if (row) await ctx.db.patch(row._id, { mode: args.mode });
+    else await ctx.db.insert("controls", { key, mode: args.mode });
     return null;
   },
 });
@@ -303,6 +561,75 @@ export const listComments = query({
       .paginate(args.paginationOpts);
     const page = result.page.map(commentDto);
     return { contractVersion: 1, ...result, page, comments: page };
+  },
+});
+
+export const seedProduct = mutation({
+  args: { scopeId: v.string(), relationCount: v.number() },
+  returns: v.any(),
+  handler: (ctx, args) => ctx.runMutation(components.afferent.probe.seedProduct, args),
+});
+
+export const beginProductMerge = mutation({
+  args: { scopeId: v.string(), adminId: v.string(), sourcePostId: v.string(), canonicalPostId: v.string() },
+  returns: v.any(),
+  handler: (ctx, args) => ctx.runMutation(components.afferent.probe.beginProductMerge, args),
+});
+
+export const stepProductMerge = mutation({
+  args: { scopeId: v.string(), jobId: v.string() },
+  returns: v.any(),
+  handler: (ctx, args) => ctx.runMutation(components.afferent.probe.stepProductMerge, args),
+});
+
+export const productMergeState = query({
+  args: { scopeId: v.string(), jobId: v.string() },
+  returns: v.any(),
+  handler: (ctx, args) => ctx.runQuery(components.afferent.probe.productMergeState, args),
+});
+
+export const productTruth = query({
+  args: { scopeId: v.string(), postId: v.string() },
+  returns: v.any(),
+  handler: (ctx, args) => ctx.runQuery(components.afferent.probe.productTruth, args),
+});
+
+export const insertProductRow = mutation({
+  args: {
+    scopeId: v.string(),
+    postId: v.string(),
+    kind: v.union(v.literal("comment"), v.literal("activity")),
+    label: v.string(),
+    parentCommentId: v.optional(v.string()),
+  },
+  returns: v.string(),
+  handler: (ctx, args) => ctx.runMutation(components.afferent.probe.insertProductRow, args),
+});
+
+export const deleteProductRow = mutation({
+  args: { scopeId: v.string(), kind: v.union(v.literal("comment"), v.literal("activity")), id: v.string() },
+  returns: v.null(),
+  handler: (ctx, args) => ctx.runMutation(components.afferent.probe.deleteProductRow, args),
+});
+
+export const listProductComments = query({
+  args: { scopeId: v.string(), postId: v.string(), paginationOpts: paginationOptsValidator },
+  returns: v.any(),
+  handler: async (ctx, args) => {
+    productFault("comments", await productMode(ctx, "comments"), args.paginationOpts);
+    return await ctx.runQuery(components.afferent.public.comments.listComments, {
+      ...args,
+      viewerAuthenticated: true,
+    });
+  },
+});
+
+export const listProductActivity = query({
+  args: { scopeId: v.string(), postId: v.string(), paginationOpts: paginationOptsValidator },
+  returns: v.any(),
+  handler: async (ctx, args) => {
+    productFault("activity", await productMode(ctx, "activity"), args.paginationOpts);
+    return await ctx.runQuery(components.afferent.admin.activity.listPostActivity, args);
   },
 });
 `;
@@ -670,6 +997,563 @@ function recordEveryPublication(store) {
   };
 }
 
+function productIds(snapshot) {
+  return snapshot.results.map((item) => `${item.id}@${item.postId}`);
+}
+
+function exactPrefixes(...sequences) {
+  const prefixes = [];
+  for (const sequence of sequences) {
+    for (let length = 0; length <= sequence.length; length += 1) {
+      const prefix = sequence.slice(0, length);
+      if (
+        !prefixes.some(
+          (candidate) => JSON.stringify(candidate) === JSON.stringify(prefix),
+        )
+      ) {
+        prefixes.push(prefix);
+      }
+    }
+  }
+  return prefixes;
+}
+
+function recordEveryProductPublication(store) {
+  const publications = [];
+  const stop = store.subscribe(() => {
+    const snapshot = store.getSnapshot();
+    publications.push({
+      ids: productIds(snapshot),
+      status: snapshot.status,
+      errorCode: snapshot.error?.code,
+    });
+  });
+  return {
+    mark: () => publications.length,
+    stop,
+    assertPrefixesSince(mark, sequences, label, options = {}) {
+      const observed = publications.slice(mark);
+      if (options.requirePublication !== false) {
+        assert.ok(observed.length > 0, `${label} must publish at least once`);
+      }
+      const allowed = exactPrefixes(...sequences);
+      for (const publication of observed) {
+        assert.ok(
+          allowed.some(
+            (prefix) =>
+              JSON.stringify(prefix) === JSON.stringify(publication.ids),
+          ),
+          `${label} emitted a non-canonical product publication: ${JSON.stringify(publication)}`,
+        );
+      }
+      if (options.errorCode !== undefined) {
+        assert.ok(
+          observed.some(
+            (publication) =>
+              publication.status === "Error" &&
+              publication.errorCode === options.errorCode,
+          ),
+          `${label} must publish typed ${options.errorCode} state`,
+        );
+      }
+    },
+  };
+}
+
+async function productTruth(http, truthReference, args, reader) {
+  return (await http.query(truthReference, args))[reader];
+}
+
+async function settleProductStore({
+  http,
+  truthReference,
+  store,
+  args,
+  reader,
+  label,
+}) {
+  const deadline = Date.now() + 20_000;
+  let requestedMore = false;
+  while (Date.now() < deadline) {
+    const expected = await productTruth(http, truthReference, args, reader);
+    const snapshot = store.getSnapshot();
+    if (
+      snapshot.status !== "Error" &&
+      snapshot.status !== "LoadingMore" &&
+      JSON.stringify(productIds(snapshot)) === JSON.stringify(expected)
+    ) {
+      return { expected, snapshot };
+    }
+    if (snapshot.status === "CanLoadMore" && !requestedMore) {
+      requestedMore = true;
+      store.loadMore(2);
+    } else if (snapshot.status !== "LoadingMore") {
+      requestedMore = false;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+  throw new Error(
+    `Timed out waiting for ${label}: ${JSON.stringify(store.getSnapshot())}`,
+  );
+}
+
+async function advanceProductMerge(http, references, job, wanted) {
+  for (let attempt = 0; attempt < 120; attempt += 1) {
+    const current = await http.query(references.state, job);
+    if (current.state === wanted) return current;
+    await http.mutation(references.step, job);
+  }
+  throw new Error(`product merge did not reach ${wanted}`);
+}
+
+async function proveInstalledProductWatches({
+  http,
+  queryModule,
+  tracking,
+  references,
+}) {
+  const alpha = await http.mutation(references.seed, {
+    scopeId: "product-alpha",
+    relationCount: 51,
+  });
+  const beta = await http.mutation(references.seed, {
+    scopeId: "product-beta",
+    relationCount: 8,
+  });
+  const alphaArgs = {
+    scopeId: "product-alpha",
+    postId: alpha.canonicalPostId,
+  };
+  const betaArgs = {
+    scopeId: "product-beta",
+    postId: beta.canonicalPostId,
+  };
+  const makeStore = (reader, args, generation, initialNumItems = 2) =>
+    queryModule.createPaginatedWatchStore({
+      client: tracking,
+      query:
+        reader === "comments"
+          ? references.listComments
+          : references.listActivity,
+      args,
+      generation,
+      initialNumItems,
+    });
+
+  const commentStore = makeStore("comments", alphaArgs, 100);
+  const activityStore = makeStore("activity", alphaArgs, 100);
+  const commentPublications = recordEveryProductPublication(commentStore);
+  const activityPublications = recordEveryProductPublication(activityStore);
+  const preComments = (
+    await settleProductStore({
+      http,
+      truthReference: references.truth,
+      store: commentStore,
+      args: alphaArgs,
+      reader: "comments",
+      label: "installed product comments before merge",
+    })
+  ).expected;
+  const preActivity = (
+    await settleProductStore({
+      http,
+      truthReference: references.truth,
+      store: activityStore,
+      args: alphaArgs,
+      reader: "activity",
+      label: "installed product activity before merge",
+    })
+  ).expected;
+
+  let commentMark = commentPublications.mark();
+  let activityMark = activityPublications.mark();
+  const begun = await http.mutation(references.begin, {
+    scopeId: "product-alpha",
+    adminId: alpha.adminId,
+    sourcePostId: alpha.sourcePostId,
+    canonicalPostId: alpha.canonicalPostId,
+  });
+  const job = { scopeId: "product-alpha", jobId: begun.jobId };
+  await advanceProductMerge(http, references, job, "ready");
+  await http.mutation(references.step, job);
+  const cutoverComments = (
+    await settleProductStore({
+      http,
+      truthReference: references.truth,
+      store: commentStore,
+      args: alphaArgs,
+      reader: "comments",
+      label: "product merge length 1 to 2 comments",
+    })
+  ).expected;
+  const cutoverActivity = (
+    await settleProductStore({
+      http,
+      truthReference: references.truth,
+      store: activityStore,
+      args: alphaArgs,
+      reader: "activity",
+      label: "product merge length 1 to 2 activity",
+    })
+  ).expected;
+  assert.ok(cutoverComments.length > preComments.length);
+  assert.ok(cutoverActivity.length > preActivity.length);
+  commentPublications.assertPrefixesSince(
+    commentMark,
+    [preComments, cutoverComments],
+    "product merge length 1 to 2 comments",
+  );
+  activityPublications.assertPrefixesSince(
+    activityMark,
+    [preActivity, cutoverActivity],
+    "product merge length 1 to 2 activity",
+  );
+
+  for (const [reader, store, publications] of [
+    ["comments", commentStore, commentPublications],
+    ["activity", activityStore, activityPublications],
+  ]) {
+    for (const mode of ["first", "middle", "tail"]) {
+      const baseline = await productTruth(
+        http,
+        references.truth,
+        alphaArgs,
+        reader,
+      );
+      let mark = publications.mark();
+      await http.mutation(references.setMode, { reader, mode });
+      await waitFor(
+        store,
+        (snapshot) => snapshot.status === "Error",
+        `installed product ${reader} ${mode}-page failure`,
+      );
+      publications.assertPrefixesSince(
+        mark,
+        [baseline],
+        `installed product ${reader} ${mode}-page failure`,
+        { errorCode: "TRANSIENT" },
+      );
+      mark = publications.mark();
+      await http.mutation(references.setMode, { reader, mode: "none" });
+      await settleProductStore({
+        http,
+        truthReference: references.truth,
+        store,
+        args: alphaArgs,
+        reader,
+        label: `installed product ${reader} ${mode}-page recovery`,
+      });
+      publications.assertPrefixesSince(
+        mark,
+        [baseline],
+        `installed product ${reader} ${mode}-page recovery`,
+      );
+    }
+  }
+
+  let previousComments = await productTruth(
+    http,
+    references.truth,
+    alphaArgs,
+    "comments",
+  );
+  commentMark = commentPublications.mark();
+  await http.mutation(references.insert, {
+    scopeId: "product-alpha",
+    postId: alpha.sourcePostId,
+    kind: "comment",
+    label: "product inserted root",
+  });
+  const insertedComments = (
+    await settleProductStore({
+      http,
+      truthReference: references.truth,
+      store: commentStore,
+      args: alphaArgs,
+      reader: "comments",
+      label: "installed product root comment insertion",
+    })
+  ).expected;
+  commentPublications.assertPrefixesSince(
+    commentMark,
+    [previousComments, insertedComments],
+    "installed product root comment insertion",
+  );
+
+  previousComments = insertedComments;
+  commentMark = commentPublications.mark();
+  await http.mutation(references.insert, {
+    scopeId: "product-alpha",
+    postId: alpha.sourcePostId,
+    kind: "comment",
+    label: "product inserted reply",
+    parentCommentId: alpha.rootCommentId,
+  });
+  const repliedComments = (
+    await settleProductStore({
+      http,
+      truthReference: references.truth,
+      store: commentStore,
+      args: alphaArgs,
+      reader: "comments",
+      label: "installed product reply insertion",
+    })
+  ).expected;
+  commentPublications.assertPrefixesSince(
+    commentMark,
+    [previousComments, repliedComments],
+    "installed product reply insertion",
+  );
+
+  let previousActivity = await productTruth(
+    http,
+    references.truth,
+    alphaArgs,
+    "activity",
+  );
+  activityMark = activityPublications.mark();
+  await http.mutation(references.insert, {
+    scopeId: "product-alpha",
+    postId: alpha.sourcePostId,
+    kind: "activity",
+    label: "product inserted activity",
+  });
+  const insertedActivity = (
+    await settleProductStore({
+      http,
+      truthReference: references.truth,
+      store: activityStore,
+      args: alphaArgs,
+      reader: "activity",
+      label: "installed product activity insertion",
+    })
+  ).expected;
+  activityPublications.assertPrefixesSince(
+    activityMark,
+    [previousActivity, insertedActivity],
+    "installed product activity insertion",
+  );
+
+  previousComments = repliedComments;
+  commentMark = commentPublications.mark();
+  await http.mutation(references.delete, {
+    scopeId: "product-alpha",
+    kind: "comment",
+    id: previousComments[Math.floor(previousComments.length / 2)].split("@")[0],
+  });
+  const deletedComments = (
+    await settleProductStore({
+      http,
+      truthReference: references.truth,
+      store: commentStore,
+      args: alphaArgs,
+      reader: "comments",
+      label: "installed product middle comment deletion",
+    })
+  ).expected;
+  commentPublications.assertPrefixesSince(
+    commentMark,
+    [previousComments, deletedComments],
+    "installed product middle comment deletion",
+  );
+
+  previousActivity = insertedActivity;
+  activityMark = activityPublications.mark();
+  await http.mutation(references.delete, {
+    scopeId: "product-alpha",
+    kind: "activity",
+    id: previousActivity[Math.floor(previousActivity.length / 2)].split("@")[0],
+  });
+  const deletedActivity = (
+    await settleProductStore({
+      http,
+      truthReference: references.truth,
+      store: activityStore,
+      args: alphaArgs,
+      reader: "activity",
+      label: "installed product middle activity deletion",
+    })
+  ).expected;
+  activityPublications.assertPrefixesSince(
+    activityMark,
+    [previousActivity, deletedActivity],
+    "installed product middle activity deletion",
+  );
+
+  for (const reader of ["comments", "activity"]) {
+    const pendingStore = makeStore(
+      reader,
+      alphaArgs,
+      reader === "comments" ? 101 : 102,
+      1,
+    );
+    const pendingPublications = recordEveryProductPublication(pendingStore);
+    await waitFor(
+      pendingStore,
+      (snapshot) => snapshot.status === "CanLoadMore",
+      `installed product ${reader} pending first page`,
+    );
+    const before = await productTruth(
+      http,
+      references.truth,
+      alphaArgs,
+      reader,
+    );
+    const mark = pendingPublications.mark();
+    pendingStore.loadMore(1);
+    await http.mutation(references.insert, {
+      scopeId: "product-alpha",
+      postId: alpha.canonicalPostId,
+      kind: reader === "comments" ? "comment" : "activity",
+      label: `product pending ${reader}`,
+    });
+    const after = (
+      await settleProductStore({
+        http,
+        truthReference: references.truth,
+        store: pendingStore,
+        args: alphaArgs,
+        reader,
+        label: `installed product ${reader} mutation while loadMore incomplete`,
+      })
+    ).expected;
+    pendingPublications.assertPrefixesSince(
+      mark,
+      [before, after],
+      `installed product ${reader} mutation while loadMore incomplete`,
+    );
+    pendingPublications.stop();
+    pendingStore.dispose();
+  }
+
+  let state = await http.query(references.state, job);
+  assert.equal(state.state, "cutover_done");
+  await http.mutation(references.step, job);
+  state = await http.query(references.state, job);
+  assert.equal(state.state, "cleaning");
+  while (state.state === "cleaning") {
+    const beforeComments = await productTruth(
+      http,
+      references.truth,
+      alphaArgs,
+      "comments",
+    );
+    const beforeActivity = await productTruth(
+      http,
+      references.truth,
+      alphaArgs,
+      "activity",
+    );
+    commentMark = commentPublications.mark();
+    activityMark = activityPublications.mark();
+    await http.mutation(references.step, job);
+    state = await http.query(references.state, job);
+    const afterComments = (
+      await settleProductStore({
+        http,
+        truthReference: references.truth,
+        store: commentStore,
+        args: alphaArgs,
+        reader: "comments",
+        label:
+          state.state === "done"
+            ? "product merge length 2 to 1 comments"
+            : "product merge cleaning repoint comments",
+      })
+    ).expected;
+    const afterActivity = (
+      await settleProductStore({
+        http,
+        truthReference: references.truth,
+        store: activityStore,
+        args: alphaArgs,
+        reader: "activity",
+        label:
+          state.state === "done"
+            ? "product merge length 2 to 1 activity"
+            : "product merge cleaning repoint activity",
+      })
+    ).expected;
+    commentPublications.assertPrefixesSince(
+      commentMark,
+      [beforeComments, afterComments],
+      state.state === "done"
+        ? "product merge length 2 to 1 comments"
+        : "product merge cleaning repoint comments",
+      { requirePublication: false },
+    );
+    activityPublications.assertPrefixesSince(
+      activityMark,
+      [beforeActivity, afterActivity],
+      state.state === "done"
+        ? "product merge length 2 to 1 activity"
+        : "product merge cleaning repoint activity",
+      { requirePublication: false },
+    );
+  }
+  assert.equal(state.state, "done");
+
+  commentPublications.stop();
+  activityPublications.stop();
+  commentStore.dispose();
+  activityStore.dispose();
+  const alphaRecords = tracking.records.filter(
+    (record) =>
+      (record.name === "harness:listProductComments" ||
+        record.name === "harness:listProductActivity") &&
+      record.args.scopeId === alphaArgs.scopeId,
+  );
+
+  for (const reader of ["comments", "activity"]) {
+    const betaStore = makeStore(reader, betaArgs, 200, 2);
+    const stopBeta = betaStore.subscribe(() => {});
+    await settleProductStore({
+      http,
+      truthReference: references.truth,
+      store: betaStore,
+      args: betaArgs,
+      reader,
+      label: `product ${reader} identity B`,
+    });
+    assert.ok(
+      alphaRecords.every(
+        (record) => record.active === 0 && record.disposeCount === 1,
+      ),
+      `product ${reader} identity A watches must be disposed before B`,
+    );
+    stopBeta();
+    betaStore.dispose();
+    const alphaAgainStore = makeStore(reader, alphaArgs, 201, 2);
+    const stopAlphaAgain = alphaAgainStore.subscribe(() => {});
+    await settleProductStore({
+      http,
+      truthReference: references.truth,
+      store: alphaAgainStore,
+      args: alphaArgs,
+      reader,
+      label: `product ${reader} identity A again`,
+    });
+    stopAlphaAgain();
+    alphaAgainStore.dispose();
+    assert.ok(
+      tracking.records
+        .filter(
+          (record) =>
+            record.name ===
+              (reader === "comments"
+                ? "harness:listProductComments"
+                : "harness:listProductActivity") &&
+            (record.args.scopeId === betaArgs.scopeId ||
+              record.args.scopeId === alphaArgs.scopeId),
+        )
+        .every((record) => record.active === 0 && record.disposeCount === 1),
+      `product ${reader} identity A to B to A must dispose each watch exactly once`,
+    );
+  }
+  // Product comment identity A to B to A
+  // Product activity identity A to B to A
+}
+
 async function waitUntil(predicate, label) {
   const deadline = Date.now() + 15_000;
   while (Date.now() < deadline) {
@@ -738,13 +1622,36 @@ try {
   assert.equal(typeof queryModule.createPaginatedWatchStore, "function");
 
   await mkdir(join(temporaryRoot, "convex"), { recursive: true });
+  await cp(
+    join(repositoryRoot, "src/component"),
+    join(temporaryRoot, "component"),
+    {
+      recursive: true,
+      filter: (source) => !source.includes("/_generated"),
+    },
+  );
+  await writeFile(
+    join(temporaryRoot, "component/probe.ts"),
+    productProbeSource,
+  );
   await symlink(
     join(repositoryRoot, "node_modules"),
     join(temporaryRoot, "node_modules"),
   );
   await writeFile(
     join(temporaryRoot, "package.json"),
-    '{"type":"module","dependencies":{"convex":"1.42.2"}}\n',
+    '{"type":"module","dependencies":{"convex":"1.42.2","convex-helpers":"0.1.120","@convex-dev/rate-limiter":"0.3.2","mdast-util-from-markdown":"2.0.3"}}\n',
+  );
+  await writeFile(
+    join(temporaryRoot, "convex/convex.config.ts"),
+    [
+      'import { defineApp } from "convex/server";',
+      'import afferent from "../component/convex.config.js";',
+      "const app = defineApp();",
+      'app.use(afferent, { name: "afferent" });',
+      "export default app;",
+      "",
+    ].join("\n"),
   );
   await writeFile(join(temporaryRoot, "convex/schema.ts"), schemaSource);
   await writeFile(join(temporaryRoot, "convex/harness.ts"), harnessSource);
@@ -770,6 +1677,18 @@ try {
   const deleteComment = reference("deleteComment");
   const canonicalComments = reference("canonicalComments");
   const listComments = reference("listComments");
+  const productReferences = {
+    seed: reference("seedProduct"),
+    begin: reference("beginProductMerge"),
+    step: reference("stepProductMerge"),
+    state: reference("productMergeState"),
+    truth: reference("productTruth"),
+    insert: reference("insertProductRow"),
+    delete: reference("deleteProductRow"),
+    setMode: reference("setProductMode"),
+    listComments: reference("listProductComments"),
+    listActivity: reference("listProductActivity"),
+  };
   await http.mutation(seedItems, { labels: ["a", "b", "c", "d", "e", "f"] });
   setupComplete = true;
 
@@ -1661,6 +2580,13 @@ try {
     );
     stopIdentity();
     identityStore.dispose();
+
+    await proveInstalledProductWatches({
+      http,
+      queryModule,
+      tracking,
+      references: productReferences,
+    });
 
     stopDirect();
     directStore.dispose();

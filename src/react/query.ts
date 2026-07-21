@@ -190,6 +190,7 @@ interface StagedPage<T> {
   result?: PageResult<T>;
   error?: AfferentError;
   invalidCursor?: true;
+  resetCursor?: true;
 }
 
 interface PaginatedStoreOptions<
@@ -312,7 +313,15 @@ export function createPaginatedWatchStore<
     return chain.map((page) => {
       if (page.watch === undefined) return { page };
       try {
-        return { page, result: page.watch.localQueryResult() };
+        const result = page.watch.localQueryResult();
+        if (
+          result !== undefined &&
+          page.endCursor !== undefined &&
+          !sameBoundary(result.continueCursor, page.endCursor)
+        ) {
+          return { page, result, resetCursor: true };
+        }
+        return { page, result };
       } catch (error) {
         if (isInvalidCursorError(error)) return { page, invalidCursor: true };
         return { page, error: mapAfferentError(error) };
@@ -393,6 +402,10 @@ export function createPaginatedWatchStore<
       queueInvalidCursorRestart(capturedEpoch);
       return;
     }
+    if (staged.some((entry) => entry.resetCursor)) {
+      queueInvalidCursorRestart(capturedEpoch);
+      return;
+    }
     const missingCursor = staged.find(
       (entry) =>
         entry.result?.pageStatus === "SplitRequired" &&
@@ -456,9 +469,7 @@ export function createPaginatedWatchStore<
       }),
       descriptor({
         cursor: splitCursor,
-        ...(page.endCursor === undefined
-          ? {}
-          : { endCursor: page.endCursor }),
+        ...(page.endCursor === undefined ? {} : { endCursor: page.endCursor }),
         numItems: page.numItems,
         epoch: page.epoch,
       }),
@@ -476,7 +487,12 @@ export function createPaginatedWatchStore<
     const lastOriginal = current.originals.at(-1);
     const firstReplacement = current.replacements[0];
     const lastReplacement = current.replacements.at(-1);
-    if (!firstOriginal || !lastOriginal || !firstReplacement || !lastReplacement) {
+    if (
+      !firstOriginal ||
+      !lastOriginal ||
+      !firstReplacement ||
+      !lastReplacement
+    ) {
       return invariantError(`${current.kind} replacement is empty`);
     }
     if (!sameBoundary(firstOriginal.cursor, firstReplacement.cursor)) {
@@ -512,13 +528,8 @@ export function createPaginatedWatchStore<
     candidate: PageDescriptor<Item>[];
     staged: StagedPage<Item>[];
   }) {
-    const {
-      current,
-      capturedPages,
-      capturedReplacements,
-      candidate,
-      staged,
-    } = input;
+    const { current, capturedPages, capturedReplacements, candidate, staged } =
+      input;
     if (
       disposed ||
       operation !== current ||
@@ -561,11 +572,7 @@ export function createPaginatedWatchStore<
   }
 
   function rereadOperation(current: StructuralOperation<Item>) {
-    if (
-      disposed ||
-      operation !== current ||
-      current.epoch !== storeEpoch
-    ) {
+    if (disposed || operation !== current || current.epoch !== storeEpoch) {
       return;
     }
     const capturedPages = pages;
@@ -592,6 +599,10 @@ export function createPaginatedWatchStore<
       queueInvalidCursorRestart(current.epoch);
       return;
     }
+    if (staged.some((entry) => entry.resetCursor)) {
+      queueInvalidCursorRestart(current.epoch);
+      return;
+    }
     const missingCursor = staged.find(
       (entry) =>
         current.replacements.includes(entry.page) &&
@@ -615,7 +626,11 @@ export function createPaginatedWatchStore<
         Boolean(entry.result.splitCursor),
     );
     if (nestedSplit?.result?.splitCursor) {
-      replaceCandidate(current, nestedSplit.page, nestedSplit.result.splitCursor);
+      replaceCandidate(
+        current,
+        nestedSplit.page,
+        nestedSplit.result.splitCursor,
+      );
       publishRetained();
       return;
     }
@@ -878,7 +893,9 @@ export function useDirectWatchQuery<Query extends FunctionReference<"query">>({
   query,
   args,
   generation,
-}: DirectWatchHookOptions<Query>): DirectWatchSnapshot<FunctionReturnType<Query>> {
+}: DirectWatchHookOptions<Query>): DirectWatchSnapshot<
+  FunctionReturnType<Query>
+> {
   const queryName = query ? getFunctionName(query) : "skip";
   const serialized = stableArgs(args);
   const store = useMemo(
