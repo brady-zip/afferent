@@ -20,6 +20,22 @@ h5i msg ask --from <self> <peer> "<question>"
 
 Do not replace `<question>` with a placeholder ellipsis. Send the user's actual request.
 
+## Resume a pending request
+
+Do not treat an ASK found only in history from an earlier turn or session as a new live
+transmission. `h5i msg wait` waits for future inbox activity, and `h5i msg watch` streams new
+channel activity; neither re-emits the historical ASK for a watcher that started later.
+
+When resuming a stale pending ASK and the user or peer is watching the live channel:
+
+1. Send a fresh `h5i msg ask --from <self> <peer> "..."` directly to the intended peer.
+2. Reference the prior ASK ID for continuity and repeat enough context to answer independently.
+3. Retain the new ASK ID and correlate the reply against that ID before acting.
+
+Never claim that a live request was sent merely because an older ASK appears in history. If the
+user asked to consult Claude, the fresh recipient must be `claude`, not `all`, `codex`, a generic
+agent, or a subprocess.
+
 ## Wait for and read the reply
 
 Wait on the current agent's inbox:
