@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { cp, mkdtemp, readFile, realpath, rm } from "node:fs/promises";
 import { spawn } from "node:child_process";
+import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
@@ -10,12 +11,12 @@ const repositoryRoot = resolve(
   "../..",
 );
 
-function run(command, args) {
+function run(command, args, options = {}) {
   return new Promise((resolveRun, rejectRun) => {
     const environment = { ...process.env, npm_config_workspaces: "false" };
     delete environment.NODE_TEST_CONTEXT;
     const child = spawn(command, args, {
-      cwd: repositoryRoot,
+      cwd: options.cwd ?? repositoryRoot,
       env: environment,
       stdio: ["ignore", "pipe", "pipe"],
     });
@@ -156,15 +157,123 @@ test("the Phase 2 gate covers the public React artifact and complete consumer", 
 test(
   "the complete release gate passes through the external packed consumer",
   { timeout: 300_000 },
-  async () => {
-    const result = await run(process.execPath, [
-      "--test",
-      "tests/integration/walking-skeleton.test.mjs",
-    ]);
+  async (t) => {
+    const temporaryRoot = await mkdtemp(
+      join(tmpdir(), "afferent-packed-admin-read-"),
+    );
+    t.after(() => rm(temporaryRoot, { force: true, recursive: true }));
+    const consumerRoot = join(temporaryRoot, "packed-vite-convex");
+    await cp(
+      join(repositoryRoot, "fixtures/packed-vite-convex"),
+      consumerRoot,
+      { recursive: true, errorOnExist: true },
+    );
+
+    const result = await run(
+      process.execPath,
+      [
+        join(repositoryRoot, "scripts/test-packed-consumer.mjs"),
+        "--consumer-dir",
+        await realpath(consumerRoot),
+        "--json",
+      ],
+      { cwd: temporaryRoot },
+    );
     assert.equal(
       result.code,
       0,
       `Packed release gate failed:\n${result.stderr || result.stdout}`,
+    );
+
+    const transcript = JSON.parse(result.stdout);
+    const adminRead = transcript.interaction?.adminRead;
+    assert.deepEqual(adminRead?.hiddenIds, [
+      transcript.interaction.createdPost.id,
+    ]);
+    assert.equal(
+      adminRead?.direct?.feedback?.id,
+      transcript.interaction.createdPost.id,
+    );
+    assert.deepEqual(adminRead?.direct?.moderation, {
+      contractVersion: 1,
+      discussionLocked: true,
+      archived: true,
+      disposition: "active",
+    });
+    assert.deepEqual(adminRead?.restore, {
+      eligible: true,
+      discussionLocked: true,
+      archived: true,
+      disposition: "active",
+    });
+
+    assert.equal(adminRead?.changelog?.length, 1);
+    const [entry] = adminRead.changelog;
+    assert.equal(entry.state, "unpublished");
+    assert.deepEqual(entry.links, [
+      {
+        contractVersion: 1,
+        id: transcript.interaction.createdPost.id,
+        title: "Packed consumer feedback",
+        status: { key: "open", label: "Open" },
+      },
+    ]);
+    assert.deepEqual(adminRead?.linkedFeedback, [
+      {
+        entryId: entry.id,
+        id: transcript.interaction.createdPost.id,
+        title: "Packed consumer feedback",
+        status: "open",
+      },
+    ]);
+
+    const selectedActivity = adminRead.activity.filter((row) =>
+      [
+        "board_move",
+        "tag_add",
+        "changelog_publish",
+        "changelog_unpublish",
+      ].includes(row.type),
+    );
+    assert.deepEqual(
+      selectedActivity.find((row) => row.type === "board_move"),
+      {
+        type: "board_move",
+        fromBoard: {
+          contractVersion: 1,
+          name: "Product Feedback",
+          slug: "feedback",
+        },
+        toBoard: {
+          contractVersion: 1,
+          name: "Product Roadmap",
+          slug: "roadmap",
+        },
+      },
+    );
+    assert.deepEqual(
+      selectedActivity.find((row) => row.type === "tag_add"),
+      {
+        type: "tag_add",
+        tag: { contractVersion: 1, name: "Packed tag" },
+      },
+    );
+    for (const type of ["changelog_publish", "changelog_unpublish"]) {
+      assert.deepEqual(
+        selectedActivity.find((row) => row.type === type),
+        {
+          type,
+          changelog: {
+            contractVersion: 1,
+            title: "Packed release",
+            slug: "packed-release",
+          },
+        },
+      );
+    }
+    assert.doesNotMatch(
+      JSON.stringify(adminRead.activity),
+      /fromBoardId|toBoardId|tagId|changelogEntryId/,
     );
   },
 );

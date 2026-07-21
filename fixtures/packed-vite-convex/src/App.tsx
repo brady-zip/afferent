@@ -5,8 +5,11 @@ import type { FormEvent } from "react";
 import { api } from "../convex/_generated/api.js";
 import type {
   AfferentActionResult,
+  AdminChangelogEntryDto,
+  AdminFeedbackPostDto,
   NotificationDto,
   NotificationTarget,
+  PostActivityDto,
   PostDto,
   PostId,
 } from "afferent";
@@ -26,6 +29,7 @@ import {
   useMergePost,
   useNotifications,
   usePost,
+  usePostActivity,
   usePostModeration,
   usePostSubscription,
   useRoadmap,
@@ -88,6 +92,39 @@ const headlessBindings = {
   },
 } satisfies AfferentBindings;
 
+export function adminRestoreProjection(post: AdminFeedbackPostDto) {
+  return {
+    eligible:
+      post.moderation.archived && post.moderation.disposition === "active",
+    discussionLocked: post.moderation.discussionLocked,
+    archived: post.moderation.archived,
+    disposition: post.moderation.disposition,
+  };
+}
+
+export function linkedFeedbackProjection(
+  entries: readonly AdminChangelogEntryDto[],
+) {
+  return entries.flatMap((entry) =>
+    entry.links.map((link) => ({
+      entryId: entry.id,
+      id: link.id,
+      title: link.title,
+      status: link.status.key,
+    })),
+  );
+}
+
+export function readableActivityProjection(rows: readonly PostActivityDto[]) {
+  return rows.map((row) => ({
+    type: row.type,
+    ...(row.fromBoard === undefined ? {} : { fromBoard: row.fromBoard }),
+    ...(row.toBoard === undefined ? {} : { toBoard: row.toBoard }),
+    ...(row.tag === undefined ? {} : { tag: row.tag }),
+    ...(row.changelog === undefined ? {} : { changelog: row.changelog }),
+  }));
+}
+
 function HeadlessWorkflow({ postId }: Readonly<{ postId?: PostId }>) {
   const feed = useFeedbackFeed({ order: "newest" });
   const comments = useComments(postId ?? ("missing" as PostId));
@@ -96,9 +133,10 @@ function HeadlessWorkflow({ postId }: Readonly<{ postId?: PostId }>) {
   const direct = usePost(postId ?? ("missing" as PostId));
   const participation = useFeedbackMutations();
   const admin = useAdminCapability();
-  const adminFeedback = useAdminFeedback("visible");
+  const adminFeedback = useAdminFeedback("hidden");
   const adminPost = useAdminPost(postId ?? ("missing" as PostId));
   const adminChangelog = useAdminChangelog();
+  const activity = usePostActivity(postId ?? ("missing" as PostId));
   const moderation = usePostModeration();
   const tags = useTags();
   const tagManagement = useTagManagement();
@@ -110,6 +148,12 @@ function HeadlessWorkflow({ postId }: Readonly<{ postId?: PostId }>) {
   const subscription = usePostSubscription(postId ?? ("missing" as PostId));
   const notifications = useNotifications();
   const unread = useUnreadNotificationCount();
+  const restore =
+    adminPost.status === "ready"
+      ? adminRestoreProjection(adminPost.post)
+      : undefined;
+  const linkedFeedback = linkedFeedbackProjection(adminChangelog.items);
+  const readableActivity = readableActivityProjection(activity.items);
 
   return (
     <section aria-label="Afferent headless contract">
@@ -137,6 +181,7 @@ function HeadlessWorkflow({ postId }: Readonly<{ postId?: PostId }>) {
           subscription: subscription.status,
           notifications: notifications.status,
           unread: unread.status,
+          activity: activity.status,
         }).map(([capability, status]) => (
           <div key={capability}>
             <dt>{capability}</dt>
@@ -144,10 +189,25 @@ function HeadlessWorkflow({ postId }: Readonly<{ postId?: PostId }>) {
           </div>
         ))}
       </dl>
+      <output data-admin-restore="value">{JSON.stringify(restore)}</output>
+      <ul aria-label="Administrative linked feedback">
+        {linkedFeedback.map((link) => (
+          <li key={`${link.entryId}:${link.id}`}>
+            {link.id}:{link.title}:{link.status}
+          </li>
+        ))}
+      </ul>
+      <output data-admin-activity="value">
+        {JSON.stringify(readableActivity)}
+      </output>
       <ul aria-label="Notification destinations">
         {notifications.items.map((notification: NotificationDto) => {
           const view = notificationTargetView(notification.target);
-          return <li key={notification.id} data-kind={view.kind}>{view.label}</li>;
+          return (
+            <li key={notification.id} data-kind={view.kind}>
+              {view.label}
+            </li>
+          );
         })}
       </ul>
     </section>
@@ -183,15 +243,10 @@ export async function submitFeedback(
 }
 
 export function feedbackActionLabels(
-  post: Pick<
-    PostDto,
-    "viewerHasVoted" | "viewerCanEdit" | "viewerCanWithdraw"
-  >,
+  post: Pick<PostDto, "viewerHasVoted" | "viewerCanEdit" | "viewerCanWithdraw">,
 ) {
   return {
-    vote: post.viewerHasVoted
-      ? "Remove feedback vote"
-      : "Vote for feedback",
+    vote: post.viewerHasVoted ? "Remove feedback vote" : "Vote for feedback",
     edit: post.viewerCanEdit ? "Edit feedback" : undefined,
     withdraw: post.viewerCanWithdraw ? "Withdraw feedback" : undefined,
   };

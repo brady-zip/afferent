@@ -31,12 +31,6 @@ import {
 } from "../../src/react/index.js";
 import { createPaginatedWatchStore } from "../../src/react/query.js";
 
-test("exports live admin read hooks for generation-fenced consumers", () => {
-  expect(useAdminFeedback).toBeTypeOf("function");
-  expect(useAdminPost).toBeTypeOf("function");
-  expect(useAdminChangelog).toBeTypeOf("function");
-});
-
 interface QueryRecord {
   name: string;
   args: Record<string, unknown>;
@@ -203,6 +197,9 @@ const refs = {
   capability: query("capability"),
   activity: query("activity"),
   tags: query("tags"),
+  adminFeedback: query("adminFeedback"),
+  adminPost: query("adminPost"),
+  adminChangelog: query("adminChangelog"),
 };
 
 const bindings = {
@@ -234,6 +231,9 @@ const bindings = {
   },
   admin: {
     capability: refs.capability,
+    listAdminFeedback: refs.adminFeedback,
+    getAdminPost: refs.adminPost,
+    listAdminChangelog: refs.adminChangelog,
     editPost: mutation("adminEdit"),
     movePost: mutation("movePost"),
     setPostStatus: mutation("setStatus"),
@@ -288,6 +288,9 @@ function defaultQueryValue(name: string) {
   if (name === "headless:capability") return true;
   if (name === "headless:activity") return page([]);
   if (name === "headless:tags") return { contractVersion: 1, tags: [] };
+  if (name === "headless:adminFeedback") return page([]);
+  if (name === "headless:adminPost") return undefined;
+  if (name === "headless:adminChangelog") return page([]);
   return undefined;
 }
 
@@ -327,6 +330,9 @@ function AllHooksProbe() {
   const capability = useAdminCapability();
   const activity = usePostActivity("post:1" as never);
   const tags = useTags();
+  const adminFeedback = useAdminFeedback("hidden");
+  const adminPost = useAdminPost("post:1" as never);
+  const adminChangelog = useAdminChangelog();
   mutationProbe = useFeedbackMutations();
   feedProbe = feed;
   commentsProbe = comments;
@@ -361,6 +367,13 @@ function AllHooksProbe() {
         capability: capability.status,
         activity: activity.status,
         tags: tags.status,
+        adminFeedback: adminFeedback.status,
+        adminFeedbackItems: adminFeedback.items,
+        adminPost: adminPost.status,
+        adminPostValue:
+          adminPost.status === "ready" ? adminPost.post : undefined,
+        adminChangelog: adminChangelog.status,
+        adminChangelogItems: adminChangelog.items,
         pending: mutationProbe.pending,
         errors: mutationProbe.errors,
       })}
@@ -423,6 +436,188 @@ afterEach(() => {
 });
 
 describe("mounted non-throwing headless reads", () => {
+  test("fences all admin read values across auth generations and stale publications", async () => {
+    const client = new ControlledWatchClient();
+    const mounted = renderHarness(client, { status: "unauthenticated" });
+    await act(async () => {});
+    expect(state(mounted.container)).toMatchObject({
+      adminFeedback: "not-authorized",
+      adminFeedbackItems: [],
+      adminPost: "not-authorized",
+      adminChangelog: "not-authorized",
+      adminChangelogItems: [],
+    });
+    for (const name of [
+      "headless:adminFeedback",
+      "headless:adminPost",
+      "headless:adminChangelog",
+    ]) {
+      expect(client.matching(name)).toHaveLength(0);
+    }
+
+    mounted.rerender({
+      status: "authenticated",
+      identityToken: "admin-a",
+    } as never);
+    await act(async () => {});
+    const generationA = client.matching("headless:adminFeedback")[0].args
+      .sessionGeneration;
+    for (const name of ["headless:adminPost", "headless:adminChangelog"]) {
+      expect(client.matching(name)[0].args.sessionGeneration).toBe(generationA);
+    }
+    const feedbackA = {
+      contractVersion: 1,
+      feedback: { id: "post-a", title: "Admin A hidden" },
+      moderation: {
+        contractVersion: 1,
+        discussionLocked: true,
+        archived: true,
+        disposition: "active",
+      },
+    };
+    const changelogA = {
+      contractVersion: 2,
+      id: "changelog-a",
+      title: "Admin A release",
+      links: [{ id: "post-a", title: "Admin A hidden" }],
+    };
+    act(() => {
+      client.update(
+        "headless:adminFeedback",
+        (args) => args.sessionGeneration === generationA,
+        page([feedbackA]),
+      );
+      client.update(
+        "headless:adminPost",
+        (args) => args.sessionGeneration === generationA,
+        feedbackA,
+      );
+      client.update(
+        "headless:adminChangelog",
+        (args) => args.sessionGeneration === generationA,
+        page([changelogA]),
+      );
+    });
+    expect(state(mounted.container)).toMatchObject({
+      adminFeedback: "ready",
+      adminFeedbackItems: [feedbackA],
+      adminPost: "ready",
+      adminPostValue: feedbackA,
+      adminChangelog: "ready",
+      adminChangelogItems: [changelogA],
+    });
+
+    const stale = [
+      client.matching("headless:adminFeedback")[0],
+      client.matching("headless:adminPost")[0],
+      client.matching("headless:adminChangelog")[0],
+    ].map((record) => ({ record, listeners: [...record.listeners] }));
+    mounted.rerender({
+      status: "authenticated",
+      identityToken: "admin-b",
+    } as never);
+    await act(async () => {});
+    const cleared = state(mounted.container);
+    expect(cleared).toMatchObject({
+      adminFeedback: "empty",
+      adminFeedbackItems: [],
+      adminPost: "loading",
+      adminChangelog: "empty",
+      adminChangelogItems: [],
+    });
+    expect(cleared).not.toHaveProperty("adminPostValue");
+    const generationB = client.matching("headless:adminFeedback").at(-1)!.args
+      .sessionGeneration;
+    expect(generationB).not.toBe(generationA);
+    for (const name of ["headless:adminPost", "headless:adminChangelog"]) {
+      expect(client.matching(name).at(-1)!.args.sessionGeneration).toBe(
+        generationB,
+      );
+    }
+
+    act(() => {
+      for (const { record, listeners } of stale) {
+        record.value =
+          record.name === "headless:adminPost"
+            ? feedbackA
+            : page(
+                record.name === "headless:adminFeedback"
+                  ? [feedbackA]
+                  : [changelogA],
+              );
+        for (const listener of listeners) listener();
+      }
+    });
+    expect(state(mounted.container)).toMatchObject({
+      adminFeedbackItems: [],
+      adminPost: "loading",
+      adminChangelogItems: [],
+    });
+
+    const feedbackB = {
+      contractVersion: 1,
+      feedback: { id: "post-b", title: "Admin B hidden" },
+      moderation: {
+        contractVersion: 1,
+        discussionLocked: false,
+        archived: true,
+        disposition: "active",
+      },
+    };
+    const changelogB = {
+      contractVersion: 2,
+      id: "changelog-b",
+      title: "Admin B release",
+      links: [{ id: "post-b", title: "Admin B hidden" }],
+    };
+    act(() => {
+      client.update(
+        "headless:adminFeedback",
+        (args) => args.sessionGeneration === generationB,
+        page([feedbackB]),
+      );
+      client.update(
+        "headless:adminPost",
+        (args) => args.sessionGeneration === generationB,
+        feedbackB,
+      );
+      client.update(
+        "headless:adminChangelog",
+        (args) => args.sessionGeneration === generationB,
+        page([changelogB]),
+      );
+    });
+    expect(state(mounted.container)).toMatchObject({
+      adminFeedbackItems: [feedbackB],
+      adminPostValue: feedbackB,
+      adminChangelogItems: [changelogB],
+    });
+
+    mounted.rerender({ status: "unauthenticated" });
+    await act(async () => {});
+    const loggedOut = state(mounted.container);
+    expect(loggedOut).toMatchObject({
+      adminFeedback: "not-authorized",
+      adminFeedbackItems: [],
+      adminPost: "not-authorized",
+      adminChangelog: "not-authorized",
+      adminChangelogItems: [],
+    });
+    expect(loggedOut).not.toHaveProperty("adminPostValue");
+    for (const name of [
+      "headless:adminFeedback",
+      "headless:adminPost",
+      "headless:adminChangelog",
+    ]) {
+      expect(client.active(name)).toHaveLength(0);
+    }
+    for (const record of client.records) {
+      expect(JSON.stringify(record.args)).not.toContain("admin-a");
+      expect(JSON.stringify(record.args)).not.toContain("admin-b");
+    }
+    mounted.unmount();
+  });
+
   test("every public direct and paginated hook returns a typed initial error", async () => {
     const client = new ControlledWatchClient();
     client.defaultError = new Error("initial transport failure");

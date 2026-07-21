@@ -7,8 +7,11 @@ import { expect, test } from "vitest";
 
 import { api } from "../convex/_generated/api.js";
 import {
+  adminRestoreProjection,
   feedbackActionLabels,
+  linkedFeedbackProjection,
   notificationTargetView,
+  readableActivityProjection,
   submitFeedback,
 } from "./App.js";
 
@@ -83,7 +86,10 @@ test("the form submit handler writes through the host wrapper and renders the pu
     api.afferent.configureInstallation,
     {
       readPolicy: "public",
-      boards: [{ slug: "feedback", name: "Product Feedback" }],
+      boards: [
+        { slug: "feedback", name: "Product Feedback" },
+        { slug: "roadmap", name: "Product Roadmap" },
+      ],
     },
   );
   const board = configured.boards[0];
@@ -117,6 +123,138 @@ test("the form submit handler writes through the host wrapper and renders the pu
     withdraw: "Withdraw feedback",
   });
 
+  await authenticated.mutation(api.afferent.movePost, {
+    postId: createdPost.id,
+    boardId: configured.boards[1].id,
+  });
+  const tag = await authenticated.mutation(api.afferent.createTag, {
+    name: "Packed tag",
+  });
+  await authenticated.mutation(api.afferent.setPostTag, {
+    postId: createdPost.id,
+    tagId: tag.id,
+    desired: true,
+  });
+  const draft = await authenticated.mutation(
+    api.afferent.createChangelogDraft,
+    {
+      title: "Packed release",
+      body: "Packed release notes",
+      slug: "packed-release",
+    },
+  );
+  await authenticated.mutation(api.afferent.setChangelogLinks, {
+    entryId: draft.id,
+    postIds: [createdPost.id],
+  });
+  await authenticated.mutation(api.afferent.publishChangelog, {
+    entryId: draft.id,
+  });
+  await authenticated.mutation(api.afferent.unpublishChangelog, {
+    entryId: draft.id,
+  });
+  await authenticated.mutation(api.afferent.setDiscussionLock, {
+    postId: createdPost.id,
+    locked: true,
+  });
+  await authenticated.mutation(api.afferent.setArchived, {
+    postId: createdPost.id,
+    archived: true,
+  });
+
+  const hidden = await authenticated.query(api.afferent.listAdminFeedback, {
+    visibility: "hidden",
+    sessionGeneration: 1,
+    paginationOpts: { numItems: 20, cursor: null },
+  });
+  const adminPost = await authenticated.query(api.afferent.getAdminPost, {
+    postId: createdPost.id,
+    sessionGeneration: 1,
+  });
+  const adminChangelog = await authenticated.query(
+    api.afferent.listAdminChangelog,
+    {
+      sessionGeneration: 1,
+      paginationOpts: { numItems: 20, cursor: null },
+    },
+  );
+  const activity = await authenticated.query(api.afferent.listPostActivity, {
+    postId: createdPost.id,
+    sessionGeneration: 1,
+    paginationOpts: { numItems: 20, cursor: null },
+  });
+  const restore = adminRestoreProjection(adminPost);
+  const linkedFeedback = linkedFeedbackProjection(adminChangelog.page);
+  const readableActivity = readableActivityProjection(activity.page);
+
+  expect(hidden.page.map((row) => row.feedback.id)).toEqual([createdPost.id]);
+  expect(adminPost.moderation).toEqual({
+    contractVersion: 1,
+    discussionLocked: true,
+    archived: true,
+    disposition: "active",
+  });
+  expect(restore).toEqual({
+    eligible: true,
+    discussionLocked: true,
+    archived: true,
+    disposition: "active",
+  });
+  expect(adminChangelog.page).toMatchObject([
+    {
+      id: draft.id,
+      state: "unpublished",
+      links: [
+        {
+          id: createdPost.id,
+          title: browserArgs.title,
+          status: { key: "open", label: "Open" },
+        },
+      ],
+    },
+  ]);
+  expect(linkedFeedback).toEqual([
+    {
+      entryId: draft.id,
+      id: createdPost.id,
+      title: browserArgs.title,
+      status: "open",
+    },
+  ]);
+  expect(readableActivity).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        type: "board_move",
+        fromBoard: expect.objectContaining({
+          name: "Product Feedback",
+          slug: "feedback",
+        }),
+        toBoard: expect.objectContaining({
+          name: "Product Roadmap",
+          slug: "roadmap",
+        }),
+      }),
+      expect.objectContaining({
+        type: "tag_add",
+        tag: expect.objectContaining({ name: "Packed tag" }),
+      }),
+      expect.objectContaining({
+        type: "changelog_publish",
+        changelog: expect.objectContaining({
+          title: "Packed release",
+          slug: "packed-release",
+        }),
+      }),
+      expect.objectContaining({
+        type: "changelog_unpublish",
+        changelog: expect.objectContaining({
+          title: "Packed release",
+          slug: "packed-release",
+        }),
+      }),
+    ]),
+  );
+
   const transcriptPath = process.env.AFFERENT_TRANSCRIPT_PATH;
   if (transcriptPath) {
     await writeFile(
@@ -133,6 +271,14 @@ test("the form submit handler writes through the host wrapper and renders the pu
         },
         trustedHostScope: "fixed-server-only",
         actorFields: ["externalKey", "displayName"],
+        adminRead: {
+          hiddenIds: hidden.page.map((row) => row.feedback.id),
+          direct: adminPost,
+          restore,
+          changelog: adminChangelog.page,
+          linkedFeedback,
+          activity: readableActivity,
+        },
       }),
     );
   }
