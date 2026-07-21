@@ -191,8 +191,270 @@ describe("subscription and notification invariants", () => {
       contractVersion: 1,
       kind: "post",
       postId: post.id,
-      label: "View comment on feedback: Canonical destination",
+      label: "View feedback: Canonical destination",
     });
+    expect(inbox.page[0].target).not.toHaveProperty("commentId");
+  });
+
+  test("rejects a cross-scope required post without leaking its destination", async () => {
+    const backend = withRateLimiter(convexTest(schema, modules));
+    const ctx = context(backend) as never;
+    const alpha = client("scope:post-alpha", "post-alpha:admin", true);
+    const beta = client("scope:post-beta", "post-beta:admin", true);
+    await alpha.admin.configureInstallation(ctx, {
+      readPolicy: "public",
+      boards: [{ slug: "feedback", name: "Feedback" }],
+    });
+    const betaInstall = await beta.admin.configureInstallation(ctx, {
+      readPolicy: "public",
+      boards: [{ slug: "feedback", name: "Feedback" }],
+    });
+    const foreignPost = await beta.participation.createPost(ctx, {
+      boardId: betaInstall.boards[0].id,
+      title: "Foreign post title must stay private",
+      body: "Foreign post body must stay private",
+    });
+    await backend.run(async (runCtx) => {
+      const existingActor = await runCtx.db
+        .query("actors")
+        .withIndex("by_scope_external_key", (q) =>
+          q
+            .eq("scopeId", "scope:post-alpha")
+            .eq("externalKey", "post-alpha:admin"),
+        )
+        .unique();
+      const actorId = existingActor?._id ?? await runCtx.db.insert("actors", {
+        scopeId: "scope:post-alpha",
+        externalKey: "post-alpha:admin",
+      });
+      const foreignPostId = runCtx.db.normalizeId("posts", foreignPost.id)!;
+      const eventId = await runCtx.db.insert("notificationEvents", {
+        scopeId: "scope:post-alpha",
+        type: "status_changed",
+        initiatorActorId: actorId,
+        postId: foreignPostId,
+        entityId: String(foreignPostId),
+        occurredAt: 1,
+        guardKey: "cross-scope:post",
+      });
+      await runCtx.db.insert("notificationInbox", {
+        scopeId: "scope:post-alpha",
+        actorId,
+        eventId,
+        type: "status_changed",
+        entityId: String(foreignPostId),
+        occurredAt: 1,
+        orderId: "cross-scope:post",
+        unreadKey: "unread",
+      });
+    });
+
+    let rejection: unknown;
+    try {
+      await backend.query(api.notifications.inbox.listNotifications, {
+        scopeId: "scope:post-alpha",
+        actor: { externalKey: "post-alpha:admin" },
+        paginationOpts: { numItems: 20, cursor: null },
+      });
+    } catch (error) {
+      rejection = error;
+    }
+    expect(rejection).toBeInstanceOf(Error);
+    expect((rejection as Error).message).toBe(
+      "NOTIFICATION_TARGET_POST_INVARIANT",
+    );
+    const serialized = `${String(rejection)} ${JSON.stringify(rejection)}`;
+    expect(serialized).not.toContain(foreignPost.id);
+    expect(serialized).not.toContain("Foreign post title must stay private");
+    expect(serialized).not.toContain("target");
+  });
+
+  test("rejects a cross-scope required changelog without leaking its destination", async () => {
+    const backend = withRateLimiter(convexTest(schema, modules));
+    const ctx = context(backend) as never;
+    const admin = client("scope:changelog-alpha", "changelog-alpha:admin", true);
+    const install = await admin.admin.configureInstallation(ctx, {
+      readPolicy: "public",
+      boards: [{ slug: "feedback", name: "Feedback" }],
+    });
+    const post = await admin.participation.createPost(ctx, {
+      boardId: install.boards[0].id,
+      title: "Validated event post",
+      body: "Required post remains in scope",
+    });
+    const foreign = await backend.run(async (runCtx) => {
+      const postId = runCtx.db.normalizeId("posts", post.id)!;
+      const actor = await runCtx.db
+        .query("actors")
+        .withIndex("by_scope_external_key", (q) =>
+          q
+            .eq("scopeId", "scope:changelog-alpha")
+            .eq("externalKey", "changelog-alpha:admin"),
+        )
+        .unique();
+      const entryId = await runCtx.db.insert("changelogEntries", {
+        scopeId: "scope:changelog-beta",
+        title: "Foreign changelog title must stay private",
+        body: "Foreign changelog body must stay private",
+        slug: "foreign-changelog-slug-must-stay-private",
+        publishedKey: "published",
+        createdAt: 1,
+        updatedAt: 1,
+        firstPublishedAt: 1,
+        publishedAt: 1,
+        orderId: "cross-scope:changelog",
+      });
+      const eventId = await runCtx.db.insert("notificationEvents", {
+        scopeId: "scope:changelog-alpha",
+        type: "changelog_published",
+        initiatorActorId: actor!._id,
+        postId,
+        entityId: String(entryId),
+        occurredAt: 1,
+        guardKey: "cross-scope:changelog",
+      });
+      await runCtx.db.insert("notificationInbox", {
+        scopeId: "scope:changelog-alpha",
+        actorId: actor!._id,
+        eventId,
+        type: "changelog_published",
+        entityId: String(entryId),
+        occurredAt: 1,
+        orderId: "cross-scope:changelog",
+        unreadKey: "unread",
+      });
+      return String(entryId);
+    });
+
+    let rejection: unknown;
+    try {
+      await backend.query(api.notifications.inbox.listNotifications, {
+        scopeId: "scope:changelog-alpha",
+        actor: { externalKey: "changelog-alpha:admin" },
+        paginationOpts: { numItems: 20, cursor: null },
+      });
+    } catch (error) {
+      rejection = error;
+    }
+    expect(rejection).toBeInstanceOf(Error);
+    expect((rejection as Error).message).toBe(
+      "NOTIFICATION_TARGET_CHANGELOG_INVARIANT",
+    );
+    const serialized = `${String(rejection)} ${JSON.stringify(rejection)}`;
+    expect(serialized).not.toContain(foreign);
+    expect(serialized).not.toContain("foreign-changelog-slug-must-stay-private");
+    expect(serialized).not.toContain("Foreign changelog title must stay private");
+    expect(serialized).not.toContain("target");
+  });
+
+  test("degrades cross-scope and wrong-post comments to the event post only", async () => {
+    const backend = withRateLimiter(convexTest(schema, modules));
+    const ctx = context(backend) as never;
+    const admin = client("scope:comment-alpha", "comment-alpha:admin", true);
+    const install = await admin.admin.configureInstallation(ctx, {
+      readPolicy: "public",
+      boards: [{ slug: "feedback", name: "Feedback" }],
+    });
+    const eventPost = await admin.participation.createPost(ctx, {
+      boardId: install.boards[0].id,
+      title: "Safe event destination",
+      body: "This is the only destination that may be exposed",
+    });
+    const wrongPost = await admin.participation.createPost(ctx, {
+      boardId: install.boards[0].id,
+      title: "Wrong related post must stay private",
+      body: "Same-scope but not the event post",
+    });
+    const invalidIds = await backend.run(async (runCtx) => {
+      const eventPostId = runCtx.db.normalizeId("posts", eventPost.id)!;
+      const wrongPostId = runCtx.db.normalizeId("posts", wrongPost.id)!;
+      const actor = await runCtx.db
+        .query("actors")
+        .withIndex("by_scope_external_key", (q) =>
+          q
+            .eq("scopeId", "scope:comment-alpha")
+            .eq("externalKey", "comment-alpha:admin"),
+        )
+        .unique();
+      const foreignActorId = await runCtx.db.insert("actors", {
+        scopeId: "scope:comment-beta",
+        externalKey: "comment-beta:author",
+      });
+      const foreignBoardId = await runCtx.db.insert("boards", {
+        scopeId: "scope:comment-beta",
+        slug: "feedback",
+        name: "Foreign Feedback",
+        sortOrder: 0,
+      });
+      const foreignPostId = await runCtx.db.insert("posts", {
+        scopeId: "scope:comment-beta",
+        boardId: foreignBoardId,
+        actorId: foreignActorId,
+        title: "Foreign comment post must stay private",
+        body: "Foreign comment relation",
+        lifecycleState: "active",
+        statusKey: "open",
+        voteCount: 0,
+        commentCount: 1,
+      });
+      const foreignCommentId = await runCtx.db.insert("comments", {
+        scopeId: "scope:comment-beta",
+        postId: foreignPostId,
+        actorId: foreignActorId,
+        body: "Foreign comment body must stay private",
+      });
+      const wrongPostCommentId = await runCtx.db.insert("comments", {
+        scopeId: "scope:comment-alpha",
+        postId: wrongPostId,
+        actorId: actor!._id,
+        body: "Wrong-post comment body must stay private",
+      });
+      for (const [index, [type, entityId]] of [
+        ["comment_replied", String(foreignCommentId)],
+        ["mentioned", String(wrongPostCommentId)],
+      ].entries()) {
+        const eventId = await runCtx.db.insert("notificationEvents", {
+          scopeId: "scope:comment-alpha",
+          type: type as "comment_replied" | "mentioned",
+          initiatorActorId: actor!._id,
+          postId: eventPostId,
+          entityId,
+          occurredAt: index + 1,
+          guardKey: `invalid-comment:${type}`,
+        });
+        await runCtx.db.insert("notificationInbox", {
+          scopeId: "scope:comment-alpha",
+          actorId: actor!._id,
+          eventId,
+          type: type as "comment_replied" | "mentioned",
+          entityId,
+          occurredAt: index + 1,
+          orderId: `invalid-comment:${index}`,
+          unreadKey: "unread",
+        });
+      }
+      return [String(foreignCommentId), String(wrongPostCommentId)];
+    });
+
+    const inbox = await backend.query(api.notifications.inbox.listNotifications, {
+      scopeId: "scope:comment-alpha",
+      actor: { externalKey: "comment-alpha:admin" },
+      paginationOpts: { numItems: 20, cursor: null },
+    });
+    expect(inbox.page).toHaveLength(2);
+    for (const notification of inbox.page) {
+      expect(notification.target).toEqual({
+        contractVersion: 1,
+        kind: "post",
+        postId: eventPost.id,
+        label: "View feedback: Safe event destination",
+      });
+      expect(notification.target).not.toHaveProperty("commentId");
+    }
+    const serialized = JSON.stringify(inbox);
+    for (const invalidId of invalidIds) expect(serialized).not.toContain(invalidId);
+    expect(serialized).not.toContain("Wrong related post must stay private");
+    expect(serialized).not.toContain("Foreign comment post must stay private");
   });
 
   test("preserves durable opt-out and does not subscribe voters", async () => {
