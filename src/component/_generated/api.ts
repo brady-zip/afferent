@@ -28,6 +28,7 @@ import type * as model_content from "../model/content.js";
 import type * as model_errors from "../model/errors.js";
 import type * as model_mentions from "../model/mentions.js";
 import type * as model_merge from "../model/merge.js";
+import type * as model_mergedPagination from "../model/mergedPagination.js";
 import type * as model_notifications from "../model/notifications.js";
 import type * as model_rateLimits from "../model/rateLimits.js";
 import type * as model_scope from "../model/scope.js";
@@ -82,6 +83,7 @@ const fullApi: ApiFromModules<{
   "model/errors": typeof model_errors;
   "model/mentions": typeof model_mentions;
   "model/merge": typeof model_merge;
+  "model/mergedPagination": typeof model_mergedPagination;
   "model/notifications": typeof model_notifications;
   "model/rateLimits": typeof model_rateLimits;
   "model/scope": typeof model_scope;

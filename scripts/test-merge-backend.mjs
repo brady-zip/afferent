@@ -105,6 +105,14 @@ export const seed = mutation({
           actorId,
           body: "comment " + index,
         });
+        await ctx.db.insert("postActivity", {
+          scopeId: args.scopeId,
+          postId,
+          actorId,
+          type: "edit",
+          occurredAt: 42,
+          changedFields: ["field-" + index],
+        });
       }
     }
     const counts = await Promise.all([
@@ -207,6 +215,31 @@ export const observe = query({
   handler: (ctx, args) => mergeObservation(ctx, args.scopeId, args.jobId),
 });
 
+export const readerTruth = query({
+  args: {
+    scopeId: v.string(),
+    canonicalPostId: v.string(),
+    sourcePostId: v.string(),
+  },
+  returns: v.any(),
+  handler: async (ctx, args) => {
+    const canonicalPostId = ctx.db.normalizeId("posts", args.canonicalPostId);
+    const sourcePostId = ctx.db.normalizeId("posts", args.sourcePostId);
+    if (!canonicalPostId || !sourcePostId) throw new Error("bad post ids");
+    const postIds = [canonicalPostId, sourcePostId];
+    const comments = (await Promise.all(postIds.map(postId =>
+      ctx.db.query("comments").withIndex("by_scope_post", q => q.eq("scopeId", args.scopeId).eq("postId", postId)).collect()
+    ))).flat().sort((left, right) => left._creationTime - right._creationTime || String(left._id).localeCompare(String(right._id)));
+    const activity = (await Promise.all(postIds.map(postId =>
+      ctx.db.query("postActivity").withIndex("by_scope_post_occurred", q => q.eq("scopeId", args.scopeId).eq("postId", postId)).collect()
+    ))).flat().sort((left, right) => right.occurredAt - left.occurredAt || right._creationTime - left._creationTime || String(right._id).localeCompare(String(left._id)));
+    return {
+      comments: comments.map(row => String(row._id)),
+      activity: activity.map(row => String(row._id)),
+    };
+  },
+});
+
 export const hideCanonical = mutation({
   args: { scopeId: v.string(), postId: v.string() },
   returns: v.null(),
@@ -230,6 +263,9 @@ export const step = mutation({ args: { scopeId: v.string(), jobId: v.string() },
 export const abortMerge = mutation({ args: { scopeId: v.string(), jobId: v.string() }, returns: v.any(), handler: (ctx, args) => ctx.runMutation(components.afferent.probe.abortMerge, args) });
 export const concurrentWrite = mutation({ args: { scopeId: v.string(), jobId: v.string(), postId: v.string(), suffix: v.string() }, returns: v.null(), handler: (ctx, args) => ctx.runMutation(components.afferent.probe.concurrentWrite, args) });
 export const observe = query({ args: { scopeId: v.string(), jobId: v.string() }, returns: v.any(), handler: (ctx, args) => ctx.runQuery(components.afferent.probe.observe, args) });
+export const readerTruth = query({ args: { scopeId: v.string(), canonicalPostId: v.string(), sourcePostId: v.string() }, returns: v.any(), handler: (ctx, args) => ctx.runQuery(components.afferent.probe.readerTruth, args) });
+export const listComments = query({ args: { scopeId: v.string(), postId: v.string(), paginationOpts: v.any() }, returns: v.any(), handler: (ctx, args) => ctx.runQuery(components.afferent.public.comments.listComments, { ...args, viewerAuthenticated: true }) });
+export const listPostActivity = query({ args: { scopeId: v.string(), postId: v.string(), paginationOpts: v.any() }, returns: v.any(), handler: (ctx, args) => ctx.runQuery(components.afferent.admin.activity.listPostActivity, args) });
 export const resolve = query({ args: { scopeId: v.string(), postId: v.string() }, returns: v.any(), handler: (ctx, args) => ctx.runQuery(components.afferent.public.posts.resolvePost, { ...args, viewerAuthenticated: true }) });
 export const hideCanonical = mutation({ args: { scopeId: v.string(), postId: v.string() }, returns: v.null(), handler: (ctx, args) => ctx.runMutation(components.afferent.probe.hideCanonical, args) });
 `;
@@ -311,6 +347,132 @@ function assertPreOrPostOnly(samples, pre, post) {
   }
 }
 
+async function readAllPages(client, name, args) {
+  const ids = [];
+  const pages = [];
+  let cursor = null;
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    const page = await client.query(reference(name), {
+      ...args,
+      paginationOpts: { numItems: 2, cursor },
+    });
+    pages.push(page);
+    ids.push(...page.page.map((row) => row.id));
+    if (page.isDone) return { ids, pages };
+    cursor = page.continueCursor;
+  }
+  throw new Error(`${name} pagination did not finish`);
+}
+
+function rewriteCursor(cursor, patch) {
+  const prefix = "afferent-page:v1:";
+  assert.ok(cursor.startsWith(prefix));
+  const encoded = cursor.slice(prefix.length).replaceAll("-", "+").replaceAll("_", "/");
+  const envelope = JSON.parse(Buffer.from(encoded, "base64url").toString("utf8"));
+  const rewritten = Buffer.from(JSON.stringify({ ...envelope, ...patch }), "utf8").toString("base64url");
+  return prefix + rewritten;
+}
+
+async function assertReaderPagination(client, seeded) {
+  const args = {
+    scopeId: "alpha",
+    canonicalPostId: seeded.canonicalPostId,
+    sourcePostId: seeded.sourcePostId,
+  };
+  const truth = await client.query(reference("readerTruth"), args);
+  const comments = await readAllPages(client, "listComments", {
+    scopeId: args.scopeId,
+    postId: args.canonicalPostId,
+  });
+  const activity = await readAllPages(client, "listPostActivity", {
+    scopeId: args.scopeId,
+    postId: args.canonicalPostId,
+  });
+  assert.ok(comments.pages.length >= 3);
+  assert.ok(activity.pages.length >= 3);
+  assert.deepEqual(comments.ids, truth.comments);
+  assert.deepEqual(activity.ids, truth.activity);
+
+  const firstComments = comments.pages[0];
+  const pinned = await client.query(reference("listComments"), {
+    scopeId: args.scopeId,
+    postId: args.canonicalPostId,
+    paginationOpts: {
+      numItems: 2,
+      cursor: null,
+      endCursor: firstComments.continueCursor,
+    },
+  });
+  assert.deepEqual(
+    pinned.page.map((row) => row.id),
+    firstComments.page.map((row) => row.id),
+  );
+
+  const sourcePage = await client.query(reference("listComments"), {
+    scopeId: args.scopeId,
+    postId: args.sourcePostId,
+    paginationOpts: {
+      numItems: 2,
+      cursor: firstComments.continueCursor,
+    },
+  });
+  assert.deepEqual(
+    sourcePage.page.map((row) => row.id),
+    comments.pages[1].page.map((row) => row.id),
+  );
+
+  const malformed = await client.query(reference("listComments"), {
+    scopeId: args.scopeId,
+    postId: args.canonicalPostId,
+    paginationOpts: { numItems: 2, cursor: "malformed" },
+  });
+  assert.deepEqual(
+    malformed.page.map((row) => row.id),
+    firstComments.page.map((row) => row.id),
+  );
+  for (const badCursor of [
+    rewriteCursor(firstComments.continueCursor, { version: 99 }),
+    rewriteCursor(firstComments.continueCursor, { reader: "activity" }),
+    rewriteCursor(firstComments.continueCursor, { order: "occurred_desc" }),
+    rewriteCursor(firstComments.continueCursor, { streams: "stale" }),
+  ]) {
+    const reset = await client.query(reference("listComments"), {
+      scopeId: args.scopeId,
+      postId: args.canonicalPostId,
+      paginationOpts: { numItems: 2, cursor: badCursor },
+    });
+    assert.deepEqual(
+      reset.page.map((row) => row.id),
+      firstComments.page.map((row) => row.id),
+    );
+    const resetEnd = await client.query(reference("listComments"), {
+      scopeId: args.scopeId,
+      postId: args.canonicalPostId,
+      paginationOpts: { numItems: 2, cursor: null, endCursor: badCursor },
+    });
+    assert.deepEqual(
+      resetEnd.page.map((row) => row.id),
+      firstComments.page.map((row) => row.id),
+    );
+  }
+
+  const bounded = await client.query(reference("listComments"), {
+    scopeId: args.scopeId,
+    postId: args.canonicalPostId,
+    paginationOpts: {
+      numItems: 2,
+      cursor: firstComments.continueCursor,
+      maximumRowsRead: 3,
+    },
+  });
+  assert.deepEqual(
+    bounded.page.map((row) => row.id),
+    comments.pages[1].page.map((row) => row.id),
+  );
+  assert.notEqual(bounded.pageStatus, "SplitRequired");
+  return { truth, comments, activity };
+}
+
 async function advanceTo(client, job, wanted) {
   for (let attempt = 0; attempt < 100; attempt += 1) {
     const current = await recordObservation(client, job);
@@ -372,6 +534,29 @@ try {
   const postSnapshot = await recordObservation(client, job);
   const post = observable(postSnapshot);
   assert.notDeepEqual(post, fencedPre);
+  const cutoverReaders = await assertReaderPagination(client, seeded);
+
+  await client.mutation(reference("step"), job);
+  await client.mutation(reference("step"), job);
+  const repointedTruth = await client.query(reference("readerTruth"), {
+    scopeId: "alpha",
+    canonicalPostId: seeded.canonicalPostId,
+    sourcePostId: seeded.sourcePostId,
+  });
+  assert.deepEqual(repointedTruth, cutoverReaders.truth);
+  const repointedPinned = await client.query(reference("listComments"), {
+    scopeId: "alpha",
+    postId: seeded.canonicalPostId,
+    paginationOpts: {
+      numItems: 2,
+      cursor: null,
+      endCursor: cutoverReaders.comments.pages[0].continueCursor,
+    },
+  });
+  assert.deepEqual(
+    repointedPinned.page.map((row) => row.id),
+    cutoverReaders.comments.pages[0].page.map((row) => row.id),
+  );
 
   await stopBackend();
   await startBackend();
@@ -380,6 +565,18 @@ try {
   const done = await recordObservation(client, job);
   assert.deepEqual(observable(done), post);
   assert.equal(done.physical.sourceRelations, 0);
+  const normalizedComments = await client.query(reference("listComments"), {
+    scopeId: "alpha",
+    postId: seeded.canonicalPostId,
+    paginationOpts: {
+      numItems: 2,
+      cursor: cutoverReaders.comments.pages[0].continueCursor,
+    },
+  });
+  assert.deepEqual(
+    normalizedComments.page.map((row) => row.id),
+    cutoverReaders.comments.pages[0].page.map((row) => row.id),
+  );
   await client.mutation(reference("step"), job);
   await client.mutation(reference("step"), job);
   assert.deepEqual(observable(await recordObservation(client, job)), post);
