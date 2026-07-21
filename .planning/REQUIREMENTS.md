@@ -117,10 +117,10 @@ Requirements for the first production-ready public release. Roadmap creation wil
 - [x] **QUAL-04**: A clean consumer fixture can install registry components and build them against the supported package version range.
 - [ ] **QUAL-05**: Browser tests verify the public feedback, roadmap, changelog, notification, and admin workflows against a real Convex deployment.
 - [ ] **QUAL-06**: Adversarial two-user tests verify that sandbox reads, writes, search, counts, seeds, resets, and cleanup never cross visitor scopes.
-- [ ] **QUAL-07**: Supplied public and admin interfaces meet documented WCAG 2.2 AA-oriented keyboard, focus, announcement, contrast, zoom, and reflow checks.
-- [ ] **QUAL-08**: Supplied public and admin interfaces support phone, tablet, and desktop layouts.
+- [x] **QUAL-07**: Supplied public and admin interfaces meet documented WCAG 2.2 AA-oriented keyboard, focus, announcement, contrast, zoom, and reflow checks.
+- [x] **QUAL-08**: Supplied public and admin interfaces support phone, tablet, and desktop layouts.
 
-  Plan 03-02 supplies component-level public feedback focus, announcement, stable DOM-order, and responsive CSS evidence. Both requirements remain pending until Plan 03-06 completes the real-browser public/admin accessibility, zoom, and reflow matrix.
+  Plan 03-06 supplies installed-source public/admin keyboard, focus, announcement, exact contrast, target-size, 320 CSS-pixel reflow, 200% zoom, and phone/tablet/desktop evidence. Axe is retained as a supplemental regression net rather than certification.
 
 - [ ] **QUAL-09**: Documentation covers installation, component mounting, all three auth integrations, access policy, headless React usage, shadcn installation, customization, testing, deployment, and upgrades.
 - [x] **QUAL-10**: The repository and published package include the Apache-2.0 license.
@@ -261,8 +261,8 @@ Every v1 requirement maps to exactly one roadmap phase.
 | QUAL-04     | Phase 3 | Complete |
 | QUAL-05     | Phase 4 | Pending  |
 | QUAL-06     | Phase 4 | Pending  |
-| QUAL-07     | Phase 3 | Pending  |
-| QUAL-08     | Phase 3 | Pending  |
+| QUAL-07     | Phase 3 | Complete |
+| QUAL-08     | Phase 3 | Complete |
 | QUAL-09     | Phase 4 | Pending  |
 | QUAL-10     | Phase 1 | Complete |
 | QUAL-11     | Phase 4 | Pending  |

@@ -16,7 +16,7 @@ Afferent reaches its first public release through four coarse vertical slices. T
 - [x] **Phase 2.1: Server-Derived Viewer Capability Contract** - Add server-derived vote membership and edit/withdraw capabilities required by the copied UI without accepting client authority facts. (INSERTED) (completed 2026-07-21)
 - [x] **Phase 2.2: Notification Navigation Target Contract** - Project versioned, public, accessible notification destinations without exposing polymorphic internal identifiers. (INSERTED) (completed 2026-07-21)
 - [x] **Phase 2.3: Admin Read and Projection Completion** - Complete server-authorized admin reads and presentation-ready moderation, changelog, and activity projections. (INSERTED) (completed 2026-07-21)
-- [ ] **Phase 3: Source-Owned Product Interface** - Consumers can install accessible, responsive public and admin shadcn interfaces from one canonical source.
+- [ ] **Phase 3: Source-Owned Product Interface** - All 6 plans are implemented; awaiting independent verification of the installed accessibility, layout, and aggregate release evidence.
 - [ ] **Phase 4: Hosted Production Release** - The published package, registry, documentation, and isolated public demo work together against real Convex.
 
 ## Phase Details
@@ -234,14 +234,14 @@ Plans:
 4. Supplied public and admin interfaces pass documented WCAG 2.2 AA-oriented keyboard, focus, announcement, contrast, 320 CSS-pixel reflow, 200% zoom, and phone/tablet/desktop layout checks with versioned evidence.
 
 **UI hint**: yes
-**Plans:** 5/6 plans executed
+**Plans:** 6/6 plans executed
 
 - [x] 03-01-PLAN.md
 - [x] 03-02-PLAN.md
 - [x] 03-03-PLAN.md
 - [x] 03-04-PLAN.md
 - [x] 03-05-PLAN.md
-- [ ] 03-06-PLAN.md
+- [x] 03-06-PLAN.md
 
 **Wave 1**
 
@@ -253,7 +253,7 @@ Plans:
 
 **Wave 3** _(blocked on Wave 2 completion)_
 
-- [ ] `03-03-PLAN.md` — Add exact roadmap, chronological changelog, and composable notification public surfaces.
+- [x] `03-03-PLAN.md` — Add exact roadmap, chronological changelog, and composable notification public surfaces.
 
 **Wave 4** _(blocked on Wave 3 completion)_
 
@@ -265,7 +265,7 @@ Plans:
 
 **Wave 6** _(blocked on Wave 5 completion)_
 
-- [ ] `03-06-PLAN.md` — Produce browser accessibility/reflow/zoom evidence and the aggregate Phase 3 release gate.
+- [x] `03-06-PLAN.md` — Produce browser accessibility/reflow/zoom evidence and the aggregate Phase 3 release gate.
 
 **Cross-cutting constraints:**
 
@@ -295,15 +295,15 @@ Plans:
 **Execution Order:**
 Phases execute sequentially: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 3 -> 4
 
-| Phase                                         | Plans Complete | Status      | Completed  |
-| --------------------------------------------- | -------------- | ----------- | ---------- |
-| 1. Secure Installable Feedback Board          | 8/8            | Complete    | 2026-07-16 |
-| 2. Complete Feedback-to-Changelog Workflow    | 17/17          | Complete    | 2026-07-21 |
-| 2.1 Server-Derived Viewer Capability Contract | 1/1            | Complete    | 2026-07-21 |
-| 2.2 Notification Navigation Target Contract   | 2/2            | Complete    | 2026-07-21 |
-| 2.3 Admin Read and Projection Completion      | 2/2            | Complete    | 2026-07-21 |
-| 3. Source-Owned Product Interface             | 4/6            | In progress | -          |
-| 4. Hosted Production Release                  | 0/TBD          | Not started | -          |
+| Phase                                         | Plans Complete | Status       | Completed  |
+| --------------------------------------------- | -------------- | ------------ | ---------- |
+| 1. Secure Installable Feedback Board          | 8/8            | Complete     | 2026-07-16 |
+| 2. Complete Feedback-to-Changelog Workflow    | 17/17          | Complete     | 2026-07-21 |
+| 2.1 Server-Derived Viewer Capability Contract | 1/1            | Complete     | 2026-07-21 |
+| 2.2 Notification Navigation Target Contract   | 2/2            | Complete     | 2026-07-21 |
+| 2.3 Admin Read and Projection Completion      | 2/2            | Complete     | 2026-07-21 |
+| 3. Source-Owned Product Interface             | 6/6            | Verification | -          |
+| 4. Hosted Production Release                  | 0/TBD          | Not started  | -          |
 
 ---
 

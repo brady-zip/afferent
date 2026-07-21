@@ -4,17 +4,17 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 03
 current_phase_name: Source-Owned Product Interface
-status: executing
-stopped_at: Ready to execute 03-06-PLAN.md
-last_updated: "2026-07-21T22:01:50.000Z"
+status: verifying
+stopped_at: Plan 03-06 complete; ready for independent Phase 3 verification
+last_updated: "2026-07-21T22:33:43.000Z"
 last_activity: 2026-07-21
-last_activity_desc: Completed 03-05 complete UI distribution
+last_activity_desc: Completed 03-06 installed accessibility and layout evidence
 progress:
   total_phases: 7
   completed_phases: 5
   total_plans: 36
-  completed_plans: 35
-  percent: 97
+  completed_plans: 36
+  percent: 100
 ---
 
 # Project State
@@ -30,18 +30,18 @@ See: .planning/PROJECT.md (updated 2026-07-17)
 
 Phase: 03 — Source-Owned Product Interface
 Plan: 03-06 of 6
-Status: In progress — ready for browser accessibility and layout evidence
-Last activity: 2026-07-21 — Completed 03-05 complete UI distribution
+Status: Ready for independent verification
+Last activity: 2026-07-21 — Completed 03-06 installed accessibility and layout evidence
 
-Progress: [██████████] 97%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 35
+- Total plans completed: 36
 - Average duration: 37 min
-- Total execution time: 1310 min
+- Total execution time: 1342 min
 
 **By Phase:**
 
@@ -51,12 +51,12 @@ Progress: [██████████] 97%
 | Phase 02   | 17    | 854 min | 50 min   |
 | Phase 02.1 | 1     | 68 min  | 68 min   |
 | Phase 02.3 | 2     | 33 min  | 17 min   |
-| Phase 03   | 5     | 74 min  | 15 min   |
+| Phase 03   | 6     | 106 min | 18 min   |
 
 **Recent Trend:**
 
-- Last 5 plans: 17 min, 8 min, 20 min, 20 min, 13 min
-- Trend: Phase 3 all-item distribution closed in 17 minutes with packed clean-consumer proof
+- Last 5 plans: 32 min, 17 min, 8 min, 20 min, 20 min
+- Trend: Phase 3 closed with installed keyboard, contrast, reflow, zoom, and aggregate-gate evidence in 32 minutes
 
 _Updated after each plan completion_
 
@@ -99,6 +99,7 @@ _Updated after each plan completion_
 | Phase 03 P03   | 20min    | 3 tasks | 27 files |
 | Phase 03 P04   | 8min     | 3 tasks | 25 files |
 | Phase 03 P05   | 17min    | 3 tasks | 15 files |
+| Phase 03 P06   | 32min    | 3 tasks | 42 files |
 
 ## Accumulated Context
 
@@ -183,6 +184,9 @@ Recent decisions affecting current work:
 - [Phase 03]: Flat comment DTO order remains authoritative and parentCommentId adds presentation context only. — Discussion rendering introduces no parallel cache or recursive tree.
 - [Phase 03]: Server viewer capability fields control action presentation while trusted host wrappers authorize every mutation. — Copied UI never fabricates browser authority.
 - [Phase 03]: Public feedback keeps one result-before-detail DOM order and adds wider composition through CSS-only breakpoints. — Phone, keyboard, and assistive-technology order remain stable.
+- [Phase 03]: Accept accessibility behavior through installed-source keyboard, focus, live-region, target geometry, reflow, and zoom evidence; axe remains supplemental. — Machine-detectable findings cannot substitute for interaction and layout proof.
+- [Phase 03]: Compare exact token contrast ratios before display rounding. — Threshold decisions cannot be changed by presentation formatting.
+- [Phase 03]: Make the Phase 3 aggregate gate self-audit its installed distribution, browser, UI, hydration, contrast, artifact, and Phase 2 regression coverage. — Required release checks cannot be silently removed from the named gate.
 - [Phase 02]: Expose comment reads as one optional public binding and map omission to an inert unsupported hook state. — Existing consumers remain compatible and React never falls through to direct backend access.
 - [Phase 02]: Reuse the closed flat CommentDto and shared atomic paginated watch store unchanged for useComments. — Replies preserve parentCommentId without a recursive tree, second cache, schema change, or generic CRUD surface.
 - [Phase 02]: Use one versioned composite-cursor stream for canonical-plus-source comments and activity, honoring both cursor boundaries and full stable tie keys. — The installed convex-helpers merged stream supplies index-bounded page pinning; public DTO and authority boundaries remain unchanged.
@@ -227,6 +231,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-21T22:01:50Z
-Stopped at: Ready to execute 03-06-PLAN.md
+Last session: 2026-07-21T22:33:43Z
+Stopped at: Plan 03-06 complete; ready for independent Phase 3 verification
 Resume file: None
