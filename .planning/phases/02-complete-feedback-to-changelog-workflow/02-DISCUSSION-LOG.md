@@ -170,6 +170,18 @@ Acceptance must invoke the real installed component queries after actual small a
 
 ---
 
+## Exact Installed-Reader Oracle Gap Closure
+
+**Date:** 2026-07-20
+
+Independent re-verification after the bounded Plan 02-16 retry reached 62/64 because the installed-reader harness still accepted any publication that happened to be a prefix of one of several candidate sequences. That permissive oracle could not prove exact full-window publication equality, same-publication fault-prefix coupling, scoped active descriptor boundaries through the merge lifecycle, non-vacuous cleanup sequences, or rejection of late old-generation result and error callbacks after an A-to-B-to-A identity transition.
+
+The live interactive Claude peer supplied the required verifier constraints in radio ASK `#f44421ca15b39572`: derive each expected publication from an independent model of the exact prior/current server window; require fault code and exact maximal coherent prefix in the same publication; record exact active boundaries across 1-to-2 cutover, cleanup, 2-to-1 completion, and append; prove exact non-empty publication count and content; deliver deferred late result and error callbacks after A-to-B-to-A; await the next publication against one deadline without sampling or retries; add eight rejection meta-tests; invoke the real installed `listComments` and `listPostActivity` readers after actual merge transitions; leave production untouched unless the stricter oracle first exposes a real defect; and treat any flake as failure across repeated direct runs plus the full Phase 2 gate.
+
+The peer's suggestion to overwrite or retry Plan 02-16 was rejected because the canonical verifier returned `gaps_found` with `/gsd:plan-phase 02 --gaps`. Plan 02-17 therefore owns the additive verification correction while Plan 02-16 remains immutable completed history.
+
+---
+
 ## the agent's Discretion
 
 - Exact Trending constants, field sizes, rate-limit values/windows, Complete recency window, inbox cap, lease/retry thresholds, and debounce defaults.

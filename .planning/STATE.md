@@ -4,17 +4,17 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 2
 current_phase_name: Complete Feedback-to-Changelog Workflow
-status: verifying
-stopped_at: Completed bounded 02-16 verifier retry; awaiting phase re-verification
-last_updated: "2026-07-21T05:22:00.000Z"
+status: in_progress
+stopped_at: Phase 2 reopened; ready to execute additive Plan 02-17
+last_updated: "2026-07-21T05:50:41.000Z"
 last_activity: 2026-07-20
-last_activity_desc: Closed 02-16 cursor-decode and real-watch verifier gaps
+last_activity_desc: Planned additive exact temporal-oracle closure 02-17
 progress:
   total_phases: 4
-  completed_phases: 2
-  total_plans: 30
+  completed_phases: 1
+  total_plans: 31
   completed_plans: 25
-  percent: 50
+  percent: 81
 ---
 
 # Project State
@@ -24,16 +24,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-17)
 
 **Core value:** SaaS teams can add deeply integrated product feedback to an existing Convex application while retaining native ownership of their data, identity, permissions, and user experience.
-**Current focus:** Phase 2 — re-verification of bounded merged reader pagination closure
+**Current focus:** Phase 2 — Complete Feedback-to-Changelog Workflow
 
 ## Current Position
 
 Phase: 2 — Complete Feedback-to-Changelog Workflow
-Plan: 02-16 of 16
-Status: Executed bounded retry — awaiting re-verification
-Last activity: 2026-07-20 — Closed cursor-decode and real-watch verifier gaps
+Plan: 02-17 of 17
+Status: Ready to execute
+Last activity: 2026-07-20 — Planned additive exact temporal-oracle closure
 
-Progress: [████████░░] 83%
+Progress: [████████░░] 81%
 
 ## Performance Metrics
 
@@ -190,6 +190,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-21T04:55:03.263Z
-Stopped at: Completed 02-16-PLAN.md; awaiting phase verification
+Last session: 2026-07-21T05:50:41.000Z
+Stopped at: Planned 02-17-PLAN.md; ready for additive gap-only execution
 Resume file: None
