@@ -75,6 +75,7 @@ Requirements for the first production-ready public release. Roadmap creation wil
 - [x] **NOTF-05**: A subscribed user receives an in-app notification when a linked changelog entry is published.
 - [x] **NOTF-06**: A host application can consume typed delivery events for supported notification events without adopting a built-in email or push vendor.
 - [x] **NOTF-07**: A user can mark individual in-app notifications as read.
+- [ ] **NOTF-08**: In-app notification DTOs expose a closed versioned post/comment or public-changelog navigation target with a human-readable accessible label, without polymorphic internal identifiers or client-side resolution.
 
 ### Component and Auth Integration
 
@@ -228,6 +229,7 @@ Every v1 requirement maps to exactly one roadmap phase.
 | NOTF-05     | Phase 2 | Complete |
 | NOTF-06     | Phase 2 | Complete |
 | NOTF-07     | Phase 2 | Complete |
+| NOTF-08     | Phase 2.2 | Pending |
 | COMP-01     | Phase 4 | Pending  |
 | COMP-02     | Phase 1 | Complete |
 | COMP-03     | Phase 1 | Complete |
@@ -264,8 +266,8 @@ Every v1 requirement maps to exactly one roadmap phase.
 
 **Coverage:**
 
-- v1 requirements: 81 total
-- Mapped to phases: 81
+- v1 requirements: 82 total
+- Mapped to phases: 82
 - Unmapped: 0 ✓
 
 ---

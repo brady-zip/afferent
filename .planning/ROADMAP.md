@@ -177,14 +177,21 @@ Plans:
 
 ### Phase 02.2: Notification Navigation Target Contract (INSERTED)
 
-**Goal:** [Urgent work - to be planned]
-**Requirements**: TBD
+**Goal:** In-app notification consumers receive a versioned, accessible, public navigation destination resolved from trusted source records without polymorphic internal IDs or client-side joins.
+**Requirements**: NOTF-08
 **Depends on:** Phase 02.1
-**Plans:** 0 plans
+**Success Criteria** (what must be TRUE):
+
+1. Notification DTOs expose a required closed post/comment-anchor or public-changelog-slug target with a server-authored human-readable accessible label and no public polymorphic `entityId`.
+2. Target resolution is scope- and relationship-complete inside the component, so host wrappers, hooks, packed consumers, and copied UI need no direct or N+1 referent reads.
+3. Small and resumable merges canonicalize post destinations while preserving comment and changelog source identity, with safe post-only degradation for legacy-invalid optional comment anchors.
+4. Exact DTO/page version bumps, validators/generated references, headless and packed consumption, adversarial scope/ID/scan guards, and the complete Phase 2 regression prove the contract.
+
+**Plans:** 0/1 plans complete
 
 Plans:
 
-- [ ] TBD (run /gsd-plan-phase 02.2 to break down)
+- [ ] `02.2-01-PLAN.md` — Replace public polymorphic notification IDs with server-resolved accessible targets and type-aware merge normalization.
 
 ### Phase 02.3: Admin Read and Projection Completion (INSERTED)
 
@@ -277,7 +284,7 @@ Phases execute sequentially: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 3 -> 4
 | 1. Secure Installable Feedback Board       | 8/8            | Complete         | 2026-07-16 |
 | 2. Complete Feedback-to-Changelog Workflow | 17/17 | Complete    | 2026-07-21 |
 | 2.1 Server-Derived Viewer Capability Contract | 1/1 | Complete   | 2026-07-21 |
-| 2.2 Notification Navigation Target Contract | 0/TBD | Not started | -          |
+| 2.2 Notification Navigation Target Contract | 0/1 | Ready to execute | -          |
 | 2.3 Admin Read and Projection Completion   | 0/TBD          | Not started      | -          |
 | 3. Source-Owned Product Interface          | 2/6            | In progress      | -          |
 | 4. Hosted Production Release               | 0/TBD          | Not started      | -          |
