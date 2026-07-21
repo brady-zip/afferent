@@ -4,10 +4,159 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
+import {
+  assertExactPublicationSequence,
+  createExpectedPublicationModel,
+} from "../helpers/headless-publication-oracle.mjs";
+
 const repositoryRoot = resolve(
   dirname(fileURLToPath(import.meta.url)),
   "../..",
 );
+
+const chain = [
+  { cursor: null, endCursor: "after-2", numItems: 2 },
+  { cursor: "after-2", numItems: 2 },
+];
+
+function publication(overrides = {}) {
+  return {
+    reader: "comments",
+    generation: 7,
+    status: "Exhausted",
+    ids: ["a", "b", "c", "d"],
+    boundaries: chain,
+    ...overrides,
+  };
+}
+
+function exactModel(publications, deferredDeliveries = []) {
+  return createExpectedPublicationModel({
+    reader: "comments",
+    generation: 7,
+    publications,
+    deferredDeliveries,
+  });
+}
+
+test("the exact publication oracle rejects every unsound evidence class", () => {
+  const exact = publication();
+  const cases = [
+    {
+      label: "shorter non-error publication",
+      model: exactModel([exact]),
+      actual: [publication({ ids: ["a", "b"] })],
+    },
+    {
+      label: "correct fault code with wrong prefix",
+      model: exactModel([
+        publication({
+          status: "Error",
+          ids: ["a", "b"],
+          errorCode: "TRANSIENT",
+        }),
+      ]),
+      actual: [
+        publication({
+          status: "Error",
+          ids: ["a"],
+          errorCode: "TRANSIENT",
+        }),
+      ],
+    },
+    {
+      label: "wrong fault code with correct prefix",
+      model: exactModel([
+        publication({
+          status: "Error",
+          ids: ["a", "b"],
+          errorCode: "TRANSIENT",
+        }),
+      ]),
+      actual: [
+        publication({
+          status: "Error",
+          ids: ["a", "b"],
+          errorCode: "UNKNOWN",
+        }),
+      ],
+    },
+    {
+      label: "overlapping descriptor boundaries",
+      model: exactModel([exact]),
+      actual: [
+        publication({
+          boundaries: [
+            { cursor: null, endCursor: "after-2", numItems: 2 },
+            { cursor: "after-1", numItems: 2 },
+          ],
+        }),
+      ],
+    },
+    {
+      label: "gapped descriptor boundaries",
+      model: exactModel([exact]),
+      actual: [
+        publication({
+          boundaries: [
+            { cursor: null, endCursor: "after-1", numItems: 2 },
+            { cursor: "after-2", numItems: 2 },
+          ],
+        }),
+      ],
+    },
+    {
+      label: "zero publications",
+      model: exactModel([exact]),
+      actual: [],
+    },
+  ];
+  for (const { label, model, actual } of cases) {
+    assert.throws(
+      () => assertExactPublicationSequence(actual, model),
+      undefined,
+      label,
+    );
+  }
+
+  for (const kind of ["result", "error"]) {
+    assert.throws(
+      () =>
+        assertExactPublicationSequence(
+          [exact],
+          exactModel([exact], [
+            { originGeneration: 6, kind, rejected: true },
+          ]),
+          [{ originGeneration: 6, kind, rejected: false }],
+        ),
+      undefined,
+      `accepted stale ${kind}`,
+    );
+  }
+});
+
+test("the exact publication oracle accepts coupled first middle and tail faults", () => {
+  const publications = [
+    publication({
+      status: "Error",
+      ids: [],
+      errorCode: "TRANSIENT",
+    }),
+    publication({
+      status: "Error",
+      ids: ["a", "b"],
+      errorCode: "TRANSIENT",
+    }),
+    publication({
+      status: "Error",
+      ids: ["a", "b", "c", "d"],
+      errorCode: "TRANSIENT",
+    }),
+  ];
+  assert.doesNotThrow(() =>
+    assertExactPublicationSequence(publications, exactModel(publications)),
+  );
+});
 
 test("the Phase 2 gate includes mounted headless and real watch-query proofs", async () => {
   const manifest = JSON.parse(
