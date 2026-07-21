@@ -1,9 +1,14 @@
 import { ConvexError } from "convex/values";
 
-import type { Doc } from "../_generated/dataModel.js";
+import type { Doc, Id } from "../_generated/dataModel.js";
 import type { MutationCtx, QueryCtx } from "../_generated/server.js";
 import { ANONYMIZED_AUTHOR_LABEL, isAnonymizedExternalKey } from "./actors.js";
 import { MAX_TAGS_PER_POST } from "./scoring.js";
+import {
+  canActorEditPost,
+  canActorWithdrawPost,
+} from "./postCapabilities.js";
+import { findVoteMembership } from "./votes.js";
 
 const STATUS_LABELS = {
   open: "Open",
@@ -34,10 +39,18 @@ export function toActorDto(actor: Doc<"actors">) {
 export async function toPostDto(
   ctx: QueryCtx | MutationCtx,
   post: Doc<"posts">,
+  viewerActorId?: Id<"actors">,
 ) {
-  const [board, actor] = await Promise.all([
+  const [board, actor, viewerVote] = await Promise.all([
     ctx.db.get(post.boardId),
     ctx.db.get(post.actorId),
+    viewerActorId === undefined
+      ? null
+      : findVoteMembership(ctx, {
+          scopeId: post.scopeId,
+          postId: post._id,
+          actorId: viewerActorId,
+        }),
   ]);
   if (
     !board ||
@@ -48,7 +61,7 @@ export async function toPostDto(
     throw new ConvexError({ code: "INVARIANT_VIOLATION" });
   }
   return {
-    contractVersion: 1 as const,
+    contractVersion: 2 as const,
     id: String(post._id),
     boardId: String(post.boardId),
     board: toBoardDto(board),
@@ -60,14 +73,18 @@ export async function toPostDto(
     commentCount: post.commentCount,
     totals: { votes: post.voteCount, comments: post.commentCount },
     tags: [] as string[],
+    viewerHasVoted: viewerVote !== null,
+    viewerCanEdit: canActorEditPost(post, viewerActorId),
+    viewerCanWithdraw: canActorWithdrawPost(post, viewerActorId),
   };
 }
 
 export async function toFeedbackPostDto(
   ctx: QueryCtx | MutationCtx,
   post: Doc<"posts">,
+  viewerActorId?: Id<"actors">,
 ) {
-  const [board, actor, memberships] = await Promise.all([
+  const [board, actor, memberships, viewerVote] = await Promise.all([
     ctx.db.get(post.boardId),
     ctx.db.get(post.actorId),
     ctx.db
@@ -76,6 +93,13 @@ export async function toFeedbackPostDto(
         query.eq("scopeId", post.scopeId).eq("postId", post._id),
       )
       .take(MAX_TAGS_PER_POST + 1),
+    viewerActorId === undefined
+      ? null
+      : findVoteMembership(ctx, {
+          scopeId: post.scopeId,
+          postId: post._id,
+          actorId: viewerActorId,
+        }),
   ]);
   if (
     !board ||
@@ -93,7 +117,7 @@ export async function toFeedbackPostDto(
     throw new ConvexError({ code: "INVARIANT_VIOLATION" });
   }
   return {
-    contractVersion: 2 as const,
+    contractVersion: 3 as const,
     id: String(post._id),
     boardId: String(post.boardId),
     board: toBoardDto(board),
@@ -114,5 +138,8 @@ export async function toFeedbackPostDto(
         id: String(tag!._id),
         name: tag!.name,
       })),
+    viewerHasVoted: viewerVote !== null,
+    viewerCanEdit: canActorEditPost(post, viewerActorId),
+    viewerCanWithdraw: canActorWithdrawPost(post, viewerActorId),
   };
 }

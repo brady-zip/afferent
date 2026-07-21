@@ -216,10 +216,10 @@ describe("public contract privacy", () => {
       "tags",
       "title",
       "totals",
-      "voteCount",
       "viewerCanEdit",
       "viewerCanWithdraw",
       "viewerHasVoted",
+      "voteCount",
     ]);
     expect(
       Object.keys(publicPostDtoValidator.fields.author.fields).sort(),

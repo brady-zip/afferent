@@ -61,7 +61,7 @@ export const setVote = mutation({
       args.desired,
       post.voteCount,
     );
-    if (!projection.membershipChanged) return await toPostDto(ctx, post);
+    if (!projection.membershipChanged) return await toPostDto(ctx, post, actorId);
 
     if (args.desired) {
       const id = await ctx.db.insert("votes", {
@@ -93,6 +93,6 @@ export const setVote = mutation({
     const updated = await patchPostRanking(ctx, post, {
       voteCount: projection.voteCount,
     });
-    return await toPostDto(ctx, updated);
+    return await toPostDto(ctx, updated, actorId);
   },
 });

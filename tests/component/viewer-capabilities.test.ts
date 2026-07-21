@@ -102,14 +102,16 @@ describe("server-derived viewer capabilities", () => {
     viewerActor = { externalKey: "fixture:owner" };
     await readAll(viewerFields(false, true, true));
 
-    const actorCountBefore = await backend.run(async (runCtx) =>
-      (await runCtx.db.query("actors").collect()).length,
-    );
+    const actorCountBefore = await backend.run(async (runCtx) => {
+      const actors = await runCtx.db.query("actors").collect();
+      return actors.length;
+    });
     viewerActor = { externalKey: "fixture:still-no-row" };
     await readAll(viewerFields(false, false, false));
-    const actorCountAfter = await backend.run(async (runCtx) =>
-      (await runCtx.db.query("actors").collect()).length,
-    );
+    const actorCountAfter = await backend.run(async (runCtx) => {
+      const actors = await runCtx.db.query("actors").collect();
+      return actors.length;
+    });
     expect(actorCountAfter).toBe(actorCountBefore);
   });
 

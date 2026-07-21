@@ -93,7 +93,7 @@ export type BoardDto = Readonly<{
 }>;
 
 export type PostDto = Readonly<{
-  contractVersion: 1;
+  contractVersion: 2;
   id: PostId;
   boardId: BoardId;
   board: BoardDto;
@@ -109,6 +109,9 @@ export type PostDto = Readonly<{
   commentCount: number;
   totals: Readonly<{ votes: number; comments: number }>;
   tags: string[];
+  viewerHasVoted: boolean;
+  viewerCanEdit: boolean;
+  viewerCanWithdraw: boolean;
 }>;
 
 export type TagDto = Readonly<{
@@ -126,7 +129,7 @@ export type TagDeleteResultDto = Readonly<{
 }>;
 
 export type FeedbackPostDto = Readonly<{
-  contractVersion: 2;
+  contractVersion: 3;
   id: PostId;
   boardId: BoardId;
   board: BoardDto;
@@ -147,17 +150,20 @@ export type FeedbackPostDto = Readonly<{
   commentCount: number;
   totals: Readonly<{ votes: number; comments: number }>;
   tags: TagDto[];
+  viewerHasVoted: boolean;
+  viewerCanEdit: boolean;
+  viewerCanWithdraw: boolean;
 }>;
 
 export type PostLookupResult =
-  | Readonly<{ contractVersion: 1; status: "post"; post: FeedbackPostDto }>
+  | Readonly<{ contractVersion: 2; status: "post"; post: FeedbackPostDto }>
   | Readonly<{
-      contractVersion: 1;
+      contractVersion: 2;
       status: "merged";
       requestedPostId: PostId;
       canonicalPostId: PostId;
     }>
-  | Readonly<{ contractVersion: 1; status: "notFound" }>;
+  | Readonly<{ contractVersion: 2; status: "notFound" }>;
 
 export type MergePostResult = Readonly<{
   contractVersion: 1;
@@ -176,7 +182,7 @@ export type PaginationOptions = Readonly<{
 }>;
 
 export type PostPageDto = Readonly<{
-  contractVersion: 1;
+  contractVersion: 2;
   page: PostDto[];
   posts: PostDto[];
   isDone: boolean;
@@ -186,7 +192,7 @@ export type PostPageDto = Readonly<{
 }>;
 
 export type FeedbackPageDto = Readonly<{
-  contractVersion: 2;
+  contractVersion: 3;
   page: FeedbackPostDto[];
   posts: FeedbackPostDto[];
   isDone: boolean;
@@ -689,7 +695,7 @@ export const publicBoardDtoValidator = v.object({
 });
 
 export const publicPostDtoValidator = v.object({
-  contractVersion: v.literal(1),
+  contractVersion: v.literal(2),
   id: v.string(),
   boardId: v.string(),
   board: publicBoardDtoValidator,
@@ -705,6 +711,9 @@ export const publicPostDtoValidator = v.object({
   commentCount: v.number(),
   totals: v.object({ votes: v.number(), comments: v.number() }),
   tags: v.array(v.string()),
+  viewerHasVoted: v.boolean(),
+  viewerCanEdit: v.boolean(),
+  viewerCanWithdraw: v.boolean(),
 });
 
 export const publicAfferentErrorValidator = v.union(
@@ -748,7 +757,7 @@ export const publicPostActionResultValidator = v.union(
 );
 
 export const publicFeedbackPostDtoValidator = v.object({
-  contractVersion: v.literal(2),
+  contractVersion: v.literal(3),
   id: v.string(),
   boardId: v.string(),
   board: publicBoardDtoValidator,
@@ -787,6 +796,9 @@ export const publicFeedbackPostDtoValidator = v.object({
       name: v.string(),
     }),
   ),
+  viewerHasVoted: v.boolean(),
+  viewerCanEdit: v.boolean(),
+  viewerCanWithdraw: v.boolean(),
 });
 
 export const tagResultValidator = v.object({
@@ -946,12 +958,12 @@ export const installationResultValidator = v.object({
 });
 
 export const postListResultValidator = v.object({
-  contractVersion: v.literal(1),
+  contractVersion: v.literal(2),
   posts: v.array(publicPostDtoValidator),
 });
 
 export const postPageResultValidator = v.object({
-  contractVersion: v.literal(1),
+  contractVersion: v.literal(2),
   page: v.array(publicPostDtoValidator),
   posts: v.array(publicPostDtoValidator),
   isDone: v.boolean(),
@@ -967,7 +979,7 @@ export const postPageResultValidator = v.object({
 });
 
 export const feedbackPageResultValidator = v.object({
-  contractVersion: v.literal(2),
+  contractVersion: v.literal(3),
   page: v.array(publicFeedbackPostDtoValidator),
   posts: v.array(publicFeedbackPostDtoValidator),
   isDone: v.boolean(),
@@ -984,17 +996,17 @@ export const feedbackPageResultValidator = v.object({
 
 export const postLookupResultValidator = v.union(
   v.object({
-    contractVersion: v.literal(1),
+    contractVersion: v.literal(2),
     status: v.literal("post"),
     post: publicFeedbackPostDtoValidator,
   }),
   v.object({
-    contractVersion: v.literal(1),
+    contractVersion: v.literal(2),
     status: v.literal("merged"),
     requestedPostId: v.string(),
     canonicalPostId: v.string(),
   }),
-  v.object({ contractVersion: v.literal(1), status: v.literal("notFound") }),
+  v.object({ contractVersion: v.literal(2), status: v.literal("notFound") }),
 );
 
 export const mergePostResultValidator = v.object({

@@ -23,6 +23,10 @@ import {
 } from "../validators.js";
 import { normalizePlainText, validateSafeMarkdown } from "../model/content.js";
 import { ensureAutoSubscription } from "./subscriptions.js";
+import {
+  canActorEditPost,
+  canActorWithdrawPost,
+} from "../model/postCapabilities.js";
 
 function postSearchText(title: string, body: string) {
   return `${title}\n${body}`;
@@ -94,7 +98,7 @@ export const createPost = mutation({
       postId,
       actorId,
     });
-    return await toPostDto(ctx, post);
+    return await toPostDto(ctx, post, actorId);
   },
 });
 
@@ -122,8 +126,8 @@ export const editPost = mutation({
     let post;
     try {
       post = await requirePostInScope(ctx, args.scopeId, args.postId);
-      if (post.actorId !== actorId) notOwner();
-      if (post.lifecycleState !== "active" || post.archivedAt !== undefined) {
+      if (!canActorWithdrawPost(post, actorId)) notOwner();
+      if (!canActorEditPost(post, actorId)) {
         invalidInput("hidden posts cannot be edited");
       }
     } catch (error) {
@@ -172,7 +176,7 @@ export const editPost = mutation({
         ...(args.body === undefined ? [] : ["body"]),
       ],
     });
-    return await toPostDto(ctx, { ...post, ...patch });
+    return await toPostDto(ctx, { ...post, ...patch }, actorId);
   },
 });
 
@@ -187,7 +191,7 @@ export const withdrawPost = mutation({
     requireScope(args.scopeId);
     const actorId = await upsertActor(ctx, args.scopeId, args.actor);
     const post = await requirePostInScope(ctx, args.scopeId, args.postId);
-    if (post.actorId !== actorId) notOwner();
+    if (!canActorWithdrawPost(post, actorId)) notOwner();
     if (post.lifecycleState !== "withdrawn") {
       await patchPostRanking(ctx, post, {
         lifecycleState: "withdrawn",
@@ -198,6 +202,6 @@ export const withdrawPost = mutation({
       ...post,
       lifecycleState: "withdrawn",
       visibilityKey: HIDDEN_POST_VISIBILITY,
-    });
+    }, actorId);
   },
 });

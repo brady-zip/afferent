@@ -126,7 +126,7 @@ describe("component-compatible post pagination", () => {
     expect(first.posts).toEqual(first.page);
     expect(first).toEqual(
       expect.objectContaining({
-        contractVersion: 1,
+        contractVersion: 2,
         continueCursor: expect.any(String),
         isDone: false,
       }),

@@ -13,6 +13,7 @@ import {
 export type ScopedAfferentClientOptions = Readonly<{
   resolveScope: (ctx: HostContext) => Promise<string>;
   resolveActor: (ctx: MutationContext) => Promise<VerifiedActor | null>;
+  resolveViewerActor?: (ctx: ReadContext) => Promise<VerifiedActor | null>;
   authorizeAdmin: (ctx: HostContext) => Promise<boolean>;
   isAuthenticated?: (ctx: ReadContext) => Promise<boolean>;
 }>;

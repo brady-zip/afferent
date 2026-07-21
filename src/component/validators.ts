@@ -194,7 +194,7 @@ export const unreadNotificationCountDtoValidator = v.object({
 });
 
 export const postDtoValidator = v.object({
-  contractVersion: v.literal(1),
+  contractVersion: v.literal(2),
   id: v.string(),
   boardId: v.string(),
   board: boardDtoValidator,
@@ -212,10 +212,13 @@ export const postDtoValidator = v.object({
     comments: v.number(),
   }),
   tags: v.array(v.string()),
+  viewerHasVoted: v.boolean(),
+  viewerCanEdit: v.boolean(),
+  viewerCanWithdraw: v.boolean(),
 });
 
 export const feedbackPostDtoValidator = v.object({
-  contractVersion: v.literal(2),
+  contractVersion: v.literal(3),
   id: v.string(),
   boardId: v.string(),
   board: boardDtoValidator,
@@ -237,21 +240,24 @@ export const feedbackPostDtoValidator = v.object({
   commentCount: v.number(),
   totals: v.object({ votes: v.number(), comments: v.number() }),
   tags: v.array(tagDtoValidator),
+  viewerHasVoted: v.boolean(),
+  viewerCanEdit: v.boolean(),
+  viewerCanWithdraw: v.boolean(),
 });
 
 export const postLookupResultValidator = v.union(
   v.object({
-    contractVersion: v.literal(1),
+    contractVersion: v.literal(2),
     status: v.literal("post"),
     post: feedbackPostDtoValidator,
   }),
   v.object({
-    contractVersion: v.literal(1),
+    contractVersion: v.literal(2),
     status: v.literal("merged"),
     requestedPostId: v.string(),
     canonicalPostId: v.string(),
   }),
-  v.object({ contractVersion: v.literal(1), status: v.literal("notFound") }),
+  v.object({ contractVersion: v.literal(2), status: v.literal("notFound") }),
 );
 
 export const mergePostResultValidator = v.object({
@@ -268,12 +274,12 @@ export const installationDtoValidator = v.object({
 });
 
 export const postListDtoValidator = v.object({
-  contractVersion: v.literal(1),
+  contractVersion: v.literal(2),
   posts: v.array(postDtoValidator),
 });
 
 export const postPageDtoValidator = v.object({
-  contractVersion: v.literal(1),
+  contractVersion: v.literal(2),
   page: v.array(postDtoValidator),
   posts: v.array(postDtoValidator),
   isDone: v.boolean(),
@@ -289,7 +295,7 @@ export const postPageDtoValidator = v.object({
 });
 
 export const feedbackPageDtoValidator = v.object({
-  contractVersion: v.literal(2),
+  contractVersion: v.literal(3),
   page: v.array(feedbackPostDtoValidator),
   posts: v.array(feedbackPostDtoValidator),
   isDone: v.boolean(),

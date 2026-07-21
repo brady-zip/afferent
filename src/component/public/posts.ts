@@ -20,6 +20,8 @@ import { requireVisiblePost } from "../model/visibility.js";
 import { requirePostInScope } from "../model/scope.js";
 import { toFeedbackPostDto, toPostDto } from "../model/views.js";
 import { postLookupResultValidator } from "../validators.js";
+import { verifiedActorValidator } from "../validators.js";
+import { findExistingActor } from "../model/actors.js";
 
 const MAX_POSTS = 50;
 
@@ -39,6 +41,7 @@ export const listPosts = query({
     scopeId: v.string(),
     boardId: v.string(),
     viewerAuthenticated: v.boolean(),
+    viewerActor: v.optional(verifiedActorValidator),
     paginationOpts: paginationOptsValidator,
   },
   returns: postPageDtoValidator,
@@ -46,6 +49,7 @@ export const listPosts = query({
     requireScope(args.scopeId);
     await requireReadPolicy(ctx, args.scopeId, args.viewerAuthenticated);
     const board = await requireBoardInScope(ctx, args.scopeId, args.boardId);
+    const viewer = await findExistingActor(ctx, args.scopeId, args.viewerActor);
     if (
       args.paginationOpts.numItems < 1 ||
       args.paginationOpts.numItems > MAX_POSTS
@@ -63,10 +67,10 @@ export const listPosts = query({
       .order("desc")
       .paginate(args.paginationOpts);
     const page = await Promise.all(
-      result.page.map((post) => toPostDto(ctx, post)),
+      result.page.map((post) => toPostDto(ctx, post, viewer?._id)),
     );
     return {
-      contractVersion: 1 as const,
+      contractVersion: 2 as const,
       ...result,
       page,
       posts: page,
@@ -79,13 +83,15 @@ export const getPost = query({
     scopeId: v.string(),
     postId: v.string(),
     viewerAuthenticated: v.boolean(),
+    viewerActor: v.optional(verifiedActorValidator),
   },
   returns: postDtoValidator,
   handler: async (ctx, args) => {
     requireScope(args.scopeId);
     await requireReadPolicy(ctx, args.scopeId, args.viewerAuthenticated);
     const post = await requireVisiblePost(ctx, args.scopeId, args.postId);
-    return await toPostDto(ctx, post);
+    const viewer = await findExistingActor(ctx, args.scopeId, args.viewerActor);
+    return await toPostDto(ctx, post, viewer?._id);
   },
 });
 
@@ -94,36 +100,38 @@ export const resolvePost = query({
     scopeId: v.string(),
     postId: v.string(),
     viewerAuthenticated: v.boolean(),
+    viewerActor: v.optional(verifiedActorValidator),
   },
   returns: postLookupResultValidator,
   handler: async (ctx, args) => {
     requireScope(args.scopeId);
     await requireReadPolicy(ctx, args.scopeId, args.viewerAuthenticated);
+    const viewer = await findExistingActor(ctx, args.scopeId, args.viewerActor);
     let post;
     try {
       post = await requirePostInScope(ctx, args.scopeId, args.postId);
     } catch {
-      return { contractVersion: 1 as const, status: "notFound" as const };
+      return { contractVersion: 2 as const, status: "notFound" as const };
     }
     if (post.mergedIntoPostId !== undefined) {
       const canonical = await ctx.db.get(post.mergedIntoPostId);
       if (!canonical || canonical.scopeId !== args.scopeId || !isPostPubliclyVisible(canonical)) {
-        return { contractVersion: 1 as const, status: "notFound" as const };
+        return { contractVersion: 2 as const, status: "notFound" as const };
       }
       return {
-        contractVersion: 1 as const,
+        contractVersion: 2 as const,
         status: "merged" as const,
         requestedPostId: String(post._id),
         canonicalPostId: String(canonical._id),
       };
     }
     if (!isPostPubliclyVisible(post)) {
-      return { contractVersion: 1 as const, status: "notFound" as const };
+      return { contractVersion: 2 as const, status: "notFound" as const };
     }
     return {
-      contractVersion: 1 as const,
+      contractVersion: 2 as const,
       status: "post" as const,
-      post: await toFeedbackPostDto(ctx, post),
+      post: await toFeedbackPostDto(ctx, post, viewer?._id),
     };
   },
 });

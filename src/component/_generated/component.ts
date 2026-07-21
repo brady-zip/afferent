@@ -335,7 +335,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             boardId: string;
             body: string;
             commentCount: number;
-            contractVersion: 2;
+            contractVersion: 3;
             id: string;
             status: {
               key:
@@ -356,6 +356,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             tags: Array<{ contractVersion: 1; id: string; name: string }>;
             title: string;
             totals: { comments: number; votes: number };
+            viewerCanEdit: boolean;
+            viewerCanWithdraw: boolean;
+            viewerHasVoted: boolean;
             voteCount: number;
           },
           Name
@@ -379,7 +382,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             boardId: string;
             body: string;
             commentCount: number;
-            contractVersion: 2;
+            contractVersion: 3;
             id: string;
             status: {
               key:
@@ -400,6 +403,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             tags: Array<{ contractVersion: 1; id: string; name: string }>;
             title: string;
             totals: { comments: number; votes: number };
+            viewerCanEdit: boolean;
+            viewerCanWithdraw: boolean;
+            viewerHasVoted: boolean;
             voteCount: number;
           },
           Name
@@ -423,7 +429,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             boardId: string;
             body: string;
             commentCount: number;
-            contractVersion: 2;
+            contractVersion: 3;
             id: string;
             status: {
               key:
@@ -444,6 +450,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             tags: Array<{ contractVersion: 1; id: string; name: string }>;
             title: string;
             totals: { comments: number; votes: number };
+            viewerCanEdit: boolean;
+            viewerCanWithdraw: boolean;
+            viewerHasVoted: boolean;
             voteCount: number;
           },
           Name
@@ -467,7 +476,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             boardId: string;
             body: string;
             commentCount: number;
-            contractVersion: 2;
+            contractVersion: 3;
             id: string;
             status: {
               key:
@@ -488,6 +497,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             tags: Array<{ contractVersion: 1; id: string; name: string }>;
             title: string;
             totals: { comments: number; votes: number };
+            viewerCanEdit: boolean;
+            viewerCanWithdraw: boolean;
+            viewerHasVoted: boolean;
             voteCount: number;
           },
           Name
@@ -517,7 +529,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             boardId: string;
             body: string;
             commentCount: number;
-            contractVersion: 2;
+            contractVersion: 3;
             id: string;
             status: {
               key:
@@ -538,6 +550,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             tags: Array<{ contractVersion: 1; id: string; name: string }>;
             title: string;
             totals: { comments: number; votes: number };
+            viewerCanEdit: boolean;
+            viewerCanWithdraw: boolean;
+            viewerHasVoted: boolean;
             voteCount: number;
           },
           Name
@@ -603,7 +618,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             boardId: string;
             body: string;
             commentCount: number;
-            contractVersion: 2;
+            contractVersion: 3;
             id: string;
             status: {
               key:
@@ -624,6 +639,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             tags: Array<{ contractVersion: 1; id: string; name: string }>;
             title: string;
             totals: { comments: number; votes: number };
+            viewerCanEdit: boolean;
+            viewerCanWithdraw: boolean;
+            viewerHasVoted: boolean;
             voteCount: number;
           },
           Name
@@ -736,7 +754,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           boardId: string;
           body: string;
           commentCount: number;
-          contractVersion: 2;
+          contractVersion: 3;
           id: string;
           status: {
             key:
@@ -757,6 +775,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           tags: Array<{ contractVersion: 1; id: string; name: string }>;
           title: string;
           totals: { comments: number; votes: number };
+          viewerCanEdit: boolean;
+          viewerCanWithdraw: boolean;
+          viewerHasVoted: boolean;
           voteCount: number;
         },
         Name
@@ -870,12 +891,15 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             boardId: string;
             body: string;
             commentCount: number;
-            contractVersion: 1;
+            contractVersion: 2;
             id: string;
             status: { key: "open"; label: "Open" };
             tags: Array<string>;
             title: string;
             totals: { comments: number; votes: number };
+            viewerCanEdit: boolean;
+            viewerCanWithdraw: boolean;
+            viewerHasVoted: boolean;
             voteCount: number;
           }
         | {
@@ -976,12 +1000,15 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             boardId: string;
             body: string;
             commentCount: number;
-            contractVersion: 1;
+            contractVersion: 2;
             id: string;
             status: { key: "open"; label: "Open" };
             tags: Array<string>;
             title: string;
             totals: { comments: number; votes: number };
+            viewerCanEdit: boolean;
+            viewerCanWithdraw: boolean;
+            viewerHasVoted: boolean;
             voteCount: number;
           }
         | {
@@ -1013,19 +1040,31 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
       getPost: FunctionReference<
         "query",
         "internal",
-        { postId: string; scopeId: string; viewerAuthenticated: boolean },
+        {
+          postId: string;
+          scopeId: string;
+          viewerActor?: {
+            avatarUrl?: string;
+            displayName?: string;
+            externalKey: string;
+          };
+          viewerAuthenticated: boolean;
+        },
         {
           author: { avatarUrl?: string; displayName?: string; id: string };
           board: { id: string; name: string; slug: string };
           boardId: string;
           body: string;
           commentCount: number;
-          contractVersion: 1;
+          contractVersion: 2;
           id: string;
           status: { key: "open"; label: "Open" };
           tags: Array<string>;
           title: string;
           totals: { comments: number; votes: number };
+          viewerCanEdit: boolean;
+          viewerCanWithdraw: boolean;
+          viewerHasVoted: boolean;
           voteCount: number;
         },
         Name
@@ -1179,11 +1218,16 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | "complete"
             | "closed";
           tagId?: string;
+          viewerActor?: {
+            avatarUrl?: string;
+            displayName?: string;
+            externalKey: string;
+          };
           viewerAuthenticated: boolean;
         },
         {
           continueCursor: string;
-          contractVersion: 2;
+          contractVersion: 3;
           isDone: boolean;
           page: Array<{
             author: { avatarUrl?: string; displayName?: string; id: string };
@@ -1191,7 +1235,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             boardId: string;
             body: string;
             commentCount: number;
-            contractVersion: 2;
+            contractVersion: 3;
             id: string;
             status: {
               key:
@@ -1212,6 +1256,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             tags: Array<{ contractVersion: 1; id: string; name: string }>;
             title: string;
             totals: { comments: number; votes: number };
+            viewerCanEdit: boolean;
+            viewerCanWithdraw: boolean;
+            viewerHasVoted: boolean;
             voteCount: number;
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
@@ -1221,7 +1268,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             boardId: string;
             body: string;
             commentCount: number;
-            contractVersion: 2;
+            contractVersion: 3;
             id: string;
             status: {
               key:
@@ -1242,6 +1289,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             tags: Array<{ contractVersion: 1; id: string; name: string }>;
             title: string;
             totals: { comments: number; votes: number };
+            viewerCanEdit: boolean;
+            viewerCanWithdraw: boolean;
+            viewerHasVoted: boolean;
             voteCount: number;
           }>;
           splitCursor?: string | null;
@@ -1384,11 +1434,16 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             numItems: number;
           };
           scopeId: string;
+          viewerActor?: {
+            avatarUrl?: string;
+            displayName?: string;
+            externalKey: string;
+          };
           viewerAuthenticated: boolean;
         },
         {
           continueCursor: string;
-          contractVersion: 1;
+          contractVersion: 2;
           isDone: boolean;
           page: Array<{
             author: { avatarUrl?: string; displayName?: string; id: string };
@@ -1396,12 +1451,15 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             boardId: string;
             body: string;
             commentCount: number;
-            contractVersion: 1;
+            contractVersion: 2;
             id: string;
             status: { key: "open"; label: "Open" };
             tags: Array<string>;
             title: string;
             totals: { comments: number; votes: number };
+            viewerCanEdit: boolean;
+            viewerCanWithdraw: boolean;
+            viewerHasVoted: boolean;
             voteCount: number;
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
@@ -1411,12 +1469,15 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             boardId: string;
             body: string;
             commentCount: number;
-            contractVersion: 1;
+            contractVersion: 2;
             id: string;
             status: { key: "open"; label: "Open" };
             tags: Array<string>;
             title: string;
             totals: { comments: number; votes: number };
+            viewerCanEdit: boolean;
+            viewerCanWithdraw: boolean;
+            viewerHasVoted: boolean;
             voteCount: number;
           }>;
           splitCursor?: string | null;
@@ -1642,7 +1703,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           boardId: string;
           body: string;
           commentCount: number;
-          contractVersion: 2;
+          contractVersion: 3;
           id: string;
           status: {
             key:
@@ -1663,6 +1724,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           tags: Array<{ contractVersion: 1; id: string; name: string }>;
           title: string;
           totals: { comments: number; votes: number };
+          viewerCanEdit: boolean;
+          viewerCanWithdraw: boolean;
+          viewerHasVoted: boolean;
           voteCount: number;
         },
         Name
@@ -1724,16 +1788,25 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
       resolvePost: FunctionReference<
         "query",
         "internal",
-        { postId: string; scopeId: string; viewerAuthenticated: boolean },
+        {
+          postId: string;
+          scopeId: string;
+          viewerActor?: {
+            avatarUrl?: string;
+            displayName?: string;
+            externalKey: string;
+          };
+          viewerAuthenticated: boolean;
+        },
         | {
-            contractVersion: 1;
+            contractVersion: 2;
             post: {
               author: { avatarUrl?: string; displayName?: string; id: string };
               board: { id: string; name: string; slug: string };
               boardId: string;
               body: string;
               commentCount: number;
-              contractVersion: 2;
+              contractVersion: 3;
               id: string;
               status: {
                 key:
@@ -1754,17 +1827,20 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               tags: Array<{ contractVersion: 1; id: string; name: string }>;
               title: string;
               totals: { comments: number; votes: number };
+              viewerCanEdit: boolean;
+              viewerCanWithdraw: boolean;
+              viewerHasVoted: boolean;
               voteCount: number;
             };
             status: "post";
           }
         | {
             canonicalPostId: string;
-            contractVersion: 1;
+            contractVersion: 2;
             requestedPostId: string;
             status: "merged";
           }
-        | { contractVersion: 1; status: "notFound" },
+        | { contractVersion: 2; status: "notFound" },
         Name
       >;
       resumeMerge: FunctionReference<
@@ -1847,7 +1923,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           boardId: string;
           body: string;
           commentCount: number;
-          contractVersion: 2;
+          contractVersion: 3;
           id: string;
           status: {
             key:
@@ -1868,6 +1944,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           tags: Array<{ contractVersion: 1; id: string; name: string }>;
           title: string;
           totals: { comments: number; votes: number };
+          viewerCanEdit: boolean;
+          viewerCanWithdraw: boolean;
+          viewerHasVoted: boolean;
           voteCount: number;
         },
         Name
@@ -1919,7 +1998,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           boardId: string;
           body: string;
           commentCount: number;
-          contractVersion: 2;
+          contractVersion: 3;
           id: string;
           status: {
             key:
@@ -1940,6 +2019,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           tags: Array<{ contractVersion: 1; id: string; name: string }>;
           title: string;
           totals: { comments: number; votes: number };
+          viewerCanEdit: boolean;
+          viewerCanWithdraw: boolean;
+          viewerHasVoted: boolean;
           voteCount: number;
         },
         Name
@@ -1969,7 +2051,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           boardId: string;
           body: string;
           commentCount: number;
-          contractVersion: 2;
+          contractVersion: 3;
           id: string;
           status: {
             key:
@@ -1990,6 +2072,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           tags: Array<{ contractVersion: 1; id: string; name: string }>;
           title: string;
           totals: { comments: number; votes: number };
+          viewerCanEdit: boolean;
+          viewerCanWithdraw: boolean;
+          viewerHasVoted: boolean;
           voteCount: number;
         },
         Name
@@ -2014,7 +2099,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           boardId: string;
           body: string;
           commentCount: number;
-          contractVersion: 2;
+          contractVersion: 3;
           id: string;
           status: {
             key:
@@ -2035,6 +2120,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           tags: Array<{ contractVersion: 1; id: string; name: string }>;
           title: string;
           totals: { comments: number; votes: number };
+          viewerCanEdit: boolean;
+          viewerCanWithdraw: boolean;
+          viewerHasVoted: boolean;
           voteCount: number;
         },
         Name
@@ -2103,12 +2191,15 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             boardId: string;
             body: string;
             commentCount: number;
-            contractVersion: 1;
+            contractVersion: 2;
             id: string;
             status: { key: "open"; label: "Open" };
             tags: Array<string>;
             title: string;
             totals: { comments: number; votes: number };
+            viewerCanEdit: boolean;
+            viewerCanWithdraw: boolean;
+            viewerHasVoted: boolean;
             voteCount: number;
           }
         | {
@@ -2220,12 +2311,15 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           boardId: string;
           body: string;
           commentCount: number;
-          contractVersion: 1;
+          contractVersion: 2;
           id: string;
           status: { key: "open"; label: "Open" };
           tags: Array<string>;
           title: string;
           totals: { comments: number; votes: number };
+          viewerCanEdit: boolean;
+          viewerCanWithdraw: boolean;
+          viewerHasVoted: boolean;
           voteCount: number;
         },
         Name
@@ -2490,12 +2584,15 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               boardId: string;
               body: string;
               commentCount: number;
-              contractVersion: 1;
+              contractVersion: 2;
               id: string;
               status: { key: "open"; label: "Open" };
               tags: Array<string>;
               title: string;
               totals: { comments: number; votes: number };
+              viewerCanEdit: boolean;
+              viewerCanWithdraw: boolean;
+              viewerHasVoted: boolean;
               voteCount: number;
             }
           | {
@@ -2544,12 +2641,15 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               boardId: string;
               body: string;
               commentCount: number;
-              contractVersion: 1;
+              contractVersion: 2;
               id: string;
               status: { key: "open"; label: "Open" };
               tags: Array<string>;
               title: string;
               totals: { comments: number; votes: number };
+              viewerCanEdit: boolean;
+              viewerCanWithdraw: boolean;
+              viewerHasVoted: boolean;
               voteCount: number;
             }
           | {
@@ -2596,12 +2696,15 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             boardId: string;
             body: string;
             commentCount: number;
-            contractVersion: 1;
+            contractVersion: 2;
             id: string;
             status: { key: "open"; label: "Open" };
             tags: Array<string>;
             title: string;
             totals: { comments: number; votes: number };
+            viewerCanEdit: boolean;
+            viewerCanWithdraw: boolean;
+            viewerHasVoted: boolean;
             voteCount: number;
           },
           Name
@@ -2694,12 +2797,15 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               boardId: string;
               body: string;
               commentCount: number;
-              contractVersion: 1;
+              contractVersion: 2;
               id: string;
               status: { key: "open"; label: "Open" };
               tags: Array<string>;
               title: string;
               totals: { comments: number; votes: number };
+              viewerCanEdit: boolean;
+              viewerCanWithdraw: boolean;
+              viewerHasVoted: boolean;
               voteCount: number;
             }
           | {
@@ -2937,11 +3043,16 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               | "complete"
               | "closed";
             tagId?: string;
+            viewerActor?: {
+              avatarUrl?: string;
+              displayName?: string;
+              externalKey: string;
+            };
             viewerAuthenticated: boolean;
           },
           {
             continueCursor: string;
-            contractVersion: 2;
+            contractVersion: 3;
             isDone: boolean;
             page: Array<{
               author: { avatarUrl?: string; displayName?: string; id: string };
@@ -2949,7 +3060,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               boardId: string;
               body: string;
               commentCount: number;
-              contractVersion: 2;
+              contractVersion: 3;
               id: string;
               status: {
                 key:
@@ -2970,6 +3081,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               tags: Array<{ contractVersion: 1; id: string; name: string }>;
               title: string;
               totals: { comments: number; votes: number };
+              viewerCanEdit: boolean;
+              viewerCanWithdraw: boolean;
+              viewerHasVoted: boolean;
               voteCount: number;
             }>;
             pageStatus?: "SplitRecommended" | "SplitRequired" | null;
@@ -2979,7 +3093,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               boardId: string;
               body: string;
               commentCount: number;
-              contractVersion: 2;
+              contractVersion: 3;
               id: string;
               status: {
                 key:
@@ -3000,6 +3114,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               tags: Array<{ contractVersion: 1; id: string; name: string }>;
               title: string;
               totals: { comments: number; votes: number };
+              viewerCanEdit: boolean;
+              viewerCanWithdraw: boolean;
+              viewerHasVoted: boolean;
               voteCount: number;
             }>;
             splitCursor?: string | null;
@@ -3018,19 +3135,31 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         getPost: FunctionReference<
           "query",
           "internal",
-          { postId: string; scopeId: string; viewerAuthenticated: boolean },
+          {
+            postId: string;
+            scopeId: string;
+            viewerActor?: {
+              avatarUrl?: string;
+              displayName?: string;
+              externalKey: string;
+            };
+            viewerAuthenticated: boolean;
+          },
           {
             author: { avatarUrl?: string; displayName?: string; id: string };
             board: { id: string; name: string; slug: string };
             boardId: string;
             body: string;
             commentCount: number;
-            contractVersion: 1;
+            contractVersion: 2;
             id: string;
             status: { key: "open"; label: "Open" };
             tags: Array<string>;
             title: string;
             totals: { comments: number; votes: number };
+            viewerCanEdit: boolean;
+            viewerCanWithdraw: boolean;
+            viewerHasVoted: boolean;
             voteCount: number;
           },
           Name
@@ -3049,11 +3178,16 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               numItems: number;
             };
             scopeId: string;
+            viewerActor?: {
+              avatarUrl?: string;
+              displayName?: string;
+              externalKey: string;
+            };
             viewerAuthenticated: boolean;
           },
           {
             continueCursor: string;
-            contractVersion: 1;
+            contractVersion: 2;
             isDone: boolean;
             page: Array<{
               author: { avatarUrl?: string; displayName?: string; id: string };
@@ -3061,12 +3195,15 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               boardId: string;
               body: string;
               commentCount: number;
-              contractVersion: 1;
+              contractVersion: 2;
               id: string;
               status: { key: "open"; label: "Open" };
               tags: Array<string>;
               title: string;
               totals: { comments: number; votes: number };
+              viewerCanEdit: boolean;
+              viewerCanWithdraw: boolean;
+              viewerHasVoted: boolean;
               voteCount: number;
             }>;
             pageStatus?: "SplitRecommended" | "SplitRequired" | null;
@@ -3076,12 +3213,15 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               boardId: string;
               body: string;
               commentCount: number;
-              contractVersion: 1;
+              contractVersion: 2;
               id: string;
               status: { key: "open"; label: "Open" };
               tags: Array<string>;
               title: string;
               totals: { comments: number; votes: number };
+              viewerCanEdit: boolean;
+              viewerCanWithdraw: boolean;
+              viewerHasVoted: boolean;
               voteCount: number;
             }>;
             splitCursor?: string | null;
@@ -3091,9 +3231,18 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         resolvePost: FunctionReference<
           "query",
           "internal",
-          { postId: string; scopeId: string; viewerAuthenticated: boolean },
+          {
+            postId: string;
+            scopeId: string;
+            viewerActor?: {
+              avatarUrl?: string;
+              displayName?: string;
+              externalKey: string;
+            };
+            viewerAuthenticated: boolean;
+          },
           | {
-              contractVersion: 1;
+              contractVersion: 2;
               post: {
                 author: {
                   avatarUrl?: string;
@@ -3104,7 +3253,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 boardId: string;
                 body: string;
                 commentCount: number;
-                contractVersion: 2;
+                contractVersion: 3;
                 id: string;
                 status: {
                   key:
@@ -3125,17 +3274,20 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 tags: Array<{ contractVersion: 1; id: string; name: string }>;
                 title: string;
                 totals: { comments: number; votes: number };
+                viewerCanEdit: boolean;
+                viewerCanWithdraw: boolean;
+                viewerHasVoted: boolean;
                 voteCount: number;
               };
               status: "post";
             }
           | {
               canonicalPostId: string;
-              contractVersion: 1;
+              contractVersion: 2;
               requestedPostId: string;
               status: "merged";
             }
-          | { contractVersion: 1; status: "notFound" },
+          | { contractVersion: 2; status: "notFound" },
           Name
         >;
       };

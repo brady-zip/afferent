@@ -20,6 +20,8 @@ import {
 import { toFeedbackPostDto } from "../model/views.js";
 import { PUBLIC_POST_VISIBILITY } from "../model/visibility.js";
 import { requireTagInScope as loadTagInScope } from "../model/tags.js";
+import { findExistingActor } from "../model/actors.js";
+import { verifiedActorValidator } from "../validators.js";
 
 const MAX_FEED_PAGE_SIZE = 50;
 
@@ -276,6 +278,7 @@ export const listFeedback = query({
   args: {
     scopeId: v.string(),
     viewerAuthenticated: v.boolean(),
+    viewerActor: v.optional(verifiedActorValidator),
     order: feedbackOrderValidator,
     boardId: v.optional(v.string()),
     status: v.optional(postStatusKeyValidator),
@@ -286,6 +289,7 @@ export const listFeedback = query({
   handler: async (ctx, args) => {
     requireScope(args.scopeId);
     await requireReadPolicy(ctx, args.scopeId, args.viewerAuthenticated);
+    const viewer = await findExistingActor(ctx, args.scopeId, args.viewerActor);
     if (
       args.paginationOpts.numItems < 1 ||
       args.paginationOpts.numItems > MAX_FEED_PAGE_SIZE
@@ -317,10 +321,10 @@ export const listFeedback = query({
           if (!post || post.scopeId !== args.scopeId) {
             throw new Error("TAG_FEED_PROJECTION_INVARIANT");
           }
-          return await toFeedbackPostDto(ctx, post);
+          return await toFeedbackPostDto(ctx, post, viewer?._id);
         }),
       );
-      return { contractVersion: 2 as const, ...result, page: posts, posts };
+      return { contractVersion: 3 as const, ...result, page: posts, posts };
     }
 
     const result = await pagePosts(ctx, {
@@ -331,8 +335,8 @@ export const listFeedback = query({
       paginationOpts: args.paginationOpts,
     });
     const posts = await Promise.all(
-      result.page.map((post) => toFeedbackPostDto(ctx, post)),
+      result.page.map((post) => toFeedbackPostDto(ctx, post, viewer?._id)),
     );
-    return { contractVersion: 2 as const, ...result, page: posts, posts };
+    return { contractVersion: 3 as const, ...result, page: posts, posts };
   },
 });

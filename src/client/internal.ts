@@ -43,6 +43,7 @@ export type HostContext = ReadContext | MutationContext;
 export type ClientResolvers = Readonly<{
   resolveScope: (ctx: HostContext) => Promise<string>;
   resolveActor: (ctx: MutationContext) => Promise<VerifiedActor | null>;
+  resolveViewerActor?: (ctx: ReadContext) => Promise<VerifiedActor | null>;
   authorizeAdmin: (ctx: HostContext) => Promise<boolean>;
   isAuthenticated?: (ctx: ReadContext) => Promise<boolean>;
 }>;
@@ -74,6 +75,15 @@ async function resolveRequiredScope<Context extends HostContext>(
 
 async function viewerAuthenticated(options: ClientResolvers, ctx: ReadContext) {
   return options.isAuthenticated ? await options.isAuthenticated(ctx) : false;
+}
+
+async function resolveViewerActor(
+  options: ClientResolvers,
+  ctx: ReadContext,
+) {
+  return options.resolveViewerActor
+    ? (await options.resolveViewerActor(ctx)) ?? undefined
+    : undefined;
 }
 
 export function createDeliveryClientWithScope(
@@ -134,10 +144,12 @@ export function createClientWithScope(
       },
       async listPosts(ctx, args) {
         const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        const viewerActor = await resolveViewerActor(options, ctx);
         return (await ctx.runQuery(component.public.posts.listPosts, {
           scopeId,
           boardId: args.boardId,
           viewerAuthenticated: await viewerAuthenticated(options, ctx),
+          ...(viewerActor === undefined ? {} : { viewerActor }),
           paginationOpts: args.paginationOpts ?? {
             numItems: 50,
             cursor: null,
@@ -146,10 +158,12 @@ export function createClientWithScope(
       },
       async listFeedback(ctx, args) {
         const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        const viewerActor = await resolveViewerActor(options, ctx);
         return (await ctx.runQuery(component.public.feeds.listFeedback, {
           scopeId,
           order: args.order,
           viewerAuthenticated: await viewerAuthenticated(options, ctx),
+          ...(viewerActor === undefined ? {} : { viewerActor }),
           ...(args.boardId === undefined ? {} : { boardId: args.boardId }),
           ...(args.status === undefined ? {} : { status: args.status }),
           ...(args.tagId === undefined ? {} : { tagId: args.tagId }),
@@ -223,18 +237,22 @@ export function createClientWithScope(
       },
       async getPost(ctx, args) {
         const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        const viewerActor = await resolveViewerActor(options, ctx);
         return (await ctx.runQuery(component.public.posts.getPost, {
           scopeId,
           postId: args.postId,
           viewerAuthenticated: await viewerAuthenticated(options, ctx),
+          ...(viewerActor === undefined ? {} : { viewerActor }),
         })) as unknown as PostDto;
       },
       async resolvePost(ctx, args) {
         const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        const viewerActor = await resolveViewerActor(options, ctx);
         return (await ctx.runQuery(component.public.posts.resolvePost, {
           scopeId,
           postId: args.postId,
           viewerAuthenticated: await viewerAuthenticated(options, ctx),
+          ...(viewerActor === undefined ? {} : { viewerActor }),
         })) as unknown as PostLookupResult;
       },
       async countPosts(ctx, args) {

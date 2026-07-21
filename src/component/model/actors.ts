@@ -9,6 +9,21 @@ export const ANONYMIZED_AUTHOR_LABEL = "Anonymous";
 
 type DatabaseContext = Pick<QueryCtx | MutationCtx, "db">;
 
+export async function findExistingActor(
+  ctx: DatabaseContext,
+  scopeId: string,
+  actor: VerifiedActorValue | null | undefined,
+) {
+  requireScope(scopeId);
+  if (!actor?.externalKey.trim()) return null;
+  return await ctx.db
+    .query("actors")
+    .withIndex("by_scope_external_key", (q) =>
+      q.eq("scopeId", scopeId).eq("externalKey", actor.externalKey),
+    )
+    .unique();
+}
+
 export function isAnonymizedExternalKey(externalKey: string) {
   return externalKey.startsWith(ANONYMIZED_KEY_PREFIX);
 }
