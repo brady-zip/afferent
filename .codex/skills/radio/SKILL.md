@@ -48,6 +48,20 @@ watcher has started and report the new ASK ID. If they report no event, do not r
 evidence: send one new directed ASK to the requested peer and correlate all subsequent waiting and
 replies with that new ID.
 
+Treat a watcher-start or watcher-miss report as an interrupt, even when an older ASK is pending:
+
+1. Stop any active `h5i msg wait` for the older ASK.
+2. Make `h5i msg ask --from <self> <peer> "..."` the next channel command. Do not run `wait`,
+   `inbox`, `history`, or more repository work first.
+3. Repeat enough context for the new ASK to be answered independently and record that it supersedes
+   the older ASK for live correlation.
+4. Require both a new ASK ID and an advanced `refs/h5i/msg` tip before reporting visible delivery;
+   then wait only for a reply correlated to the replacement ASK.
+
+The common failure is ordering: an ASK sent before the watcher starts is historical, and continuing
+to wait on it creates no new ref event for `watch` to display. The recovery is always a new send
+after the watcher is armed, never another wait on the old ASK.
+
 For a watcher miss, distinguish these failure modes explicitly:
 
 - No new ASK ID: no live request was sent; send one now.
