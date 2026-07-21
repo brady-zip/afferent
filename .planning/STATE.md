@@ -5,16 +5,16 @@ milestone_name: milestone
 current_phase: 03
 current_phase_name: Source-Owned Product Interface
 status: executing
-stopped_at: Ready to execute 03-03-PLAN.md
-last_updated: "2026-07-21T21:15:19Z"
+stopped_at: Ready to execute 03-04-PLAN.md
+last_updated: "2026-07-21T21:37:40.743Z"
 last_activity: 2026-07-21
-last_activity_desc: Phase 02.3 independently verified at 7/7; resumed Phase 3
+last_activity_desc: Completed 03-03 public roadmap, changelog, and notification surfaces
 progress:
   total_phases: 7
   completed_phases: 5
   total_plans: 36
-  completed_plans: 32
-  percent: 89
+  completed_plans: 33
+  percent: 92
 ---
 
 # Project State
@@ -29,73 +29,74 @@ See: .planning/PROJECT.md (updated 2026-07-17)
 ## Current Position
 
 Phase: 03 — Source-Owned Product Interface
-Plan: 03-03 of 6
-Status: In progress — ready to execute public roadmap, changelog, and notifications
-Last activity: 2026-07-21 — Phase 02.3 independently verified at 7/7; resumed Phase 3
+Plan: 03-04 of 6
+Status: In progress — ready to execute admin product interfaces
+Last activity: 2026-07-21 — Completed 03-03 public roadmap, changelog, and notification surfaces
 
-Progress: [█████████░] 89%
+Progress: [█████████░] 92%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 32
-- Average duration: 40 min
-- Total execution time: 1265 min
+- Total plans completed: 33
+- Average duration: 39 min
+- Total execution time: 1285 min
 
 **By Phase:**
 
-| Phase    | Plans | Total   | Avg/Plan |
-| -------- | ----- | ------- | -------- |
-| Phase 01 | 8     | 299 min | 37 min   |
-| Phase 02 | 17    | 854 min | 50 min   |
-| Phase 02.1 | 1   | 68 min  | 68 min   |
-| Phase 02.3 | 2   | 33 min  | 17 min   |
-| Phase 03 | 2     | 29 min  | 15 min   |
+| Phase      | Plans | Total   | Avg/Plan |
+| ---------- | ----- | ------- | -------- |
+| Phase 01   | 8     | 299 min | 37 min   |
+| Phase 02   | 17    | 854 min | 50 min   |
+| Phase 02.1 | 1     | 68 min  | 68 min   |
+| Phase 02.3 | 2     | 33 min  | 17 min   |
+| Phase 03   | 3     | 49 min  | 16 min   |
 
 **Recent Trend:**
 
-- Last 5 plans: 68 min, 30 min, 17 min, 100 min, 20 min
-- Trend: Phase 02.3 behavioral proof closed in 20 minutes without production changes
+- Last 5 plans: 17 min, 8 min, 13 min, 20 min, 20 min
+- Trend: Phase 3 public product surfaces closed in 20 minutes with deterministic distribution proof
 
 _Updated after each plan completion_
 
 **Plan History:**
 
-| Plan         | Duration | Tasks   | Files    |
-| ------------ | -------- | ------- | -------- |
-| Phase 01 P01 | 8 min    | 2 tasks | 2 files  |
-| Phase 01 P02 | 148 min  | 2 tasks | 30 files |
-| Phase 01 P03 | 21 min   | 3 tasks | 27 files |
-| Phase 01 P04 | 90 min   | 3 tasks | 23 files |
-| Phase 01 P05 | 13m      | 3 tasks | 16 files |
-| Phase 01 P06 | 4 min    | 2 tasks | 8 files  |
-| Phase 01 P07 | 5 min    | 2 tasks | 6 files  |
-| Phase 01 P08 | 10 min   | 3 tasks | 13 files |
-| Phase 02 P01 | 12 min   | 3 tasks | 24 files |
-| Phase 02 P02 | 14 min   | 3 tasks | 26 files |
-| Phase 02 P03 | 26 min   | 3 tasks | 45 files |
-| Phase 02 P04 | 15min    | 3 tasks | 26 files |
-| Phase 02 P06 | 8min     | 3 tasks | 14 files |
-| Phase 02 P07 | 13min    | 3 tasks | 20 files |
-| Phase 02 P08 | 13min    | 3 tasks | 29 files |
-| Phase 02 P09 | 31min    | 3 tasks | 16 files |
-| Phase 02 P10 | 446min   | 3 tasks | 21 files |
-| Phase 02 P05 | 55min    | 3 tasks | 23 files |
-| Phase 02 P11 | 27min    | 3 tasks | 20 files |
-| Phase 02 P12 | 34min    | 3 tasks | 28 files |
-| Phase 02 P13 | 47min    | 3 tasks | 4 files  |
-| Phase 02 P14 | 14min    | 3 tasks | 4 files  |
-| Phase 03 P01 | 14min    | 3 tasks | 35 files |
-| Phase 02 P15 | 100min   | 3 tasks | 11 files |
-| Phase 02 P16 | 17min    | 3 tasks | 9 files  |
-| Phase 02 P17 | 30min    | 3 tasks | 5 files  |
-| Phase 02.1 P01 | 68min  | 3 tasks | 31 files |
-| Phase 03 P02 | 15 min | 3 tasks | 32 files |
-| Phase 02.2 P01 | 17min | 3 tasks | 16 files |
-| Phase 02.2 P02 | 8min | 2 tasks | 2 files |
-| Phase 02.3 P01 | 13min | 3 tasks | 31 files |
-| Phase 02.3 P02 | 20min | 3 tasks | 7 files |
+| Plan           | Duration | Tasks   | Files    |
+| -------------- | -------- | ------- | -------- |
+| Phase 01 P01   | 8 min    | 2 tasks | 2 files  |
+| Phase 01 P02   | 148 min  | 2 tasks | 30 files |
+| Phase 01 P03   | 21 min   | 3 tasks | 27 files |
+| Phase 01 P04   | 90 min   | 3 tasks | 23 files |
+| Phase 01 P05   | 13m      | 3 tasks | 16 files |
+| Phase 01 P06   | 4 min    | 2 tasks | 8 files  |
+| Phase 01 P07   | 5 min    | 2 tasks | 6 files  |
+| Phase 01 P08   | 10 min   | 3 tasks | 13 files |
+| Phase 02 P01   | 12 min   | 3 tasks | 24 files |
+| Phase 02 P02   | 14 min   | 3 tasks | 26 files |
+| Phase 02 P03   | 26 min   | 3 tasks | 45 files |
+| Phase 02 P04   | 15min    | 3 tasks | 26 files |
+| Phase 02 P06   | 8min     | 3 tasks | 14 files |
+| Phase 02 P07   | 13min    | 3 tasks | 20 files |
+| Phase 02 P08   | 13min    | 3 tasks | 29 files |
+| Phase 02 P09   | 31min    | 3 tasks | 16 files |
+| Phase 02 P10   | 446min   | 3 tasks | 21 files |
+| Phase 02 P05   | 55min    | 3 tasks | 23 files |
+| Phase 02 P11   | 27min    | 3 tasks | 20 files |
+| Phase 02 P12   | 34min    | 3 tasks | 28 files |
+| Phase 02 P13   | 47min    | 3 tasks | 4 files  |
+| Phase 02 P14   | 14min    | 3 tasks | 4 files  |
+| Phase 03 P01   | 14min    | 3 tasks | 35 files |
+| Phase 02 P15   | 100min   | 3 tasks | 11 files |
+| Phase 02 P16   | 17min    | 3 tasks | 9 files  |
+| Phase 02 P17   | 30min    | 3 tasks | 5 files  |
+| Phase 02.1 P01 | 68min    | 3 tasks | 31 files |
+| Phase 03 P02   | 15 min   | 3 tasks | 32 files |
+| Phase 02.2 P01 | 17min    | 3 tasks | 16 files |
+| Phase 02.2 P02 | 8min     | 2 tasks | 2 files  |
+| Phase 02.3 P01 | 13min    | 3 tasks | 31 files |
+| Phase 02.3 P02 | 20min    | 3 tasks | 7 files  |
+| Phase 03 P03   | 20min    | 3 tasks | 27 files |
 
 ## Accumulated Context
 
@@ -195,6 +196,8 @@ Recent decisions affecting current work:
 - [Phase 02.3]: Admin feedback wraps the unchanged public feedback DTO with exact moderation truth. — Keeps moderation-only fields off the public contract while aligning reads and writes.
 - [Phase 02.3]: Admin changelog and activity projections use v2 presentation shapes instead of bare relation IDs. — Canonical link summaries and snapshot-backed labels eliminate browser joins and ID leakage.
 - [Phase 02.3]: Legacy activity resolves same-scope live referents before stable non-identifying fallbacks. — Historical rows remain readable without trusting or exposing cross-scope relations.
+- [Phase 03]: Notification comment links and discussion rows share the `afferent-comment-${commentId}` anchor encoder; comment-specific labels receive fragments only when a validated commentId exists.
+- [Phase 03]: Notification list and popover compose directly over generation-fenced hooks; pending, errors, paging, unread state, and optimism remain headless-owned.
 
 ### Pending Todos
 
@@ -220,6 +223,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-21T21:15:19Z
-Stopped at: Ready to execute 03-03-PLAN.md
+Last session: 2026-07-21T21:37:40Z
+Stopped at: Ready to execute 03-04-PLAN.md
 Resume file: None
