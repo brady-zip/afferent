@@ -39,11 +39,18 @@ describe("manual changelog lifecycle", () => {
     const ctx = context(backend) as never;
     const client = scopedClient("scope:changelog-queue-alpha");
     const seeded = await backend.run(async (runCtx) => {
-      const alpha: Array<{ id: string; createdAt: number; orderId: string; state: string }> = [];
+      const alpha: {
+        id: string;
+        createdAt: number;
+        orderId: string;
+        state: string;
+      }[] = [];
       for (let index = 0; index < 51; index += 1) {
         const createdAt = 20_000 + Math.floor(index / 2);
         const orderId = `alpha-${String(index).padStart(3, "0")}`;
-        const state = (["draft", "published", "unpublished"] as const)[index % 3];
+        const state = (["draft", "published", "unpublished"] as const)[
+          index % 3
+        ];
         const id = await runCtx.db.insert("changelogEntries", {
           scopeId: "scope:changelog-queue-alpha",
           title: `Alpha changelog ${index}`,
@@ -58,7 +65,7 @@ describe("manual changelog lifecycle", () => {
         });
         alpha.push({ id: String(id), createdAt, orderId, state });
       }
-      const beta: Array<{ id: string; slug: string; title: string }> = [];
+      const beta: { id: string; slug: string; title: string }[] = [];
       for (let index = 0; index < 4; index += 1) {
         const title = `Foreign beta changelog ${index}`;
         const slug = `foreign-beta-changelog-${index}`;

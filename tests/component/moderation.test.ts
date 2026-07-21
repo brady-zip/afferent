@@ -28,15 +28,12 @@ function context(backend: ReturnType<typeof convexTest>) {
 describe("admin moderation and append-only activity", () => {
   test("pages exact visible and hidden scope-owned queues and rejects a foreign direct read", async () => {
     const backend = withRateLimiter(convexTest(schema, modules));
-    const client = createScopedAfferentClient(
-      api as unknown as ComponentApi,
-      {
-        resolveScope: async () => "scope:queue-alpha",
-        resolveActor: async () => ({ externalKey: "queue-alpha:admin" }),
-        authorizeAdmin: async () => true,
-        isAuthenticated: async () => true,
-      },
-    ) as any;
+    const client = createScopedAfferentClient(api as unknown as ComponentApi, {
+      resolveScope: async () => "scope:queue-alpha",
+      resolveActor: async () => ({ externalKey: "queue-alpha:admin" }),
+      authorizeAdmin: async () => true,
+      isAuthenticated: async () => true,
+    }) as any;
     const ctx = context(backend) as never;
     const seeded = await backend.run(async (runCtx) => {
       const alphaBoard = await runCtx.db.insert("boards", {
@@ -59,7 +56,10 @@ describe("admin moderation and append-only activity", () => {
         scopeId: "scope:queue-beta",
         externalKey: "beta:author",
       });
-      const rows: Record<"visible" | "hidden", Array<{ id: string; createdAt: number; orderId: string }>> = {
+      const rows: Record<
+        "visible" | "hidden",
+        { id: string; createdAt: number; orderId: string }[]
+      > = {
         visible: [],
         hidden: [],
       };
@@ -111,7 +111,8 @@ describe("admin moderation and append-only activity", () => {
             ...(visibility === "hidden" ? { archivedAt: 99_000 + index } : {}),
           });
           betaIds.push(String(id));
-          if (visibility === "hidden" && index === 0) foreignHiddenId = String(id);
+          if (visibility === "hidden" && index === 0)
+            foreignHiddenId = String(id);
         }
       }
       return { rows, betaIds, foreignHiddenId };
