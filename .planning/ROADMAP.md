@@ -12,7 +12,7 @@ Afferent reaches its first public release through four coarse vertical slices. T
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
 - [x] **Phase 1: Secure Installable Feedback Board** - A clean consumer can install the packed artifact, connect any supported auth provider, and run the core multi-board feedback loop safely. (completed 2026-07-16)
-- [ ] **Phase 2: Complete Feedback-to-Changelog Workflow** - All 17 plans are implemented; awaiting independent re-verification of the exact merged comment/activity temporal and boundary closure.
+- [x] **Phase 2: Complete Feedback-to-Changelog Workflow** - All 17 plans are implemented and independently verified at 64/64 must-haves. (completed 2026-07-21)
 - [ ] **Phase 3: Source-Owned Product Interface** - Consumers can install accessible, responsive public and admin shadcn interfaces from one canonical source.
 - [ ] **Phase 4: Hosted Production Release** - The published package, registry, documentation, and isolated public demo work together against real Convex.
 
@@ -233,8 +233,8 @@ Phases execute sequentially: 1 -> 2 -> 3 -> 4
 | Phase                                      | Plans Complete | Status           | Completed  |
 | ------------------------------------------ | -------------- | ---------------- | ---------- |
 | 1. Secure Installable Feedback Board       | 8/8            | Complete         | 2026-07-16 |
-| 2. Complete Feedback-to-Changelog Workflow | 17/17          | Verifying        | -          |
-| 3. Source-Owned Product Interface          | 1/6            | Blocked on Phase 2 verification | -          |
+| 2. Complete Feedback-to-Changelog Workflow | 17/17 | Complete    | 2026-07-21 |
+| 3. Source-Owned Product Interface          | 1/6            | In progress      | -          |
 | 4. Hosted Production Release               | 0/TBD          | Not started      | -          |
 
 ---
