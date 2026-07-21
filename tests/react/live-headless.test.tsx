@@ -346,6 +346,7 @@ function AllHooksProbe() {
         subscription: subscription.status,
         notifications: notifications.status,
         notificationItems: notifications.items.map((item) => item.id),
+        notificationTargets: notifications.items.map((item) => item.target),
         unread: unread.status,
         unreadCount: unread.count,
         capability: capability.status,
@@ -1540,7 +1541,18 @@ describe("mounted identity-generation isolation", () => {
       client.update(
         "headless:notifications",
         (args) => args.sessionGeneration === firstGeneration,
-        page([{ id: `notification-${firstGeneration}` }]),
+        page([
+          {
+            id: `notification-${firstGeneration}`,
+            target: {
+              contractVersion: 1,
+              kind: "post",
+              postId: "post:1",
+              commentId: "comment:1",
+              label: "View comment on feedback: Keyboard navigation",
+            },
+          },
+        ]),
       );
       client.update(
         "headless:capability",
@@ -1550,6 +1562,15 @@ describe("mounted identity-generation isolation", () => {
     });
     expect(state(mounted.container).feedItems).toEqual([
       `feed-${firstGeneration}`,
+    ]);
+    expect(state(mounted.container).notificationTargets).toEqual([
+      {
+        contractVersion: 1,
+        kind: "post",
+        postId: "post:1",
+        commentId: "comment:1",
+        label: "View comment on feedback: Keyboard navigation",
+      },
     ]);
 
     mounted.rerender({

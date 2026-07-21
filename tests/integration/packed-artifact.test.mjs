@@ -126,6 +126,13 @@ test("the Phase 2 gate covers the public React artifact and complete consumer", 
   );
   assert.match(gate, /afferent\/react\.js/);
   assert.match(gate, /fixtures\/packed-vite-convex/);
+  const packedApp = await readFile(
+    join(repositoryRoot, "fixtures/packed-vite-convex/src/App.tsx"),
+    "utf8",
+  );
+  assert.match(packedApp, /NotificationTarget/);
+  assert.match(packedApp, /target\.kind/);
+  assert.match(packedApp, /target\.label/);
 });
 
 test(

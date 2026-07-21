@@ -34,6 +34,167 @@ function client(scopeId: string, actorKey: string, admin = false) {
 }
 
 describe("subscription and notification invariants", () => {
+  test("projects every event kind to a versioned accessible navigation target", async () => {
+    const backend = withRateLimiter(convexTest(schema, modules));
+    const ctx = context(backend) as never;
+    const admin = client("scope:targets", "targets:admin", true);
+    const install = await admin.admin.configureInstallation(ctx, {
+      readPolicy: "public",
+      boards: [{ slug: "feedback", name: "Feedback" }],
+    });
+    const post = await admin.participation.createPost(ctx, {
+      boardId: install.boards[0].id,
+      title: "Keyboard navigation",
+      body: "Make notifications actionable",
+    });
+
+    await backend.run(async (runCtx) => {
+      const postId = runCtx.db.normalizeId("posts", post.id)!;
+      const actor = await runCtx.db
+        .query("actors")
+        .withIndex("by_scope_external_key", (q) =>
+          q
+            .eq("scopeId", "scope:targets")
+            .eq("externalKey", "targets:admin"),
+        )
+        .unique();
+      const commentId = await runCtx.db.insert("comments", {
+        scopeId: "scope:targets",
+        postId,
+        actorId: actor!._id,
+        body: "A navigable reply",
+      });
+      const entryId = await runCtx.db.insert("changelogEntries", {
+        scopeId: "scope:targets",
+        title: "Accessible inbox",
+        body: "Notification destinations are ready.",
+        slug: "accessible-inbox",
+        publishedKey: "published",
+        createdAt: 1,
+        updatedAt: 1,
+        firstPublishedAt: 1,
+        publishedAt: 1,
+        orderId: "entry:targets",
+      });
+      const sources = [
+        ["status_changed", String(postId)],
+        ["admin_replied", String(commentId)],
+        ["comment_replied", String(commentId)],
+        ["mentioned", String(commentId)],
+        ["changelog_published", String(entryId)],
+      ] as const;
+      for (const [index, [type, entityId]] of sources.entries()) {
+        const eventId = await runCtx.db.insert("notificationEvents", {
+          scopeId: "scope:targets",
+          type,
+          initiatorActorId: actor!._id,
+          postId,
+          entityId,
+          occurredAt: index + 1,
+          guardKey: `target:${type}`,
+        });
+        await runCtx.db.insert("notificationInbox", {
+          scopeId: "scope:targets",
+          actorId: actor!._id,
+          eventId,
+          type,
+          entityId,
+          occurredAt: index + 1,
+          orderId: `target:${index}`,
+          unreadKey: "unread",
+        });
+      }
+    });
+
+    const inbox = await backend.query(api.notifications.inbox.listNotifications, {
+      scopeId: "scope:targets",
+      actor: { externalKey: "targets:admin" },
+      paginationOpts: { numItems: 20, cursor: null },
+    });
+    expect(inbox.contractVersion).toBe(2);
+    const byType = Object.fromEntries(
+      inbox.page.map((row: any) => [row.type, row]),
+    );
+    expect(byType.status_changed.target).toEqual({
+      contractVersion: 1,
+      kind: "post",
+      postId: post.id,
+      label: "View feedback: Keyboard navigation",
+    });
+    for (const type of ["admin_replied", "comment_replied", "mentioned"]) {
+      expect(byType[type].target).toMatchObject({
+        contractVersion: 1,
+        kind: "post",
+        postId: post.id,
+        label: "View comment on feedback: Keyboard navigation",
+      });
+      expect(byType[type].target.commentId).toEqual(expect.any(String));
+    }
+    expect(byType.changelog_published.target).toEqual({
+      contractVersion: 1,
+      kind: "changelog",
+      slug: "accessible-inbox",
+      label: "View changelog: Accessible inbox",
+    });
+    for (const row of inbox.page) expect(row).not.toHaveProperty("entityId");
+  });
+
+  test("degrades a legacy-invalid comment anchor to its validated post target", async () => {
+    const backend = withRateLimiter(convexTest(schema, modules));
+    const ctx = context(backend) as never;
+    const admin = client("scope:legacy-target", "legacy:admin", true);
+    const install = await admin.admin.configureInstallation(ctx, {
+      readPolicy: "public",
+      boards: [{ slug: "feedback", name: "Feedback" }],
+    });
+    const post = await admin.participation.createPost(ctx, {
+      boardId: install.boards[0].id,
+      title: "Canonical destination",
+      body: "Keep the post link",
+    });
+    await backend.run(async (runCtx) => {
+      const postId = runCtx.db.normalizeId("posts", post.id)!;
+      const actor = await runCtx.db
+        .query("actors")
+        .withIndex("by_scope_external_key", (q) =>
+          q
+            .eq("scopeId", "scope:legacy-target")
+            .eq("externalKey", "legacy:admin"),
+        )
+        .unique();
+      const eventId = await runCtx.db.insert("notificationEvents", {
+        scopeId: "scope:legacy-target",
+        type: "mentioned",
+        initiatorActorId: actor!._id,
+        postId,
+        entityId: "legacy-clobbered-comment-id",
+        occurredAt: 1,
+        guardKey: "legacy:mentioned",
+      });
+      await runCtx.db.insert("notificationInbox", {
+        scopeId: "scope:legacy-target",
+        actorId: actor!._id,
+        eventId,
+        type: "mentioned",
+        entityId: "legacy-clobbered-comment-id",
+        occurredAt: 1,
+        orderId: "legacy:mentioned",
+        unreadKey: "unread",
+      });
+    });
+    const inbox = await backend.query(api.notifications.inbox.listNotifications, {
+      scopeId: "scope:legacy-target",
+      actor: { externalKey: "legacy:admin" },
+      paginationOpts: { numItems: 20, cursor: null },
+    });
+    expect(inbox.page[0].target).toEqual({
+      contractVersion: 1,
+      kind: "post",
+      postId: post.id,
+      label: "View comment on feedback: Canonical destination",
+    });
+  });
+
   test("preserves durable opt-out and does not subscribe voters", async () => {
     const backend = withRateLimiter(convexTest(schema, modules));
     const ctx = context(backend) as never;

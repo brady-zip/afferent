@@ -40,6 +40,104 @@ function corruptInnerCursor(cursor: string) {
 }
 
 describe("duplicate merge lifecycle", () => {
+  test.each([
+    ["atomic", 0],
+    ["resumable", 51],
+  ] as const)(
+    "canonicalizes %s notification destinations without clobbering source identity",
+    async (_mode, relationCount) => {
+      vi.useFakeTimers();
+      const backend = withRateLimiter(convexTest(schema, modules));
+      const ctx = context(backend) as never;
+      const admin = client("scope:target-merge", "target-merge:admin", true);
+      const install = await admin.admin.configureInstallation(ctx, {
+        readPolicy: "public",
+        boards: [{ slug: "feedback", name: "Feedback" }],
+      });
+      const canonical = await admin.participation.createPost(ctx, {
+        boardId: install.boards[0].id,
+        title: "Canonical target",
+        body: "Destination",
+      });
+      const source = await admin.participation.createPost(ctx, {
+        boardId: install.boards[0].id,
+        title: "Source target",
+        body: "Duplicate",
+      });
+      const identities = await backend.run(async (runCtx) => {
+        const sourceId = runCtx.db.normalizeId("posts", source.id)!;
+        const actor = await runCtx.db
+          .query("actors")
+          .withIndex("by_scope_external_key", (q) =>
+            q
+              .eq("scopeId", "scope:target-merge")
+              .eq("externalKey", "target-merge:admin"),
+          )
+          .unique();
+        for (let index = 0; index < relationCount; index += 1) {
+          const actorId = await runCtx.db.insert("actors", {
+            scopeId: "scope:target-merge",
+            externalKey: `target-merge:voter:${index}`,
+          });
+          await runCtx.db.insert("votes", {
+            scopeId: "scope:target-merge",
+            postId: sourceId,
+            actorId,
+          });
+        }
+        await runCtx.db.patch(sourceId, { voteCount: relationCount });
+        const commentId = await runCtx.db.insert("comments", {
+          scopeId: "scope:target-merge",
+          postId: sourceId,
+          actorId: actor!._id,
+          body: "Preserve this anchor",
+        });
+        const changelogIdentity = "changelog-source-identity";
+        const eventIds = [];
+        for (const [type, entityId] of [
+          ["status_changed", String(sourceId)],
+          ["comment_replied", String(commentId)],
+          ["changelog_published", changelogIdentity],
+        ] as const) {
+          eventIds.push(
+            await runCtx.db.insert("notificationEvents", {
+              scopeId: "scope:target-merge",
+              type,
+              initiatorActorId: actor!._id,
+              postId: sourceId,
+              entityId,
+              occurredAt: 1,
+              guardKey: `merge-target:${type}:${relationCount}`,
+            }),
+          );
+        }
+        return { eventIds, commentId: String(commentId), changelogIdentity };
+      });
+
+      await backend.mutation(api.admin.merge.mergePost, {
+        scopeId: "scope:target-merge",
+        actor: { externalKey: "target-merge:admin" },
+        sourcePostId: source.id,
+        canonicalPostId: canonical.id,
+      });
+      await backend.finishAllScheduledFunctions(() => vi.runAllTimers());
+      const events = await backend.run(async (runCtx) =>
+        Promise.all(identities.eventIds.map((id) => runCtx.db.get(id))),
+      );
+      expect(events.map((event) => event?.postId)).toEqual([
+        canonical.id,
+        canonical.id,
+        canonical.id,
+      ]);
+      expect(events.map((event) => event?.entityId)).toEqual([
+        canonical.id,
+        identities.commentId,
+        identities.changelogIdentity,
+      ]);
+      vi.useRealTimers();
+    },
+  );
+
   test("pages exact merged comment and activity ties with pinned reset-safe cursors", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-07-20T12:00:00.000Z"));

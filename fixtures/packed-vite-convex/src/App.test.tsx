@@ -6,7 +6,11 @@ import * as headless from "afferent/react.js";
 import { expect, test } from "vitest";
 
 import { api } from "../convex/_generated/api.js";
-import { feedbackActionLabels, submitFeedback } from "./App.js";
+import {
+  feedbackActionLabels,
+  notificationTargetView,
+  submitFeedback,
+} from "./App.js";
 
 const modules = import.meta.glob("../convex/**/*.ts");
 
@@ -35,6 +39,32 @@ test("the packed React subpath exposes the complete headless workflow", () => {
       identityToken: "",
     }),
   ).toThrow("identityToken must be non-empty");
+});
+
+test("the packed consumer dispatches the closed notification target verbatim", () => {
+  expect(
+    notificationTargetView({
+      contractVersion: 1,
+      kind: "post",
+      postId: "post:packed" as never,
+      commentId: "comment:packed" as never,
+      label: "View comment on feedback: Packed navigation",
+    }),
+  ).toEqual({
+    kind: "post",
+    label: "View comment on feedback: Packed navigation",
+  });
+  expect(
+    notificationTargetView({
+      contractVersion: 1,
+      kind: "changelog",
+      slug: "packed-navigation",
+      label: "View changelog: Packed navigation",
+    }),
+  ).toEqual({
+    kind: "changelog",
+    label: "View changelog: Packed navigation",
+  });
 });
 
 test("the form submit handler writes through the host wrapper and renders the public DTO", async () => {

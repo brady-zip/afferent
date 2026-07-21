@@ -133,6 +133,26 @@ describe("public contract privacy", () => {
     );
   });
 
+  test("publishes notification navigation separately from delivery identity", () => {
+    const contractsSource = fs.readFileSync("src/client/contracts.ts", "utf8");
+    const notificationSlice = contractsSource.slice(
+      contractsSource.indexOf("export type NotificationTarget"),
+      contractsSource.indexOf("export type UnreadNotificationCountDto"),
+    );
+    expect(notificationSlice).toContain("contractVersion: 2");
+    expect(notificationSlice).toContain('kind: "post"');
+    expect(notificationSlice).toContain('kind: "changelog"');
+    expect(notificationSlice).toContain("target: NotificationTarget");
+    expect(notificationSlice).not.toContain("entityId");
+
+    const deliverySlice = contractsSource.slice(
+      contractsSource.indexOf("export type DeliveryEventDto"),
+      contractsSource.indexOf("export type DeliveryLeaseDto"),
+    );
+    expect(deliverySlice).toContain("contractVersion: 1");
+    expect(deliverySlice).toContain("entityId: string");
+  });
+
   test("keeps authority and provider records out of intent validators", () => {
     expect(Object.keys(createPostIntentValidator.fields).sort()).toEqual([
       "boardId",
