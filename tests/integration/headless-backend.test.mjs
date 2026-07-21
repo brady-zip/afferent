@@ -124,9 +124,7 @@ test("the exact publication oracle rejects every unsound evidence class", () => 
       () =>
         assertExactPublicationSequence(
           [exact],
-          exactModel([exact], [
-            { originGeneration: 6, kind, rejected: true },
-          ]),
+          exactModel([exact], [{ originGeneration: 6, kind, rejected: true }]),
           [{ originGeneration: 6, kind, rejected: false }],
         ),
       undefined,
