@@ -9,11 +9,13 @@ Afferent reaches its first public release through four coarse vertical slices. T
 **Phase Numbering:**
 
 - Integer phases (1, 2, 3): Planned milestone work
-- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+- Decimal phases (2.1, 2.2, 2.3): Urgent insertions (marked with INSERTED)
 
 - [x] **Phase 1: Secure Installable Feedback Board** - A clean consumer can install the packed artifact, connect any supported auth provider, and run the core multi-board feedback loop safely. (completed 2026-07-16)
 - [x] **Phase 2: Complete Feedback-to-Changelog Workflow** - All 17 plans are implemented and independently verified at 64/64 must-haves. (completed 2026-07-21)
 - [x] **Phase 2.1: Server-Derived Viewer Capability Contract** - Add server-derived vote membership and edit/withdraw capabilities required by the copied UI without accepting client authority facts. (INSERTED) (completed 2026-07-21)
+- [ ] **Phase 2.2: Notification Navigation Target Contract** - Project versioned, public, accessible notification destinations without exposing polymorphic internal identifiers. (INSERTED)
+- [ ] **Phase 2.3: Admin Read and Projection Completion** - Complete server-authorized admin reads and presentation-ready moderation, changelog, and activity projections. (INSERTED)
 - [ ] **Phase 3: Source-Owned Product Interface** - Consumers can install accessible, responsive public and admin shadcn interfaces from one canonical source.
 - [ ] **Phase 4: Hosted Production Release** - The published package, registry, documentation, and isolated public demo work together against real Convex.
 
@@ -173,11 +175,33 @@ Plans:
 
 - [x] `02.1-01-PLAN.md` — Add the trusted viewer resolver, indexed vote/action projection, explicit DTO versioning, exact headless optimism, and adversarial packed/full-regression proof.
 
+### Phase 02.2: Notification Navigation Target Contract (INSERTED)
+
+**Goal:** [Urgent work - to be planned]
+**Requirements**: TBD
+**Depends on:** Phase 02.1
+**Plans:** 0 plans
+
+Plans:
+
+- [ ] TBD (run /gsd-plan-phase 02.2 to break down)
+
+### Phase 02.3: Admin Read and Projection Completion (INSERTED)
+
+**Goal:** [Urgent work - to be planned]
+**Requirements**: TBD
+**Depends on:** Phase 02.2
+**Plans:** 0 plans
+
+Plans:
+
+- [ ] TBD (run /gsd-plan-phase 02.3 to break down)
+
 ### Phase 3: Source-Owned Product Interface
 
 **Goal:** As a developer adopting Afferent, I want to install and restyle source-owned public and admin shadcn interfaces from one canonical registry-backed source, so that my users and administrators can complete the feedback lifecycle through accessible, responsive screens without replacing the headless behavior layer.
 **Mode:** mvp
-**Depends on:** Phase 02.1
+**Depends on:** Phase 02.3
 **Requirements:** UI-04, UI-05, UI-06, UI-07, QUAL-04, QUAL-07, QUAL-08
 **Success Criteria** (what must be TRUE):
 
@@ -246,13 +270,15 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute sequentially: 1 -> 2 -> 2.1 -> 3 -> 4
+Phases execute sequentially: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 3 -> 4
 
 | Phase                                      | Plans Complete | Status           | Completed  |
 | ------------------------------------------ | -------------- | ---------------- | ---------- |
 | 1. Secure Installable Feedback Board       | 8/8            | Complete         | 2026-07-16 |
 | 2. Complete Feedback-to-Changelog Workflow | 17/17 | Complete    | 2026-07-21 |
 | 2.1 Server-Derived Viewer Capability Contract | 1/1 | Complete   | 2026-07-21 |
+| 2.2 Notification Navigation Target Contract | 0/TBD | Not started | -          |
+| 2.3 Admin Read and Projection Completion   | 0/TBD          | Not started      | -          |
 | 3. Source-Owned Product Interface          | 2/6            | In progress      | -          |
 | 4. Hosted Production Release               | 0/TBD          | Not started      | -          |
 

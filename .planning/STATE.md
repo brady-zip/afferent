@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 03
-current_phase_name: Source-Owned Product Interface
-status: executing
-stopped_at: Completed 03-02-PLAN.md; ready to execute Phase 03 Plan 03-03
-last_updated: "2026-07-21T18:37:40.829Z"
+current_phase: 02.2
+current_phase_name: Notification Navigation Target Contract
+status: planning
+stopped_at: Phase 03 Plan 03-03 blocked on notification navigation target; planning urgent prerequisite 02.2
+last_updated: "2026-07-21T18:55:42.616Z"
 last_activity: 2026-07-21
-last_activity_desc: Plan 03-02 completed the public feedback interface
+last_activity_desc: Inserted Phase 02.2 and 02.3 from proactive Phase 3 contract audit
 progress:
-  total_phases: 5
+  total_phases: 7
   completed_phases: 3
   total_plans: 32
   completed_plans: 28
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-17)
 
 **Core value:** SaaS teams can add deeply integrated product feedback to an existing Convex application while retaining native ownership of their data, identity, permissions, and user experience.
-**Current focus:** Phase 03 — Source-Owned Product Interface
+**Current focus:** Phase 02.2 — Notification Navigation Target Contract
 
 ## Current Position
 
-Phase: 03 — Source-Owned Product Interface
-Plan: 03-03 of 6
-Status: Ready to execute
-Last activity: 2026-07-21 — Plan 03-02 completed the public feedback interface
+Phase: 02.2 — Notification Navigation Target Contract
+Plan: Not planned
+Status: Planning
+Last activity: 2026-07-21 — Inserted Phase 02.2 and 02.3 from proactive Phase 3 contract audit
 
 Progress: [█████████░] 88%
 
@@ -195,6 +195,8 @@ None yet.
 ### Roadmap Evolution
 
 - Phase 02.1 inserted after Phase 2: Server-Derived Viewer Capability Contract (URGENT)
+- Phase 02.2 inserted after Phase 2: Notification Navigation Target Contract (URGENT)
+- Phase 02.3 inserted after Phase 2: Admin Read and Projection Completion (URGENT)
 
 ## Deferred Items
 
@@ -206,6 +208,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-21T18:37:40.823Z
-Stopped at: Completed 03-02-PLAN.md; ready to execute Phase 03 Plan 03-03
+Last session: 2026-07-21T18:55:42.616Z
+Stopped at: Phase 03 Plan 03-03 blocked on notification navigation target; planning urgent prerequisite 02.2
 Resume file: None
