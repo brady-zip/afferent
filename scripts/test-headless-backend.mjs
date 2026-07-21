@@ -1525,6 +1525,26 @@ async function proveInstalledProductWatches({
         `installed product ${reader} ${mode}-page recovery`,
       );
     }
+    store.retry();
+    const restartBoundary = [{ cursor: null, numItems: 2 }];
+    await expectExactProductPublication(
+      publications,
+      {
+        status: "LoadingFirstPage",
+        ids: baseline,
+        boundaries: restartBoundary,
+      },
+      `installed product ${reader} append/restart loading`,
+    );
+    await expectExactProductPublication(
+      publications,
+      {
+        status: "CanLoadMore",
+        ids: first,
+        boundaries: restartBoundary,
+      },
+      `installed product ${reader} append/restart settled`,
+    );
     assertCompleteProductSequence(publications);
     publications.stop();
     store.dispose();
