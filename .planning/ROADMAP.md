@@ -95,7 +95,7 @@ Afferent reaches its first public release through four coarse vertical slices. T
 
 **Wave 17** _(additive exact-oracle closure; required before Phase 3 Plan 03-02)_
 
-- [x] 02-17-PLAN.md — Replace permissive installed-reader prefix checks with exact temporal, boundary, stale-generation, and no-flake proof. (completed 2026-07-21)
+- [x] 02-17-PLAN.md — Replace permissive installed-reader prefix checks with exact temporal, pinned-boundary, stale-generation, and no-flake proof. (final bounded closure completed 2026-07-21)
 
 **Wave 16** _(additive merged-reader correction; required before Phase 3 Plan 03-02)_
 

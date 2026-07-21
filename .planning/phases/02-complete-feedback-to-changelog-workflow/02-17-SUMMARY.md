@@ -10,6 +10,7 @@ requires:
 provides:
   - Rejection-capable exact publication and descriptor-chain oracle with negative meta-tests
   - Exact installed comment/activity lifecycle evidence across merge, cleanup, faults, append, restart, and A-to-B-to-A replacement
+  - Three-descriptor pinned-window proof through 1-to-2 cutover, every cleanup repoint, and 2-to-1 completion
   - Descriptor-safe restart behavior with late old-generation result/error rejection
 affects: [phase-2-verification, phase-3-discussion-ui, headless-consumers]
 
@@ -36,7 +37,7 @@ key-decisions:
 
 requirements-completed: [DISC-07, ADMN-10, UI-03, QUAL-01]
 
-duration: 23min
+duration: 30min
 completed: 2026-07-21
 status: complete
 ---
@@ -47,9 +48,9 @@ status: complete
 
 ## Performance
 
-- **Duration:** 23 min
+- **Duration:** 30 min
 - **Started:** 2026-07-21T14:48:44Z
-- **Completed:** 2026-07-21T15:11:32Z
+- **Completed:** 2026-07-21T15:35:23Z
 - **Tasks:** 3
 - **Files modified:** 5
 
@@ -58,6 +59,7 @@ status: complete
 - Added pure exact-sequence and exact-boundary assertions whose negative fixtures independently reject truncated normal publications, mismatched fault prefix/code pairs, overlap, gaps, vacuous recorders, and accepted stale result/error deliveries.
 - Replaced the installed-product prefix-membership seam with exact per-reader schedules over the real installed `listComments` and `listPostActivity` queries, including mandatory cleanup publications, exact five-notification append transitions, three-page first/middle/tail faults, recovery, and restart.
 - Held real old-generation result and error callbacks, disposed A, settled B and a fresh A, then proved both late deliveries left the current snapshot, descriptor chain, publication count, and error state unchanged.
+- Added a second real staged merge whose comment and activity stores each hold three exact descriptors before cutover, preserve pinned boundaries through every physical cleanup repoint, and prove descriptor-backed resets plus three-page reloads at both reader-set transitions.
 - Preserved the full unrelated tracked-diff fingerprint and added no schema, DTO, authority input, package, cache, or merge-truth surface.
 
 ## Task Commits
@@ -65,6 +67,7 @@ status: complete
 1. **Task 1: Build a rejection-capable expected temporal oracle red-first** - `2df87b0`, `f57199d`
 2. **Task 2: Drive exact installed-reader publications, boundaries, and stale deliveries** - `86d2be8`, `7f3d5b3`
 3. **Task 3: Fix only proven product defects and enforce the no-flake gate** - `1d786ca`, `9e7f0fa`, `a5f9e77`
+4. **Bounded verifier closure: Reject extra chains and fully record pinned/replacement paths** - `2750088`, `686c237`
 
 ## Production Defect Proven and Fixed
 
@@ -72,7 +75,7 @@ The strict restart scenario failed because `restart()` stopped the old chain, pu
 
 ## Verification
 
-- Pure integration/meta oracle: 7/7 passed.
+- Pure integration/meta oracle: 9/9 passed.
 - Focused mounted React generation fence: 21/21 passed.
 - Typecheck and oxlint passed.
 - Three consecutive direct `node scripts/test-headless-backend.mjs` runs passed in one fail-fast command with no retry.
@@ -105,6 +108,16 @@ The strict restart scenario failed because `restart()` stopped the old chain, pu
 - **GREEN:** `f57199d` implemented the pure oracle; `7f3d5b3` installed it over real readers; `9e7f0fa` made restart descriptor-backed.
 - **ACCEPTANCE:** Focused suites, one fail-fast three-run direct command, the complete Phase 2 gate, and the unrelated fingerprint all pass.
 
+## Final Bounded Verifier Closure
+
+The independent verifier at `a48678c` retained two exact-evidence gaps. This bounded continuation closed both without editing the canonical verification report or creating another plan:
+
+- `extractDescriptorChain` now orders one reader/scope/session chain from `cursor: null` and requires every active scoped record to belong to it. Actual extraction-seam fixtures reject overlap, a gap, and an extra active tail.
+- A separate installed `product-pinned` merge loads exactly three comment and three activity descriptors before cutover. It records the exact retained-window restart at 1-to-2, exact pinned chains and row identities at every non-vacuous cleanup repoint, the exact 2-to-1 restart, and a three-descriptor reload after completion.
+- Negative sequence fixtures reject a cleanup that drops or duplicates a row across a page boundary.
+- Installed B and restored A each use an exact loading/settled recorder. The current-A observation includes publication count, IDs, status, error, and boundaries immediately before and after each old result/error release; both counts remain unchanged and the final exact sequence rejects any extra stale publication.
+- The new rejection fixtures were committed RED in `2750088`; the installed real-backend implementation and strict extractor became GREEN in `686c237`. No additional product defect was exposed, so production remained unchanged in this continuation.
+
 ## Next Phase Readiness
 
 - Plan 02-17 is complete and ready for independent Phase 2 re-verification against the unchanged canonical `02-VERIFICATION.md`.
@@ -112,7 +125,7 @@ The strict restart scenario failed because `restart()` stopped the old chain, pu
 
 ## Self-Check: PASSED
 
-- All seven implementation/test commits exist and every declared artifact exists.
+- All nine implementation/test commits exist and every declared artifact exists.
 - The final no-retry direct and aggregate gates pass.
 - Only the proven private restart defect changed production; unrelated dirty work remains untouched.
 
