@@ -234,13 +234,13 @@ Plans:
 4. Supplied public and admin interfaces pass documented WCAG 2.2 AA-oriented keyboard, focus, announcement, contrast, 320 CSS-pixel reflow, 200% zoom, and phone/tablet/desktop layout checks with versioned evidence.
 
 **UI hint**: yes
-**Plans:** 4/6 plans executed
+**Plans:** 5/6 plans executed
 
 - [x] 03-01-PLAN.md
 - [x] 03-02-PLAN.md
 - [x] 03-03-PLAN.md
 - [x] 03-04-PLAN.md
-- [ ] 03-05-PLAN.md
+- [x] 03-05-PLAN.md
 - [ ] 03-06-PLAN.md
 
 **Wave 1**
@@ -261,7 +261,7 @@ Plans:
 
 **Wave 5** _(blocked on Wave 4 completion)_
 
-- [ ] `03-05-PLAN.md` — Close the six-item deterministic registry/mirror and clean all-item consumer installation contract.
+- [x] `03-05-PLAN.md` — Close the six-item deterministic registry/mirror and clean all-item consumer installation contract.
 
 **Wave 6** _(blocked on Wave 5 completion)_
 

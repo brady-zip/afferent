@@ -5,16 +5,16 @@ milestone_name: milestone
 current_phase: 03
 current_phase_name: Source-Owned Product Interface
 status: executing
-stopped_at: Ready to execute 03-05-PLAN.md
-last_updated: "2026-07-21T21:44:50.670Z"
+stopped_at: Ready to execute 03-06-PLAN.md
+last_updated: "2026-07-21T22:01:50.000Z"
 last_activity: 2026-07-21
-last_activity_desc: Completed 03-04 administrative product interface
+last_activity_desc: Completed 03-05 complete UI distribution
 progress:
   total_phases: 7
   completed_phases: 5
   total_plans: 36
-  completed_plans: 34
-  percent: 94
+  completed_plans: 35
+  percent: 97
 ---
 
 # Project State
@@ -29,19 +29,19 @@ See: .planning/PROJECT.md (updated 2026-07-17)
 ## Current Position
 
 Phase: 03 — Source-Owned Product Interface
-Plan: 03-05 of 6
-Status: In progress — ready to close all-item distribution
-Last activity: 2026-07-21 — Completed 03-04 administrative product interface
+Plan: 03-06 of 6
+Status: In progress — ready for browser accessibility and layout evidence
+Last activity: 2026-07-21 — Completed 03-05 complete UI distribution
 
-Progress: [█████████░] 92%
+Progress: [██████████] 97%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 34
-- Average duration: 38 min
-- Total execution time: 1293 min
+- Total plans completed: 35
+- Average duration: 37 min
+- Total execution time: 1310 min
 
 **By Phase:**
 
@@ -51,12 +51,12 @@ Progress: [█████████░] 92%
 | Phase 02   | 17    | 854 min | 50 min   |
 | Phase 02.1 | 1     | 68 min  | 68 min   |
 | Phase 02.3 | 2     | 33 min  | 17 min   |
-| Phase 03   | 4     | 57 min  | 14 min   |
+| Phase 03   | 5     | 74 min  | 15 min   |
 
 **Recent Trend:**
 
-- Last 5 plans: 17 min, 8 min, 13 min, 20 min, 20 min
-- Trend: Phase 3 public product surfaces closed in 20 minutes with deterministic distribution proof
+- Last 5 plans: 17 min, 8 min, 20 min, 20 min, 13 min
+- Trend: Phase 3 all-item distribution closed in 17 minutes with packed clean-consumer proof
 
 _Updated after each plan completion_
 
@@ -98,6 +98,7 @@ _Updated after each plan completion_
 | Phase 02.3 P02 | 20min    | 3 tasks | 7 files  |
 | Phase 03 P03   | 20min    | 3 tasks | 27 files |
 | Phase 03 P04   | 8min     | 3 tasks | 25 files |
+| Phase 03 P05   | 17min    | 3 tasks | 15 files |
 
 ## Accumulated Context
 
@@ -112,6 +113,8 @@ Recent decisions affecting current work:
 - [Phase 3]: Author one neutral shadcn-compatible UI source and deterministically emit both registry artifacts and byte-equivalent repository examples.
 - [Phase 3]: Keep copied hook consumers as route-agnostic client components; no SSR initial-data contract in v1.
 - [Phase 3]: Treat explicit keyboard, focus, announcement, contrast, zoom, and reflow evidence as a release artifact.
+- [Phase 3]: Install the packed package before all generated registry items and require the mounted clean consumer to typecheck and build.
+- [Phase 3]: Serialize same-worktree UI artifact generation with a temporary lock so parallel verification cannot race shared output replacement.
 - [Phase 4]: Keep normal installs single-product while the public demo uses separate showcase and server-scoped sandbox component instances.
 - [Phase 01]: Approved the exact 17-entry npm matrix before installation; provider packages remain fixture-only. — The 2026-07-15 registry and official-source audit found no SLOP or install lifecycle scripts.
 - [Phase 01]: Use @auth/core 0.41.2 with @convex-dev/auth 0.0.94 despite the stale latest dist-tag. — The selected version is legitimate and satisfies the auth package peer range.
@@ -224,6 +227,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-21T21:37:40Z
-Stopped at: Ready to execute 03-05-PLAN.md
+Last session: 2026-07-21T22:01:50Z
+Stopped at: Ready to execute 03-06-PLAN.md
 Resume file: None
