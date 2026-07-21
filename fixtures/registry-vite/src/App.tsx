@@ -4,7 +4,12 @@ import type { NotificationTarget } from "afferent";
 import { AfferentProvider } from "afferent/react.js";
 
 import { AfferentBoardScreen } from "@/components/afferent/board/board-screen";
+import { AfferentAdminScreen } from "@/components/afferent/admin/admin-screen";
+import { AfferentChangelogScreen } from "@/components/afferent/changelog/changelog-screen";
 import { AfferentUiProvider } from "@/components/afferent/core/afferent-ui-provider";
+import { AfferentNotificationsList } from "@/components/afferent/notifications/notifications-list";
+import { AfferentNotificationsPopover } from "@/components/afferent/notifications/notifications-popover";
+import { AfferentRoadmapScreen } from "@/components/afferent/roadmap/roadmap-screen";
 
 const fixturePost = {
   id: "feedback_fixture",
@@ -80,10 +85,17 @@ export function App() {
         }}
         currentLocation="/feedback"
       >
-        <output data-kind={notificationTargetView(fixtureNotificationTarget).kind}>
+        <output
+          data-kind={notificationTargetView(fixtureNotificationTarget).kind}
+        >
           {notificationTargetView(fixtureNotificationTarget).label}
         </output>
         <AfferentBoardScreen />
+        <AfferentRoadmapScreen />
+        <AfferentChangelogScreen />
+        <AfferentNotificationsList />
+        <AfferentNotificationsPopover />
+        <AfferentAdminScreen />
       </AfferentUiProvider>
     </AfferentProvider>
   );

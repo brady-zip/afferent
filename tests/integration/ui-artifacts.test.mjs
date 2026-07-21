@@ -45,6 +45,24 @@ test("canonical UI generation is deterministic and byte-equal to its mirror", as
   }
 });
 
+test("publishes canonical adoption guidance and a complete stable mirror manifest", async () => {
+  const [guide, mirroredGuide, manifest] = await Promise.all([
+    readFile(join(canonicalRoot, "README.md")),
+    readFile(join(mirrorRoot, "README.md")),
+    readFile(join(mirrorRoot, "manifest.json"), "utf8").then(JSON.parse),
+  ]);
+  assert.equal(digest(guide), digest(mirroredGuide));
+  assert.deepEqual(
+    manifest.map((entry) => entry.path),
+    manifest.map((entry) => entry.path).sort(),
+  );
+  assert.equal(
+    manifest.some((entry) => entry.path === "README.md"),
+    true,
+  );
+  assert.doesNotMatch(JSON.stringify(manifest), /timestamp|generatedAt/);
+});
+
 test("registry catalog and emitted items use stable approved metadata", async () => {
   const catalog = JSON.parse(
     await readFile(join(root, "registry/registry.json"), "utf8"),
@@ -54,7 +72,14 @@ test("registry catalog and emitted items use stable approved metadata", async ()
     catalog.items.map((item) => item.name),
     catalog.items.map((item) => item.name).sort(),
   );
-  for (const name of ["afferent-ui-core", "afferent-board"]) {
+  for (const name of [
+    "afferent-admin",
+    "afferent-board",
+    "afferent-changelog",
+    "afferent-notifications",
+    "afferent-roadmap",
+    "afferent-ui-core",
+  ]) {
     const path = join(root, `registry/r/${name}.json`);
     const itemStat = await stat(path);
     assert.ok(itemStat.size > 0);

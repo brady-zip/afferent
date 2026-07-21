@@ -67,21 +67,27 @@ test(
         [
           "afferent-ui-core.json",
           "afferent-board.json",
+          "afferent-roadmap.json",
+          "afferent-changelog.json",
+          "afferent-notifications.json",
           "afferent-admin.json",
         ].map((name) =>
           cp(join(root, "registry/r", name), join(consumer, name)),
         ),
       );
-      await run(
-        join(root, "node_modules/.bin/shadcn"),
-        ["add", "--yes", "--overwrite", "./afferent-board.json"],
-        { cwd: consumer },
-      );
-      await run(
-        join(root, "node_modules/.bin/shadcn"),
-        ["add", "--yes", "--overwrite", "./afferent-admin.json"],
-        { cwd: consumer },
-      );
+      for (const item of [
+        "board",
+        "roadmap",
+        "changelog",
+        "notifications",
+        "admin",
+      ]) {
+        await run(
+          join(root, "node_modules/.bin/shadcn"),
+          ["add", "--yes", "--overwrite", `./afferent-${item}.json`],
+          { cwd: consumer },
+        );
+      }
       await run("npm", ["run", "typecheck"], { cwd: consumer });
       await run("npm", ["run", "build"], { cwd: consumer });
 
