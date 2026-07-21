@@ -69,7 +69,9 @@ async function resolveNotificationTarget(
     kind: "post" as const,
     postId: String(post._id),
     ...(validComment === undefined ? {} : { commentId: validComment }),
-    label: `View comment on feedback: ${post.title}`,
+    label: validComment === undefined
+      ? `View feedback: ${post.title}`
+      : `View comment on feedback: ${post.title}`,
   };
 }
 
