@@ -167,11 +167,11 @@ Afferent reaches its first public release through four coarse vertical slices. T
 2. Versioned post DTOs expose indexed vote membership and server-computed author edit/withdraw capabilities with anonymous-safe false values and exact mutation-policy parity.
 3. Headless feed/detail hooks surface and optimistically maintain the fields without UI-local authority state, and packed/static/adversarial tests reject spoofing, scans, drift, and stale capability behavior.
 
-**Plans:** 0 plans
+**Plans:** 1 plan
 
 Plans:
 
-- [ ] TBD (run /gsd-plan-phase 02.1 to break down)
+- [ ] `02.1-01-PLAN.md` — Add the trusted viewer resolver, indexed vote/action projection, explicit DTO versioning, exact headless optimism, and adversarial packed/full-regression proof.
 
 ### Phase 3: Source-Owned Product Interface
 
@@ -252,8 +252,8 @@ Phases execute sequentially: 1 -> 2 -> 2.1 -> 3 -> 4
 | ------------------------------------------ | -------------- | ---------------- | ---------- |
 | 1. Secure Installable Feedback Board       | 8/8            | Complete         | 2026-07-16 |
 | 2. Complete Feedback-to-Changelog Workflow | 17/17 | Complete    | 2026-07-21 |
-| 2.1 Server-Derived Viewer Capability Contract | 0/TBD | Ready to plan | - |
-| 3. Source-Owned Product Interface          | 1/6            | In progress      | -          |
+| 2.1 Server-Derived Viewer Capability Contract | 0/1 | Ready to execute | - |
+| 3. Source-Owned Product Interface          | 1/6            | Blocked on 02.1-01 | -          |
 | 4. Hosted Production Release               | 0/TBD          | Not started      | -          |
 
 ---

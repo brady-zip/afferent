@@ -4,15 +4,15 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 02.1
 current_phase_name: Server-Derived Viewer Capability Contract
-status: planning
-stopped_at: Urgent Phase 02.1 inserted; ready to plan the server-derived viewer capability contract
-last_updated: "2026-07-21T16:10:14.475Z"
+status: in_progress
+stopped_at: Planned 02.1-01; ready to execute the server-derived viewer capability contract
+last_updated: "2026-07-21T16:21:59.330Z"
 last_activity: 2026-07-21
-last_activity_desc: Inserted urgent Phase 02.1 as the blocking contract prerequisite for Phase 03
+last_activity_desc: Planned red-first 02.1-01 as the blocking contract prerequisite for Phase 03
 progress:
   total_phases: 5
   completed_phases: 2
-  total_plans: 31
+  total_plans: 32
   completed_plans: 26
   percent: 40
 ---
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-07-17)
 ## Current Position
 
 Phase: 02.1 — Server-Derived Viewer Capability Contract
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-07-21 — Inserted urgent Phase 02.1 as the blocking contract prerequisite for Phase 03
+Plan: 02.1-01 of 1
+Status: Ready to execute
+Last activity: 2026-07-21 — Planned red-first 02.1-01 as the blocking contract prerequisite for Phase 03
 
-Progress: [████████░░] 84%
+Progress: [████████░░] 81%
 
 ## Performance Metrics
 
@@ -196,6 +196,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-21T16:00:52.943Z
-Stopped at: Urgent Phase 02.1 inserted; ready to plan the server-derived viewer capability contract
+Last session: 2026-07-21T16:21:59.330Z
+Stopped at: Planned 02.1-01; ready to execute the server-derived viewer capability contract
 Resume file: None
