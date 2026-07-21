@@ -1329,6 +1329,71 @@ describe("mounted ordered pagination", () => {
       }
     },
   );
+
+  test("rejects captured late result and error callbacks after A to B to A replacement", () => {
+    const client = new ControlledWatchClient();
+    client.resolver = (name, args) => {
+      if (name !== "headless:feed") return defaultQueryValue(name, args);
+      return page([{ id: `generation-${String(args.sessionGeneration)}` }]);
+    };
+    const createStore = (sessionGeneration: number) =>
+      createPaginatedWatchStore({
+        client,
+        query: refs.feed as never,
+        args: { sessionGeneration } as never,
+        generation: sessionGeneration,
+        initialNumItems: 2,
+      });
+
+    const oldA = createStore(31);
+    const stopOldA = oldA.subscribe(() => {});
+    expect(oldA.getSnapshot().results).toEqual([{ id: "generation-31" }]);
+    const oldRecord = client.matching(
+      "headless:feed",
+      (args) => args.sessionGeneration === 31,
+    )[0];
+    const capturedCallbacks = [...oldRecord.listeners];
+    expect(capturedCallbacks).toHaveLength(1);
+    stopOldA();
+    oldA.dispose();
+
+    const actorB = createStore(32);
+    const stopB = actorB.subscribe(() => {});
+    expect(actorB.getSnapshot().results).toEqual([{ id: "generation-32" }]);
+    stopB();
+    actorB.dispose();
+
+    const currentA = createStore(33);
+    let currentPublications = 0;
+    const stopCurrentA = currentA.subscribe(() => {
+      currentPublications += 1;
+    });
+    const currentEvidence = () => {
+      const snapshot = currentA.getSnapshot();
+      return {
+        results: structuredClone(snapshot.results),
+        status: snapshot.status,
+        errorCode: snapshot.error?.code,
+      };
+    };
+    const before = currentEvidence();
+    const beforePublications = currentPublications;
+
+    oldRecord.error = undefined;
+    oldRecord.value = page([{ id: "late-old-result" }]);
+    for (const callback of capturedCallbacks) callback();
+    expect(currentEvidence()).toEqual(before);
+    expect(currentPublications).toBe(beforePublications);
+
+    oldRecord.error = new Error("late old error");
+    for (const callback of capturedCallbacks) callback();
+    expect(currentEvidence()).toEqual(before);
+    expect(currentPublications).toBe(beforePublications);
+
+    stopCurrentA();
+    currentA.dispose();
+    expect(oldRecord.disposeCount).toBe(1);
+  });
 });
 
 describe("mounted identity-generation isolation", () => {

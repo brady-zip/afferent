@@ -228,10 +228,18 @@ test("the real watch harness drives installed merged comment and activity public
     source,
     /components\.afferent\.admin\.activity\.listPostActivity/,
   );
-  assert.match(source, /recordEveryProductPublication/);
+  assert.match(source, /createExpectedPublicationModel/);
+  assert.match(source, /assertExactPublicationSequence/);
+  assert.match(source, /awaitNextPublication/);
+  assert.match(source, /extractDescriptorChain/);
+  assert.match(source, /createDeferredWatchTransport/);
+  assert.doesNotMatch(source, /exactPrefixes/);
+  assert.doesNotMatch(source, /assertPrefixesSince/);
   assert.match(source, /product merge length 1 to 2/);
   assert.match(source, /product merge cleaning repoint/);
   assert.match(source, /product merge length 2 to 1/);
+  assert.match(source, /cleanupPublications\.comments > 0/);
+  assert.match(source, /cleanupPublications\.activity > 0/);
   assert.match(source, /product comment identity A to B to A/i);
   assert.match(source, /product activity identity A to B to A/i);
 });
