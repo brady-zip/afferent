@@ -297,7 +297,7 @@ Phases execute sequentially: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 3 -> 4
 | 2. Complete Feedback-to-Changelog Workflow | 17/17 | Complete    | 2026-07-21 |
 | 2.1 Server-Derived Viewer Capability Contract | 1/1 | Complete   | 2026-07-21 |
 | 2.2 Notification Navigation Target Contract | 2/2 | Complete   | 2026-07-21 |
-| 2.3 Admin Read and Projection Completion   | 0/1            | Planned; blocked on 02.2 | -          |
+| 2.3 Admin Read and Projection Completion   | 0/1            | In progress      | -          |
 | 3. Source-Owned Product Interface          | 2/6            | In progress      | -          |
 | 4. Hosted Production Release               | 0/TBD          | Not started      | -          |
 
