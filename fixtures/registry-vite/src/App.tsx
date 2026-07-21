@@ -1,4 +1,5 @@
 import type { ComponentProps } from "react";
+import type { NotificationTarget } from "afferent";
 
 import { AfferentProvider } from "afferent/react.js";
 
@@ -22,6 +23,24 @@ const fixturePost = {
   viewerCanEdit: true,
   viewerCanWithdraw: true,
 };
+
+const fixtureNotificationTarget: NotificationTarget = {
+  contractVersion: 1,
+  kind: "post",
+  postId: "feedback_fixture" as never,
+  label: "View feedback: Ship source-owned feedback",
+};
+
+function notificationTargetView(target: NotificationTarget) {
+  switch (target.kind) {
+    case "post": {
+      return { kind: target.kind, label: target.label };
+    }
+    case "changelog": {
+      return { kind: target.kind, label: target.label };
+    }
+  }
+}
 
 const bindings = {
   public: { listFeedback: {} },
@@ -61,6 +80,9 @@ export function App() {
         }}
         currentLocation="/feedback"
       >
+        <output data-kind={notificationTargetView(fixtureNotificationTarget).kind}>
+          {notificationTargetView(fixtureNotificationTarget).label}
+        </output>
         <AfferentBoardScreen />
       </AfferentUiProvider>
     </AfferentProvider>

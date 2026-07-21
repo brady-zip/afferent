@@ -23,6 +23,8 @@ import {
   listPublishedChangelogIntentValidator,
   listRoadmapGroupIntentValidator,
   listTagsIntentValidator,
+  notificationPageResultValidator,
+  notificationResultValidator,
   publicPostDtoValidator,
   publicCommentDtoValidator,
   setVoteIntentValidator,
@@ -151,6 +153,20 @@ describe("public contract privacy", () => {
     );
     expect(deliverySlice).toContain("contractVersion: 1");
     expect(deliverySlice).toContain("entityId: string");
+    expect(Object.keys(notificationResultValidator.fields).sort()).toEqual([
+      "contractVersion",
+      "eventId",
+      "id",
+      "initiator",
+      "occurredAt",
+      "read",
+      "target",
+      "type",
+    ]);
+    expect(notificationResultValidator.fields).not.toHaveProperty("entityId");
+    expect(Object.keys(notificationPageResultValidator.fields)).toContain(
+      "contractVersion",
+    );
   });
 
   test("keeps authority and provider records out of intent validators", () => {

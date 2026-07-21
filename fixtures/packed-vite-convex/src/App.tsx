@@ -3,7 +3,13 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 
 import { api } from "../convex/_generated/api.js";
-import type { AfferentActionResult, PostDto, PostId } from "afferent";
+import type {
+  AfferentActionResult,
+  NotificationDto,
+  NotificationTarget,
+  PostDto,
+  PostId,
+} from "afferent";
 import {
   AfferentProvider,
   useAdminCapability,
@@ -126,8 +132,25 @@ function HeadlessWorkflow({ postId }: Readonly<{ postId?: PostId }>) {
           </div>
         ))}
       </dl>
+      <ul aria-label="Notification destinations">
+        {notifications.items.map((notification: NotificationDto) => {
+          const view = notificationTargetView(notification.target);
+          return <li key={notification.id} data-kind={view.kind}>{view.label}</li>;
+        })}
+      </ul>
     </section>
   );
+}
+
+export function notificationTargetView(target: NotificationTarget) {
+  switch (target.kind) {
+    case "post": {
+      return { kind: target.kind, label: target.label };
+    }
+    case "changelog": {
+      return { kind: target.kind, label: target.label };
+    }
+  }
 }
 
 export type FeedbackIntent = Readonly<{

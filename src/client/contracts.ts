@@ -914,12 +914,28 @@ export const deliveryOperationResultValidator = v.union(
   }),
 );
 
+export const notificationTargetResultValidator = v.union(
+  v.object({
+    contractVersion: v.literal(1),
+    kind: v.literal("post"),
+    postId: v.string(),
+    commentId: v.optional(v.string()),
+    label: v.string(),
+  }),
+  v.object({
+    contractVersion: v.literal(1),
+    kind: v.literal("changelog"),
+    slug: v.string(),
+    label: v.string(),
+  }),
+);
+
 export const notificationResultValidator = v.object({
-  contractVersion: v.literal(1),
+  contractVersion: v.literal(2),
   id: v.string(),
   eventId: v.string(),
   type: notificationEventTypeResultValidator,
-  entityId: v.string(),
+  target: notificationTargetResultValidator,
   occurredAt: v.number(),
   read: v.boolean(),
   initiator: v.object({
@@ -930,7 +946,7 @@ export const notificationResultValidator = v.object({
 });
 
 export const notificationPageResultValidator = v.object({
-  contractVersion: v.literal(1),
+  contractVersion: v.literal(2),
   page: v.array(notificationResultValidator),
   notifications: v.array(notificationResultValidator),
   isDone: v.boolean(),
