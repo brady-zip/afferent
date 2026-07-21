@@ -6,12 +6,24 @@ const read = (file: string) => fs.readFileSync(file, "utf8");
 describe("trusted viewer authority boundary", () => {
   test("keeps browser bindings and intent validators free of viewer authority", () => {
     const contracts = read("src/client/contracts.ts");
+    const publicPostReadValidators = [
+      "listPostsIntentValidator",
+      "listFeedbackIntentValidator",
+      "getPostIntentValidator",
+    ].map((name) => {
+      const start = contracts.indexOf(`export const ${name}`);
+      expect(start).toBeGreaterThanOrEqual(0);
+      const nextExport = contracts.indexOf("\nexport const ", start + 1);
+      const declaration = contracts.slice(
+        start,
+        nextExport === -1 ? contracts.length : nextExport,
+      );
+      expect(declaration.length).toBeGreaterThan(0);
+      return declaration;
+    });
     const browserSurface = [
       read("src/react/bindings.ts"),
-      contracts.slice(
-        contracts.indexOf("export const listFeedbackIntentValidator"),
-        contracts.indexOf("export const configureInstallationIntentValidator"),
-      ),
+      ...publicPostReadValidators,
     ].join("\n");
     for (const forbidden of [
       "userId",
