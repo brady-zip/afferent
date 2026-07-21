@@ -14,7 +14,7 @@ Afferent reaches its first public release through four coarse vertical slices. T
 - [x] **Phase 1: Secure Installable Feedback Board** - A clean consumer can install the packed artifact, connect any supported auth provider, and run the core multi-board feedback loop safely. (completed 2026-07-16)
 - [x] **Phase 2: Complete Feedback-to-Changelog Workflow** - All 17 plans are implemented and independently verified at 64/64 must-haves. (completed 2026-07-21)
 - [x] **Phase 2.1: Server-Derived Viewer Capability Contract** - Add server-derived vote membership and edit/withdraw capabilities required by the copied UI without accepting client authority facts. (INSERTED) (completed 2026-07-21)
-- [x] **Phase 2.2: Notification Navigation Target Contract** - Project versioned, public, accessible notification destinations without exposing polymorphic internal identifiers. (INSERTED) (completed 2026-07-21)
+- [ ] **Phase 2.2: Notification Navigation Target Contract** - Project versioned, public, accessible notification destinations without exposing polymorphic internal identifiers. (INSERTED)
 - [ ] **Phase 2.3: Admin Read and Projection Completion** - Complete server-authorized admin reads and presentation-ready moderation, changelog, and activity projections. (INSERTED)
 - [ ] **Phase 3: Source-Owned Product Interface** - Consumers can install accessible, responsive public and admin shadcn interfaces from one canonical source.
 - [ ] **Phase 4: Hosted Production Release** - The published package, registry, documentation, and isolated public demo work together against real Convex.
@@ -187,11 +187,15 @@ Plans:
 3. Small and resumable merges canonicalize post destinations while preserving comment and changelog source identity, with safe post-only degradation for legacy-invalid optional comment anchors.
 4. Exact DTO/page version bumps, validators/generated references, headless and packed consumption, adversarial scope/ID/scan guards, and the complete Phase 2 regression prove the contract.
 
-**Plans:** 1/1 plans complete
+**Plans:** 1/2 plans complete
 
 Plans:
 
 - [x] `02.2-01-PLAN.md` — Replace public polymorphic notification IDs with server-resolved accessible targets and type-aware merge normalization.
+
+**Wave 2** _(verification gap closure; blocked on Plan 02.2-01)_
+
+- [ ] `02.2-02-PLAN.md` — Correct post-only fallback labels and execute required cross-scope/mismatched notification relation proofs.
 
 ### Phase 02.3: Admin Read and Projection Completion (INSERTED)
 
@@ -292,7 +296,7 @@ Phases execute sequentially: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 3 -> 4
 | 1. Secure Installable Feedback Board       | 8/8            | Complete         | 2026-07-16 |
 | 2. Complete Feedback-to-Changelog Workflow | 17/17 | Complete    | 2026-07-21 |
 | 2.1 Server-Derived Viewer Capability Contract | 1/1 | Complete   | 2026-07-21 |
-| 2.2 Notification Navigation Target Contract | 1/1 | Complete   | 2026-07-21 |
+| 2.2 Notification Navigation Target Contract | 1/2 | Gap closure ready | -          |
 | 2.3 Admin Read and Projection Completion   | 0/1            | Planned; blocked on 02.2 | -          |
 | 3. Source-Owned Product Interface          | 2/6            | In progress      | -          |
 | 4. Hosted Production Release               | 0/TBD          | Not started      | -          |
