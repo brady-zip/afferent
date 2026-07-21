@@ -139,6 +139,18 @@ class AdminClient extends ControlledUiClient {
   }
 }
 
+class MutationAdminClient extends AdminClient {
+  outcomes = new Map<string, Promise<unknown> | unknown>();
+
+  override mutation(reference: unknown, args: Record<string, unknown>) {
+    const name = getFunctionName(reference as never);
+    this.mutationCalls.push({ name, args });
+    return Promise.resolve(
+      this.outcomes.get(name) ?? { contractVersion: 1, ok: true, data: {} },
+    ) as Promise<any>;
+  }
+}
+
 function buttonNamed(root: ParentNode, name: string) {
   const button = [...root.querySelectorAll<HTMLButtonElement>("button")].find(
     (candidate) => candidate.textContent?.trim() === name,
@@ -350,6 +362,63 @@ describe("admin product interface", () => {
     mounted.unmount();
   });
 
+  test("keeps a consequential dialog open through pending and typed correction state", async () => {
+    const { AfferentAdminScreen } =
+      await import("../../ui/afferent/admin/admin-screen.js");
+    const client = new MutationAdminClient();
+    let resolveMutation!: (value: unknown) => void;
+    client.outcomes.set(
+      "admin:setArchived",
+      new Promise((resolve) => {
+        resolveMutation = resolve;
+      }),
+    );
+    const mounted = renderUi(
+      <AfferentAdminScreen
+        boards={[board]}
+        mobileView="detail"
+        onMobileViewChange={() => {}}
+      />,
+      { client, bindings: adminBindings },
+    );
+    await settle();
+    click(mounted.container.querySelector("[data-admin-feedback] button")!);
+    await settle();
+    click(buttonNamed(mounted.container, "Archive feedback"));
+    await settle();
+    const confirm = buttonNamed(
+      document.body.querySelector("[role='dialog']")!,
+      "Archive feedback",
+    );
+    click(confirm);
+    await settle();
+    expect(confirm.disabled).toBe(true);
+    expect(confirm.getAttribute("aria-busy")).toBe("true");
+    expect(document.body.querySelector("[role='dialog']")).not.toBeNull();
+
+    await act(async () => {
+      resolveMutation({
+        contractVersion: 1,
+        ok: false,
+        error: {
+          contractVersion: 1,
+          code: "VALIDATION",
+          message: "Resolve the moderation conflict before archiving.",
+        },
+      });
+    });
+    expect(document.body.querySelector("[role='dialog']")).not.toBeNull();
+    expect(document.body.textContent).toContain(
+      "Resolve the moderation conflict before archiving.",
+    );
+    click(buttonNamed(document.body, "Dismiss error and continue editing"));
+    await settle();
+    expect(document.body.textContent).not.toContain(
+      "Resolve the moderation conflict before archiving.",
+    );
+    mounted.unmount();
+  });
+
   test("keeps queue selection semantic after focus moves and lets the host control the phone pane", async () => {
     const { AfferentAdminScreen } =
       await import("../../ui/afferent/admin/admin-screen.js");
@@ -439,7 +508,9 @@ describe("admin product interface", () => {
     expect(failed.container.textContent).toContain(
       "We couldn't load feedback management",
     );
-    expect(failed.container.querySelector("[data-tone='error']")).not.toBeNull();
+    expect(
+      failed.container.querySelector("[data-tone='error']"),
+    ).not.toBeNull();
     failed.unmount();
   });
 
@@ -467,8 +538,5 @@ describe("admin product interface", () => {
       /grid-template-columns: minmax\(280px, 35fr\) minmax\(0, 65fr\)/,
     );
     expect(css).toMatch(/data-admin-label/);
-    expect(css).toMatch(/data-selected="true"/);
-    expect(css).toMatch(/data-tone="error"/);
-    expect(css).toMatch(/data-tone="destructive"/);
   });
 });

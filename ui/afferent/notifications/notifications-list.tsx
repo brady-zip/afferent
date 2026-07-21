@@ -22,6 +22,10 @@ import {
   afferentErrorText,
   assertNever,
 } from "@/components/afferent/core/state-region";
+import {
+  formatAfferentDateTime,
+  formatAfferentDateTimeValue,
+} from "@/components/afferent/core/format";
 
 export function AfferentNotificationsList({
   pageOwner = true,
@@ -205,8 +209,8 @@ function NotificationMetadata({
     <p className="afferent-notification__metadata">
       {notification.initiator.displayName ?? "Someone"}
       {" · "}
-      <time dateTime={new Date(notification.occurredAt).toISOString()}>
-        {notification.occurredAt}
+      <time dateTime={formatAfferentDateTimeValue(notification.occurredAt)}>
+        {formatAfferentDateTime(notification.occurredAt)}
       </time>
     </p>
   );
