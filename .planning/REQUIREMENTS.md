@@ -120,7 +120,7 @@ Requirements for the first production-ready public release. Roadmap creation wil
 - [ ] **QUAL-07**: Supplied public and admin interfaces meet documented WCAG 2.2 AA-oriented keyboard, focus, announcement, contrast, zoom, and reflow checks.
 - [ ] **QUAL-08**: Supplied public and admin interfaces support phone, tablet, and desktop layouts.
 
-  Plan 03-06 supplied the initial installed-source evidence. The canonical `03-UI-REVIEW.md` reopened UI-05, QUAL-07, and QUAL-08 for Plans 03-07 and 03-08 to close consequential dialogs, selected/error/destructive hierarchy, controlled phone navigation, token/copy drift, complete states, and broader installed-source visual evidence. Axe remains a supplemental regression net rather than certification.
+  Plan 03-07 closed the canonical consequential dialogs, selected/error/destructive hierarchy, controlled phone navigation, token/copy drift, and complete administrative states. UI-05, QUAL-07, and QUAL-08 remain pending until Plan 03-08 refreshes the installed-browser and broad public/admin visual evidence. Axe remains a supplemental regression net rather than certification.
 
 - [ ] **QUAL-09**: Documentation covers installation, component mounting, all three auth integrations, access policy, headless React usage, shadcn installation, customization, testing, deployment, and upgrades.
 - [x] **QUAL-10**: The repository and published package include the Apache-2.0 license.

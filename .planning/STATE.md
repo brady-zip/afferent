@@ -5,16 +5,16 @@ milestone_name: milestone
 current_phase: 03
 current_phase_name: Source-Owned Product Interface
 status: ready
-stopped_at: UI audit gap plans 03-07 and 03-08 created; ready to execute 03-07
-last_updated: "2026-07-21T22:44:42.000Z"
+stopped_at: Plan 03-07 complete; ready to execute 03-08 evidence refresh
+last_updated: "2026-07-21T22:58:44.000Z"
 last_activity: 2026-07-21
-last_activity_desc: Planned Phase 3 UI audit gap closure
+last_activity_desc: Completed 03-07 canonical UI audit interaction closure
 progress:
   total_phases: 7
   completed_phases: 5
   total_plans: 38
-  completed_plans: 36
-  percent: 95
+  completed_plans: 37
+  percent: 97
 ---
 
 # Project State
@@ -29,19 +29,19 @@ See: .planning/PROJECT.md (updated 2026-07-17)
 ## Current Position
 
 Phase: 03 — Source-Owned Product Interface
-Plan: 03-07 of 8
-Status: Ready to execute UI audit gap closure
-Last activity: 2026-07-21 — Planned Phase 3 UI audit gap closure
+Plan: 03-08 of 8
+Status: Ready to refresh installed-source UI audit evidence
+Last activity: 2026-07-21 — Completed 03-07 canonical UI audit interaction closure
 
-Progress: [█████████░] 95%
+Progress: [██████████] 97%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 36
+- Total plans completed: 37
 - Average duration: 37 min
-- Total execution time: 1342 min
+- Total execution time: 1351 min
 
 **By Phase:**
 
@@ -51,12 +51,12 @@ Progress: [█████████░] 95%
 | Phase 02   | 17    | 854 min | 50 min   |
 | Phase 02.1 | 1     | 68 min  | 68 min   |
 | Phase 02.3 | 2     | 33 min  | 17 min   |
-| Phase 03   | 6     | 106 min | 18 min   |
+| Phase 03   | 7     | 115 min | 16 min   |
 
 **Recent Trend:**
 
-- Last 5 plans: 32 min, 17 min, 8 min, 20 min, 20 min
-- Trend: Phase 3 closed with installed keyboard, contrast, reflow, zoom, and aggregate-gate evidence in 32 minutes
+- Last 5 plans: 9 min, 32 min, 17 min, 8 min, 20 min
+- Trend: Phase 3 canonical UI audit interaction closure completed in 9 minutes with deterministic clean-consumer proof
 
 _Updated after each plan completion_
 
@@ -100,6 +100,7 @@ _Updated after each plan completion_
 | Phase 03 P04   | 8min     | 3 tasks | 25 files |
 | Phase 03 P05   | 17min    | 3 tasks | 15 files |
 | Phase 03 P06   | 32min    | 3 tasks | 42 files |
+| Phase 03 P07   | 9min     | 3 tasks | 38 files |
 
 ## Accumulated Context
 
@@ -187,6 +188,9 @@ Recent decisions affecting current work:
 - [Phase 03]: Accept accessibility behavior through installed-source keyboard, focus, live-region, target geometry, reflow, and zoom evidence; axe remains supplemental. — Machine-detectable findings cannot substitute for interaction and layout proof.
 - [Phase 03]: Compare exact token contrast ratios before display rounding. — Threshold decisions cannot be changed by presentation formatting.
 - [Phase 03]: Make the Phase 3 aggregate gate self-audit its installed distribution, browser, UI, hydration, contrast, artifact, and Phase 2 regression coverage. — Required release checks cannot be silently removed from the named gate.
+- [Phase 03]: Consequential dialogs close only after an accepted headless result and retain typed correction context after rejection. — UI confirmation records intent while trusted mutations remain authoritative.
+- [Phase 03]: Hosts own the active queue or detail phone pane; copied source accepts navigation intent but no authority fact or viewport-derived render branch. — CSS alone restores simultaneous wider composition.
+- [Phase 03]: Activity, editorial state, and time use explicit English labels and fixed UTC formatting. — Raw discriminants and numeric timestamps are not product copy.
 - [Phase 02]: Expose comment reads as one optional public binding and map omission to an inert unsupported hook state. — Existing consumers remain compatible and React never falls through to direct backend access.
 - [Phase 02]: Reuse the closed flat CommentDto and shared atomic paginated watch store unchanged for useComments. — Replies preserve parentCommentId without a recursive tree, second cache, schema change, or generic CRUD surface.
 - [Phase 02]: Use one versioned composite-cursor stream for canonical-plus-source comments and activity, honoring both cursor boundaries and full stable tie keys. — The installed convex-helpers merged stream supplies index-bounded page pinning; public DTO and authority boundaries remain unchanged.
@@ -231,6 +235,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-21T22:44:42Z
-Stopped at: UI audit gap plans 03-07 and 03-08 created; ready to execute 03-07
+Last session: 2026-07-21T22:58:44Z
+Stopped at: Plan 03-07 complete; ready to execute 03-08 evidence refresh
 Resume file: None
