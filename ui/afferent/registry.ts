@@ -62,6 +62,11 @@ export const afferentRegistry = {
       registryDependencies: ["./afferent-ui-core.json"],
       files: [
         {
+          path: "ui/afferent/admin/confirmation-dialog.tsx",
+          type: "registry:component",
+          target: "components/afferent/admin/confirmation-dialog.tsx",
+        },
+        {
           path: "ui/afferent/admin/admin-screen.tsx",
           type: "registry:component",
           target: "components/afferent/admin/admin-screen.tsx",
@@ -169,6 +174,11 @@ export const afferentRegistry = {
           path: "ui/afferent/core/copy.ts",
           type: "registry:lib",
           target: "components/afferent/core/copy.ts",
+        },
+        {
+          path: "ui/afferent/core/format.ts",
+          type: "registry:lib",
+          target: "components/afferent/core/format.ts",
         },
         {
           path: "ui/afferent/core/icons.tsx",

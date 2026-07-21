@@ -153,6 +153,16 @@
   padding: 16px;
 }
 
+.afferent-state[data-tone="error"] {
+  border-color: var(--destructive);
+  border-inline-start-width: 4px;
+}
+
+.afferent-state[data-tone="error"] h2,
+.afferent-inline-error h3 {
+  color: var(--destructive);
+}
+
 .afferent-board__workspace,
 .afferent-post-detail,
 .afferent-discussion,
@@ -565,7 +575,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   display: grid;
-  gap: 12px;
+  gap: 16px;
   min-width: 0;
   padding: 16px;
 }
@@ -616,15 +626,19 @@
 
 .afferent-notifications-trigger__count {
   align-items: center;
-  background: var(--primary-foreground);
+  background: var(--primary);
   border-radius: 999px;
-  color: var(--primary);
+  color: var(--primary-foreground);
   display: inline-flex;
-  font-size: 12px;
+  font-size: 14px;
   justify-content: center;
   min-height: 20px;
   min-width: 20px;
   padding-inline: 6px;
+}
+
+.afferent-notifications-trigger {
+  margin-top: 0;
 }
 
 @media (min-width: 640px) {
@@ -703,13 +717,22 @@
   padding: 32px 16px 48px;
 }
 .afferent-admin-workspace,
+.afferent-admin-pane,
 .afferent-admin-detail,
+.afferent-admin-activity,
 .afferent-admin-form,
 .afferent-tag-manager,
 .afferent-changelog-editor,
 .afferent-changelog-editor form {
   display: grid;
   gap: 16px;
+}
+
+.afferent-admin-workspace[data-mobile-view="queue"]
+  [data-admin-pane="detail"],
+.afferent-admin-workspace[data-mobile-view="detail"]
+  [data-admin-pane="queue"] {
+  display: none;
 }
 
 .afferent-admin h1 {
@@ -743,6 +766,21 @@
   text-align: start;
   width: 100%;
 }
+.afferent-admin-queue [data-selected="true"] button {
+  background: var(--muted);
+  border-inline-start: 4px solid var(--primary);
+}
+
+.afferent-admin-queue__selection {
+  align-items: center;
+  border: 1px solid var(--primary);
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 600;
+  justify-self: start;
+  padding: 4px 8px;
+}
 .afferent-admin-queue [data-admin-label]::before {
   color: var(--muted-foreground);
   content: attr(data-admin-label) ": ";
@@ -766,7 +804,7 @@
 }
 
 .afferent-tag-manager form,
-.afferent-tag-manager li,
+.afferent-tag-manager__actions,
 .afferent-changelog-editor fieldset label {
   align-items: center;
   display: flex;
@@ -774,13 +812,38 @@
   gap: 8px;
 }
 
+.afferent-tag-manager__row,
+.afferent-changelog-editor article,
+.afferent-admin-activity li {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+}
+
+.afferent-tag-manager__row > span {
+  font-weight: 600;
+}
+
 .afferent-tag-manager ul,
-.afferent-changelog-editor ol {
+.afferent-changelog-editor ol,
+.afferent-admin-activity ol {
   display: grid;
   gap: 16px;
   list-style: none;
   margin: 0;
   padding: 0;
+}
+
+.afferent-admin-activity p {
+  margin: 0;
+}
+
+.afferent-admin-activity time,
+.afferent-changelog-editor time {
+  color: var(--muted-foreground);
+  font-size: 14px;
 }
 
 .afferent-changelog-editor fieldset {
@@ -809,7 +872,7 @@
   border-radius: var(--radius);
   color: var(--foreground);
   min-height: 44px;
-  padding: 8px 12px;
+  padding: 8px 16px;
 }
 .afferent-dialog-overlay {
   background: rgb(0 0 0 / 50%);
@@ -835,13 +898,51 @@
   width: 480px;
   z-index: 61;
 }
+
+.afferent-dialog[data-tone="destructive"] {
+  border-color: var(--destructive);
+  border-width: 2px;
+}
+
+.afferent-dialog[data-tone="destructive"] > h2,
+.afferent-dialog[data-tone="destructive"] > h1 {
+  color: var(--destructive);
+}
+
+.afferent-dialog__actions,
+.afferent-destructive-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.afferent-destructive-actions {
+  border-top: 1px solid var(--destructive);
+  margin-top: 16px;
+  padding-top: 16px;
+}
+
+.afferent-admin .afferent-button--destructive,
+.afferent-dialog .afferent-button--destructive {
+  background: var(--destructive);
+  border-color: var(--destructive);
+  color: var(--primary-foreground);
+}
 @media (min-width: 768px) {
   .afferent-admin-workspace {
     align-items: start;
     grid-template-columns: minmax(280px, 35fr) minmax(0, 65fr);
   }
-  .afferent-changelog-editor {
-    grid-column: 1 / -1;
+
+  .afferent-admin-workspace[data-mobile-view="queue"]
+    [data-admin-pane="detail"],
+  .afferent-admin-workspace[data-mobile-view="detail"]
+    [data-admin-pane="queue"] {
+    display: grid;
+  }
+
+  .afferent-admin__return {
+    display: none;
   }
 }
 

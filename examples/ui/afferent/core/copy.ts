@@ -174,6 +174,61 @@ export type AfferentUiCopy = Readonly<{
     saveChangelogDraft: string;
     publishChangelog: string;
     unpublishChangelog: string;
+    loading: string;
+    selectFeedbackHeading: string;
+    selectFeedbackBody: string;
+    selectedFeedback: string;
+    returnToQueue: string;
+    loadingDetail: string;
+    detailUnsupportedHeading: string;
+    detailErrorHeading: string;
+    activityHeading: string;
+    activityLoading: string;
+    activityEmptyHeading: string;
+    activityEmptyBody: string;
+    activityErrorHeading: string;
+    activityUnsupportedHeading: string;
+    loadMoreActivity: string;
+    loadingMoreActivity: string;
+    tagsLoading: string;
+    tagsEmptyHeading: string;
+    tagsEmptyBody: string;
+    tagsErrorHeading: string;
+    createTag: string;
+    newTagLabel: string;
+    assignTag: string;
+    removeTag: string;
+    deleteTag: string;
+    deleteTagTitle: (name: string) => string;
+    deleteTagBody: string;
+    keepTag: string;
+    archiveTitle: (title: string) => string;
+    archiveBody: string;
+    mergeDescription: (
+      duplicateTitle: string,
+      canonicalTitle: string,
+    ) => string;
+    canonicalFeedback: string;
+    duplicateTitle: string;
+    changelogLoading: string;
+    changelogEmptyHeading: string;
+    changelogEmptyBody: string;
+    changelogErrorHeading: string;
+    changelogUnsupportedHeading: string;
+    changelogNotAuthorizedHeading: string;
+    loadMoreChangelog: string;
+    loadingMoreChangelog: string;
+    changelogTitleLabel: string;
+    changelogBodyLabel: string;
+    linkedFeedback: string;
+    publishTitle: (title: string) => string;
+    publishBody: string;
+    returnToEditing: string;
+    unpublishTitle: (title: string) => string;
+    unpublishBody: string;
+    keepChangelogPublished: string;
+    mutationErrorHeading: (action: string) => string;
+    dismissMutationError: string;
   }>;
 }>;
 
@@ -380,6 +435,62 @@ export const englishAfferentUiCopy: AfferentUiCopy = {
     saveChangelogDraft: "Save changelog draft",
     publishChangelog: "Publish changelog entry",
     unpublishChangelog: "Unpublish changelog entry",
+    loading: "Loading feedback management…",
+    selectFeedbackHeading: "Select feedback",
+    selectFeedbackBody: "Choose a queue item to open its management workspace.",
+    selectedFeedback: "Selected feedback",
+    returnToQueue: "Return to feedback queue",
+    loadingDetail: "Loading feedback detail…",
+    detailUnsupportedHeading: "Feedback detail isn't configured",
+    detailErrorHeading: "We couldn't load feedback detail",
+    activityHeading: "Activity",
+    activityLoading: "Loading feedback activity…",
+    activityEmptyHeading: "No feedback activity yet",
+    activityEmptyBody:
+      "Administrative changes to this feedback will appear here.",
+    activityErrorHeading: "We couldn't load feedback activity",
+    activityUnsupportedHeading: "Feedback activity isn't configured",
+    loadMoreActivity: "Load more feedback activity",
+    loadingMoreActivity: "Loading more feedback activity…",
+    tagsLoading: "Loading feedback tags…",
+    tagsEmptyHeading: "No feedback tags yet",
+    tagsEmptyBody: "Create a feedback tag to organize managed feedback.",
+    tagsErrorHeading: "We couldn't load feedback tags",
+    createTag: "Create feedback tag",
+    newTagLabel: "New feedback tag",
+    assignTag: "Assign feedback tag",
+    removeTag: "Remove feedback tag",
+    deleteTag: "Delete feedback tag",
+    deleteTagTitle: (name) => `Delete “${name}”?`,
+    deleteTagBody:
+      "The tag will be removed from assigned feedback without deleting feedback.",
+    keepTag: "Keep tag",
+    archiveTitle: (title) => `Archive “${title}”?`,
+    archiveBody: "It will leave public feedback views until restored.",
+    mergeDescription: (duplicateTitle, canonicalTitle) =>
+      `Merge “${duplicateTitle}” into “${canonicalTitle}”? This moves its votes, comments, and history and cannot be undone. Type “${duplicateTitle}” to confirm.`,
+    canonicalFeedback: "Canonical feedback",
+    duplicateTitle: "Duplicate title",
+    changelogLoading: "Loading changelog entries…",
+    changelogEmptyHeading: "No changelog entries yet",
+    changelogEmptyBody: "Save a changelog draft to begin an editorial update.",
+    changelogErrorHeading: "We couldn't load changelog entries",
+    changelogUnsupportedHeading: "Changelog publishing isn't configured",
+    changelogNotAuthorizedHeading: "You can't manage changelog entries",
+    loadMoreChangelog: "Load more changelog entries",
+    loadingMoreChangelog: "Loading more changelog entries…",
+    changelogTitleLabel: "Changelog title",
+    changelogBodyLabel: "Changelog body",
+    linkedFeedback: "Linked feedback",
+    publishTitle: (title) => `Publish “${title}” now?`,
+    publishBody: "It will become visible at its public changelog link.",
+    returnToEditing: "Return to editing",
+    unpublishTitle: (title) => `Unpublish “${title}”?`,
+    unpublishBody:
+      "Its public changelog link will stop showing the entry until republished.",
+    keepChangelogPublished: "Keep changelog published",
+    mutationErrorHeading: (action) => `${action} wasn't completed`,
+    dismissMutationError: "Dismiss error and continue editing",
   },
 };
 

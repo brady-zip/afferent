@@ -5,31 +5,35 @@
   },
   {
     "path": "admin/admin-screen.tsx",
-    "sha256": "553c84e121c5e4f67ec1436f7052e404d1f838f207d1e186ad0b8d51f92c869a"
+    "sha256": "48add334ad498183ba789723e039b008a805f4fa0329d06d541cf7bc3951d312"
   },
   {
     "path": "admin/changelog-editor.tsx",
-    "sha256": "5456d489f65e5631857dc6bd2ebd020d5c2e3b5d8e9683ae522a3e7718f38daa"
+    "sha256": "d484f4194b845d515055f6cf82cb0f7763fbd53e9c4f6df3cb76088a214e3fe6"
+  },
+  {
+    "path": "admin/confirmation-dialog.tsx",
+    "sha256": "f782aee0cfc1e75b61a5565c35bc3f97687053e39c2bfc192215ee33f1e61345"
   },
   {
     "path": "admin/feedback-queue.tsx",
-    "sha256": "8968fadffa7f927edbbd49e2bc4fdd4e029a4c501186a9e03e803f8082f0dda8"
+    "sha256": "52c4b678f21452112a6965431c0e5add4045b6463ab0d80565113b80637b2748"
   },
   {
     "path": "admin/merge-dialog.tsx",
-    "sha256": "fc2e9861a668576bb43aed296b414264d8a02a695a5b314a560f2b9b3c4afa7b"
+    "sha256": "791097375dceef170357970d318ac7789e9f28d21e0abb5c5b76adfe6d2b4249"
   },
   {
     "path": "admin/moderation-form.tsx",
-    "sha256": "180d19da149256b1056adc88fb4b0c97eba36e22f7ee8b05ff35dea9d333c8fe"
+    "sha256": "ded73f05cda35f968b01999b8c6e644f654f5cd361aa05a657bdd03ba1d76499"
   },
   {
     "path": "admin/tag-manager.tsx",
-    "sha256": "0c9d30ea2c921caf7452e27fa0c2de44b6b1f1f537b49069ade6d4c3d2594098"
+    "sha256": "2e61d84592c45010ebc8dbd897b63f02c726906afd59b500e7ba7be00e7f05c9"
   },
   {
     "path": "afferent.css",
-    "sha256": "2aa1eba82b949e85b1e71b2087070fc4fa37943ae3453f1b020a15c18573fd5f"
+    "sha256": "8e6a08ec740b55371daa6830f157c27558bd42585a266f34759ddeb688196c37"
   },
   {
     "path": "board/activity.tsx",
@@ -77,7 +81,11 @@
   },
   {
     "path": "core/copy.ts",
-    "sha256": "af7f9e1ad3bc1e34d0cb7153fb2e75865c78d5f5e7d98869c1eb00ace26b87f8"
+    "sha256": "a8da7202f7c8e81e328950740e512844079ba88da4db61d923bd2ba4294ae800"
+  },
+  {
+    "path": "core/format.ts",
+    "sha256": "046699b2b91c29a95c6315bb9d1673bb8eedcb88afa2b5094f2a12714cdc1141"
   },
   {
     "path": "core/icons.tsx",
@@ -89,7 +97,7 @@
   },
   {
     "path": "core/state-region.tsx",
-    "sha256": "772176b9cb025f469d9e29cf2aa28e0a2a8a4f619e549e215debed276741c9bc"
+    "sha256": "ce11b88abbf1cc9928eca3f568294a08b4a516f516b7ca4096ff09351e67097e"
   },
   {
     "path": "core/utils.ts",
@@ -97,11 +105,11 @@
   },
   {
     "path": "notifications/notifications-list.tsx",
-    "sha256": "b73bab691694d12f48c16070d2a27a95b51e9b96b23d5ab2990f0e91f2f3c930"
+    "sha256": "5cae280cf0d232dca49cfbc4fd8123f5c553fe2b1027b51dced34345e7fd7efd"
   },
   {
     "path": "notifications/notifications-popover.tsx",
-    "sha256": "c2cf73965e968811aaf5ad4be1745505a8a034aa949708902283ebe7ad9df3f2"
+    "sha256": "95e3bc10adeb12d66fdaefaa32614f179b10ee0535d9a01beea71846952047f9"
   },
   {
     "path": "roadmap/roadmap-card.tsx",

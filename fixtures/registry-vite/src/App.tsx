@@ -372,6 +372,9 @@ const surfaces: readonly Readonly<{ id: Surface; label: string }>[] = [
 
 export function App() {
   const [surface, setSurface] = useState<Surface>("board");
+  const [adminMobileView, setAdminMobileView] = useState<"queue" | "detail">(
+    "queue",
+  );
   return (
     <ConvexProvider client={client as never}>
       <AfferentProvider
@@ -428,7 +431,11 @@ export function App() {
             </main>
           ) : null}
           {surface === "admin" ? (
-            <AfferentAdminScreen boards={[board, roadmapBoard] as never} />
+            <AfferentAdminScreen
+              boards={[board, roadmapBoard] as never}
+              mobileView={adminMobileView}
+              onMobileViewChange={setAdminMobileView}
+            />
           ) : null}
         </AfferentUiProvider>
       </AfferentProvider>

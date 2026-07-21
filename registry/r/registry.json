@@ -23,6 +23,11 @@
           "type": "registry:component"
         },
         {
+          "path": "ui/afferent/admin/confirmation-dialog.tsx",
+          "target": "components/afferent/admin/confirmation-dialog.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "ui/afferent/admin/feedback-queue.tsx",
           "target": "components/afferent/admin/feedback-queue.tsx",
           "type": "registry:component"
@@ -220,6 +225,11 @@
         {
           "path": "ui/afferent/core/copy.ts",
           "target": "components/afferent/core/copy.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "ui/afferent/core/format.ts",
+          "target": "components/afferent/core/format.ts",
           "type": "registry:lib"
         },
         {

@@ -38,5 +38,5 @@ export function afferentErrorText(error: Readonly<{ code: string }> & object) {
     return error.message;
   }
   if (error.code === "RATE_LIMITED") return "Please wait before trying again.";
-  return error.code;
+  return "The request could not be completed. Try again or contact the application owner.";
 }

@@ -21,7 +21,7 @@ export function AfferentNotificationsPopover() {
         <button
           ref={trigger}
           type="button"
-          className="afferent-button"
+          className="afferent-button afferent-button--secondary afferent-notifications-trigger"
           aria-label={label}
         >
           {copy.notifications.title}
