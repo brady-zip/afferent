@@ -187,8 +187,16 @@ export async function toAdminChangelogEntryDto(
   entry: Doc<"changelogEntries">,
 ) {
   const links = await listChangelogLinks(ctx, entry);
+  const resolved = await Promise.all(
+    links.map((link) => resolveCanonicalLinkedPost(ctx, entry.scopeId, link.postId)),
+  );
+  const unique = resolved.filter(
+    (post, index): post is Doc<"posts"> =>
+      post !== null &&
+      resolved.findIndex((candidate) => candidate?._id === post._id) === index,
+  );
   return {
-    contractVersion: 1 as const,
+    contractVersion: 2 as const,
     id: String(entry._id),
     title: entry.title,
     body: entry.body,
@@ -202,20 +210,9 @@ export async function toAdminChangelogEntryDto(
     ...(entry.publishedAt === undefined
       ? {}
       : { publishedAt: entry.publishedAt }),
-    postIds: [
-      ...new Set(
-        await Promise.all(
-          links.map(async (link) => {
-            const canonical = await resolveCanonicalLinkedPost(
-              ctx,
-              entry.scopeId,
-              link.postId,
-            );
-            return String(canonical?._id ?? link.postId);
-          }),
-        ),
-      ),
-    ],
+    links: await Promise.all(
+      unique.map((post) => toChangelogLinkedPostDto(ctx, post)),
+    ),
   };
 }
 

@@ -23,8 +23,28 @@ export async function appendPostActivity(
     changelogEntryId?: Doc<"changelogEntries">["_id"];
   },
 ) {
+  const [fromBoard, toBoard, tag, changelog] = await Promise.all([
+    args.fromBoardId === undefined ? null : ctx.db.get(args.fromBoardId),
+    args.toBoardId === undefined ? null : ctx.db.get(args.toBoardId),
+    args.tagId === undefined ? null : ctx.db.get(args.tagId),
+    args.changelogEntryId === undefined
+      ? null
+      : ctx.db.get(args.changelogEntryId),
+  ]);
   const id = await ctx.db.insert("postActivity", {
     ...args,
+    ...(fromBoard?.scopeId === args.scopeId
+      ? { fromBoardSnapshot: { name: fromBoard.name, slug: fromBoard.slug } }
+      : {}),
+    ...(toBoard?.scopeId === args.scopeId
+      ? { toBoardSnapshot: { name: toBoard.name, slug: toBoard.slug } }
+      : {}),
+    ...(tag?.scopeId === args.scopeId
+      ? { tagSnapshot: { name: tag.name } }
+      : {}),
+    ...(changelog?.scopeId === args.scopeId
+      ? { changelogSnapshot: { title: changelog.title, slug: changelog.slug } }
+      : {}),
     occurredAt: Date.now(),
   });
   await fenceActiveMergeWrite(ctx, {
@@ -41,13 +61,20 @@ export async function toPostActivityDto(
   ctx: QueryCtx,
   activity: Doc<"postActivity">,
 ) {
-  const actor =
-    activity.actorId === undefined ? null : await ctx.db.get(activity.actorId);
+  const [actor, fromBoard, toBoard, tag, changelog] = await Promise.all([
+    activity.actorId === undefined ? null : ctx.db.get(activity.actorId),
+    activity.fromBoardId === undefined ? null : ctx.db.get(activity.fromBoardId),
+    activity.toBoardId === undefined ? null : ctx.db.get(activity.toBoardId),
+    activity.tagId === undefined ? null : ctx.db.get(activity.tagId),
+    activity.changelogEntryId === undefined
+      ? null
+      : ctx.db.get(activity.changelogEntryId),
+  ]);
   if (actor && actor.scopeId !== activity.scopeId) {
     throw new ConvexError({ code: "INVARIANT_VIOLATION" });
   }
   return {
-    contractVersion: 1 as const,
+    contractVersion: 2 as const,
     id: String(activity._id),
     postId: String(activity.postId),
     type: activity.type,
@@ -64,13 +91,50 @@ export async function toPostActivityDto(
       : { toStatus: activity.toStatus as Doc<"posts">["statusKey"] }),
     ...(activity.fromBoardId === undefined
       ? {}
-      : { fromBoardId: String(activity.fromBoardId) }),
+      : {
+          fromBoard: {
+            contractVersion: 1 as const,
+            ...(activity.fromBoardSnapshot ??
+              (fromBoard?.scopeId === activity.scopeId
+                ? { name: fromBoard.name, slug: fromBoard.slug }
+                : { name: "Deleted board", slug: "deleted-board" })),
+          },
+        }),
     ...(activity.toBoardId === undefined
       ? {}
-      : { toBoardId: String(activity.toBoardId) }),
-    ...(activity.tagId === undefined ? {} : { tagId: String(activity.tagId) }),
+      : {
+          toBoard: {
+            contractVersion: 1 as const,
+            ...(activity.toBoardSnapshot ??
+              (toBoard?.scopeId === activity.scopeId
+                ? { name: toBoard.name, slug: toBoard.slug }
+                : { name: "Deleted board", slug: "deleted-board" })),
+          },
+        }),
+    ...(activity.tagId === undefined
+      ? {}
+      : {
+          tag: {
+            contractVersion: 1 as const,
+            ...(activity.tagSnapshot ??
+              (tag?.scopeId === activity.scopeId
+                ? { name: tag.name }
+                : { name: "Deleted tag" })),
+          },
+        }),
     ...(activity.changelogEntryId === undefined
       ? {}
-      : { changelogEntryId: String(activity.changelogEntryId) }),
+      : {
+          changelog: {
+            contractVersion: 1 as const,
+            ...(activity.changelogSnapshot ??
+              (changelog?.scopeId === activity.scopeId
+                ? { title: changelog.title, slug: changelog.slug }
+                : {
+                    title: "Unavailable changelog entry",
+                    slug: "unavailable-changelog-entry",
+                  })),
+          },
+        }),
   };
 }

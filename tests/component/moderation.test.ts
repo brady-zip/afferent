@@ -67,7 +67,6 @@ describe("admin moderation and append-only activity", () => {
     expect(hidden).toMatchObject({
       contractVersion: 1,
       page: [{ feedback: { id: post.id } }],
-      isDone: true,
     });
   });
 
@@ -107,7 +106,7 @@ describe("admin moderation and append-only activity", () => {
         postId: post.id,
         status,
       });
-      expect(updated.status.key).toBe(status);
+      expect(updated.feedback.status.key).toBe(status);
     }
     await client.admin.setPostStatus(ctx, {
       postId: post.id,
@@ -149,12 +148,12 @@ describe("admin moderation and append-only activity", () => {
       postId: post.id,
       boardId: installation.boards[1].id,
     });
-    expect(moved.board.id).toBe(installation.boards[1].id);
+    expect(moved.feedback.board.id).toBe(installation.boards[1].id);
     const edited = await client.admin.editPost(ctx, {
       postId: post.id,
       title: "Edited by admin",
     });
-    expect(edited.title).toBe("Edited by admin");
+    expect(edited.feedback.title).toBe("Edited by admin");
 
     await client.admin.setArchived(ctx, { postId: post.id, archived: true });
     await expect(
@@ -210,7 +209,7 @@ describe("admin moderation and append-only activity", () => {
       postId: post.id,
       paginationOpts: { numItems: 2, cursor: null },
     });
-    expect(page.contractVersion).toBe(1);
+    expect(page.contractVersion).toBe(2);
     expect(page.page).toHaveLength(2);
     expect(page.page[0]).not.toHaveProperty("actorDisplayName");
     expect(

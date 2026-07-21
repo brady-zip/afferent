@@ -261,6 +261,34 @@ export const feedbackPostDtoValidator = v.object({
   viewerCanWithdraw: v.boolean(),
 });
 
+export const adminFeedbackPostDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  feedback: feedbackPostDtoValidator,
+  moderation: v.object({
+    contractVersion: v.literal(1),
+    discussionLocked: v.boolean(),
+    archived: v.boolean(),
+    disposition: v.union(
+      v.literal("active"),
+      v.literal("withdrawn"),
+      v.literal("merged"),
+    ),
+    mergedIntoPostId: v.optional(v.string()),
+  }),
+});
+
+export const adminFeedbackPageDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  page: v.array(adminFeedbackPostDtoValidator),
+  posts: v.array(adminFeedbackPostDtoValidator),
+  isDone: v.boolean(),
+  continueCursor: v.string(),
+  splitCursor: v.optional(v.union(v.string(), v.null())),
+  pageStatus: v.optional(
+    v.union(v.literal("SplitRecommended"), v.literal("SplitRequired"), v.null()),
+  ),
+});
+
 export const postLookupResultValidator = v.union(
   v.object({
     contractVersion: v.literal(2),
@@ -416,7 +444,7 @@ export const publishedChangelogLookupDtoValidator = v.union(
 );
 
 export const adminChangelogEntryDtoValidator = v.object({
-  contractVersion: v.literal(1),
+  contractVersion: v.literal(2),
   id: v.string(),
   title: v.string(),
   body: v.string(),
@@ -430,7 +458,19 @@ export const adminChangelogEntryDtoValidator = v.object({
   updatedAt: v.number(),
   firstPublishedAt: v.optional(v.number()),
   publishedAt: v.optional(v.number()),
-  postIds: v.array(v.string()),
+  links: v.array(changelogLinkedPostDtoValidator),
+});
+
+export const adminChangelogPageDtoValidator = v.object({
+  contractVersion: v.literal(1),
+  page: v.array(adminChangelogEntryDtoValidator),
+  entries: v.array(adminChangelogEntryDtoValidator),
+  isDone: v.boolean(),
+  continueCursor: v.string(),
+  splitCursor: v.optional(v.union(v.string(), v.null())),
+  pageStatus: v.optional(
+    v.union(v.literal("SplitRecommended"), v.literal("SplitRequired"), v.null()),
+  ),
 });
 
 export const discoveryPostDtoValidator = v.object({
@@ -518,7 +558,7 @@ export const activityTypeValidator = v.union(
 );
 
 export const postActivityDtoValidator = v.object({
-  contractVersion: v.literal(1),
+  contractVersion: v.literal(2),
   id: v.string(),
   postId: v.string(),
   type: activityTypeValidator,
@@ -527,14 +567,14 @@ export const postActivityDtoValidator = v.object({
   changedFields: v.optional(v.array(v.string())),
   fromStatus: v.optional(postStatusKeyValidator),
   toStatus: v.optional(postStatusKeyValidator),
-  fromBoardId: v.optional(v.string()),
-  toBoardId: v.optional(v.string()),
-  tagId: v.optional(v.string()),
-  changelogEntryId: v.optional(v.string()),
+  fromBoard: v.optional(v.object({ contractVersion: v.literal(1), name: v.string(), slug: v.string() })),
+  toBoard: v.optional(v.object({ contractVersion: v.literal(1), name: v.string(), slug: v.string() })),
+  tag: v.optional(v.object({ contractVersion: v.literal(1), name: v.string() })),
+  changelog: v.optional(v.object({ contractVersion: v.literal(1), title: v.string(), slug: v.string() })),
 });
 
 export const postActivityPageDtoValidator = v.object({
-  contractVersion: v.literal(1),
+  contractVersion: v.literal(2),
   page: v.array(postActivityDtoValidator),
   isDone: v.boolean(),
   continueCursor: v.string(),

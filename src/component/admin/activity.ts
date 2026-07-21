@@ -31,7 +31,7 @@ export const listPostActivity = query({
       paginationOpts: args.paginationOpts,
     });
     return {
-      contractVersion: 1 as const,
+      contractVersion: 2 as const,
       ...result,
       page: await Promise.all(
         result.page.map((entry) => toPostActivityDto(ctx, entry)),

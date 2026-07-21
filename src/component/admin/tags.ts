@@ -17,15 +17,15 @@ import {
   tagSearchProjection,
   toTagDto,
 } from "../model/tags.js";
-import { toFeedbackPostDto } from "../model/views.js";
 import {
-  feedbackPostDtoValidator,
+  adminFeedbackPostDtoValidator,
   tagDeleteResultValidator,
   tagDtoValidator,
   tagListDtoValidator,
   verifiedActorValidator,
 } from "../validators.js";
 import { TAG_CLEANUP_BATCH_SIZE } from "../jobs/tag_cleanup.js";
+import { toAdminFeedbackPostDto } from "./posts.js";
 
 export const listTags = query({
   args: { scopeId: v.string() },
@@ -120,7 +120,7 @@ export const setPostTag = mutation({
     tagId: v.string(),
     desired: v.boolean(),
   },
-  returns: feedbackPostDtoValidator,
+  returns: adminFeedbackPostDtoValidator,
   handler: async (ctx, args) => {
     requireScope(args.scopeId);
     const [post, tag] = await Promise.all([
@@ -133,7 +133,7 @@ export const setPostTag = mutation({
       tagId: tag._id,
     });
     if ((membership !== null) === args.desired) {
-      return await toFeedbackPostDto(ctx, post);
+      return await toAdminFeedbackPostDto(ctx, post);
     }
     const actorId = await upsertActor(ctx, args.scopeId, args.actor);
     if (args.desired) {
@@ -180,7 +180,7 @@ export const setPostTag = mutation({
       type: args.desired ? "tag_add" : "tag_remove",
       tagId: tag._id,
     });
-    return await toFeedbackPostDto(ctx, post);
+    return await toAdminFeedbackPostDto(ctx, post);
   },
 });
 

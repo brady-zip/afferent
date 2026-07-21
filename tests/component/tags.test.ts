@@ -63,14 +63,14 @@ describe("scope-owned tag lifecycle", () => {
       tagId: tag.id,
       desired: true,
     });
-    expect(assigned.tags).toEqual([tag]);
+    expect(assigned.feedback.tags).toEqual([tag]);
     expect(
       await client.admin.setPostTag(ctx, {
         postId: post.id,
         tagId: tag.id,
         desired: true,
       }),
-    ).toMatchObject({ tags: [tag] });
+    ).toMatchObject({ feedback: { tags: [tag] } });
 
     const renamed = await client.admin.renameTag(ctx, {
       tagId: tag.id,
@@ -106,14 +106,14 @@ describe("scope-owned tag lifecycle", () => {
       tagId: tag.id,
       desired: false,
     });
-    expect(removed.tags).toEqual([]);
+    expect(removed.feedback.tags).toEqual([]);
     expect(
       await client.admin.setPostTag(ctx, {
         postId: post.id,
         tagId: tag.id,
         desired: false,
       }),
-    ).toMatchObject({ tags: [] });
+    ).toMatchObject({ feedback: { tags: [] } });
   });
 
   test("enforces fresh admin authorization, scope equivalence, uniqueness, and the 20-tag ceiling", async () => {

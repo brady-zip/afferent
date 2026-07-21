@@ -42,14 +42,14 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           },
           {
             continueCursor: string;
-            contractVersion: 1;
+            contractVersion: 2;
             isDone: boolean;
             page: Array<{
               actor?: { avatarUrl?: string; displayName?: string; id: string };
               changedFields?: Array<string>;
-              changelogEntryId?: string;
-              contractVersion: 1;
-              fromBoardId?: string;
+              changelog?: { contractVersion: 1; slug: string; title: string };
+              contractVersion: 2;
+              fromBoard?: { contractVersion: 1; name: string; slug: string };
               fromStatus?:
                 | "open"
                 | "under_review"
@@ -60,8 +60,8 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               id: string;
               occurredAt: number;
               postId: string;
-              tagId?: string;
-              toBoardId?: string;
+              tag?: { contractVersion: 1; name: string };
+              toBoard?: { contractVersion: 1; name: string; slug: string };
               toStatus?:
                 | "open"
                 | "under_review"
@@ -116,11 +116,31 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           },
           {
             body: string;
-            contractVersion: 1;
+            contractVersion: 2;
             createdAt: number;
             firstPublishedAt?: number;
             id: string;
-            postIds: Array<string>;
+            links: Array<{
+              contractVersion: 1;
+              id: string;
+              status: {
+                key:
+                  | "open"
+                  | "under_review"
+                  | "planned"
+                  | "in_progress"
+                  | "complete"
+                  | "closed";
+                label:
+                  | "Open"
+                  | "Under Review"
+                  | "Planned"
+                  | "In Progress"
+                  | "Complete"
+                  | "Closed";
+              };
+              title: string;
+            }>;
             publishedAt?: number;
             slug: string;
             state: "draft" | "published" | "unpublished";
@@ -146,16 +166,125 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           },
           {
             body: string;
-            contractVersion: 1;
+            contractVersion: 2;
             createdAt: number;
             firstPublishedAt?: number;
             id: string;
-            postIds: Array<string>;
+            links: Array<{
+              contractVersion: 1;
+              id: string;
+              status: {
+                key:
+                  | "open"
+                  | "under_review"
+                  | "planned"
+                  | "in_progress"
+                  | "complete"
+                  | "closed";
+                label:
+                  | "Open"
+                  | "Under Review"
+                  | "Planned"
+                  | "In Progress"
+                  | "Complete"
+                  | "Closed";
+              };
+              title: string;
+            }>;
             publishedAt?: number;
             slug: string;
             state: "draft" | "published" | "unpublished";
             title: string;
             updatedAt: number;
+          },
+          Name
+        >;
+        listAdminChangelog: FunctionReference<
+          "query",
+          "internal",
+          {
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+            scopeId: string;
+          },
+          {
+            continueCursor: string;
+            contractVersion: 1;
+            entries: Array<{
+              body: string;
+              contractVersion: 2;
+              createdAt: number;
+              firstPublishedAt?: number;
+              id: string;
+              links: Array<{
+                contractVersion: 1;
+                id: string;
+                status: {
+                  key:
+                    | "open"
+                    | "under_review"
+                    | "planned"
+                    | "in_progress"
+                    | "complete"
+                    | "closed";
+                  label:
+                    | "Open"
+                    | "Under Review"
+                    | "Planned"
+                    | "In Progress"
+                    | "Complete"
+                    | "Closed";
+                };
+                title: string;
+              }>;
+              publishedAt?: number;
+              slug: string;
+              state: "draft" | "published" | "unpublished";
+              title: string;
+              updatedAt: number;
+            }>;
+            isDone: boolean;
+            page: Array<{
+              body: string;
+              contractVersion: 2;
+              createdAt: number;
+              firstPublishedAt?: number;
+              id: string;
+              links: Array<{
+                contractVersion: 1;
+                id: string;
+                status: {
+                  key:
+                    | "open"
+                    | "under_review"
+                    | "planned"
+                    | "in_progress"
+                    | "complete"
+                    | "closed";
+                  label:
+                    | "Open"
+                    | "Under Review"
+                    | "Planned"
+                    | "In Progress"
+                    | "Complete"
+                    | "Closed";
+                };
+                title: string;
+              }>;
+              publishedAt?: number;
+              slug: string;
+              state: "draft" | "published" | "unpublished";
+              title: string;
+              updatedAt: number;
+            }>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            splitCursor?: string | null;
           },
           Name
         >;
@@ -173,11 +302,31 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           },
           {
             body: string;
-            contractVersion: 1;
+            contractVersion: 2;
             createdAt: number;
             firstPublishedAt?: number;
             id: string;
-            postIds: Array<string>;
+            links: Array<{
+              contractVersion: 1;
+              id: string;
+              status: {
+                key:
+                  | "open"
+                  | "under_review"
+                  | "planned"
+                  | "in_progress"
+                  | "complete"
+                  | "closed";
+                label:
+                  | "Open"
+                  | "Under Review"
+                  | "Planned"
+                  | "In Progress"
+                  | "Complete"
+                  | "Closed";
+              };
+              title: string;
+            }>;
             publishedAt?: number;
             slug: string;
             state: "draft" | "published" | "unpublished";
@@ -201,11 +350,31 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           },
           {
             body: string;
-            contractVersion: 1;
+            contractVersion: 2;
             createdAt: number;
             firstPublishedAt?: number;
             id: string;
-            postIds: Array<string>;
+            links: Array<{
+              contractVersion: 1;
+              id: string;
+              status: {
+                key:
+                  | "open"
+                  | "under_review"
+                  | "planned"
+                  | "in_progress"
+                  | "complete"
+                  | "closed";
+                label:
+                  | "Open"
+                  | "Under Review"
+                  | "Planned"
+                  | "In Progress"
+                  | "Complete"
+                  | "Closed";
+              };
+              title: string;
+            }>;
             publishedAt?: number;
             slug: string;
             state: "draft" | "published" | "unpublished";
@@ -228,11 +397,31 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           },
           {
             body: string;
-            contractVersion: 1;
+            contractVersion: 2;
             createdAt: number;
             firstPublishedAt?: number;
             id: string;
-            postIds: Array<string>;
+            links: Array<{
+              contractVersion: 1;
+              id: string;
+              status: {
+                key:
+                  | "open"
+                  | "under_review"
+                  | "planned"
+                  | "in_progress"
+                  | "complete"
+                  | "closed";
+                label:
+                  | "Open"
+                  | "Under Review"
+                  | "Planned"
+                  | "In Progress"
+                  | "Complete"
+                  | "Closed";
+              };
+              title: string;
+            }>;
             publishedAt?: number;
             slug: string;
             state: "draft" | "published" | "unpublished";
@@ -330,36 +519,210 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             title?: string;
           },
           {
-            author: { avatarUrl?: string; displayName?: string; id: string };
-            board: { id: string; name: string; slug: string };
-            boardId: string;
-            body: string;
-            commentCount: number;
-            contractVersion: 3;
-            id: string;
-            status: {
-              key:
-                | "open"
-                | "under_review"
-                | "planned"
-                | "in_progress"
-                | "complete"
-                | "closed";
-              label:
-                | "Open"
-                | "Under Review"
-                | "Planned"
-                | "In Progress"
-                | "Complete"
-                | "Closed";
+            contractVersion: 1;
+            feedback: {
+              author: { avatarUrl?: string; displayName?: string; id: string };
+              board: { id: string; name: string; slug: string };
+              boardId: string;
+              body: string;
+              commentCount: number;
+              contractVersion: 3;
+              id: string;
+              status: {
+                key:
+                  | "open"
+                  | "under_review"
+                  | "planned"
+                  | "in_progress"
+                  | "complete"
+                  | "closed";
+                label:
+                  | "Open"
+                  | "Under Review"
+                  | "Planned"
+                  | "In Progress"
+                  | "Complete"
+                  | "Closed";
+              };
+              tags: Array<{ contractVersion: 1; id: string; name: string }>;
+              title: string;
+              totals: { comments: number; votes: number };
+              viewerCanEdit: boolean;
+              viewerCanWithdraw: boolean;
+              viewerHasVoted: boolean;
+              voteCount: number;
             };
-            tags: Array<{ contractVersion: 1; id: string; name: string }>;
-            title: string;
-            totals: { comments: number; votes: number };
-            viewerCanEdit: boolean;
-            viewerCanWithdraw: boolean;
-            viewerHasVoted: boolean;
-            voteCount: number;
+            moderation: {
+              archived: boolean;
+              contractVersion: 1;
+              discussionLocked: boolean;
+              disposition: "active" | "withdrawn" | "merged";
+              mergedIntoPostId?: string;
+            };
+          },
+          Name
+        >;
+        getAdminPost: FunctionReference<
+          "query",
+          "internal",
+          { postId: string; scopeId: string },
+          {
+            contractVersion: 1;
+            feedback: {
+              author: { avatarUrl?: string; displayName?: string; id: string };
+              board: { id: string; name: string; slug: string };
+              boardId: string;
+              body: string;
+              commentCount: number;
+              contractVersion: 3;
+              id: string;
+              status: {
+                key:
+                  | "open"
+                  | "under_review"
+                  | "planned"
+                  | "in_progress"
+                  | "complete"
+                  | "closed";
+                label:
+                  | "Open"
+                  | "Under Review"
+                  | "Planned"
+                  | "In Progress"
+                  | "Complete"
+                  | "Closed";
+              };
+              tags: Array<{ contractVersion: 1; id: string; name: string }>;
+              title: string;
+              totals: { comments: number; votes: number };
+              viewerCanEdit: boolean;
+              viewerCanWithdraw: boolean;
+              viewerHasVoted: boolean;
+              voteCount: number;
+            };
+            moderation: {
+              archived: boolean;
+              contractVersion: 1;
+              discussionLocked: boolean;
+              disposition: "active" | "withdrawn" | "merged";
+              mergedIntoPostId?: string;
+            };
+          },
+          Name
+        >;
+        listAdminFeedback: FunctionReference<
+          "query",
+          "internal",
+          {
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+            scopeId: string;
+            visibility: "visible" | "hidden";
+          },
+          {
+            continueCursor: string;
+            contractVersion: 1;
+            isDone: boolean;
+            page: Array<{
+              contractVersion: 1;
+              feedback: {
+                author: {
+                  avatarUrl?: string;
+                  displayName?: string;
+                  id: string;
+                };
+                board: { id: string; name: string; slug: string };
+                boardId: string;
+                body: string;
+                commentCount: number;
+                contractVersion: 3;
+                id: string;
+                status: {
+                  key:
+                    | "open"
+                    | "under_review"
+                    | "planned"
+                    | "in_progress"
+                    | "complete"
+                    | "closed";
+                  label:
+                    | "Open"
+                    | "Under Review"
+                    | "Planned"
+                    | "In Progress"
+                    | "Complete"
+                    | "Closed";
+                };
+                tags: Array<{ contractVersion: 1; id: string; name: string }>;
+                title: string;
+                totals: { comments: number; votes: number };
+                viewerCanEdit: boolean;
+                viewerCanWithdraw: boolean;
+                viewerHasVoted: boolean;
+                voteCount: number;
+              };
+              moderation: {
+                archived: boolean;
+                contractVersion: 1;
+                discussionLocked: boolean;
+                disposition: "active" | "withdrawn" | "merged";
+                mergedIntoPostId?: string;
+              };
+            }>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            posts: Array<{
+              contractVersion: 1;
+              feedback: {
+                author: {
+                  avatarUrl?: string;
+                  displayName?: string;
+                  id: string;
+                };
+                board: { id: string; name: string; slug: string };
+                boardId: string;
+                body: string;
+                commentCount: number;
+                contractVersion: 3;
+                id: string;
+                status: {
+                  key:
+                    | "open"
+                    | "under_review"
+                    | "planned"
+                    | "in_progress"
+                    | "complete"
+                    | "closed";
+                  label:
+                    | "Open"
+                    | "Under Review"
+                    | "Planned"
+                    | "In Progress"
+                    | "Complete"
+                    | "Closed";
+                };
+                tags: Array<{ contractVersion: 1; id: string; name: string }>;
+                title: string;
+                totals: { comments: number; votes: number };
+                viewerCanEdit: boolean;
+                viewerCanWithdraw: boolean;
+                viewerHasVoted: boolean;
+                voteCount: number;
+              };
+              moderation: {
+                archived: boolean;
+                contractVersion: 1;
+                discussionLocked: boolean;
+                disposition: "active" | "withdrawn" | "merged";
+                mergedIntoPostId?: string;
+              };
+            }>;
+            splitCursor?: string | null;
           },
           Name
         >;
@@ -377,36 +740,46 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             scopeId: string;
           },
           {
-            author: { avatarUrl?: string; displayName?: string; id: string };
-            board: { id: string; name: string; slug: string };
-            boardId: string;
-            body: string;
-            commentCount: number;
-            contractVersion: 3;
-            id: string;
-            status: {
-              key:
-                | "open"
-                | "under_review"
-                | "planned"
-                | "in_progress"
-                | "complete"
-                | "closed";
-              label:
-                | "Open"
-                | "Under Review"
-                | "Planned"
-                | "In Progress"
-                | "Complete"
-                | "Closed";
+            contractVersion: 1;
+            feedback: {
+              author: { avatarUrl?: string; displayName?: string; id: string };
+              board: { id: string; name: string; slug: string };
+              boardId: string;
+              body: string;
+              commentCount: number;
+              contractVersion: 3;
+              id: string;
+              status: {
+                key:
+                  | "open"
+                  | "under_review"
+                  | "planned"
+                  | "in_progress"
+                  | "complete"
+                  | "closed";
+                label:
+                  | "Open"
+                  | "Under Review"
+                  | "Planned"
+                  | "In Progress"
+                  | "Complete"
+                  | "Closed";
+              };
+              tags: Array<{ contractVersion: 1; id: string; name: string }>;
+              title: string;
+              totals: { comments: number; votes: number };
+              viewerCanEdit: boolean;
+              viewerCanWithdraw: boolean;
+              viewerHasVoted: boolean;
+              voteCount: number;
             };
-            tags: Array<{ contractVersion: 1; id: string; name: string }>;
-            title: string;
-            totals: { comments: number; votes: number };
-            viewerCanEdit: boolean;
-            viewerCanWithdraw: boolean;
-            viewerHasVoted: boolean;
-            voteCount: number;
+            moderation: {
+              archived: boolean;
+              contractVersion: 1;
+              discussionLocked: boolean;
+              disposition: "active" | "withdrawn" | "merged";
+              mergedIntoPostId?: string;
+            };
           },
           Name
         >;
@@ -424,36 +797,46 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             scopeId: string;
           },
           {
-            author: { avatarUrl?: string; displayName?: string; id: string };
-            board: { id: string; name: string; slug: string };
-            boardId: string;
-            body: string;
-            commentCount: number;
-            contractVersion: 3;
-            id: string;
-            status: {
-              key:
-                | "open"
-                | "under_review"
-                | "planned"
-                | "in_progress"
-                | "complete"
-                | "closed";
-              label:
-                | "Open"
-                | "Under Review"
-                | "Planned"
-                | "In Progress"
-                | "Complete"
-                | "Closed";
+            contractVersion: 1;
+            feedback: {
+              author: { avatarUrl?: string; displayName?: string; id: string };
+              board: { id: string; name: string; slug: string };
+              boardId: string;
+              body: string;
+              commentCount: number;
+              contractVersion: 3;
+              id: string;
+              status: {
+                key:
+                  | "open"
+                  | "under_review"
+                  | "planned"
+                  | "in_progress"
+                  | "complete"
+                  | "closed";
+                label:
+                  | "Open"
+                  | "Under Review"
+                  | "Planned"
+                  | "In Progress"
+                  | "Complete"
+                  | "Closed";
+              };
+              tags: Array<{ contractVersion: 1; id: string; name: string }>;
+              title: string;
+              totals: { comments: number; votes: number };
+              viewerCanEdit: boolean;
+              viewerCanWithdraw: boolean;
+              viewerHasVoted: boolean;
+              voteCount: number;
             };
-            tags: Array<{ contractVersion: 1; id: string; name: string }>;
-            title: string;
-            totals: { comments: number; votes: number };
-            viewerCanEdit: boolean;
-            viewerCanWithdraw: boolean;
-            viewerHasVoted: boolean;
-            voteCount: number;
+            moderation: {
+              archived: boolean;
+              contractVersion: 1;
+              discussionLocked: boolean;
+              disposition: "active" | "withdrawn" | "merged";
+              mergedIntoPostId?: string;
+            };
           },
           Name
         >;
@@ -471,36 +854,46 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             scopeId: string;
           },
           {
-            author: { avatarUrl?: string; displayName?: string; id: string };
-            board: { id: string; name: string; slug: string };
-            boardId: string;
-            body: string;
-            commentCount: number;
-            contractVersion: 3;
-            id: string;
-            status: {
-              key:
-                | "open"
-                | "under_review"
-                | "planned"
-                | "in_progress"
-                | "complete"
-                | "closed";
-              label:
-                | "Open"
-                | "Under Review"
-                | "Planned"
-                | "In Progress"
-                | "Complete"
-                | "Closed";
+            contractVersion: 1;
+            feedback: {
+              author: { avatarUrl?: string; displayName?: string; id: string };
+              board: { id: string; name: string; slug: string };
+              boardId: string;
+              body: string;
+              commentCount: number;
+              contractVersion: 3;
+              id: string;
+              status: {
+                key:
+                  | "open"
+                  | "under_review"
+                  | "planned"
+                  | "in_progress"
+                  | "complete"
+                  | "closed";
+                label:
+                  | "Open"
+                  | "Under Review"
+                  | "Planned"
+                  | "In Progress"
+                  | "Complete"
+                  | "Closed";
+              };
+              tags: Array<{ contractVersion: 1; id: string; name: string }>;
+              title: string;
+              totals: { comments: number; votes: number };
+              viewerCanEdit: boolean;
+              viewerCanWithdraw: boolean;
+              viewerHasVoted: boolean;
+              voteCount: number;
             };
-            tags: Array<{ contractVersion: 1; id: string; name: string }>;
-            title: string;
-            totals: { comments: number; votes: number };
-            viewerCanEdit: boolean;
-            viewerCanWithdraw: boolean;
-            viewerHasVoted: boolean;
-            voteCount: number;
+            moderation: {
+              archived: boolean;
+              contractVersion: 1;
+              discussionLocked: boolean;
+              disposition: "active" | "withdrawn" | "merged";
+              mergedIntoPostId?: string;
+            };
           },
           Name
         >;
@@ -524,36 +917,46 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               | "closed";
           },
           {
-            author: { avatarUrl?: string; displayName?: string; id: string };
-            board: { id: string; name: string; slug: string };
-            boardId: string;
-            body: string;
-            commentCount: number;
-            contractVersion: 3;
-            id: string;
-            status: {
-              key:
-                | "open"
-                | "under_review"
-                | "planned"
-                | "in_progress"
-                | "complete"
-                | "closed";
-              label:
-                | "Open"
-                | "Under Review"
-                | "Planned"
-                | "In Progress"
-                | "Complete"
-                | "Closed";
+            contractVersion: 1;
+            feedback: {
+              author: { avatarUrl?: string; displayName?: string; id: string };
+              board: { id: string; name: string; slug: string };
+              boardId: string;
+              body: string;
+              commentCount: number;
+              contractVersion: 3;
+              id: string;
+              status: {
+                key:
+                  | "open"
+                  | "under_review"
+                  | "planned"
+                  | "in_progress"
+                  | "complete"
+                  | "closed";
+                label:
+                  | "Open"
+                  | "Under Review"
+                  | "Planned"
+                  | "In Progress"
+                  | "Complete"
+                  | "Closed";
+              };
+              tags: Array<{ contractVersion: 1; id: string; name: string }>;
+              title: string;
+              totals: { comments: number; votes: number };
+              viewerCanEdit: boolean;
+              viewerCanWithdraw: boolean;
+              viewerHasVoted: boolean;
+              voteCount: number;
             };
-            tags: Array<{ contractVersion: 1; id: string; name: string }>;
-            title: string;
-            totals: { comments: number; votes: number };
-            viewerCanEdit: boolean;
-            viewerCanWithdraw: boolean;
-            viewerHasVoted: boolean;
-            voteCount: number;
+            moderation: {
+              archived: boolean;
+              contractVersion: 1;
+              discussionLocked: boolean;
+              disposition: "active" | "withdrawn" | "merged";
+              mergedIntoPostId?: string;
+            };
           },
           Name
         >;
@@ -613,36 +1016,46 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             tagId: string;
           },
           {
-            author: { avatarUrl?: string; displayName?: string; id: string };
-            board: { id: string; name: string; slug: string };
-            boardId: string;
-            body: string;
-            commentCount: number;
-            contractVersion: 3;
-            id: string;
-            status: {
-              key:
-                | "open"
-                | "under_review"
-                | "planned"
-                | "in_progress"
-                | "complete"
-                | "closed";
-              label:
-                | "Open"
-                | "Under Review"
-                | "Planned"
-                | "In Progress"
-                | "Complete"
-                | "Closed";
+            contractVersion: 1;
+            feedback: {
+              author: { avatarUrl?: string; displayName?: string; id: string };
+              board: { id: string; name: string; slug: string };
+              boardId: string;
+              body: string;
+              commentCount: number;
+              contractVersion: 3;
+              id: string;
+              status: {
+                key:
+                  | "open"
+                  | "under_review"
+                  | "planned"
+                  | "in_progress"
+                  | "complete"
+                  | "closed";
+                label:
+                  | "Open"
+                  | "Under Review"
+                  | "Planned"
+                  | "In Progress"
+                  | "Complete"
+                  | "Closed";
+              };
+              tags: Array<{ contractVersion: 1; id: string; name: string }>;
+              title: string;
+              totals: { comments: number; votes: number };
+              viewerCanEdit: boolean;
+              viewerCanWithdraw: boolean;
+              viewerHasVoted: boolean;
+              voteCount: number;
             };
-            tags: Array<{ contractVersion: 1; id: string; name: string }>;
-            title: string;
-            totals: { comments: number; votes: number };
-            viewerCanEdit: boolean;
-            viewerCanWithdraw: boolean;
-            viewerHasVoted: boolean;
-            voteCount: number;
+            moderation: {
+              archived: boolean;
+              contractVersion: 1;
+              discussionLocked: boolean;
+              disposition: "active" | "withdrawn" | "merged";
+              mergedIntoPostId?: string;
+            };
           },
           Name
         >;
@@ -749,36 +1162,46 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           title?: string;
         },
         {
-          author: { avatarUrl?: string; displayName?: string; id: string };
-          board: { id: string; name: string; slug: string };
-          boardId: string;
-          body: string;
-          commentCount: number;
-          contractVersion: 3;
-          id: string;
-          status: {
-            key:
-              | "open"
-              | "under_review"
-              | "planned"
-              | "in_progress"
-              | "complete"
-              | "closed";
-            label:
-              | "Open"
-              | "Under Review"
-              | "Planned"
-              | "In Progress"
-              | "Complete"
-              | "Closed";
+          contractVersion: 1;
+          feedback: {
+            author: { avatarUrl?: string; displayName?: string; id: string };
+            board: { id: string; name: string; slug: string };
+            boardId: string;
+            body: string;
+            commentCount: number;
+            contractVersion: 3;
+            id: string;
+            status: {
+              key:
+                | "open"
+                | "under_review"
+                | "planned"
+                | "in_progress"
+                | "complete"
+                | "closed";
+              label:
+                | "Open"
+                | "Under Review"
+                | "Planned"
+                | "In Progress"
+                | "Complete"
+                | "Closed";
+            };
+            tags: Array<{ contractVersion: 1; id: string; name: string }>;
+            title: string;
+            totals: { comments: number; votes: number };
+            viewerCanEdit: boolean;
+            viewerCanWithdraw: boolean;
+            viewerHasVoted: boolean;
+            voteCount: number;
           };
-          tags: Array<{ contractVersion: 1; id: string; name: string }>;
-          title: string;
-          totals: { comments: number; votes: number };
-          viewerCanEdit: boolean;
-          viewerCanWithdraw: boolean;
-          viewerHasVoted: boolean;
-          voteCount: number;
+          moderation: {
+            archived: boolean;
+            contractVersion: 1;
+            discussionLocked: boolean;
+            disposition: "active" | "withdrawn" | "merged";
+            mergedIntoPostId?: string;
+          };
         },
         Name
       >;
@@ -858,11 +1281,31 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         },
         {
           body: string;
-          contractVersion: 1;
+          contractVersion: 2;
           createdAt: number;
           firstPublishedAt?: number;
           id: string;
-          postIds: Array<string>;
+          links: Array<{
+            contractVersion: 1;
+            id: string;
+            status: {
+              key:
+                | "open"
+                | "under_review"
+                | "planned"
+                | "in_progress"
+                | "complete"
+                | "closed";
+              label:
+                | "Open"
+                | "Under Review"
+                | "Planned"
+                | "In Progress"
+                | "Complete"
+                | "Closed";
+            };
+            title: string;
+          }>;
           publishedAt?: number;
           slug: string;
           state: "draft" | "published" | "unpublished";
@@ -967,11 +1410,31 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         },
         {
           body: string;
-          contractVersion: 1;
+          contractVersion: 2;
           createdAt: number;
           firstPublishedAt?: number;
           id: string;
-          postIds: Array<string>;
+          links: Array<{
+            contractVersion: 1;
+            id: string;
+            status: {
+              key:
+                | "open"
+                | "under_review"
+                | "planned"
+                | "in_progress"
+                | "complete"
+                | "closed";
+              label:
+                | "Open"
+                | "Under Review"
+                | "Planned"
+                | "In Progress"
+                | "Complete"
+                | "Closed";
+            };
+            title: string;
+          }>;
           publishedAt?: number;
           slug: string;
           state: "draft" | "published" | "unpublished";
@@ -1035,6 +1498,54 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 };
             ok: false;
           },
+        Name
+      >;
+      getAdminPost: FunctionReference<
+        "query",
+        "internal",
+        { postId: string; scopeId: string },
+        {
+          contractVersion: 1;
+          feedback: {
+            author: { avatarUrl?: string; displayName?: string; id: string };
+            board: { id: string; name: string; slug: string };
+            boardId: string;
+            body: string;
+            commentCount: number;
+            contractVersion: 3;
+            id: string;
+            status: {
+              key:
+                | "open"
+                | "under_review"
+                | "planned"
+                | "in_progress"
+                | "complete"
+                | "closed";
+              label:
+                | "Open"
+                | "Under Review"
+                | "Planned"
+                | "In Progress"
+                | "Complete"
+                | "Closed";
+            };
+            tags: Array<{ contractVersion: 1; id: string; name: string }>;
+            title: string;
+            totals: { comments: number; votes: number };
+            viewerCanEdit: boolean;
+            viewerCanWithdraw: boolean;
+            viewerHasVoted: boolean;
+            voteCount: number;
+          };
+          moderation: {
+            archived: boolean;
+            contractVersion: 1;
+            discussionLocked: boolean;
+            disposition: "active" | "withdrawn" | "merged";
+            mergedIntoPostId?: string;
+          };
+        },
         Name
       >;
       getPost: FunctionReference<
@@ -1142,6 +1653,203 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           scopeId: string;
         },
         { contractVersion: 1; count: number },
+        Name
+      >;
+      listAdminChangelog: FunctionReference<
+        "query",
+        "internal",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          scopeId: string;
+        },
+        {
+          continueCursor: string;
+          contractVersion: 1;
+          entries: Array<{
+            body: string;
+            contractVersion: 2;
+            createdAt: number;
+            firstPublishedAt?: number;
+            id: string;
+            links: Array<{
+              contractVersion: 1;
+              id: string;
+              status: {
+                key:
+                  | "open"
+                  | "under_review"
+                  | "planned"
+                  | "in_progress"
+                  | "complete"
+                  | "closed";
+                label:
+                  | "Open"
+                  | "Under Review"
+                  | "Planned"
+                  | "In Progress"
+                  | "Complete"
+                  | "Closed";
+              };
+              title: string;
+            }>;
+            publishedAt?: number;
+            slug: string;
+            state: "draft" | "published" | "unpublished";
+            title: string;
+            updatedAt: number;
+          }>;
+          isDone: boolean;
+          page: Array<{
+            body: string;
+            contractVersion: 2;
+            createdAt: number;
+            firstPublishedAt?: number;
+            id: string;
+            links: Array<{
+              contractVersion: 1;
+              id: string;
+              status: {
+                key:
+                  | "open"
+                  | "under_review"
+                  | "planned"
+                  | "in_progress"
+                  | "complete"
+                  | "closed";
+                label:
+                  | "Open"
+                  | "Under Review"
+                  | "Planned"
+                  | "In Progress"
+                  | "Complete"
+                  | "Closed";
+              };
+              title: string;
+            }>;
+            publishedAt?: number;
+            slug: string;
+            state: "draft" | "published" | "unpublished";
+            title: string;
+            updatedAt: number;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        },
+        Name
+      >;
+      listAdminFeedback: FunctionReference<
+        "query",
+        "internal",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          scopeId: string;
+          visibility: "visible" | "hidden";
+        },
+        {
+          continueCursor: string;
+          contractVersion: 1;
+          isDone: boolean;
+          page: Array<{
+            contractVersion: 1;
+            feedback: {
+              author: { avatarUrl?: string; displayName?: string; id: string };
+              board: { id: string; name: string; slug: string };
+              boardId: string;
+              body: string;
+              commentCount: number;
+              contractVersion: 3;
+              id: string;
+              status: {
+                key:
+                  | "open"
+                  | "under_review"
+                  | "planned"
+                  | "in_progress"
+                  | "complete"
+                  | "closed";
+                label:
+                  | "Open"
+                  | "Under Review"
+                  | "Planned"
+                  | "In Progress"
+                  | "Complete"
+                  | "Closed";
+              };
+              tags: Array<{ contractVersion: 1; id: string; name: string }>;
+              title: string;
+              totals: { comments: number; votes: number };
+              viewerCanEdit: boolean;
+              viewerCanWithdraw: boolean;
+              viewerHasVoted: boolean;
+              voteCount: number;
+            };
+            moderation: {
+              archived: boolean;
+              contractVersion: 1;
+              discussionLocked: boolean;
+              disposition: "active" | "withdrawn" | "merged";
+              mergedIntoPostId?: string;
+            };
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          posts: Array<{
+            contractVersion: 1;
+            feedback: {
+              author: { avatarUrl?: string; displayName?: string; id: string };
+              board: { id: string; name: string; slug: string };
+              boardId: string;
+              body: string;
+              commentCount: number;
+              contractVersion: 3;
+              id: string;
+              status: {
+                key:
+                  | "open"
+                  | "under_review"
+                  | "planned"
+                  | "in_progress"
+                  | "complete"
+                  | "closed";
+                label:
+                  | "Open"
+                  | "Under Review"
+                  | "Planned"
+                  | "In Progress"
+                  | "Complete"
+                  | "Closed";
+              };
+              tags: Array<{ contractVersion: 1; id: string; name: string }>;
+              title: string;
+              totals: { comments: number; votes: number };
+              viewerCanEdit: boolean;
+              viewerCanWithdraw: boolean;
+              viewerHasVoted: boolean;
+              voteCount: number;
+            };
+            moderation: {
+              archived: boolean;
+              contractVersion: 1;
+              discussionLocked: boolean;
+              disposition: "active" | "withdrawn" | "merged";
+              mergedIntoPostId?: string;
+            };
+          }>;
+          splitCursor?: string | null;
+        },
         Name
       >;
       listBoards: FunctionReference<
@@ -1399,14 +2107,14 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         },
         {
           continueCursor: string;
-          contractVersion: 1;
+          contractVersion: 2;
           isDone: boolean;
           page: Array<{
             actor?: { avatarUrl?: string; displayName?: string; id: string };
             changedFields?: Array<string>;
-            changelogEntryId?: string;
-            contractVersion: 1;
-            fromBoardId?: string;
+            changelog?: { contractVersion: 1; slug: string; title: string };
+            contractVersion: 2;
+            fromBoard?: { contractVersion: 1; name: string; slug: string };
             fromStatus?:
               | "open"
               | "under_review"
@@ -1417,8 +2125,8 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             id: string;
             occurredAt: number;
             postId: string;
-            tagId?: string;
-            toBoardId?: string;
+            tag?: { contractVersion: 1; name: string };
+            toBoard?: { contractVersion: 1; name: string; slug: string };
             toStatus?:
               | "open"
               | "under_review"
@@ -1737,36 +2445,46 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           scopeId: string;
         },
         {
-          author: { avatarUrl?: string; displayName?: string; id: string };
-          board: { id: string; name: string; slug: string };
-          boardId: string;
-          body: string;
-          commentCount: number;
-          contractVersion: 3;
-          id: string;
-          status: {
-            key:
-              | "open"
-              | "under_review"
-              | "planned"
-              | "in_progress"
-              | "complete"
-              | "closed";
-            label:
-              | "Open"
-              | "Under Review"
-              | "Planned"
-              | "In Progress"
-              | "Complete"
-              | "Closed";
+          contractVersion: 1;
+          feedback: {
+            author: { avatarUrl?: string; displayName?: string; id: string };
+            board: { id: string; name: string; slug: string };
+            boardId: string;
+            body: string;
+            commentCount: number;
+            contractVersion: 3;
+            id: string;
+            status: {
+              key:
+                | "open"
+                | "under_review"
+                | "planned"
+                | "in_progress"
+                | "complete"
+                | "closed";
+              label:
+                | "Open"
+                | "Under Review"
+                | "Planned"
+                | "In Progress"
+                | "Complete"
+                | "Closed";
+            };
+            tags: Array<{ contractVersion: 1; id: string; name: string }>;
+            title: string;
+            totals: { comments: number; votes: number };
+            viewerCanEdit: boolean;
+            viewerCanWithdraw: boolean;
+            viewerHasVoted: boolean;
+            voteCount: number;
           };
-          tags: Array<{ contractVersion: 1; id: string; name: string }>;
-          title: string;
-          totals: { comments: number; votes: number };
-          viewerCanEdit: boolean;
-          viewerCanWithdraw: boolean;
-          viewerHasVoted: boolean;
-          voteCount: number;
+          moderation: {
+            archived: boolean;
+            contractVersion: 1;
+            discussionLocked: boolean;
+            disposition: "active" | "withdrawn" | "merged";
+            mergedIntoPostId?: string;
+          };
         },
         Name
       >;
@@ -1784,11 +2502,31 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         },
         {
           body: string;
-          contractVersion: 1;
+          contractVersion: 2;
           createdAt: number;
           firstPublishedAt?: number;
           id: string;
-          postIds: Array<string>;
+          links: Array<{
+            contractVersion: 1;
+            id: string;
+            status: {
+              key:
+                | "open"
+                | "under_review"
+                | "planned"
+                | "in_progress"
+                | "complete"
+                | "closed";
+              label:
+                | "Open"
+                | "Under Review"
+                | "Planned"
+                | "In Progress"
+                | "Complete"
+                | "Closed";
+            };
+            title: string;
+          }>;
           publishedAt?: number;
           slug: string;
           state: "draft" | "published" | "unpublished";
@@ -1957,36 +2695,46 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           scopeId: string;
         },
         {
-          author: { avatarUrl?: string; displayName?: string; id: string };
-          board: { id: string; name: string; slug: string };
-          boardId: string;
-          body: string;
-          commentCount: number;
-          contractVersion: 3;
-          id: string;
-          status: {
-            key:
-              | "open"
-              | "under_review"
-              | "planned"
-              | "in_progress"
-              | "complete"
-              | "closed";
-            label:
-              | "Open"
-              | "Under Review"
-              | "Planned"
-              | "In Progress"
-              | "Complete"
-              | "Closed";
+          contractVersion: 1;
+          feedback: {
+            author: { avatarUrl?: string; displayName?: string; id: string };
+            board: { id: string; name: string; slug: string };
+            boardId: string;
+            body: string;
+            commentCount: number;
+            contractVersion: 3;
+            id: string;
+            status: {
+              key:
+                | "open"
+                | "under_review"
+                | "planned"
+                | "in_progress"
+                | "complete"
+                | "closed";
+              label:
+                | "Open"
+                | "Under Review"
+                | "Planned"
+                | "In Progress"
+                | "Complete"
+                | "Closed";
+            };
+            tags: Array<{ contractVersion: 1; id: string; name: string }>;
+            title: string;
+            totals: { comments: number; votes: number };
+            viewerCanEdit: boolean;
+            viewerCanWithdraw: boolean;
+            viewerHasVoted: boolean;
+            voteCount: number;
           };
-          tags: Array<{ contractVersion: 1; id: string; name: string }>;
-          title: string;
-          totals: { comments: number; votes: number };
-          viewerCanEdit: boolean;
-          viewerCanWithdraw: boolean;
-          viewerHasVoted: boolean;
-          voteCount: number;
+          moderation: {
+            archived: boolean;
+            contractVersion: 1;
+            discussionLocked: boolean;
+            disposition: "active" | "withdrawn" | "merged";
+            mergedIntoPostId?: string;
+          };
         },
         Name
       >;
@@ -2005,11 +2753,31 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         },
         {
           body: string;
-          contractVersion: 1;
+          contractVersion: 2;
           createdAt: number;
           firstPublishedAt?: number;
           id: string;
-          postIds: Array<string>;
+          links: Array<{
+            contractVersion: 1;
+            id: string;
+            status: {
+              key:
+                | "open"
+                | "under_review"
+                | "planned"
+                | "in_progress"
+                | "complete"
+                | "closed";
+              label:
+                | "Open"
+                | "Under Review"
+                | "Planned"
+                | "In Progress"
+                | "Complete"
+                | "Closed";
+            };
+            title: string;
+          }>;
           publishedAt?: number;
           slug: string;
           state: "draft" | "published" | "unpublished";
@@ -2032,36 +2800,46 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           scopeId: string;
         },
         {
-          author: { avatarUrl?: string; displayName?: string; id: string };
-          board: { id: string; name: string; slug: string };
-          boardId: string;
-          body: string;
-          commentCount: number;
-          contractVersion: 3;
-          id: string;
-          status: {
-            key:
-              | "open"
-              | "under_review"
-              | "planned"
-              | "in_progress"
-              | "complete"
-              | "closed";
-            label:
-              | "Open"
-              | "Under Review"
-              | "Planned"
-              | "In Progress"
-              | "Complete"
-              | "Closed";
+          contractVersion: 1;
+          feedback: {
+            author: { avatarUrl?: string; displayName?: string; id: string };
+            board: { id: string; name: string; slug: string };
+            boardId: string;
+            body: string;
+            commentCount: number;
+            contractVersion: 3;
+            id: string;
+            status: {
+              key:
+                | "open"
+                | "under_review"
+                | "planned"
+                | "in_progress"
+                | "complete"
+                | "closed";
+              label:
+                | "Open"
+                | "Under Review"
+                | "Planned"
+                | "In Progress"
+                | "Complete"
+                | "Closed";
+            };
+            tags: Array<{ contractVersion: 1; id: string; name: string }>;
+            title: string;
+            totals: { comments: number; votes: number };
+            viewerCanEdit: boolean;
+            viewerCanWithdraw: boolean;
+            viewerHasVoted: boolean;
+            voteCount: number;
           };
-          tags: Array<{ contractVersion: 1; id: string; name: string }>;
-          title: string;
-          totals: { comments: number; votes: number };
-          viewerCanEdit: boolean;
-          viewerCanWithdraw: boolean;
-          viewerHasVoted: boolean;
-          voteCount: number;
+          moderation: {
+            archived: boolean;
+            contractVersion: 1;
+            discussionLocked: boolean;
+            disposition: "active" | "withdrawn" | "merged";
+            mergedIntoPostId?: string;
+          };
         },
         Name
       >;
@@ -2085,36 +2863,46 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | "closed";
         },
         {
-          author: { avatarUrl?: string; displayName?: string; id: string };
-          board: { id: string; name: string; slug: string };
-          boardId: string;
-          body: string;
-          commentCount: number;
-          contractVersion: 3;
-          id: string;
-          status: {
-            key:
-              | "open"
-              | "under_review"
-              | "planned"
-              | "in_progress"
-              | "complete"
-              | "closed";
-            label:
-              | "Open"
-              | "Under Review"
-              | "Planned"
-              | "In Progress"
-              | "Complete"
-              | "Closed";
+          contractVersion: 1;
+          feedback: {
+            author: { avatarUrl?: string; displayName?: string; id: string };
+            board: { id: string; name: string; slug: string };
+            boardId: string;
+            body: string;
+            commentCount: number;
+            contractVersion: 3;
+            id: string;
+            status: {
+              key:
+                | "open"
+                | "under_review"
+                | "planned"
+                | "in_progress"
+                | "complete"
+                | "closed";
+              label:
+                | "Open"
+                | "Under Review"
+                | "Planned"
+                | "In Progress"
+                | "Complete"
+                | "Closed";
+            };
+            tags: Array<{ contractVersion: 1; id: string; name: string }>;
+            title: string;
+            totals: { comments: number; votes: number };
+            viewerCanEdit: boolean;
+            viewerCanWithdraw: boolean;
+            viewerHasVoted: boolean;
+            voteCount: number;
           };
-          tags: Array<{ contractVersion: 1; id: string; name: string }>;
-          title: string;
-          totals: { comments: number; votes: number };
-          viewerCanEdit: boolean;
-          viewerCanWithdraw: boolean;
-          viewerHasVoted: boolean;
-          voteCount: number;
+          moderation: {
+            archived: boolean;
+            contractVersion: 1;
+            discussionLocked: boolean;
+            disposition: "active" | "withdrawn" | "merged";
+            mergedIntoPostId?: string;
+          };
         },
         Name
       >;
@@ -2133,36 +2921,46 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           tagId: string;
         },
         {
-          author: { avatarUrl?: string; displayName?: string; id: string };
-          board: { id: string; name: string; slug: string };
-          boardId: string;
-          body: string;
-          commentCount: number;
-          contractVersion: 3;
-          id: string;
-          status: {
-            key:
-              | "open"
-              | "under_review"
-              | "planned"
-              | "in_progress"
-              | "complete"
-              | "closed";
-            label:
-              | "Open"
-              | "Under Review"
-              | "Planned"
-              | "In Progress"
-              | "Complete"
-              | "Closed";
+          contractVersion: 1;
+          feedback: {
+            author: { avatarUrl?: string; displayName?: string; id: string };
+            board: { id: string; name: string; slug: string };
+            boardId: string;
+            body: string;
+            commentCount: number;
+            contractVersion: 3;
+            id: string;
+            status: {
+              key:
+                | "open"
+                | "under_review"
+                | "planned"
+                | "in_progress"
+                | "complete"
+                | "closed";
+              label:
+                | "Open"
+                | "Under Review"
+                | "Planned"
+                | "In Progress"
+                | "Complete"
+                | "Closed";
+            };
+            tags: Array<{ contractVersion: 1; id: string; name: string }>;
+            title: string;
+            totals: { comments: number; votes: number };
+            viewerCanEdit: boolean;
+            viewerCanWithdraw: boolean;
+            viewerHasVoted: boolean;
+            voteCount: number;
           };
-          tags: Array<{ contractVersion: 1; id: string; name: string }>;
-          title: string;
-          totals: { comments: number; votes: number };
-          viewerCanEdit: boolean;
-          viewerCanWithdraw: boolean;
-          viewerHasVoted: boolean;
-          voteCount: number;
+          moderation: {
+            archived: boolean;
+            contractVersion: 1;
+            discussionLocked: boolean;
+            disposition: "active" | "withdrawn" | "merged";
+            mergedIntoPostId?: string;
+          };
         },
         Name
       >;
@@ -2319,11 +3117,31 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         },
         {
           body: string;
-          contractVersion: 1;
+          contractVersion: 2;
           createdAt: number;
           firstPublishedAt?: number;
           id: string;
-          postIds: Array<string>;
+          links: Array<{
+            contractVersion: 1;
+            id: string;
+            status: {
+              key:
+                | "open"
+                | "under_review"
+                | "planned"
+                | "in_progress"
+                | "complete"
+                | "closed";
+              label:
+                | "Open"
+                | "Under Review"
+                | "Planned"
+                | "In Progress"
+                | "Complete"
+                | "Closed";
+            };
+            title: string;
+          }>;
           publishedAt?: number;
           slug: string;
           state: "draft" | "published" | "unpublished";

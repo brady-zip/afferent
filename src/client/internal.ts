@@ -3,7 +3,10 @@ import type { GenericMutationCtx, GenericQueryCtx } from "convex/server";
 import type { ComponentApi } from "../component/_generated/component.js";
 import type {
   AdminCapabilities,
+  AdminChangelogPageDto,
   AdminChangelogEntryDto,
+  AdminFeedbackPageDto,
+  AdminFeedbackPostDto,
   BoardDto,
   CommentDto,
   CommentPageDto,
@@ -24,7 +27,6 @@ import type {
   ReadCapabilities,
   SearchResultDto,
   SimilarPostResultDto,
-  FeedbackPostDto,
   PostActivityPageDto,
   PublishedChangelogLookupDto,
   PostLookupResult,
@@ -398,6 +400,34 @@ export function createClientWithScope(
       },
     },
     admin: {
+      async listAdminFeedback(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        if (!(await options.authorizeAdmin(ctx)))
+          throw new Error("ADMIN_AUTHORIZATION_REQUIRED");
+        return (await ctx.runQuery(component.admin.posts.listAdminFeedback, {
+          scopeId,
+          visibility: args.visibility,
+          paginationOpts: args.paginationOpts ?? { numItems: 20, cursor: null },
+        })) as unknown as AdminFeedbackPageDto;
+      },
+      async getAdminPost(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        if (!(await options.authorizeAdmin(ctx)))
+          throw new Error("ADMIN_AUTHORIZATION_REQUIRED");
+        return (await ctx.runQuery(component.admin.posts.getAdminPost, {
+          scopeId,
+          postId: args.postId,
+        })) as unknown as AdminFeedbackPostDto;
+      },
+      async listAdminChangelog(ctx, args) {
+        const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
+        if (!(await options.authorizeAdmin(ctx)))
+          throw new Error("ADMIN_AUTHORIZATION_REQUIRED");
+        return (await ctx.runQuery(component.admin.changelog.listAdminChangelog, {
+          scopeId,
+          paginationOpts: args.paginationOpts ?? { numItems: 20, cursor: null },
+        })) as unknown as AdminChangelogPageDto;
+      },
       async configureInstallation(ctx, args) {
         const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
         if (!(await options.authorizeAdmin(ctx))) {
@@ -438,7 +468,7 @@ export function createClientWithScope(
           postId: args.postId,
           ...(args.title === undefined ? {} : { title: args.title }),
           ...(args.body === undefined ? {} : { body: args.body }),
-        })) as unknown as FeedbackPostDto;
+        })) as unknown as AdminFeedbackPostDto;
       },
       async movePost(ctx, args) {
         const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
@@ -451,7 +481,7 @@ export function createClientWithScope(
           actor,
           postId: args.postId,
           boardId: args.boardId,
-        })) as unknown as FeedbackPostDto;
+        })) as unknown as AdminFeedbackPostDto;
       },
       async setPostStatus(ctx, args) {
         const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
@@ -464,7 +494,7 @@ export function createClientWithScope(
           actor,
           postId: args.postId,
           status: args.status,
-        })) as unknown as FeedbackPostDto;
+        })) as unknown as AdminFeedbackPostDto;
       },
       async setDiscussionLock(ctx, args) {
         const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
@@ -477,7 +507,7 @@ export function createClientWithScope(
           actor,
           postId: args.postId,
           locked: args.locked,
-        })) as unknown as FeedbackPostDto;
+        })) as unknown as AdminFeedbackPostDto;
       },
       async setArchived(ctx, args) {
         const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
@@ -490,7 +520,7 @@ export function createClientWithScope(
           actor,
           postId: args.postId,
           archived: args.archived,
-        })) as unknown as FeedbackPostDto;
+        })) as unknown as AdminFeedbackPostDto;
       },
       async listPostActivity(ctx, args) {
         const scopeId = await resolveRequiredScope(options.resolveScope, ctx);
@@ -541,7 +571,7 @@ export function createClientWithScope(
           postId: args.postId,
           tagId: args.tagId,
           desired: args.desired,
-        })) as unknown as FeedbackPostDto;
+        })) as unknown as AdminFeedbackPostDto;
       },
       async deleteTag(ctx, args) {
         const scopeId = await resolveRequiredScope(options.resolveScope, ctx);

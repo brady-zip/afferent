@@ -201,6 +201,28 @@ export type FeedbackPageDto = Readonly<{
   pageStatus?: "SplitRecommended" | "SplitRequired" | null;
 }>;
 
+export type AdminFeedbackPostDto = Readonly<{
+  contractVersion: 1;
+  feedback: FeedbackPostDto;
+  moderation: Readonly<{
+    contractVersion: 1;
+    discussionLocked: boolean;
+    archived: boolean;
+    disposition: "active" | "withdrawn" | "merged";
+    mergedIntoPostId?: PostId;
+  }>;
+}>;
+
+export type AdminFeedbackPageDto = Readonly<{
+  contractVersion: 1;
+  page: AdminFeedbackPostDto[];
+  posts: AdminFeedbackPostDto[];
+  isDone: boolean;
+  continueCursor: string;
+  splitCursor?: string | null;
+  pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+}>;
+
 export type RoadmapItemDto = Readonly<{
   contractVersion: 1;
   id: PostId;
@@ -273,7 +295,7 @@ export type PublishedChangelogLookupDto =
     }>;
 
 export type AdminChangelogEntryDto = Readonly<{
-  contractVersion: 1;
+  contractVersion: 2;
   id: ChangelogId;
   title: string;
   body: string;
@@ -283,7 +305,17 @@ export type AdminChangelogEntryDto = Readonly<{
   updatedAt: number;
   firstPublishedAt?: number;
   publishedAt?: number;
-  postIds: PostId[];
+  links: ChangelogLinkedPostDto[];
+}>;
+
+export type AdminChangelogPageDto = Readonly<{
+  contractVersion: 1;
+  page: AdminChangelogEntryDto[];
+  entries: AdminChangelogEntryDto[];
+  isDone: boolean;
+  continueCursor: string;
+  splitCursor?: string | null;
+  pageStatus?: "SplitRecommended" | "SplitRequired" | null;
 }>;
 
 export type NotificationEventType =
@@ -407,7 +439,7 @@ export type CommentPageDto = Readonly<{
 }>;
 
 export type PostActivityDto = Readonly<{
-  contractVersion: 1;
+  contractVersion: 2;
   id: ActivityId;
   postId: PostId;
   type:
@@ -429,14 +461,18 @@ export type PostActivityDto = Readonly<{
   changedFields?: string[];
   fromStatus?: PostStatusKey;
   toStatus?: PostStatusKey;
-  fromBoardId?: BoardId;
-  toBoardId?: BoardId;
-  tagId?: TagId;
-  changelogEntryId?: ChangelogId;
+  fromBoard?: Readonly<{ contractVersion: 1; name: string; slug: string }>;
+  toBoard?: Readonly<{ contractVersion: 1; name: string; slug: string }>;
+  tag?: Readonly<{ contractVersion: 1; name: string }>;
+  changelog?: Readonly<{
+    contractVersion: 1;
+    title: string;
+    slug: string;
+  }>;
 }>;
 
 export type PostActivityPageDto = Readonly<{
-  contractVersion: 1;
+  contractVersion: 2;
   page: PostActivityDto[];
   isDone: boolean;
   continueCursor: string;
@@ -529,6 +565,14 @@ export const listPostActivityIntentValidator = v.object({
   postId: v.string(),
   paginationOpts: v.optional(paginationOptsValidator),
 });
+export const listAdminFeedbackIntentValidator = v.object({
+  visibility: v.union(v.literal("visible"), v.literal("hidden")),
+  paginationOpts: v.optional(paginationOptsValidator),
+});
+export const getAdminPostIntentValidator = v.object({ postId: v.string() });
+export const listAdminChangelogIntentValidator = v.object({
+  paginationOpts: v.optional(paginationOptsValidator),
+});
 export const publicPostStatusKeyValidator = v.union(
   v.literal("open"),
   v.literal("under_review"),
@@ -553,7 +597,7 @@ export const postActivityTypeResultValidator = v.union(
   v.literal("changelog_unpublish"),
 );
 export const postActivityResultValidator = v.object({
-  contractVersion: v.literal(1),
+  contractVersion: v.literal(2),
   id: v.string(),
   postId: v.string(),
   type: postActivityTypeResultValidator,
@@ -568,13 +612,13 @@ export const postActivityResultValidator = v.object({
   changedFields: v.optional(v.array(v.string())),
   fromStatus: v.optional(publicPostStatusKeyValidator),
   toStatus: v.optional(publicPostStatusKeyValidator),
-  fromBoardId: v.optional(v.string()),
-  toBoardId: v.optional(v.string()),
-  tagId: v.optional(v.string()),
-  changelogEntryId: v.optional(v.string()),
+  fromBoard: v.optional(v.object({ contractVersion: v.literal(1), name: v.string(), slug: v.string() })),
+  toBoard: v.optional(v.object({ contractVersion: v.literal(1), name: v.string(), slug: v.string() })),
+  tag: v.optional(v.object({ contractVersion: v.literal(1), name: v.string() })),
+  changelog: v.optional(v.object({ contractVersion: v.literal(1), title: v.string(), slug: v.string() })),
 });
 export const postActivityPageResultValidator = v.object({
-  contractVersion: v.literal(1),
+  contractVersion: v.literal(2),
   page: v.array(postActivityResultValidator),
   isDone: v.boolean(),
   continueCursor: v.string(),
@@ -1148,7 +1192,7 @@ export const publishedChangelogLookupResultValidator = v.union(
 );
 
 export const adminChangelogEntryResultValidator = v.object({
-  contractVersion: v.literal(1),
+  contractVersion: v.literal(2),
   id: v.string(),
   title: v.string(),
   body: v.string(),
@@ -1162,7 +1206,39 @@ export const adminChangelogEntryResultValidator = v.object({
   updatedAt: v.number(),
   firstPublishedAt: v.optional(v.number()),
   publishedAt: v.optional(v.number()),
-  postIds: v.array(v.string()),
+  links: v.array(changelogLinkedPostResultValidator),
+});
+
+export const adminChangelogPageResultValidator = v.object({
+  contractVersion: v.literal(1),
+  page: v.array(adminChangelogEntryResultValidator),
+  entries: v.array(adminChangelogEntryResultValidator),
+  isDone: v.boolean(),
+  continueCursor: v.string(),
+  splitCursor: v.optional(v.union(v.string(), v.null())),
+  pageStatus: v.optional(v.union(v.literal("SplitRecommended"), v.literal("SplitRequired"), v.null())),
+});
+
+export const adminFeedbackPostResultValidator = v.object({
+  contractVersion: v.literal(1),
+  feedback: publicFeedbackPostDtoValidator,
+  moderation: v.object({
+    contractVersion: v.literal(1),
+    discussionLocked: v.boolean(),
+    archived: v.boolean(),
+    disposition: v.union(v.literal("active"), v.literal("withdrawn"), v.literal("merged")),
+    mergedIntoPostId: v.optional(v.string()),
+  }),
+});
+
+export const adminFeedbackPageResultValidator = v.object({
+  contractVersion: v.literal(1),
+  page: v.array(adminFeedbackPostResultValidator),
+  posts: v.array(adminFeedbackPostResultValidator),
+  isDone: v.boolean(),
+  continueCursor: v.string(),
+  splitCursor: v.optional(v.union(v.string(), v.null())),
+  pageStatus: v.optional(v.union(v.literal("SplitRecommended"), v.literal("SplitRequired"), v.null())),
 });
 
 export const discoveryPostResultValidator = v.object({
@@ -1346,6 +1422,18 @@ export interface AdminCapabilities<
   QueryContext,
   MutationContext = QueryContext,
 > {
+  listAdminFeedback(
+    ctx: QueryContext,
+    args: { visibility: "visible" | "hidden"; paginationOpts?: PaginationOptions },
+  ): Promise<AdminFeedbackPageDto>;
+  getAdminPost(
+    ctx: QueryContext,
+    args: { postId: PostId },
+  ): Promise<AdminFeedbackPostDto>;
+  listAdminChangelog(
+    ctx: QueryContext,
+    args: { paginationOpts?: PaginationOptions },
+  ): Promise<AdminChangelogPageDto>;
   configureInstallation(
     ctx: MutationContext,
     args: {
@@ -1364,23 +1452,23 @@ export interface AdminCapabilities<
   editPost(
     ctx: MutationContext,
     args: { postId: PostId; title?: string; body?: string },
-  ): Promise<FeedbackPostDto>;
+  ): Promise<AdminFeedbackPostDto>;
   movePost(
     ctx: MutationContext,
     args: { postId: PostId; boardId: BoardId },
-  ): Promise<FeedbackPostDto>;
+  ): Promise<AdminFeedbackPostDto>;
   setPostStatus(
     ctx: MutationContext,
     args: { postId: PostId; status: PostStatusKey },
-  ): Promise<FeedbackPostDto>;
+  ): Promise<AdminFeedbackPostDto>;
   setDiscussionLock(
     ctx: MutationContext,
     args: { postId: PostId; locked: boolean },
-  ): Promise<FeedbackPostDto>;
+  ): Promise<AdminFeedbackPostDto>;
   setArchived(
     ctx: MutationContext,
     args: { postId: PostId; archived: boolean },
-  ): Promise<FeedbackPostDto>;
+  ): Promise<AdminFeedbackPostDto>;
   listPostActivity(
     ctx: QueryContext,
     args: { postId: PostId; paginationOpts?: PaginationOptions },
@@ -1394,7 +1482,7 @@ export interface AdminCapabilities<
   setPostTag(
     ctx: MutationContext,
     args: { postId: PostId; tagId: TagId; desired: boolean },
-  ): Promise<FeedbackPostDto>;
+  ): Promise<AdminFeedbackPostDto>;
   deleteTag(
     ctx: MutationContext,
     args: { tagId: TagId },

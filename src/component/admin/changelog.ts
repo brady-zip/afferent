@@ -1,7 +1,9 @@
 import { v } from "convex/values";
+import { paginationOptsValidator } from "convex/server";
+import { paginator } from "convex-helpers/server/pagination";
 
 import type { Doc, Id } from "../_generated/dataModel.js";
-import { mutation } from "../_generated/server.js";
+import { mutation, query } from "../_generated/server.js";
 import type { MutationCtx } from "../_generated/server.js";
 import { appendPostActivity } from "../model/activity.js";
 import { upsertActor } from "../model/actors.js";
@@ -18,7 +20,9 @@ import { normalizePlainText, validateSafeMarkdown } from "../model/content.js";
 import { conflict, invalidInput, notFound } from "../model/errors.js";
 import { requirePostInScope, requireScope } from "../model/scope.js";
 import { isPostPubliclyVisible } from "../model/visibility.js";
+import schema from "../schema.js";
 import {
+  adminChangelogPageDtoValidator,
   adminChangelogEntryDtoValidator,
   verifiedActorValidator,
 } from "../validators.js";
@@ -27,6 +31,26 @@ import {
   listCurrentSubscriberActorIds,
 } from "../notifications/events.js";
 import { fenceActiveMergeWrite } from "../model/merge.js";
+
+export const listAdminChangelog = query({
+  args: { scopeId: v.string(), paginationOpts: paginationOptsValidator },
+  returns: adminChangelogPageDtoValidator,
+  handler: async (ctx, args) => {
+    requireScope(args.scopeId);
+    if (args.paginationOpts.numItems < 1 || args.paginationOpts.numItems > 50) {
+      invalidInput("pagination numItems must be between 1 and 50");
+    }
+    const result = await paginator(ctx.db, schema)
+      .query("changelogEntries")
+      .withIndex("by_scope_created", (index) => index.eq("scopeId", args.scopeId))
+      .order("desc")
+      .paginate(args.paginationOpts);
+    const entries = await Promise.all(
+      result.page.map((entry) => toAdminChangelogEntryDto(ctx, entry)),
+    );
+    return { contractVersion: 1 as const, ...result, page: entries, entries };
+  },
+});
 
 async function insertNotificationGuard(
   ctx: MutationCtx,

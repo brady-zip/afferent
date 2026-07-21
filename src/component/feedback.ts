@@ -19,6 +19,8 @@ export {
 export { listComments } from "./public/comments.js";
 export {
   editPost as adminEditPost,
+  getAdminPost,
+  listAdminFeedback,
   movePost,
   setArchived,
   setDiscussionLock,
@@ -29,6 +31,7 @@ export { abortMerge, mergePost, resumeMerge } from "./admin/merge.js";
 export {
   createChangelogDraft,
   editChangelog,
+  listAdminChangelog,
   publishChangelog,
   setChangelogLinks,
   unpublishChangelog,

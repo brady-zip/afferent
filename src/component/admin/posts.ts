@@ -1,6 +1,10 @@
 import { v } from "convex/values";
+import { paginationOptsValidator } from "convex/server";
+import { paginator } from "convex-helpers/server/pagination";
 
-import { mutation } from "../_generated/server.js";
+import type { Doc } from "../_generated/dataModel.js";
+import type { MutationCtx, QueryCtx } from "../_generated/server.js";
+import { mutation, query } from "../_generated/server.js";
 import { appendPostActivity } from "../model/activity.js";
 import { upsertActor } from "../model/actors.js";
 import { normalizePlainText, validateSafeMarkdown } from "../model/content.js";
@@ -17,8 +21,10 @@ import {
   PUBLIC_POST_VISIBILITY,
 } from "../model/visibility.js";
 import { toFeedbackPostDto } from "../model/views.js";
+import schema from "../schema.js";
 import {
-  feedbackPostDtoValidator,
+  adminFeedbackPageDtoValidator,
+  adminFeedbackPostDtoValidator,
   postStatusKeyValidator,
   verifiedActorValidator,
 } from "../validators.js";
@@ -36,6 +42,66 @@ async function loadAdminPost(
   return await requirePostInScope(ctx, scopeId, postId);
 }
 
+export async function toAdminFeedbackPostDto(
+  ctx: QueryCtx | MutationCtx,
+  post: Doc<"posts">,
+) {
+  return {
+    contractVersion: 1 as const,
+    feedback: await toFeedbackPostDto(ctx, post),
+    moderation: {
+      contractVersion: 1 as const,
+      discussionLocked: post.discussionLocked ?? false,
+      archived: post.archivedAt !== undefined,
+      disposition:
+        post.mergedIntoPostId !== undefined
+          ? ("merged" as const)
+          : post.lifecycleState === "withdrawn"
+            ? ("withdrawn" as const)
+            : ("active" as const),
+      ...(post.mergedIntoPostId === undefined
+        ? {}
+        : { mergedIntoPostId: String(post.mergedIntoPostId) }),
+    },
+  };
+}
+
+export const listAdminFeedback = query({
+  args: {
+    scopeId: v.string(),
+    visibility: v.union(v.literal("visible"), v.literal("hidden")),
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: adminFeedbackPageDtoValidator,
+  handler: async (ctx, args) => {
+    requireScope(args.scopeId);
+    if (args.paginationOpts.numItems < 1 || args.paginationOpts.numItems > 50) {
+      invalidInput("pagination numItems must be between 1 and 50");
+    }
+    const result = await paginator(ctx.db, schema)
+      .query("posts")
+      .withIndex("by_scope_visibility_created", (index) =>
+        index.eq("scopeId", args.scopeId).eq("visibilityKey", args.visibility),
+      )
+      .order("desc")
+      .paginate(args.paginationOpts);
+    const posts = await Promise.all(
+      result.page.map((post) => toAdminFeedbackPostDto(ctx, post)),
+    );
+    return { contractVersion: 1 as const, ...result, page: posts, posts };
+  },
+});
+
+export const getAdminPost = query({
+  args: { scopeId: v.string(), postId: v.string() },
+  returns: adminFeedbackPostDtoValidator,
+  handler: async (ctx, args) =>
+    await toAdminFeedbackPostDto(
+      ctx,
+      await requirePostInScope(ctx, args.scopeId, args.postId),
+    ),
+});
+
 export const editPost = mutation({
   args: {
     scopeId: v.string(),
@@ -44,7 +110,7 @@ export const editPost = mutation({
     title: v.optional(v.string()),
     body: v.optional(v.string()),
   },
-  returns: feedbackPostDtoValidator,
+  returns: adminFeedbackPostDtoValidator,
   handler: async (ctx, args) => {
     const post = await loadAdminPost(ctx, args.scopeId, args.postId);
     if (args.title === undefined && args.body === undefined) {
@@ -87,7 +153,7 @@ export const editPost = mutation({
       type: "edit",
       changedFields,
     });
-    return await toFeedbackPostDto(ctx, {
+    return await toAdminFeedbackPostDto(ctx, {
       ...post,
       title,
       body,
@@ -103,7 +169,7 @@ export const movePost = mutation({
     postId: v.string(),
     boardId: v.string(),
   },
-  returns: feedbackPostDtoValidator,
+  returns: adminFeedbackPostDtoValidator,
   handler: async (ctx, args) => {
     const post = await loadAdminPost(ctx, args.scopeId, args.postId);
     const board = await requireBoardInScope(ctx, args.scopeId, args.boardId);
@@ -118,7 +184,7 @@ export const movePost = mutation({
         fromBoardId: post.boardId,
         toBoardId: board._id,
       });
-    return await toFeedbackPostDto(ctx, updated);
+    return await toAdminFeedbackPostDto(ctx, updated);
   },
 });
 
@@ -129,7 +195,7 @@ export const setPostStatus = mutation({
     postId: v.string(),
     status: postStatusKeyValidator,
   },
-  returns: feedbackPostDtoValidator,
+  returns: adminFeedbackPostDtoValidator,
   handler: async (ctx, args) => {
     const post = await loadAdminPost(ctx, args.scopeId, args.postId);
     const actorId = await upsertActor(ctx, args.scopeId, args.actor);
@@ -164,7 +230,7 @@ export const setPostStatus = mutation({
         });
       }
     }
-    return await toFeedbackPostDto(ctx, {
+    return await toAdminFeedbackPostDto(ctx, {
       ...updated,
       currentStatusSince:
         post.statusKey === args.status ? post.currentStatusSince : now,
@@ -179,7 +245,7 @@ export const setDiscussionLock = mutation({
     postId: v.string(),
     locked: v.boolean(),
   },
-  returns: feedbackPostDtoValidator,
+  returns: adminFeedbackPostDtoValidator,
   handler: async (ctx, args) => {
     const post = await loadAdminPost(ctx, args.scopeId, args.postId);
     const actorId = await upsertActor(ctx, args.scopeId, args.actor);
@@ -192,7 +258,7 @@ export const setDiscussionLock = mutation({
         type: args.locked ? "lock" : "unlock",
       });
     }
-    return await toFeedbackPostDto(ctx, {
+    return await toAdminFeedbackPostDto(ctx, {
       ...post,
       discussionLocked: args.locked,
     });
@@ -206,12 +272,12 @@ export const setArchived = mutation({
     postId: v.string(),
     archived: v.boolean(),
   },
-  returns: feedbackPostDtoValidator,
+  returns: adminFeedbackPostDtoValidator,
   handler: async (ctx, args) => {
     const post = await loadAdminPost(ctx, args.scopeId, args.postId);
     const actorId = await upsertActor(ctx, args.scopeId, args.actor);
     const isArchived = post.archivedAt !== undefined;
-    if (isArchived === args.archived) return await toFeedbackPostDto(ctx, post);
+    if (isArchived === args.archived) return await toAdminFeedbackPostDto(ctx, post);
     const archivedAt = args.archived ? Date.now() : undefined;
     const updated = await patchPostRanking(ctx, post, {
       visibilityKey: args.archived
@@ -225,6 +291,6 @@ export const setArchived = mutation({
       actorId,
       type: args.archived ? "archive" : "restore",
     });
-    return await toFeedbackPostDto(ctx, { ...updated, archivedAt });
+    return await toAdminFeedbackPostDto(ctx, { ...updated, archivedAt });
   },
 });

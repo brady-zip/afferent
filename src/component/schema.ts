@@ -558,6 +558,10 @@ export default defineSchema({
     toBoardId: v.optional(v.id("boards")),
     tagId: v.optional(v.id("tags")),
     changelogEntryId: v.optional(v.id("changelogEntries")),
+    fromBoardSnapshot: v.optional(v.object({ name: v.string(), slug: v.string() })),
+    toBoardSnapshot: v.optional(v.object({ name: v.string(), slug: v.string() })),
+    tagSnapshot: v.optional(v.object({ name: v.string() })),
+    changelogSnapshot: v.optional(v.object({ title: v.string(), slug: v.string() })),
   }).index("by_scope_post_occurred", ["scopeId", "postId", "occurredAt"]),
   changelogEntries: defineTable({
     scopeId: v.string(),
@@ -571,6 +575,7 @@ export default defineSchema({
     publishedAt: v.optional(v.number()),
     orderId: v.string(),
   })
+    .index("by_scope_created", ["scopeId", "createdAt", "orderId"])
     .index("by_scope_slug", ["scopeId", "slug"])
     .index("by_scope_published_first", [
       "scopeId",
