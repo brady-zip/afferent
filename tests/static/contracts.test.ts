@@ -76,6 +76,16 @@ describe("public contract privacy", () => {
     }
   });
 
+  test("freezes closed admin read and readable activity projections", () => {
+    const source = fs.readFileSync("src/client/contracts.ts", "utf8");
+    expect(source).toContain("export type AdminFeedbackPostDto");
+    expect(source).toContain("export type AdminFeedbackPageDto");
+    expect(source).toContain("export type AdminChangelogPageDto");
+    expect(source).toContain("contractVersion: 2;\n  id: ActivityId");
+    expect(source).toContain("fromBoard?:");
+    expect(source).toContain("changelog?:");
+  });
+
   test("normalizes the session-validated Better Auth component user document", () => {
     expect(
       normalizeBetterAuthUser({

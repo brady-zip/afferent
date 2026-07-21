@@ -1,11 +1,19 @@
 import { describe, expect, test, vi } from "vitest";
 
 import {
+  mapAdminChangelogState,
   mapChangelogEntryState,
   mapChangelogFeedState,
 } from "../../src/react/index.js";
 
 describe("headless changelog hooks", () => {
+  test("maps the authorized all-state editorial feed verbatim", () => {
+    const entry = { contractVersion: 2, id: "entry-1", links: [] } as never;
+    const state = mapAdminChangelogState({ results: [entry], status: "Exhausted", loadMore: vi.fn() });
+    expect(state).toMatchObject({ status: "ready", items: [entry] });
+    expect(state.items[0]).toBe(entry);
+  });
+
   test("maps ordered pagination and public slug lookup states", () => {
     const results = [{ id: "entry-1" }];
     const loadMore = vi.fn();

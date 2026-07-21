@@ -34,6 +34,41 @@ function scopedClient(scopeId: string) {
 }
 
 describe("manual changelog lifecycle", () => {
+  test("lists every editorial state with canonical ordered link summaries", async () => {
+    const backend = withRateLimiter(convexTest(schema, modules));
+    const ctx = context(backend) as never;
+    const client = scopedClient("scope:admin-changelog");
+    const installation = await client.admin.configureInstallation(ctx, {
+      readPolicy: "public",
+      boards: [{ slug: "feedback", name: "Feedback" }],
+    });
+    const post = await client.participation.createPost(ctx, {
+      boardId: installation.boards[0].id,
+      title: "Canonical title",
+      body: "Body",
+    });
+    const draft = await client.admin.createChangelogDraft(ctx, {
+      title: "Draft",
+      body: "Draft body",
+    });
+    const linked = await client.admin.setChangelogLinks(ctx, {
+      entryId: draft.id,
+      postIds: [post.id],
+    });
+    expect(linked).toMatchObject({
+      contractVersion: 2,
+      links: [{ id: post.id, title: "Canonical title" }],
+    });
+    expect(linked).not.toHaveProperty("postIds");
+    const page = await client.admin.listAdminChangelog(ctx, {
+      paginationOpts: { numItems: 1, cursor: null },
+    });
+    expect(page).toMatchObject({
+      contractVersion: 1,
+      page: [{ id: draft.id, state: "draft" }],
+    });
+  });
+
   test("re-authorizes every editorial mutation in the trusted host wrapper", async () => {
     const backend = withRateLimiter(convexTest(schema, modules));
     const ctx = context(backend) as never;

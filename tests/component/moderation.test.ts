@@ -23,6 +23,54 @@ function context(backend: ReturnType<typeof convexTest>) {
 }
 
 describe("admin moderation and append-only activity", () => {
+  test("returns the closed admin projection from reads and moderation writes", async () => {
+    const backend = withRateLimiter(convexTest(schema, modules));
+    const client = createAfferentClient(api as unknown as ComponentApi, {
+      resolveActor: async () => ({ externalKey: "fixture:admin" }),
+      authorizeAdmin: async () => true,
+      isAuthenticated: async () => true,
+    }) as any;
+    const ctx = context(backend) as never;
+    const installation = await client.admin.configureInstallation(ctx, {
+      readPolicy: "public",
+      boards: [{ slug: "feedback", name: "Feedback" }],
+    });
+    const post = await client.participation.createPost(ctx, {
+      boardId: installation.boards[0].id,
+      title: "Admin truth",
+      body: "Visible now",
+    });
+
+    const locked = await client.admin.setDiscussionLock(ctx, {
+      postId: post.id,
+      locked: true,
+    });
+    expect(locked).toMatchObject({
+      contractVersion: 1,
+      moderation: {
+        contractVersion: 1,
+        discussionLocked: true,
+        archived: false,
+        disposition: "active",
+      },
+    });
+    await client.admin.setArchived(ctx, { postId: post.id, archived: true });
+    const direct = await client.admin.getAdminPost(ctx, { postId: post.id });
+    expect(direct).toMatchObject({
+      feedback: { id: post.id },
+      moderation: { archived: true, discussionLocked: true },
+    });
+    const hidden = await client.admin.listAdminFeedback(ctx, {
+      visibility: "hidden",
+      paginationOpts: { numItems: 1, cursor: null },
+    });
+    expect(hidden).toMatchObject({
+      contractVersion: 1,
+      page: [{ feedback: { id: post.id } }],
+      isDone: true,
+    });
+  });
+
   test("keeps status, archive, and discussion lock orthogonal", async () => {
     const backend = withRateLimiter(convexTest(schema, modules));
     const client = createAfferentClient(api as unknown as ComponentApi, {

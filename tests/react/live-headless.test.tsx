@@ -9,6 +9,9 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   AfferentProvider,
   useAdminCapability,
+  useAdminChangelog,
+  useAdminFeedback,
+  useAdminPost,
   useChangelogEntry,
   useChangelogFeed,
   useComments,
@@ -27,6 +30,12 @@ import {
   type AfferentAuthState,
 } from "../../src/react/index.js";
 import { createPaginatedWatchStore } from "../../src/react/query.js";
+
+test("exports live admin read hooks for generation-fenced consumers", () => {
+  expect(useAdminFeedback).toBeTypeOf("function");
+  expect(useAdminPost).toBeTypeOf("function");
+  expect(useAdminChangelog).toBeTypeOf("function");
+});
 
 interface QueryRecord {
   name: string;

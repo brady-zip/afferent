@@ -133,6 +133,24 @@ test("the Phase 2 gate covers the public React artifact and complete consumer", 
   assert.match(packedApp, /NotificationTarget/);
   assert.match(packedApp, /target\.kind/);
   assert.match(packedApp, /target\.label/);
+  for (const adminRead of [
+    "useAdminFeedback",
+    "useAdminPost",
+    "useAdminChangelog",
+  ]) {
+    assert.match(packedApp, new RegExp(adminRead));
+  }
+  const wrapper = await readFile(
+    join(repositoryRoot, "fixtures/packed-vite-convex/convex/afferent.ts"),
+    "utf8",
+  );
+  for (const adminRead of [
+    "listAdminFeedback",
+    "getAdminPost",
+    "listAdminChangelog",
+  ]) {
+    assert.match(wrapper, new RegExp(adminRead));
+  }
 });
 
 test(
