@@ -316,6 +316,10 @@ describe("notifications", () => {
       mounted.container.querySelector("[data-notification-unread='true']")
         ?.textContent,
     ).toContain("Unread");
+    expect(mounted.container.textContent).toContain(
+      "Morgan · January 1, 1970 at 12:00 AM UTC",
+    );
+    expect(mounted.container.textContent).not.toContain("Morgan · 200");
 
     click(
       mounted.container.querySelector<HTMLButtonElement>(
@@ -359,6 +363,7 @@ describe("notifications", () => {
     const trigger = mounted.container.querySelector<HTMLButtonElement>(
       "button[aria-haspopup='dialog']",
     )!;
+    expect(trigger.className).toContain("afferent-button--secondary");
     trigger.focus();
     click(trigger);
     await act(async () => {});

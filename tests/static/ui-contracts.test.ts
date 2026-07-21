@@ -48,4 +48,40 @@ describe("copied UI distribution contract", () => {
     }
     expect(fs.existsSync("components.json")).toBe(false);
   });
+
+  test("closes the audited admin hierarchy, token, formatting, and controlled-phone contracts", () => {
+    const adminFiles = [
+      "admin-screen.tsx",
+      "feedback-queue.tsx",
+      "moderation-form.tsx",
+      "tag-manager.tsx",
+      "merge-dialog.tsx",
+      "changelog-editor.tsx",
+      "confirmation-dialog.tsx",
+    ];
+    const admin = adminFiles
+      .map((file) => fs.readFileSync(`${root}/admin/${file}`, "utf8"))
+      .join("\n");
+    expect(fs.existsSync(`${root}/core/format.ts`)).toBe(true);
+    expect(admin).toMatch(/mobileView/);
+    expect(admin).toMatch(/onMobileViewChange/);
+    expect(admin).toMatch(/aria-current/);
+    expect(admin).toMatch(/pending/);
+    expect(admin).toMatch(/errors/);
+    expect(admin).toMatch(/reset/);
+    expect(admin).not.toMatch(
+      /window\.|matchMedia|useMediaQuery|react-router|next\/navigation|sonner|from ["'][^"']*convex|userId|isAdmin|scopeId/,
+    );
+
+    const styles = fs.readFileSync(`${root}/afferent.css`, "utf8");
+    expect(styles).toMatch(/\[data-selected="true"\]/);
+    expect(styles).toMatch(/\[data-tone="error"\]/);
+    expect(styles).toMatch(/\[data-tone="destructive"\]/);
+    expect(styles).toMatch(/\[data-mobile-view="queue"\]/);
+    expect(styles).toMatch(/\[data-mobile-view="detail"\]/);
+    expect(styles).not.toMatch(/(?:font-size|gap|padding):[^;\n]*12px/);
+    for (const size of styles.matchAll(/font-size:\s*(\d+)px/g)) {
+      expect([14, 16, 20, 28]).toContain(Number(size[1]));
+    }
+  });
 });
