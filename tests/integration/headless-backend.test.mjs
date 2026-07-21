@@ -70,6 +70,25 @@ test("the real watch harness distinguishes setup failures from assertions", asyn
   assert.doesNotMatch(querySource, /\b(?:revision|watermark)\b/i);
 });
 
+test("the real watch harness drives installed merged comment and activity publications", async () => {
+  const source = await readFile(
+    join(repositoryRoot, "scripts/test-headless-backend.mjs"),
+    "utf8",
+  );
+  assert.match(source, /app\.use\(afferent, \{ name: "afferent" \}\)/);
+  assert.match(source, /components\.afferent\.public\.comments\.listComments/);
+  assert.match(
+    source,
+    /components\.afferent\.admin\.activity\.listPostActivity/,
+  );
+  assert.match(source, /recordEveryProductPublication/);
+  assert.match(source, /product merge length 1 to 2/);
+  assert.match(source, /product merge cleaning repoint/);
+  assert.match(source, /product merge length 2 to 1/);
+  assert.match(source, /product comment identity A to B to A/);
+  assert.match(source, /product activity identity A to B to A/);
+});
+
 test("the packed fixture wires the optional comment feed through trusted host boundaries", async () => {
   const [wrapperSource, applicationSource] = await Promise.all([
     readFile(
