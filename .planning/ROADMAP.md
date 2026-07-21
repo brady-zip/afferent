@@ -234,12 +234,12 @@ Plans:
 4. Supplied public and admin interfaces pass documented WCAG 2.2 AA-oriented keyboard, focus, announcement, contrast, 320 CSS-pixel reflow, 200% zoom, and phone/tablet/desktop layout checks with versioned evidence.
 
 **UI hint**: yes
-**Plans:** 3/6 plans executed
+**Plans:** 4/6 plans executed
 
 - [x] 03-01-PLAN.md
 - [x] 03-02-PLAN.md
 - [x] 03-03-PLAN.md
-- [ ] 03-04-PLAN.md
+- [x] 03-04-PLAN.md
 - [ ] 03-05-PLAN.md
 - [ ] 03-06-PLAN.md
 
@@ -257,7 +257,7 @@ Plans:
 
 **Wave 4** _(blocked on Wave 3 completion)_
 
-- [ ] `03-04-PLAN.md` — Deliver keyboard-complete admin triage, moderation, merge, tag, status, and changelog publishing workflows.
+- [x] `03-04-PLAN.md` — Deliver keyboard-complete admin triage, moderation, merge, tag, status, and changelog publishing workflows.
 
 **Wave 5** _(blocked on Wave 4 completion)_
 
@@ -302,7 +302,7 @@ Phases execute sequentially: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 3 -> 4
 | 2.1 Server-Derived Viewer Capability Contract | 1/1            | Complete    | 2026-07-21 |
 | 2.2 Notification Navigation Target Contract   | 2/2            | Complete    | 2026-07-21 |
 | 2.3 Admin Read and Projection Completion      | 2/2            | Complete    | 2026-07-21 |
-| 3. Source-Owned Product Interface             | 3/6            | In progress | -          |
+| 3. Source-Owned Product Interface             | 4/6            | In progress | -          |
 | 4. Hosted Production Release                  | 0/TBD          | Not started | -          |
 
 ---
