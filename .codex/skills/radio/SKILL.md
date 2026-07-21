@@ -1,6 +1,6 @@
 ---
 name: radio
-description: Send questions or messages to a live peer agent through h5i radio and wait for, read, or reply to inbox messages. Use whenever the user asks to ask, message, consult, converse with, or wait for Claude or Codex via h5i, or invokes $radio. Use only the live peer channel; never substitute a headless Claude or Codex subprocess.
+description: Send questions or messages to a live peer agent through h5i radio and wait for, read, or reply to inbox messages. Use whenever the user asks to ask, message, consult, converse with, or wait for Claude or Codex via h5i, invokes $radio, or expects visible h5i watcher activity. Use only the live peer channel; never substitute a headless Claude or Codex subprocess.
 ---
 
 # h5i Radio
@@ -8,6 +8,11 @@ description: Send questions or messages to a live peer agent through h5i radio a
 Use `refs/h5i/msg` to communicate with an already-running interactive peer session. Always
 identify both the current agent and the recipient explicitly because shared clones may contain
 multiple stored identities.
+
+Before trusting the channel, establish its transport topology. If both peers use the same clone or
+worktree ref store, a fresh directed ASK plus ACK is the live proof. If they use separate clones,
+require a configured shared remote and an operational `h5i share push`/`h5i share pull` path before
+waiting; do not treat an unbridged local `refs/h5i/msg` as a working peer channel.
 
 ## Send a request
 
@@ -20,6 +25,18 @@ h5i msg ask --from <self> <peer> "<question>"
 
 Do not replace `<question>` with a placeholder ellipsis. Send the user's actual request.
 
+Treat radio invocation as a send gate, not permission to inspect history and continue silently.
+When the user invokes radio, asks to consult a peer, or says a watcher is armed:
+
+1. Read only enough context to formulate the request.
+2. Make the fresh directed ASK the next live-channel action, before continuing repository work.
+3. Confirm that the command returned a new ASK ID and report that ID.
+4. Do not continue past a requested peer-decision gate until the matching reply is received.
+
+If the user expects visible radio activity but no substantive question is ready yet, send a fresh
+directed link-check ASK requesting an ACK. Do not defer all channel activity until after unrelated
+investigation or verification work.
+
 ## Verify live transmission
 
 A request counts as sent only when the `h5i msg ask` command succeeds and returns a new ASK ID.
@@ -30,6 +47,13 @@ When the user is already running `h5i msg watch --all`, execute the fresh direct
 watcher has started and report the new ASK ID. If they report no event, do not reuse history as
 evidence: send one new directed ASK to the requested peer and correlate all subsequent waiting and
 replies with that new ID.
+
+For a watcher miss, distinguish these failure modes explicitly:
+
+- No new ASK ID: no live request was sent; send one now.
+- Old ASK only: watchers do not replay history; re-send it as a new directed ASK.
+- Separate clone/ref store: push/pull the h5i refs or move both peers to the shared ref store, then
+  send another fresh ASK.
 
 ## Resume a pending request
 
@@ -61,9 +85,16 @@ When a message arrives, consume the inbox deliberately:
 h5i msg inbox --as <self> --plain
 ```
 
-Correlate a reply with the ASK ID. If the wake-up is an unrelated broadcast or message,
-handle or acknowledge it as appropriate and continue waiting for the requested reply. Do not
-run `inbox` merely to poll: it advances the read cursor and replaces the numbered reply view.
+Correlate a reply with the ASK ID and positively acknowledge receipt. If the wake-up is an
+unrelated broadcast or message, handle or acknowledge it as appropriate and continue waiting for
+the requested reply. Do not run `inbox` merely to poll: it advances the read cursor and replaces
+the numbered reply view.
+
+A single wait can miss an event between re-arms. For a required peer reply, repeat finite waits,
+check every wait command's exit status, drain the inbox deliberately after each successful wake-up,
+and stop only on the matching reply, user interruption, or the workflow's declared timeout budget.
+Re-arm after a clean timeout; treat a nonzero wait exit as a channel fault, and surface repeated
+wait errors instead of reporting them as quiet. Never infer delivery from silence.
 
 If the wait times out, report that the live peer has not replied and leave the request pending.
 Do not spawn a replacement process.
@@ -82,7 +113,8 @@ Use a directed message if no numbered reply view is available:
 h5i msg send --from <self> <peer> "<response>"
 ```
 
-Pass `--from <self>` to `ack`, `done`, and `decline` as well.
+Pass `--from <self>` to `ack`, `done`, and `decline` as well. Require bidirectional positive ACKs:
+each peer acknowledges receipt so neither side infers consumption from a moved cursor or silence.
 
 ## Operate safely
 
