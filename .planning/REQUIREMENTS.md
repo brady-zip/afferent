@@ -117,6 +117,8 @@ Requirements for the first production-ready public release. Roadmap creation wil
 - [ ] **QUAL-06**: Adversarial two-user tests verify that sandbox reads, writes, search, counts, seeds, resets, and cleanup never cross visitor scopes.
 - [ ] **QUAL-07**: Supplied public and admin interfaces meet documented WCAG 2.2 AA-oriented keyboard, focus, announcement, contrast, zoom, and reflow checks.
 - [ ] **QUAL-08**: Supplied public and admin interfaces support phone, tablet, and desktop layouts.
+
+  Plan 03-02 supplies component-level public feedback focus, announcement, stable DOM-order, and responsive CSS evidence. Both requirements remain pending until Plan 03-06 completes the real-browser public/admin accessibility, zoom, and reflow matrix.
 - [ ] **QUAL-09**: Documentation covers installation, component mounting, all three auth integrations, access policy, headless React usage, shadcn installation, customization, testing, deployment, and upgrades.
 - [x] **QUAL-10**: The repository and published package include the Apache-2.0 license.
 - [ ] **QUAL-11**: A validated npm release publishes explicit package exports, declarations, provenance, and synchronized package, registry, documentation, and demo versions.
