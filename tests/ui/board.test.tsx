@@ -116,6 +116,11 @@ describe("public feedback board", () => {
     expect(comments[1].getAttribute("data-parent-comment-id")).toBe(
       "comment:root",
     );
+    const results = mounted.container.querySelector(".afferent-board__results")!;
+    const detail = mounted.container.querySelector(".afferent-post-detail")!;
+    expect(
+      results.compareDocumentPosition(detail) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
 
     click(
       [...mounted.container.querySelectorAll("button")].find(
@@ -302,5 +307,14 @@ describe("public feedback board", () => {
     );
     expect(source).not.toMatch(/userId|actorId|isAdmin|scopeId|toast\s*\(/);
     expect(source).not.toContain("client.read.listComments");
+
+    const styles = fs.readFileSync("ui/afferent/afferent.css", "utf8");
+    expect(styles).toMatch(/@media \(min-width: 640px\)/);
+    expect(styles).toMatch(/@media \(min-width: 768px\)/);
+    expect(styles).toMatch(/@media \(min-width: 1024px\)/);
+    expect(styles).toMatch(
+      /grid-template-columns: minmax\(320px, 2fr\) minmax\(320px, 3fr\)/,
+    );
+    expect(styles).toMatch(/@media \(prefers-reduced-motion: reduce\)/);
   });
 });
