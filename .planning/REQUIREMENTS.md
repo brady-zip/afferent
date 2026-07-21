@@ -76,7 +76,7 @@ Requirements for the first production-ready public release. Roadmap creation wil
 - [x] **NOTF-05**: A subscribed user receives an in-app notification when a linked changelog entry is published.
 - [x] **NOTF-06**: A host application can consume typed delivery events for supported notification events without adopting a built-in email or push vendor.
 - [x] **NOTF-07**: A user can mark individual in-app notifications as read.
-- [ ] **NOTF-08**: In-app notification DTOs expose a closed versioned post/comment or public-changelog navigation target with a human-readable accessible label, without polymorphic internal identifiers or client-side resolution.
+- [x] **NOTF-08**: In-app notification DTOs expose a closed versioned post/comment or public-changelog navigation target with a human-readable accessible label, without polymorphic internal identifiers or client-side resolution.
 
 ### Component and Auth Integration
 
@@ -121,6 +121,7 @@ Requirements for the first production-ready public release. Roadmap creation wil
 - [ ] **QUAL-08**: Supplied public and admin interfaces support phone, tablet, and desktop layouts.
 
   Plan 03-02 supplies component-level public feedback focus, announcement, stable DOM-order, and responsive CSS evidence. Both requirements remain pending until Plan 03-06 completes the real-browser public/admin accessibility, zoom, and reflow matrix.
+
 - [ ] **QUAL-09**: Documentation covers installation, component mounting, all three auth integrations, access policy, headless React usage, shadcn installation, customization, testing, deployment, and upgrades.
 - [x] **QUAL-10**: The repository and published package include the Apache-2.0 license.
 - [ ] **QUAL-11**: A validated npm release publishes explicit package exports, declarations, provenance, and synchronized package, registry, documentation, and demo versions.
@@ -231,7 +232,7 @@ Every v1 requirement maps to exactly one roadmap phase.
 | NOTF-05     | Phase 2 | Complete |
 | NOTF-06     | Phase 2 | Complete |
 | NOTF-07     | Phase 2 | Complete |
-| NOTF-08     | Phase 2.2 | Pending |
+| NOTF-08     | Phase 2.2 | Complete |
 | COMP-01     | Phase 4 | Pending  |
 | COMP-02     | Phase 1 | Complete |
 | COMP-03     | Phase 1 | Complete |

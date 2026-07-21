@@ -4,17 +4,17 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 02.2
 current_phase_name: Notification Navigation Target Contract
-status: ready_to_execute
-stopped_at: Phase 02.2 Plan 02.2-01 ready; Phase 02.3 Plan 02.3-01 planned and blocked on 02.2
-last_updated: "2026-07-21T19:09:25.000Z"
+status: verifying
+stopped_at: Completed 02.2-01-PLAN.md
+last_updated: "2026-07-21T19:26:38.820Z"
 last_activity: 2026-07-21
-last_activity_desc: Planned both urgent Phase 3 contract prerequisites; Phase 02.2 remains next
+last_activity_desc: Completed Phase 02.2 notification navigation target contract; ready for verification
 progress:
   total_phases: 7
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 34
-  completed_plans: 28
-  percent: 82
+  completed_plans: 29
+  percent: 85
 ---
 
 # Project State
@@ -30,18 +30,18 @@ See: .planning/PROJECT.md (updated 2026-07-17)
 
 Phase: 02.2 — Notification Navigation Target Contract
 Plan: 02.2-01 of 1
-Status: Ready to execute
-Last activity: 2026-07-21 — Planned both urgent Phase 3 contract prerequisites; Phase 02.2 remains next
+Status: Phase complete — ready for verification
+Last activity: 2026-07-21 — Completed Phase 02.2 notification navigation target contract; ready for verification
 
-Progress: [████████░░] 82%
+Progress: [█████████░] 85%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 28
-- Average duration: 44 min
-- Total execution time: 1220 min
+- Total plans completed: 29
+- Average duration: 43 min
+- Total execution time: 1237 min
 
 **By Phase:**
 
@@ -91,6 +91,7 @@ _Updated after each plan completion_
 | Phase 02 P17 | 30min    | 3 tasks | 5 files  |
 | Phase 02.1 P01 | 68min  | 3 tasks | 31 files |
 | Phase 03 P02 | 15 min | 3 tasks | 32 files |
+| Phase 02.2 P01 | 17min | 3 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -183,6 +184,9 @@ Recent decisions affecting current work:
 - [Phase 02.1]: Resolve optional viewer identity only in trusted host reads and look up existing component actors by scope and external key without writes or scans. — Browser state never becomes authority and authenticated viewers without actor rows remain anonymous-safe.
 - [Phase 02.1]: Project vote membership through the exact scope/post/actor index and share edit/withdraw predicates with mutation enforcement. — UI action availability cannot drift from backend policy.
 - [Phase 02.1]: Apply desired-state vote optimism to both feed and detail caches from server viewerHasVoted truth. — Repeated Vote or Remove vote requests stay idempotent across current-generation caches.
+- [Phase 02.2]: Expose a required closed post-or-changelog target in NotificationDto and NotificationPageDto version 2 while preserving DeliveryEventDto version 1 with entityId. — In-app navigation and host delivery are separate trust and version boundaries.
+- [Phase 02.2]: Resolve notification targets only from trusted same-scope event, post, comment, and changelog records; omit invalid optional comment anchors. — Consumers receive presentation-ready truth without browser authority, ID leakage, or per-row reads.
+- [Phase 02.2]: Always canonicalize notification event postId during merge and rewrite entityId only for status_changed. — Comment and changelog identity remains available for exact navigation in both merge modes.
 
 ### Pending Todos
 
@@ -208,6 +212,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-21T18:55:42.616Z
-Stopped at: Phase 03 Plan 03-03 blocked on notification navigation target; planning urgent prerequisite 02.2
+Last session: 2026-07-21T19:26:26.786Z
+Stopped at: Completed 02.2-01-PLAN.md
 Resume file: None
