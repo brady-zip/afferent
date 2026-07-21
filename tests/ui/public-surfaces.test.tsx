@@ -6,8 +6,6 @@ import { getFunctionName, makeFunctionReference } from "convex/server";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 import { AfferentChangelogScreen } from "../../ui/afferent/changelog/changelog-screen.js";
-import { AfferentNotificationsList } from "../../ui/afferent/notifications/notifications-list.js";
-import { AfferentNotificationsPopover } from "../../ui/afferent/notifications/notifications-popover.js";
 import { AfferentRoadmapScreen } from "../../ui/afferent/roadmap/roadmap-screen.js";
 import {
   ControlledUiClient,
@@ -29,6 +27,11 @@ const surfaceReferences = {
   notifications: query("notifications"),
   unread: query("unread"),
 };
+
+const notificationListModule =
+  "../../ui/afferent/notifications/notifications-list.js";
+const notificationPopoverModule =
+  "../../ui/afferent/notifications/notifications-popover.js";
 
 const surfaceBindings = {
   ...uiBindings,
@@ -267,9 +270,11 @@ describe("public changelog", () => {
     );
     await act(async () => {});
     expect(
-      [...mounted.container.querySelectorAll("[data-changelog-entry]")].map(
-        (entry) => entry.querySelector("h2, h3")?.textContent,
-      ),
+      [
+        ...mounted.container.querySelectorAll(
+          ".afferent-changelog__list [data-changelog-entry]",
+        ),
+      ].map((entry) => entry.querySelector("h2, h3")?.textContent),
     ).toEqual(["Latest release", "Earlier release"]);
     expect(
       mounted.container.querySelector("a[href='/changelog/latest-release']")
@@ -286,6 +291,9 @@ describe("public changelog", () => {
 
 describe("notifications", () => {
   test("works independently with exact targets, unread state, paging, and mark-read hook actions", async () => {
+    const { AfferentNotificationsList } = await import(
+      /* @vite-ignore */ notificationListModule
+    );
     const client = new PublicSurfaceClient();
     const mounted = renderUi(<AfferentNotificationsList />, {
       client,
@@ -331,6 +339,9 @@ describe("notifications", () => {
   });
 
   test("popover closes on Escape and restores its trigger without trapping page focus", async () => {
+    const { AfferentNotificationsPopover } = await import(
+      /* @vite-ignore */ notificationPopoverModule
+    );
     const mounted = renderUi(<AfferentNotificationsPopover />, {
       client: new PublicSurfaceClient(),
       bindings: surfaceBindings,
@@ -361,6 +372,9 @@ describe("notifications", () => {
 
 describe("closed public surface states", () => {
   test("renders unsupported, unauthenticated, loading, empty, and error copy without stealing focus", async () => {
+    const { AfferentNotificationsList } = await import(
+      /* @vite-ignore */ notificationListModule
+    );
     const unsupported = renderUi(<AfferentRoadmapScreen boards={[board]} />, {
       bindings: uiBindings,
     });
@@ -383,8 +397,7 @@ describe("closed public surface states", () => {
     );
     unauthenticated.unmount();
 
-    const loadingClient = new PublicSurfaceClient();
-    loadingClient.values.set("ui:changelogFeed", undefined);
+    const loadingClient = new ControlledUiClient();
     const loading = renderUi(<AfferentChangelogScreen />, {
       client: loadingClient,
       bindings: surfaceBindings,
