@@ -34,6 +34,89 @@ function scopedClient(scopeId: string) {
 }
 
 describe("manual changelog lifecycle", () => {
+  test("pages an exact mixed-state newest-first queue without scope leakage", async () => {
+    const backend = withRateLimiter(convexTest(schema, modules));
+    const ctx = context(backend) as never;
+    const client = scopedClient("scope:changelog-queue-alpha");
+    const seeded = await backend.run(async (runCtx) => {
+      const alpha: Array<{ id: string; createdAt: number; orderId: string; state: string }> = [];
+      for (let index = 0; index < 51; index += 1) {
+        const createdAt = 20_000 + Math.floor(index / 2);
+        const orderId = `alpha-${String(index).padStart(3, "0")}`;
+        const state = (["draft", "published", "unpublished"] as const)[index % 3];
+        const id = await runCtx.db.insert("changelogEntries", {
+          scopeId: "scope:changelog-queue-alpha",
+          title: `Alpha changelog ${index}`,
+          body: `Alpha changelog body ${index}`,
+          slug: `alpha-changelog-${index}`,
+          publishedKey: state === "published" ? "published" : "hidden",
+          createdAt,
+          updatedAt: createdAt,
+          ...(state === "draft" ? {} : { firstPublishedAt: createdAt + 1 }),
+          ...(state === "published" ? { publishedAt: createdAt + 2 } : {}),
+          orderId,
+        });
+        alpha.push({ id: String(id), createdAt, orderId, state });
+      }
+      const beta: Array<{ id: string; slug: string; title: string }> = [];
+      for (let index = 0; index < 4; index += 1) {
+        const title = `Foreign beta changelog ${index}`;
+        const slug = `foreign-beta-changelog-${index}`;
+        const id = await runCtx.db.insert("changelogEntries", {
+          scopeId: "scope:changelog-queue-beta",
+          title,
+          body: `Foreign beta body ${index}`,
+          slug,
+          publishedKey: "published",
+          createdAt: 99_000 + index,
+          updatedAt: 99_000 + index,
+          firstPublishedAt: 99_001 + index,
+          publishedAt: 99_002 + index,
+          orderId: `beta-${index}`,
+        });
+        beta.push({ id: String(id), slug, title });
+      }
+      return { alpha, beta };
+    });
+    const expected = [...seeded.alpha].sort(
+      (left, right) =>
+        right.createdAt - left.createdAt ||
+        right.orderId.localeCompare(left.orderId),
+    );
+    const first = await client.admin.listAdminChangelog(ctx, {
+      paginationOpts: { numItems: 50, cursor: null },
+    });
+    expect(first.page.map((entry: any) => entry.id)).toEqual(
+      expected.slice(0, 50).map((entry) => entry.id),
+    );
+    expect(first.isDone).toBe(false);
+    expect(first.continueCursor).not.toBe("");
+    const second = await client.admin.listAdminChangelog(ctx, {
+      paginationOpts: { numItems: 50, cursor: first.continueCursor },
+    });
+    expect(second.page.map((entry: any) => entry.id)).toEqual([
+      expected[50].id,
+    ]);
+    expect(second.isDone).toBe(true);
+    const all = [...first.page, ...second.page];
+    expect(all.map((entry: any) => entry.id)).toEqual(
+      expected.map((entry) => entry.id),
+    );
+    expect(all.map((entry: any) => entry.state)).toEqual(
+      expected.map((entry) => entry.state),
+    );
+    expect(new Set(all.map((entry: any) => entry.id)).size).toBe(51);
+    expect(new Set(all.map((entry: any) => entry.state))).toEqual(
+      new Set(["draft", "published", "unpublished"]),
+    );
+    const serialized = JSON.stringify(all);
+    for (const foreign of seeded.beta) {
+      expect(serialized).not.toContain(foreign.id);
+      expect(serialized).not.toContain(foreign.slug);
+      expect(serialized).not.toContain(foreign.title);
+    }
+  });
+
   test("lists every editorial state with canonical ordered link summaries", async () => {
     const backend = withRateLimiter(convexTest(schema, modules));
     const ctx = context(backend) as never;
