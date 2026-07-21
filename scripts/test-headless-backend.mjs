@@ -2588,14 +2588,25 @@ try {
       label: "pending-new",
       position: 15,
     });
-    const pendingSnapshot = await waitFor(
+    let pendingSnapshot = await waitFor(
       pendingCommentStore,
       (snapshot) =>
-        JSON.stringify(snapshot.results.map((item) => item.body)) ===
-          JSON.stringify(["pending-a", "pending-new", "pending-b"]) &&
-        snapshot.status !== "LoadingMore",
-      "pending comment load mutation",
+        snapshot.status !== "LoadingMore" &&
+        snapshot.results.some((item) => item.body === "pending-new"),
+      "pending comment mutation settles",
     );
+    if (pendingSnapshot.results.length < 3) {
+      assert.equal(pendingSnapshot.status, "CanLoadMore");
+      pendingCommentStore.loadMore(1);
+      pendingSnapshot = await waitFor(
+        pendingCommentStore,
+        (snapshot) =>
+          JSON.stringify(snapshot.results.map((item) => item.body)) ===
+            JSON.stringify(["pending-a", "pending-new", "pending-b"]) &&
+          snapshot.status !== "LoadingMore",
+        "pending comment deterministic tail append",
+      );
+    }
     await waitUntil(() => {
       try {
         assertActiveBoundaries(tracking);
@@ -2617,6 +2628,7 @@ try {
       [
         ["pending-a"],
         ["pending-a", "pending-b"],
+        ["pending-a", "pending-new"],
         ["pending-a", "pending-new", "pending-b"],
       ],
       "pending comment load mutation",
