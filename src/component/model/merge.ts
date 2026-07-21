@@ -676,7 +676,9 @@ async function normalizeSourceRelation(
       if (row?.postId === job.sourcePostId) {
         await ctx.db.patch(row._id, {
           postId: job.canonicalPostId,
-          entityId: String(job.canonicalPostId),
+          ...(row.type === "status_changed"
+            ? { entityId: String(job.canonicalPostId) }
+            : {}),
         });
       }
       return;

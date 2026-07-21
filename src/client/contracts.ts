@@ -293,6 +293,21 @@ export type NotificationEventType =
   | "mentioned"
   | "changelog_published";
 
+export type NotificationTarget =
+  | Readonly<{
+      contractVersion: 1;
+      kind: "post";
+      postId: PostId;
+      commentId?: CommentId;
+      label: string;
+    }>
+  | Readonly<{
+      contractVersion: 1;
+      kind: "changelog";
+      slug: string;
+      label: string;
+    }>;
+
 export type PostSubscriptionDto = Readonly<{
   contractVersion: 1;
   postId: PostId;
@@ -301,18 +316,18 @@ export type PostSubscriptionDto = Readonly<{
 }>;
 
 export type NotificationDto = Readonly<{
-  contractVersion: 1;
+  contractVersion: 2;
   id: NotificationId;
   eventId: string;
   type: NotificationEventType;
-  entityId: string;
+  target: NotificationTarget;
   occurredAt: number;
   read: boolean;
   initiator: PostDto["author"];
 }>;
 
 export type NotificationPageDto = Readonly<{
-  contractVersion: 1;
+  contractVersion: 2;
   page: NotificationDto[];
   notifications: NotificationDto[];
   isDone: boolean;

@@ -322,12 +322,30 @@ describe("subscription and notification invariants", () => {
         scopeId: "scope:trim",
         externalKey: "trim:actor",
       });
+      const boardId = await ctx.db.insert("boards", {
+        scopeId: "scope:trim",
+        slug: "feedback",
+        name: "Feedback",
+        sortOrder: 0,
+      });
+      const postId = await ctx.db.insert("posts", {
+        scopeId: "scope:trim",
+        boardId,
+        actorId,
+        title: "Retention target",
+        body: "One valid destination for retained rows",
+        lifecycleState: "active",
+        statusKey: "open",
+        voteCount: 0,
+        commentCount: 0,
+      });
       for (let index = 0; index < 501; index += 1) {
         const eventId = await ctx.db.insert("notificationEvents", {
           scopeId: "scope:trim",
           type: "status_changed",
           initiatorActorId: actorId,
-          entityId: `post:${index}`,
+          postId,
+          entityId: String(postId),
           occurredAt: index,
           guardKey: `event:${index}`,
         });
@@ -336,7 +354,7 @@ describe("subscription and notification invariants", () => {
           actorId,
           eventId,
           type: "status_changed",
-          entityId: `post:${index}`,
+          entityId: String(postId),
           occurredAt: index,
           orderId: `row:${index}`,
           unreadKey: "unread",

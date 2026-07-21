@@ -161,19 +161,35 @@ export const postSubscriptionDtoValidator = v.object({
   explicitOptOut: v.boolean(),
 });
 
+export const notificationTargetValidator = v.union(
+  v.object({
+    contractVersion: v.literal(1),
+    kind: v.literal("post"),
+    postId: v.string(),
+    commentId: v.optional(v.string()),
+    label: v.string(),
+  }),
+  v.object({
+    contractVersion: v.literal(1),
+    kind: v.literal("changelog"),
+    slug: v.string(),
+    label: v.string(),
+  }),
+);
+
 export const notificationDtoValidator = v.object({
-  contractVersion: v.literal(1),
+  contractVersion: v.literal(2),
   id: v.string(),
   eventId: v.string(),
   type: notificationEventTypeValidator,
-  entityId: v.string(),
+  target: notificationTargetValidator,
   occurredAt: v.number(),
   read: v.boolean(),
   initiator: actorDtoValidator,
 });
 
 export const notificationPageDtoValidator = v.object({
-  contractVersion: v.literal(1),
+  contractVersion: v.literal(2),
   page: v.array(notificationDtoValidator),
   notifications: v.array(notificationDtoValidator),
   isDone: v.boolean(),

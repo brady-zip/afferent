@@ -23,6 +23,56 @@ import {
 
 const MAX_NOTIFICATION_PAGE_SIZE = 50;
 
+async function resolveNotificationTarget(
+  ctx: QueryCtx | MutationCtx,
+  event: Doc<"notificationEvents">,
+) {
+  if (event.postId === undefined) {
+    throw new Error("NOTIFICATION_TARGET_POST_INVARIANT");
+  }
+  const post = await ctx.db.get(event.postId);
+  if (!post || post.scopeId !== event.scopeId) {
+    throw new Error("NOTIFICATION_TARGET_POST_INVARIANT");
+  }
+
+  if (event.type === "changelog_published") {
+    const entryId = ctx.db.normalizeId("changelogEntries", event.entityId);
+    const entry = entryId ? await ctx.db.get(entryId) : null;
+    if (!entry || entry.scopeId !== event.scopeId) {
+      throw new Error("NOTIFICATION_TARGET_CHANGELOG_INVARIANT");
+    }
+    return {
+      contractVersion: 1 as const,
+      kind: "changelog" as const,
+      slug: entry.slug,
+      label: `View changelog: ${entry.title}`,
+    };
+  }
+
+  if (event.type === "status_changed") {
+    return {
+      contractVersion: 1 as const,
+      kind: "post" as const,
+      postId: String(post._id),
+      label: `View feedback: ${post.title}`,
+    };
+  }
+
+  const commentId = ctx.db.normalizeId("comments", event.entityId);
+  const comment = commentId ? await ctx.db.get(commentId) : null;
+  const validComment =
+    comment?.scopeId === event.scopeId && comment.postId === event.postId
+      ? String(comment._id)
+      : undefined;
+  return {
+    contractVersion: 1 as const,
+    kind: "post" as const,
+    postId: String(post._id),
+    ...(validComment === undefined ? {} : { commentId: validComment }),
+    label: `View comment on feedback: ${post.title}`,
+  };
+}
+
 async function findActor(
   ctx: Pick<QueryCtx | MutationCtx, "db">,
   scopeId: string,
@@ -52,12 +102,13 @@ async function toNotificationDto(
   ) {
     throw new Error("NOTIFICATION_INBOX_SCOPE_INVARIANT");
   }
+  const target = await resolveNotificationTarget(ctx, event);
   return {
-    contractVersion: 1 as const,
+    contractVersion: 2 as const,
     id: String(row._id),
     eventId: String(row.eventId),
     type: row.type,
-    entityId: row.entityId,
+    target,
     occurredAt: row.occurredAt,
     read: row.unreadKey === "read",
     initiator: toActorDto(initiator),
@@ -84,7 +135,7 @@ export const listNotifications = query({
     const actor = await findActor(ctx, args.scopeId, args.actor.externalKey);
     if (!actor) {
       return {
-        contractVersion: 1 as const,
+        contractVersion: 2 as const,
         page: [],
         notifications: [],
         isDone: true,
@@ -102,7 +153,7 @@ export const listNotifications = query({
       result.page.map((row) => toNotificationDto(ctx, row)),
     );
     return {
-      contractVersion: 1 as const,
+      contractVersion: 2 as const,
       ...result,
       page,
       notifications: page,

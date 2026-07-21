@@ -9,7 +9,7 @@ describe("notification target trust boundary", () => {
     const hooks = fs.readFileSync("src/react/hooks/notifications.ts", "utf8");
 
     expect(inbox).toContain("resolveNotificationTarget");
-    expect(inbox).toContain("target:");
+    expect(inbox).toMatch(/\btarget[:,]/);
     expect(inbox).not.toMatch(/\.query\([^)]*\)\.collect\(/s);
     expect(bindings).not.toMatch(/target\??:/);
     expect(hooks).not.toMatch(/runQuery|watchQuery|target\s*=|entityId/);

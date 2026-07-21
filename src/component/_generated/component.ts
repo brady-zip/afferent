@@ -1319,16 +1319,29 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         },
         {
           continueCursor: string;
-          contractVersion: 1;
+          contractVersion: 2;
           isDone: boolean;
           notifications: Array<{
-            contractVersion: 1;
-            entityId: string;
+            contractVersion: 2;
             eventId: string;
             id: string;
             initiator: { avatarUrl?: string; displayName?: string; id: string };
             occurredAt: number;
             read: boolean;
+            target:
+              | {
+                  commentId?: string;
+                  contractVersion: 1;
+                  kind: "post";
+                  label: string;
+                  postId: string;
+                }
+              | {
+                  contractVersion: 1;
+                  kind: "changelog";
+                  label: string;
+                  slug: string;
+                };
             type:
               | "status_changed"
               | "admin_replied"
@@ -1337,13 +1350,26 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               | "changelog_published";
           }>;
           page: Array<{
-            contractVersion: 1;
-            entityId: string;
+            contractVersion: 2;
             eventId: string;
             id: string;
             initiator: { avatarUrl?: string; displayName?: string; id: string };
             occurredAt: number;
             read: boolean;
+            target:
+              | {
+                  commentId?: string;
+                  contractVersion: 1;
+                  kind: "post";
+                  label: string;
+                  postId: string;
+                }
+              | {
+                  contractVersion: 1;
+                  kind: "changelog";
+                  label: string;
+                  slug: string;
+                };
             type:
               | "status_changed"
               | "admin_replied"
@@ -1647,13 +1673,26 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           scopeId: string;
         },
         {
-          contractVersion: 1;
-          entityId: string;
+          contractVersion: 2;
           eventId: string;
           id: string;
           initiator: { avatarUrl?: string; displayName?: string; id: string };
           occurredAt: number;
           read: boolean;
+          target:
+            | {
+                commentId?: string;
+                contractVersion: 1;
+                kind: "post";
+                label: string;
+                postId: string;
+              }
+            | {
+                contractVersion: 1;
+                kind: "changelog";
+                label: string;
+                slug: string;
+              };
           type:
             | "status_changed"
             | "admin_replied"
@@ -2362,11 +2401,10 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           },
           {
             continueCursor: string;
-            contractVersion: 1;
+            contractVersion: 2;
             isDone: boolean;
             notifications: Array<{
-              contractVersion: 1;
-              entityId: string;
+              contractVersion: 2;
               eventId: string;
               id: string;
               initiator: {
@@ -2376,6 +2414,20 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               };
               occurredAt: number;
               read: boolean;
+              target:
+                | {
+                    commentId?: string;
+                    contractVersion: 1;
+                    kind: "post";
+                    label: string;
+                    postId: string;
+                  }
+                | {
+                    contractVersion: 1;
+                    kind: "changelog";
+                    label: string;
+                    slug: string;
+                  };
               type:
                 | "status_changed"
                 | "admin_replied"
@@ -2384,8 +2436,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 | "changelog_published";
             }>;
             page: Array<{
-              contractVersion: 1;
-              entityId: string;
+              contractVersion: 2;
               eventId: string;
               id: string;
               initiator: {
@@ -2395,6 +2446,20 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               };
               occurredAt: number;
               read: boolean;
+              target:
+                | {
+                    commentId?: string;
+                    contractVersion: 1;
+                    kind: "post";
+                    label: string;
+                    postId: string;
+                  }
+                | {
+                    contractVersion: 1;
+                    kind: "changelog";
+                    label: string;
+                    slug: string;
+                  };
               type:
                 | "status_changed"
                 | "admin_replied"
@@ -2420,13 +2485,26 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             scopeId: string;
           },
           {
-            contractVersion: 1;
-            entityId: string;
+            contractVersion: 2;
             eventId: string;
             id: string;
             initiator: { avatarUrl?: string; displayName?: string; id: string };
             occurredAt: number;
             read: boolean;
+            target:
+              | {
+                  commentId?: string;
+                  contractVersion: 1;
+                  kind: "post";
+                  label: string;
+                  postId: string;
+                }
+              | {
+                  contractVersion: 1;
+                  kind: "changelog";
+                  label: string;
+                  slug: string;
+                };
             type:
               | "status_changed"
               | "admin_replied"
