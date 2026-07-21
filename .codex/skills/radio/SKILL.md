@@ -20,6 +20,17 @@ h5i msg ask --from <self> <peer> "<question>"
 
 Do not replace `<question>` with a placeholder ellipsis. Send the user's actual request.
 
+## Verify live transmission
+
+A request counts as sent only when the `h5i msg ask` command succeeds and returns a new ASK ID.
+Looking at history, finding an older pending ASK, or describing an intent to send does not create
+live channel activity and must never be reported as a send.
+
+When the user is already running `h5i msg watch --all`, execute the fresh directed ASK after their
+watcher has started and report the new ASK ID. If they report no event, do not reuse history as
+evidence: send one new directed ASK to the requested peer and correlate all subsequent waiting and
+replies with that new ID.
+
 ## Resume a pending request
 
 Do not treat an ASK found only in history from an earlier turn or session as a new live
