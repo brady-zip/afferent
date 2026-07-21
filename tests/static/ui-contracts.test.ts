@@ -33,7 +33,7 @@ describe("copied UI distribution contract", () => {
   test("marks every hook consumer as a route-agnostic deterministic client boundary", () => {
     const files = fs
       .readdirSync(root, { recursive: true })
-      .filter((path) => /\.tsx$/.test(String(path)));
+      .filter((path) => String(path).endsWith(".tsx"));
     for (const relative of files) {
       const source = fs.readFileSync(`${root}/${relative}`, "utf8");
       if (
