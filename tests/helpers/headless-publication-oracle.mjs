@@ -178,8 +178,32 @@ export function extractDescriptorChain(records, { name, scopeId, sessionId }) {
       record.args.paginationOpts?.id === sessionId,
   );
   assert.ok(active.length > 0, "expected one scoped active descriptor chain");
+  const ordered = [];
+  let cursor = null;
+  while (ordered.length < active.length) {
+    const matches = active.filter(
+      (record) =>
+        !ordered.includes(record) &&
+        record.args.paginationOpts.cursor === cursor,
+    );
+    assert.equal(
+      matches.length,
+      1,
+      `expected exactly one active descriptor at ${String(cursor)}`,
+    );
+    const record = matches[0];
+    ordered.push(record);
+    const endCursor = record.args.paginationOpts.endCursor;
+    if (endCursor === undefined) break;
+    cursor = endCursor;
+  }
+  assert.equal(
+    ordered.length,
+    active.length,
+    "every scoped active record must belong to the one descriptor chain",
+  );
   return assertExactDescriptorChain(
-    active.map((record) => normalizedBoundary(record.args.paginationOpts)),
+    ordered.map((record) => normalizedBoundary(record.args.paginationOpts)),
   );
 }
 

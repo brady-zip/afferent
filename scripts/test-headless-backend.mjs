@@ -1032,14 +1032,33 @@ function productChains(records) {
   return chains;
 }
 
-function activeProductBoundaries(tracking, { name, scopeId, snapshot }) {
-  const active = tracking.records.filter(
+function scopedActiveProductRecords(tracking, { name, scopeId }) {
+  return tracking.records.filter(
     (record) =>
       record.active > 0 &&
       record.name === name &&
       record.args.scopeId === scopeId &&
       record.args.paginationOpts,
   );
+}
+
+function activeProductBoundaries(tracking, { name, scopeId }) {
+  const active = scopedActiveProductRecords(tracking, { name, scopeId });
+  assert.ok(active.length > 0, "expected active installed product watches");
+  const sessionId = active[0].args.paginationOpts.id;
+  assert.ok(
+    active.every((record) => record.args.paginationOpts.id === sessionId),
+    "one store must use one pagination session",
+  );
+  return extractDescriptorChain(tracking.records, {
+    name,
+    scopeId,
+    sessionId,
+  });
+}
+
+function publishedProductBoundaries(tracking, { name, scopeId, snapshot }) {
+  const active = scopedActiveProductRecords(tracking, { name, scopeId });
   assert.ok(active.length > 0, "expected active installed product watches");
   const sessionId = active[0].args.paginationOpts.id;
   assert.ok(
@@ -1079,6 +1098,7 @@ function recordExactProductPublications({
   generation,
   name,
   scopeId,
+  allowStructuralOperation = false,
 }) {
   const recorder = createPublicationRecorder();
   const stop = store.subscribe(() => {
@@ -1088,7 +1108,9 @@ function recordExactProductPublications({
       generation,
       status: snapshot.status,
       ids: productIds(snapshot),
-      boundaries: activeProductBoundaries(tracking, {
+      boundaries: (allowStructuralOperation
+        ? publishedProductBoundaries
+        : activeProductBoundaries)(tracking, {
         name,
         scopeId,
         snapshot,
@@ -1173,6 +1195,219 @@ async function advanceProductMerge(http, references, job, wanted) {
   throw new Error(`product merge did not reach ${wanted}`);
 }
 
+async function loadMinimumProductDescriptors({
+  store,
+  tracking,
+  name,
+  scopeId,
+  minimumDescriptorCount,
+  label,
+}) {
+  let snapshot = await waitFor(
+    store,
+    (candidate) =>
+      candidate.status === "CanLoadMore" || candidate.status === "Exhausted",
+    `${label} first page`,
+  );
+  let boundaries = activeProductBoundaries(tracking, { name, scopeId });
+  while (boundaries.length < minimumDescriptorCount) {
+    assert.equal(
+      snapshot.status,
+      "CanLoadMore",
+      `${label} must have enough rows for ${minimumDescriptorCount} descriptors`,
+    );
+    const previousLength = snapshot.results.length;
+    store.loadMore(1);
+    snapshot = await waitFor(
+      store,
+      (candidate) =>
+        candidate.status !== "LoadingMore" &&
+        candidate.results.length > previousLength,
+      `${label} descriptor ${boundaries.length + 1}`,
+    );
+    boundaries = activeProductBoundaries(tracking, { name, scopeId });
+  }
+  assert.equal(boundaries.length, minimumDescriptorCount);
+  return { snapshot, boundaries };
+}
+
+async function provePinnedInstalledMergeLifecycle({
+  http,
+  makeStore,
+  readerName,
+  references,
+  tracking,
+}) {
+  const seeded = await http.mutation(references.seed, {
+    scopeId: "product-pinned",
+    relationCount: 51,
+  });
+  const args = {
+    scopeId: "product-pinned",
+    postId: seeded.canonicalPostId,
+  };
+  const minimumDescriptorCount = 3;
+  const readers = new Map();
+  for (const [reader, generation] of [
+    ["comments", 500],
+    ["activity", 501],
+  ]) {
+    const name = readerName(reader);
+    const store = makeStore(reader, args, generation, 1);
+    const keepAlive = store.subscribe(() => {});
+    const settled = await loadMinimumProductDescriptors({
+      store,
+      tracking,
+      name,
+      scopeId: args.scopeId,
+      minimumDescriptorCount,
+      label: `pinned ${reader} before cutover`,
+    });
+    const publications = recordExactProductPublications({
+      store,
+      tracking,
+      reader,
+      generation,
+      name,
+      scopeId: args.scopeId,
+    });
+    readers.set(reader, {
+      reader,
+      generation,
+      name,
+      store,
+      keepAlive,
+      publications,
+      ids: productIds(settled.snapshot),
+      boundaries: settled.boundaries,
+    });
+  }
+
+  const begun = await http.mutation(references.begin, {
+    scopeId: args.scopeId,
+    adminId: seeded.adminId,
+    sourcePostId: seeded.sourcePostId,
+    canonicalPostId: seeded.canonicalPostId,
+  });
+  const job = { scopeId: args.scopeId, jobId: begun.jobId };
+  await advanceProductMerge(http, references, job, "ready");
+  await http.mutation(references.step, job);
+  const restartBoundary = [{ cursor: null, numItems: 1 }];
+  for (const current of readers.values()) {
+    await expectExactProductPublication(
+      current.publications,
+      {
+        status: "LoadingFirstPage",
+        ids: current.ids,
+        boundaries: restartBoundary,
+      },
+      `pinned product merge length 1 to 2 ${current.reader} restart`,
+    );
+    const first = (
+      await productTruth(http, references.truth, args, current.reader)
+    ).slice(0, 1);
+    await expectExactProductPublication(
+      current.publications,
+      { status: "CanLoadMore", ids: first, boundaries: restartBoundary },
+      `pinned product merge length 1 to 2 ${current.reader} settled`,
+    );
+    assertCompleteProductSequence(current.publications);
+    current.publications.stop();
+    const settled = await loadMinimumProductDescriptors({
+      store: current.store,
+      tracking,
+      name: current.name,
+      scopeId: args.scopeId,
+      minimumDescriptorCount,
+      label: `pinned ${current.reader} after cutover`,
+    });
+    current.ids = productIds(settled.snapshot);
+    current.boundaries = settled.boundaries;
+    current.publications = recordExactProductPublications({
+      store: current.store,
+      tracking,
+      reader: current.reader,
+      generation: current.generation,
+      name: current.name,
+      scopeId: args.scopeId,
+    });
+  }
+
+  let state = await http.query(references.state, job);
+  assert.equal(state.state, "cutover_done");
+  await http.mutation(references.step, job);
+  state = await http.query(references.state, job);
+  assert.equal(state.state, "cleaning");
+  const cleanupPublications = { comments: 0, activity: 0 };
+  while (state.state === "cleaning") {
+    const before = {
+      comments: readers.get("comments").ids,
+      activity: readers.get("activity").ids,
+    };
+    await http.mutation(references.step, job);
+    state = await http.query(references.state, job);
+    for (const current of readers.values()) {
+      if (state.state === "done") {
+        await expectExactProductPublication(
+          current.publications,
+          {
+            status: "LoadingFirstPage",
+            ids: before[current.reader],
+            boundaries: restartBoundary,
+          },
+          `pinned product merge length 2 to 1 ${current.reader} restart`,
+        );
+        const first = (
+          await productTruth(http, references.truth, args, current.reader)
+        ).slice(0, 1);
+        await expectExactProductPublication(
+          current.publications,
+          { status: "CanLoadMore", ids: first, boundaries: restartBoundary },
+          `pinned product merge length 2 to 1 ${current.reader} settled`,
+        );
+        current.ids = first;
+        current.boundaries = restartBoundary;
+        continue;
+      }
+      const next = (
+        await productTruth(http, references.truth, args, current.reader)
+      ).slice(0, minimumDescriptorCount);
+      if (JSON.stringify(next) === JSON.stringify(before[current.reader])) {
+        continue;
+      }
+      await expectExactProductPublication(
+        current.publications,
+        {
+          status: "CanLoadMore",
+          ids: next,
+          boundaries: current.boundaries,
+        },
+        `pinned product merge cleaning repoint ${current.reader}`,
+      );
+      current.ids = next;
+      cleanupPublications[current.reader] += 1;
+    }
+  }
+  assert.equal(state.state, "done");
+  assert.ok(cleanupPublications.comments > 0);
+  assert.ok(cleanupPublications.activity > 0);
+  for (const current of readers.values()) {
+    assertCompleteProductSequence(current.publications);
+    current.publications.stop();
+    const settled = await loadMinimumProductDescriptors({
+      store: current.store,
+      tracking,
+      name: current.name,
+      scopeId: args.scopeId,
+      minimumDescriptorCount,
+      label: `pinned ${current.reader} after completion`,
+    });
+    assert.equal(settled.boundaries.length, minimumDescriptorCount);
+    current.keepAlive();
+    current.store.dispose();
+  }
+}
+
 async function proveInstalledProductWatches({
   react,
   http,
@@ -1204,7 +1439,7 @@ async function proveInstalledProductWatches({
     reader,
     args,
     generation,
-    initialNumItems = 50,
+    initialNumItems = 1,
     client = tracking,
   ) =>
     queryModule.createPaginatedWatchStore({
@@ -1217,12 +1452,19 @@ async function proveInstalledProductWatches({
       generation,
       initialNumItems,
     });
+  await provePinnedInstalledMergeLifecycle({
+    http,
+    makeStore,
+    readerName,
+    references,
+    tracking,
+  });
   const lifecycle = new Map();
   for (const [reader, generation] of [
     ["comments", 100],
     ["activity", 101],
   ]) {
-    const store = makeStore(reader, alphaArgs, generation);
+    const store = makeStore(reader, alphaArgs, generation, 50);
     const publications = recordExactProductPublications({
       store,
       tracking,
@@ -1436,6 +1678,7 @@ async function proveInstalledProductWatches({
       generation,
       name: readerName(reader),
       scopeId: alphaArgs.scopeId,
+      allowStructuralOperation: true,
     });
     const first = (await productTruth(
       http,
@@ -1586,21 +1829,67 @@ async function proveInstalledProductWatches({
     oldStore.dispose();
     await http.mutation(references.setMode, { reader, mode: "none" });
 
-    const betaStore = makeStore(reader, betaArgs, generation + 10);
-    const stopBeta = betaStore.subscribe(() => {});
-    await waitFor(
-      betaStore,
-      (snapshot) => snapshot.status === "Exhausted",
-      `product ${reader} identity B`,
+    const betaGeneration = generation + 10;
+    const betaStore = makeStore(reader, betaArgs, betaGeneration, 50);
+    const betaPublications = recordExactProductPublications({
+      store: betaStore,
+      tracking,
+      reader,
+      generation: betaGeneration,
+      name: readerName(reader),
+      scopeId: betaArgs.scopeId,
+    });
+    const betaBoundary = [{ cursor: null, numItems: 50 }];
+    await expectExactProductPublication(
+      betaPublications,
+      { status: "LoadingFirstPage", ids: [], boundaries: betaBoundary },
+      `product ${reader} identity B loading`,
     );
-    stopBeta();
+    const betaIds = await productTruth(
+      http,
+      references.truth,
+      betaArgs,
+      reader,
+    );
+    await expectExactProductPublication(
+      betaPublications,
+      { status: "Exhausted", ids: betaIds, boundaries: betaBoundary },
+      `product ${reader} identity B settled`,
+    );
+    assertCompleteProductSequence(betaPublications);
+    betaPublications.stop();
     betaStore.dispose();
-    const currentStore = makeStore(reader, alphaArgs, generation + 20);
-    const stopCurrent = currentStore.subscribe(() => {});
-    await waitFor(
-      currentStore,
-      (snapshot) => snapshot.status === "Exhausted",
-      `product ${reader} identity A again`,
+    const currentGeneration = generation + 20;
+    const currentStore = makeStore(
+      reader,
+      alphaArgs,
+      currentGeneration,
+      50,
+    );
+    const currentPublications = recordExactProductPublications({
+      store: currentStore,
+      tracking,
+      reader,
+      generation: currentGeneration,
+      name: readerName(reader),
+      scopeId: alphaArgs.scopeId,
+    });
+    const currentBoundary = [{ cursor: null, numItems: 50 }];
+    await expectExactProductPublication(
+      currentPublications,
+      { status: "LoadingFirstPage", ids: [], boundaries: currentBoundary },
+      `product ${reader} identity A again loading`,
+    );
+    const currentIds = await productTruth(
+      http,
+      references.truth,
+      alphaArgs,
+      reader,
+    );
+    await expectExactProductPublication(
+      currentPublications,
+      { status: "Exhausted", ids: currentIds, boundaries: currentBoundary },
+      `product ${reader} identity A again settled`,
     );
     const observe = () => {
       const snapshot = currentStore.getSnapshot();
@@ -1608,20 +1897,25 @@ async function proveInstalledProductWatches({
         ids: productIds(snapshot),
         status: snapshot.status,
         errorCode: snapshot.error?.code,
+        publicationCount: currentPublications.recorder.publications.length,
         boundaries: activeProductBoundaries(tracking, {
           name: readerName(reader),
           scopeId: alphaArgs.scopeId,
-          snapshot,
         }),
       };
     };
+    const beforeResult = observe();
     deferred.releaseNext(observe);
+    assert.deepEqual(observe(), beforeResult);
+    const beforeError = observe();
     deferred.releaseNext(observe);
+    assert.deepEqual(observe(), beforeError);
     assert.deepEqual(deferred.deferredDeliveries, [
       { originGeneration: generation, kind: "result", rejected: true },
       { originGeneration: generation, kind: "error", rejected: true },
     ]);
-    stopCurrent();
+    assertCompleteProductSequence(currentPublications);
+    currentPublications.stop();
     currentStore.dispose();
     assert.ok(
       oldTracking.records.every(

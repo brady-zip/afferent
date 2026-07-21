@@ -329,7 +329,7 @@ test("the real watch harness drives installed merged comment and activity public
   assert.match(source, /cleanupPublications\.comments > 0/);
   assert.match(source, /cleanupPublications\.activity > 0/);
   assert.match(source, /initialNumItems = 1/);
-  assert.match(source, /minimumDescriptorCount:\s*3/);
+  assert.match(source, /minimumDescriptorCount\s*=\s*3/);
   assert.match(source, /betaPublications/);
   assert.match(source, /currentPublications/);
   assert.match(source, /publicationCount/);
