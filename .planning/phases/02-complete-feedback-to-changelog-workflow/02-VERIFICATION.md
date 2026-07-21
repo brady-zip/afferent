@@ -1,155 +1,170 @@
 ---
 phase: 02-complete-feedback-to-changelog-workflow
-verified: 2026-07-17T20:31:32Z
-status: passed
-score: 39/39 must-haves verified
+verified: 2026-07-21T01:34:15Z
+status: gaps_found
+score: 58/59 must-haves verified
 behavior_unverified: 0
 overrides_applied: 0
 re_verification:
-  previous_status: gaps_found
-  previous_score: 38/39
+  previous_status: passed
+  previous_score: 39/39
   gaps_closed:
-    - "Every paginated store publication now derives from one synchronous all-descriptor read of one installed Convex client transition; the known cross-window reorder no longer emits a mixed-revision array."
-  gaps_remaining: []
+    - "Plan 02-15 adds the optional injected public.listComments binding and closed useComments state over the shared paginated watch store."
+    - "Flat versioned CommentDto rows, unsupported behavior, typed error recovery, generation fencing, and packed-consumer wiring are verified."
+  gaps_remaining:
+    - "The real two-post merged comment reader does not implement the cursor-window and endCursor contract exercised by useComments."
   regressions: []
-gaps: []
+gaps:
+  - truth: "Every comment-feed notification is one exact coherent ordered cursor-window prefix from the existing generation-fenced, endCursor-pinned, all-descriptor atomic pagination substrate."
+    status: failed
+    reason: "The shipped readPostIds.length === 2 product branch hand-rolls two-stream pagination, ignores paginationOpts.endCursor, serializes only _creationTime although its total order also uses _id, and applies deep-page cursor bounds with a post-index filter. Plan 02-15's mounted and disposable-real oracle exercises a separate single-post native paginator query, so passing tests do not cover this path. The same defect pattern exists in merged post activity."
+    artifacts:
+      - path: src/component/public/comments.ts
+        issue: "Merged comment pagination at lines 41-75 ignores endCursor, loses the _id tie-break in its cursor, and uses .filter after the post index instead of a cursor-bounded merged indexed stream."
+      - path: src/component/admin/activity.ts
+        issue: "Merged activity pagination at lines 27-59 repeats the endCursor omission, partial sort-key cursor, and filter-based deep-page scan pattern."
+      - path: scripts/test-headless-backend.mjs
+        issue: "The comment oracle at lines 286-305 uses one synthetic postId and native .paginate(args.paginationOpts); it never invokes the component merged-post branch."
+    missing:
+      - "Create dedicated additive Plan 02-16 for merged-reader cursor correctness and boundedness; do not fold this into Phase 3 UI work."
+      - "Implement one stable total-order cursor/session contract for the two indexed comment streams that honors both paginationOpts.cursor and paginationOpts.endCursor, including split/pinned page windows."
+      - "Apply the same contract to merged post activity or extract a shared merged-pagination primitive so the hand-rolled pattern cannot drift."
+      - "Add real product-path tests that merge posts, read multiple pages, exercise equal primary sort keys, pin endCursor windows through reactive insert/delete, and assert bounded indexed deep-page work for comments and activity."
 ---
 
 # Phase 2: Complete Feedback-to-Changelog Workflow Verification Report
 
 **Phase Goal:** As a developer integrating Afferent into my existing Convex + React application, I want to run the complete provider-neutral feedback-to-roadmap-to-changelog workflow -- ranked, searchable, and filterable discovery with admin duplicate merges; authenticated participation; admin moderation with a status-driven public roadmap; manually published changelog entries linked to feedback; and in-app notifications backed by a host-consumable delivery outbox -- through tested component APIs and framework-light headless React hooks with explicit async, auth, and error states, so that my users and admins can complete the entire feedback lifecycle while I retain ownership of identity, authorization, and my own presentation.
 
-**Verified:** 2026-07-17T20:31:32Z
-**Status:** passed
-**Re-verification:** Yes -- after additive gap-closure Plan 02-14
-**Score:** 39/39 (previously 38/39)
+**Verified:** 2026-07-21T01:34:15Z
+**Status:** gaps_found
+**Re-verification:** Yes -- after additive Plan 02-15
+**Score:** 58/59 must-haves verified
+
+## User Flow Coverage
+
+| Step                     | Expected                                                                                                                                         | Evidence                                                                                                                                | Status                    |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| Integrate                | The host injects generated function references and the React consumer reads comments through `useComments`                                       | `src/react/bindings.ts`, `src/react/hooks/feedback.ts`, and the packed fixture are wired; artifact and key-link queries pass 4/4        | VERIFIED                  |
+| Browse and participate   | Public, participation, roadmap, changelog, notification, and admin workflows retain their previously verified closed states and trust boundaries | Prior Phase 2 component, React, static, backend, auth, scope, and package evidence remains present; targeted current comment tests pass | VERIFIED                  |
+| Follow a merged post     | A visitor can page the complete canonical-plus-source comment history through stable reactive cursor windows                                     | `src/component/public/comments.ts:41-75` bypasses the required `endCursor` contract on the two-post branch                              | FAILED                    |
+| Administer a merged post | An admin can page the complete append-only activity history without offset-scaling scans or page drift                                           | `src/component/admin/activity.ts:27-59` repeats the same hand-rolled pagination pattern                                                 | FAILED (same grouped gap) |
+| Outcome                  | Users and admins can complete the full lifecycle while the host retains identity, authorization, and presentation ownership                      | Ownership boundaries pass, but the merged multi-page read path prevents complete lifecycle coverage                                     | BLOCKED                   |
 
 ## Final Verdict
 
-Phase 2 achieves its goal. Plan 02-14 closes the sole remaining D-47 mixed-revision publication gap without adding a public revision, watermark, transition token, schema field, binding argument, or DTO member.
+Phase 2 is not yet complete. Plan 02-15 successfully adds the missing headless comment-read seam, but its acceptance oracle proves the shared React pagination store against a synthetic single-stream query rather than the real merged-post component query. The shipped two-stream branch violates the exact cursor-window contract that `useComments` relies on.
 
-The paginated store now treats every page-watch callback only as a dirty signal. It synchronously stages `localQueryResult()` from the complete captured committed or candidate descriptor chain, rechecks store epoch and descriptor/operation identities, validates boundaries, and only then commits caches, swaps structures, and publishes one exact snapshot. Loading and incomplete replacement sets retain the last coherent array; errors expose only the maximal coherent prefix with a typed error; recovery rereads and restores the full exact window.
+This is one grouped deterministic blocker, not a human-verification item. It requires a dedicated additive **Plan 02-16** in Phase 2. Phase 3 UI work must not compensate with a client-side cache, tree, raw Convex read, or other boundary shortcut.
 
 ## Goal Achievement
 
-| Roadmap success criterion | Status | Evidence |
-|---|---|---|
-| Ranked/filterable/searchable discovery and lossless duplicate merge | VERIFIED | Component and real backend matrices remain green; exact reactive page windows now pass settled and temporal oracles. |
-| Authorized moderation, status, tags, activity, safe content, and rate limits | VERIFIED | Prior component/model/real-backend evidence retained; no touched contract or regression. |
-| Status-derived roadmap and manually published changelog | VERIFIED | Domain/component/React suites pass. |
-| Fixed in-app notifications and typed host delivery outbox | VERIFIED | Notification/outbox/fanout evidence remains green; generation isolation passes. |
-| Complete workflow through injected headless refs with explicit async/auth/error states and tests | VERIFIED | Non-throwing reads, generation fences, cursor-window pagination, every-publication oracle, and clean packed consumer all pass. |
+### Roadmap Success Criteria
 
-## Plan 02-14 Truths
+| Roadmap success criterion                                                                                   | Status                             | Evidence                                                                                                                                                                                 |
+| ----------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Ranked/filterable/searchable discovery and lossless duplicate merge                                         | VERIFIED BASELINE                  | Prior relation-preservation, redirect, cutover, discovery, and merge matrices remain intact; the new blocker is the paginated presentation of merged comments, not stored relation loss. |
+| Authorized moderation, status, tags, activity, safe content, and rate limits                                | VERIFIED BASELINE WITH GROUPED GAP | All prior mutations and safety behavior remain verified; merged activity pagination shares the one grouped reader defect.                                                                |
+| Status-derived roadmap and manually published changelog                                                     | VERIFIED                           | Prior domain, component, and React evidence remains present and untouched.                                                                                                               |
+| Fixed in-app notifications and typed host delivery outbox                                                   | VERIFIED                           | Prior notification, outbox, fan-out, lease, and generation-isolation evidence remains present and untouched.                                                                             |
+| Complete workflow through injected headless refs with explicit async/auth/error/pagination states and tests | FAILED                             | The injected comment seam exists, but real merged multi-page cursor-window behavior is neither implemented nor exercised.                                                                |
 
-| # | Truth | Status | Independent evidence |
-|---|---|---|---|
-| 1 | Every notification is the exact prior or current canonical loaded window | VERIFIED | Lifetime real recorders reject every third array; three independent disposable runs pass insertion, deletion, both-direction moves, split, collapse, load, faults, and recovery. |
-| 2 | A page callback is a dirty signal and rereads the entire descriptor set | VERIFIED | `dirty` routes to `rereadCommitted`/`rereadOperation`; `stageChain` synchronously reads every watch before cache mutation or publication. |
-| 3 | Loading/inconsistent sets retain last coherent results; coherent sets publish exact concatenation; errors publish maximal same-transition prefix | VERIFIED | Source gates plus mounted and real first/middle/tail fault/recovery matrices pass. |
-| 4 | Structural and generation fences remain atomic without public transition data | VERIFIED | Epoch, page-array, operation, replacement-array, disposal, and generation checks pass; public-source audit finds no revision/watermark. |
-| 5 | Mounted and real tests observe every publication across the required matrix | VERIFIED | Controlled listener-order permutations and real lifetime `recordEveryPublication` assertions pass in addition to settled canonical/boundary checks. |
+### Must-Have Accounting
 
-## Three-Level Artifact Verification
+The previous 55 roadmap and Plan 02-01 through 02-14 truths received quick regression checks: their artifacts remain present, the current diff does not touch their product surfaces, and no new regression was found. Plan 02-15 contributes four detailed truths: three verify and one fails. The broad roadmap/headless impact above is the same failed concern and is scored once after deduplication.
 
-| Artifact | L1 Exists | L2 Substantive | L3 Wired / behavioral | Status |
-|---|---:|---:|---|---|
-| `src/react/query.ts` | Yes | All-chain staging, last-coherent gate, typed prefix errors, atomic structural commit, fences | Used by every public domain paginator; temporal and settled tests pass | VERIFIED |
-| `tests/react/live-headless.test.tsx` | Yes | Transaction-style multi-record updates, both listener orders, structural/error/generation matrix | Known `[a,b,back,f]` mixed tick is explicitly rejected | VERIFIED |
-| `scripts/test-headless-backend.mjs` | Yes | Direct client-atomicity probe, lifetime publication recorders, exact prior/current and fault assertions | Executes against disposable Convex 1.42.2 and passes repeatedly | VERIFIED |
-| `tests/integration/headless-backend.test.mjs` | Yes | Requires atomicity probe, every-publication recorder, exact/fault checks; forbids weak proxies and public watermark | Included in Phase 2 gate and passes | VERIFIED |
-| Packed React artifact | Yes | Provider/bindings/hooks remain unchanged externally | Clean tarball install/codegen/test/typecheck/build passes | VERIFIED |
+| Scope                                  | Verified |  Total | Result                                   |
+| -------------------------------------- | -------: | -----: | ---------------------------------------- |
+| Roadmap plus Plans 02-01 through 02-14 |       55 |     55 | No regression found                      |
+| Plan 02-15                             |        3 |      4 | One grouped merged-reader pagination gap |
+| **Total**                              |   **58** | **59** | **GAPS_FOUND**                           |
 
-## Convex Client Atomicity Proof
+### Plan 02-15 Truths
 
-The installed Convex 1.42.2 source establishes the required ordering:
+| #   | Truth                                                                                                                                                        | Status   | Independent evidence                                                                                                                                            |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | A React consumer can read a post's comments through one optional public binding and a closed `useComments` state without direct Convex/server-client access  | VERIFIED | `CommentFeedQueryReference`, optional `public.listComments`, and `useComments -> usePaginatedWatchQuery` wiring pass artifact/key-link checks.                  |
+| 2   | Comment reads expose bounded creation-ordered flat `CommentDto` rows with `parentCommentId`, without raw documents, recursive trees, or N+1 UI queries       | VERIFIED | DTO validators/mappers and hook boundary are flat and closed; the component enforces `numItems` 1..50. This does not certify the failed multi-page cursor seam. |
+| 3   | Every comment-feed notification is an exact coherent ordered cursor-window prefix from the generation-fenced, `endCursor`-pinned atomic pagination substrate | FAILED   | The real merged branch ignores `endCursor`; see Product-Path Trace and Gap below.                                                                               |
+| 4   | Missing binding is explicitly unsupported; configured failures retain a coherent prefix and recover without render throws                                    | VERIFIED | Hook state mapping and the shared store's failure/recovery path remain wired and tested.                                                                        |
 
-1. `notifyOnQueryResultChanges` builds the complete remote query-result map.
-2. `ingestQueryResultsFromServer` replaces the local query-result map and reapplies optimistic updates.
-3. Only after installation does `handleTransition` dispatch changed query tokens.
-4. `ConvexReactClient.transition` invokes listeners synchronously for those tokens.
+## Product-Path Trace
 
-The disposable executable probe watches three differently sized page queries changed by one mutation. Inside every individual listener it synchronously rereads all three siblings. Every read reports the same mutation revision. This proves that all-descriptor reread uses one installed client transition rather than a server watermark approximation.
+| Layer                    | Product path                                                                                      | Status   | Evidence                                                                          |
+| ------------------------ | ------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------- |
+| React hook               | `useComments` delegates to `usePaginatedWatchQuery`                                               | WIRED    | `src/react/hooks/feedback.ts:277-287`; key-link query passes                      |
+| Trusted host             | Packed wrapper validates/strips `sessionGeneration` and calls `client.read.listComments`          | WIRED    | Packed fixture/source audit and key-link query pass                               |
+| Client                   | `client.read.listComments` invokes `component.public.comments.listComments` with `paginationOpts` | WIRED    | `src/client/internal.ts:248-257`                                                  |
+| Component, ordinary post | Native paginator consumes complete `paginationOpts`                                               | VERIFIED | `src/component/public/comments.ts:77-83`                                          |
+| Component, merged post   | Two post-index streams are manually filtered, merged, and cursor-serialized                       | FAILED   | `src/component/public/comments.ts:41-75` does not read `paginationOpts.endCursor` |
 
-## Publication and Structural Proof
+### Why the Merged Branch Fails
 
-| Case | Expected temporal contract | Result |
-|---|---|---|
-| Front/middle/back insert | Every publication equals prior or current exact ordered window | PASS |
-| Front/middle delete | Every publication equals prior or current exact ordered window | PASS |
-| Cross-window move in both directions | No shortened or duplicate mixed window in either listener order | PASS |
-| Pending and rapid `loadMore` | Last coherent array retained until pinned-tail replacement is complete; one append | PASS |
-| Opportunistic split | Parent remains publishable; exact children replace it atomically | PASS |
-| Required split | Incomplete parent hidden; exact children publish atomically | PASS |
-| Required split without cursor | Typed closed error with empty prefix, then in-place recovery | PASS |
-| Empty middle-window collapse | Exact prior/current arrays only; adjacent merge swaps atomically | PASS |
-| First/middle/tail fault | Exact maximal prefix plus typed `TRANSIENT` error | PASS |
-| Fault recovery | Exact prefix retained until exact full window returns | PASS |
-| Generation replacement during append | New generation is cold; old reads/callbacks disposed and ignored | PASS |
-| Unsubscribe/dispose | Every attached watch becomes inactive and is disposed exactly once | PASS |
+1. **Pinned/split page windows are ignored.** Convex defines `endCursor` as the explicit page end used by reactive clients to prevent gaps between pages and to split pages. The branch reads only `cursor`; a rerun can grow past the pinned boundary, so the shared store cannot enforce its descriptor contract.
+2. **The cursor is not the total order.** Rows sort by `(_creationTime, _id)`, but `continueCursor` stores only `_creationTime`. A page ending within equal-time rows resumes with `_creationTime > cursor`, which can skip the remaining tied rows. `postActivity` similarly sorts by `(occurredAt, _id)` but serializes only `occurredAt`.
+3. **Deep pages are not cursor-bounded at the index.** Each branch selects the post index prefix and then applies `.filter(...)`. Advancing the cursor therefore scans prior matching rows before filtering, making work scale with offset rather than page size.
 
-## Behavioral Evidence
+## Test Coverage Analysis
 
-| Gate | Result |
-|---|---|
-| Plan 02-14 mounted temporal file | PASS: 17/17 |
-| All React suites | PASS: 11 files, 43 tests |
-| Headless integration audit | PASS: 2/2 |
-| Disposable real Convex every-publication oracle | PASS three consecutive independent runs |
-| Static contracts/exports | PASS: 3 files, 21 tests |
-| Build | PASS |
-| Typecheck | PASS |
-| Lint | PASS |
-| Clean packed consumer | PASS: 3/3 |
+| Evidence                                                   | What it proves                                                                                             | What it does not prove                                                         |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `tests/component/participation.test.ts` named comment test | Flat root/reply DTOs and a single first-page read                                                          | Merge, second page, `endCursor`, ties, reactive changes, or bounded deep pages |
+| `tests/component/anonymization.test.ts` named comment test | Anonymized author projection on one read                                                                   | Merged multi-page behavior                                                     |
+| `tests/react/live-headless.test.tsx`                       | Mounted `useComments` state and shared-store publication behavior against a controlled query client        | Real component `readPostIds.length === 2` behavior                             |
+| `scripts/test-headless-backend.mjs:286-305`                | Real Convex watch behavior for a synthetic single-post query using native `.paginate(args.paginationOpts)` | The product's manually merged two-post query                                   |
+| `tests/integration/headless-backend.test.mjs`              | Source wiring and packed fixture use the injected comment binding                                          | Multi-page product output correctness                                          |
 
-No settled-only result was used to close the gap. Each real scenario records every store listener publication from a pre-transition mark through settlement, allows only explicit exact arrays, and separately retains the settled canonical query, descriptor-boundary, native split-threshold, and exact-once disposal assertions.
+Targeted current spot-check:
 
-## No Public Watermark or Contract Change
+| Command                                                                                                                                                                                                                                | Result                                    | Status                            |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | --------------------------------- |
+| `npx vitest run tests/component/participation.test.ts tests/component/anonymization.test.ts -t "adds flat root comments and one-level replies with exact totals\|removes identity while retaining content, relationships, and totals"` | 2 files passed, 2 tests passed, 3 skipped | PASS, but no merged-path coverage |
 
-- `src/react/query.ts` contains no `revision` or `watermark` field.
-- `src/react/bindings.ts`, client contracts, component validators/schema, and packed fixture host wrappers gained no transition argument or result member.
-- The only revision used is private to the disposable test harness to prove client-store atomicity and canonical truth.
-- Existing `sessionGeneration` remains the local identity cache discriminator from Plan 02-12; it is not a server revision and conveys no authorization.
+## Artifact and Key-Link Verification
 
-## Prior Gap and Regression Check
+| Check                          | Result                                     |
+| ------------------------------ | ------------------------------------------ |
+| Plan 02-15 artifact query      | 4/4 artifacts present and substantive      |
+| Plan 02-15 key-link query      | 4/4 links wired                            |
+| Plan structure                 | Valid; 3 tasks, no errors or warnings      |
+| Product merged-reader behavior | Failed despite artifact and wiring success |
 
-- Plan 02-12 non-throwing direct and paginated query errors remain typed and recoverable.
-- Identity-token and generation fencing remains synchronous across query/page/mutation/retry/optimistic/admin/inbox state.
-- Plan 02-13 end-cursor adjacency, one unbounded tail, exact settled growth/shrink/reorder, split, collapse, coherent-prefix error, and watch disposal remain green.
-- The real harness contains no `new Set(`, `results.length > 0`, ID-deduplication, nonempty, or fixed-count proxy for exactness.
-- Packed declarations/runtime and supported exports remain compatible.
+This is the expected L4 failure mode: the hook and host wiring are real, but the upstream product data source does not satisfy the pagination contract.
 
 ## Requirements Coverage
 
-| Requirement(s) | Status | Evidence |
-|---|---|---|
-| DISC-01..08 | SATISFIED | Exact reactive discovery windows, bounded search, suggestions, and lossless merge are verified. |
-| ADMN-01..10 | SATISFIED | Authorized moderation/tag/status/activity behavior retains prior passing evidence. |
-| RMAP-01..03 | SATISFIED | Status-derived scoped projections and paginated hooks pass. |
-| CHLG-01..06 | SATISFIED | Explicit editorial lifecycle and linked public feed pass. |
-| NOTF-01..07 | SATISFIED | Inbox/subscription/unread and typed fenced delivery pass. |
-| UI-01..03 | SATISFIED | Every workflow is exposed through injected refs with executable explicit async/auth/error/pagination states. |
-| QUAL-01 | SATISFIED | Mounted, real temporal, settled canonical, integration audit, static, packed, and prior invariant/security suites pass. |
+| Requirement                    | Status             | Evidence                                                                                                         |
+| ------------------------------ | ------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| DISC-07                        | BLOCKED            | Stored comments remain preserved across merge, but the public merged reader can omit or drift rows across pages. |
+| ADMN-10                        | BLOCKED            | Activity entries exist, but the merged activity reader repeats the incomplete cursor/endCursor pattern.          |
+| UI-03                          | BLOCKED            | The headless API exposes pagination state, but the underlying merged page contract is not correct.               |
+| QUAL-01                        | BLOCKED            | No automated test invokes the real merged comment/activity multi-page product path.                              |
+| All other Phase 2 requirements | SATISFIED BASELINE | No regression found in the previously verified implementation surfaces.                                          |
 
-All 38 Phase 2 requirement IDs are satisfied and mapped. No orphaned requirement or deferred acceptance item remains.
+## Anti-Patterns Found
 
-## Anti-Patterns and Human Verification
+| File                                | Line(s) | Pattern                                                                                    | Severity               | Impact                                                                                |
+| ----------------------------------- | ------: | ------------------------------------------------------------------------------------------ | ---------------------- | ------------------------------------------------------------------------------------- |
+| `src/component/public/comments.ts`  |   41-75 | Hand-rolled merged pagination ignores `endCursor` and serializes a partial total-order key | BLOCKER                | Reactive page holes/overlaps or tied-row loss; shared store guarantees do not compose |
+| `src/component/public/comments.ts`  |   48-54 | Cursor applied with `.filter` after `by_scope_post` equality                               | BLOCKER                | Deep pages scan earlier post rows; bounded indexed query criterion is not met         |
+| `src/component/admin/activity.ts`   |   27-59 | Same hand-rolled cursor/endCursor/filter pattern                                           | BLOCKER (same concern) | Merged activity can drift, skip ties, and scale with offset                           |
+| `scripts/test-headless-backend.mjs` | 286-305 | Test oracle substitutes a synthetic native paginator query for the product branch          | BLOCKER COVERAGE GAP   | Green oracle cannot falsify the shipped merged reader                                 |
 
-No blocker or warning remains in the Plan 02-14 surface. No public revision token, weak exactness proxy, placeholder, swallowed error, generic CRUD exposure, provider-record leakage, or authorization-boundary change was found.
+No debt-marker blocker, provider-record leak, browser authority input, raw-document exposure, or recursive comment tree was found in the Plan 02-15 surface.
 
-Human verification is not required. The remaining risk area is deterministic and covered by mounted and disposable-real-backend automation.
+## Human Verification
+
+None. The failure is deterministic and should be closed with product-path automated tests.
 
 ## Deferred-Item Check
 
-No Phase 2 item is improperly deferred. Phase 3 may consume the verified headless contract for copy-owned UI without repairing backend or pagination behavior.
+No later phase clearly owns this concern. Phase 3 consumes the headless contract and Phase 4 hosts production artifacts; neither may repair a Phase 2 backend pagination invariant. The gap remains in Phase 2.
 
-## Summary
+## Gap Summary
 
-The final mixed-revision defect is closed. Convex client transitions are atomically visible to sibling watch reads; Afferent now stages the complete descriptor set before every publication; both callback orders and every real notification remain exact across data, structural, fault, recovery, and generation transitions. Prior security, non-throwing error, backend, and packed-consumer guarantees remain green.
-
-Phase 2 is verified complete at **39/39**.
+Create additive **Plan 02-16** to replace or unify the two-stream merged comment and activity readers with cursor-complete, `endCursor`-aware, index-bounded pagination. Acceptance must execute the real component paths after a merge across multiple pages, including equal primary sort keys, pinned/split windows, reactive insertion/deletion, and a bounded deep-page read assertion. Existing completed plans remain preserved.
 
 ---
 
-_Re-verified: 2026-07-17T20:31:32Z_
+_Re-verified: 2026-07-21T01:34:15Z_
 _Verifier: generic-agent workaround for gsd-verifier_
