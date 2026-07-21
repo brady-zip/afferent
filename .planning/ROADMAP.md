@@ -158,9 +158,15 @@ Afferent reaches its first public release through four coarse vertical slices. T
 
 ### Phase 02.1: Server-Derived Viewer Capability Contract (INSERTED)
 
-**Goal:** [Urgent work - to be planned]
-**Requirements**: TBD
+**Goal:** Copied UI can render exact vote and author-action state from server-derived, provider-neutral viewer truth without accepting browser identity or authority facts.
+**Requirements**: UI-08
 **Depends on:** Phase 2
+**Success Criteria** (what must be TRUE):
+
+1. Trusted host query wrappers derive an optional provider-neutral viewer actor on every post-bearing read, while browser arguments expose no actor or capability input.
+2. Versioned post DTOs expose indexed vote membership and server-computed author edit/withdraw capabilities with anonymous-safe false values and exact mutation-policy parity.
+3. Headless feed/detail hooks surface and optimistically maintain the fields without UI-local authority state, and packed/static/adversarial tests reject spoofing, scans, drift, and stale capability behavior.
+
 **Plans:** 0 plans
 
 Plans:
