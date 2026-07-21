@@ -130,8 +130,7 @@ describe("duplicate merge lifecycle", () => {
     const expected = await backend.run(async (runCtx) => {
       const canonicalId = runCtx.db.normalizeId("posts", canonical.id)!;
       const sourceId = runCtx.db.normalizeId("posts", source.id)!;
-      const comments = (
-        await Promise.all(
+      const commentPages = await Promise.all(
           [canonicalId, sourceId].map((postId) =>
             runCtx.db
               .query("comments")
@@ -140,8 +139,8 @@ describe("duplicate merge lifecycle", () => {
               )
               .collect(),
           ),
-        )
-      )
+        );
+      const comments = commentPages
         .flat()
         .sort(
           (left, right) =>
@@ -149,8 +148,7 @@ describe("duplicate merge lifecycle", () => {
             String(left._id).localeCompare(String(right._id)),
         )
         .map((row) => String(row._id));
-      const activity = (
-        await Promise.all(
+      const activityPages = await Promise.all(
           [canonicalId, sourceId].map((postId) =>
             runCtx.db
               .query("postActivity")
@@ -159,8 +157,8 @@ describe("duplicate merge lifecycle", () => {
               )
               .collect(),
           ),
-        )
-      )
+        );
+      const activity = activityPages
         .flat()
         .sort(
           (left, right) =>
