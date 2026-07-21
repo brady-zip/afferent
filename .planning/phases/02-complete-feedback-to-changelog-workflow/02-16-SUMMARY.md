@@ -32,11 +32,14 @@ key-files:
     - tests/static/schema-scope.test.ts
     - tests/integration/headless-backend.test.mjs
     - scripts/test-merge-backend.mjs
+    - scripts/test-headless-backend.mjs
+    - src/react/query.ts
 
 key-decisions:
   - "Use the same mergedStream helper for one and two post IDs so cursor shape and reactive window semantics cannot diverge by reader cardinality."
   - "Bind opaque cursor positions to reader, order, and hashed stream-set identity; any mismatch resets cursor and endCursor together instead of attempting partial reuse."
   - "Keep comments ordered by _creationTime,_id and activity ordered by occurredAt,_creationTime,_id so cleanup repoints never change cursor position."
+  - "Treat a bounded page whose returned continueCursor differs from its requested endCursor as a reader-set reset and atomically restart the complete client descriptor chain."
 
 patterns-established:
   - "Repoint-invariant pagination: merge membership stays outside the helper position while the envelope detects reader-set transitions."
@@ -161,6 +164,17 @@ status: complete
 - The first aggregate Phase 2 run hit a transient local Convex startup timeout in the pre-existing search harness after several disposable backend runs reused port 3210. No contract assertion failed; after the prior process released the port, a clean `npm run test:phase2` rerun passed end-to-end.
 - h5i's pending commit context acquired invalid trailing bytes while large captured outputs were being recorded. The corrupt internal file was preserved as `.git/.h5i/pending_context.json.corrupt-20260720T2152Z`, a fresh sync restored storage health, and `h5i capture commit` then recorded Task 3 normally.
 
+## Bounded Verifier Retry
+
+Independent verification found two unmet Plan 02-16 acceptance cases, so the plan stayed in verification and received a bounded retry rather than a follow-up plan.
+
+- `901ca35` added red coverage for valid outer cursor envelopes carrying malformed inner helper positions across comments/activity, one/two streams, and both cursor roles.
+- `7a3a1b8` made inner-position decoding total; malformed helper JSON now resets to the fresh coherent window instead of reaching `convex-helpers` and throwing.
+- `d0b084c` added a red integration-source contract requiring the headless harness to install Afferent and watch both real product readers through merge lifecycle and identity transitions.
+- `d54a146` installed the copied component in the disposable headless app and added every-publication exact-prefix oracles for comments and activity across load-more, insert/reply/delete, incomplete-tail mutation, first/middle/tail faults and recovery, cleanup repoints, 1-to-2 and 2-to-1 stream transitions, A-to-B-to-A replacement, and exact-once disposal.
+- The real oracle exposed a client defect at 1-to-2 cutover: every stale pinned descriptor independently reset to the new first page and their results were concatenated. The watch store now detects a returned boundary that differs from the pinned `endCursor`, retains the last coherent snapshot, and restarts the whole descriptor chain before publishing.
+- The focused React 51/51 and integration 5/5 suites, two direct real-headless runs, typecheck, lint, and the complete `npm run test:phase2` gate pass. The canonical verifier report remains unchanged for independent re-verification.
+
 ## TDD Gate Compliance
 
 - RED: `87780dd` committed failing model, real component, static, and disposable-harness source expectations before production changes.
@@ -173,7 +187,7 @@ None.
 
 ## Next Phase Readiness
 
-- Phase 2 Plan 02-16 is executed and ready for independent phase verification.
+- Phase 2 Plan 02-16's bounded retry is executed and ready for independent phase re-verification.
 - Phase 3 Plan 03-02 may resume only after the verifier confirms the grouped merged comments/activity gap is closed.
 - The unrelated TypeScript 7 package experiment and Codex hook/debug changes remain byte-for-byte at their original tracked-diff baseline.
 
@@ -183,8 +197,8 @@ None.
 
 ## Self-Check: PASSED
 
-- Commits `87780dd`, `1828326`, and `ecf1cad` exist and every declared source, test, harness, and summary artifact exists.
-- Focused model/component/static tests, React 51/51, integration 4/4, real merge and headless backends, static 24/24, typecheck, lint, build, packed artifact 3/3, and the clean aggregate `npm run test:phase2` pass.
+- Commits `87780dd`, `1828326`, `ecf1cad`, `901ca35`, `7a3a1b8`, `d0b084c`, and `d54a146` exist and every declared source, test, harness, and summary artifact exists.
+- Focused model/component/static tests, React 51/51, integration 5/5, repeated real merge and headless backends, static 24/24, typecheck, lint, build, packed artifact 3/3, and the clean aggregate `npm run test:phase2` pass.
 - Plan structure validates with three complete tasks and no warnings; the unrelated tracked-diff SHA-256 remains `09b5f7179dc749a197ec6a59c5ba188313b8c84536e0c35b6487ae7fcb058381`.
 - No schema, index, writer, DTO, public authority input, React cache, package dependency, or production merge mutation changed.
 
