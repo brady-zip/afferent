@@ -158,8 +158,8 @@ function page(contractVersion: 1 | 2, items: readonly unknown[]) {
     items,
     entries: items,
     notifications: items,
-    isDone: false,
-    continueCursor: "next",
+    isDone: items.length === 0,
+    continueCursor: items.length === 0 ? "done" : "next",
   };
 }
 
@@ -178,7 +178,9 @@ class PublicSurfaceClient extends ControlledUiClient {
         entry: changelogEntries[0],
       });
     } else if (name === "ui:notifications") {
-      this.values.set(name, page(2, notifications));
+      const pagination = args.paginationOpts as
+        { cursor?: string | null } | undefined;
+      this.values.set(name, page(2, pagination?.cursor ? [] : notifications));
     } else if (name === "ui:unread") {
       this.values.set(name, { contractVersion: 1, count: 1 });
     }
@@ -302,8 +304,9 @@ describe("notifications", () => {
     await act(async () => {});
     expect(mounted.container.textContent).toContain("1 unread notification");
     expect(
-      mounted.container.querySelector(`a[href='/feedback/${feedbackPost.id}']`)
-        ?.textContent,
+      mounted.container.querySelector(
+        `a[href='/feedback/${feedbackPost.id}#afferent-comment-comment:root']`,
+      )?.textContent,
     ).toBe(`View comment on feedback: ${feedbackPost.title}`);
     expect(
       mounted.container.querySelector("a[href='/changelog/latest-release']")
@@ -330,8 +333,14 @@ describe("notifications", () => {
       args: { notificationId: "notification:post" },
     });
     expect(
-      client.records.filter((record) => record.name === "ui:notifications"),
-    ).toHaveLength(2);
+      client.records
+        .filter((record) => record.name === "ui:notifications")
+        .some(
+          (record) =>
+            (record.args.paginationOpts as { cursor?: string } | undefined)
+              ?.cursor === "next",
+        ),
+    ).toBe(true);
     expect(
       mounted.container.querySelector("[role='status']")?.textContent,
     ).toMatch(/notification|Loading/i);
@@ -440,6 +449,12 @@ describe("closed public surface states", () => {
         "utf8",
       ),
     ).not.toMatch(/useState|useReducer/);
+    expect(fs.readFileSync("ui/afferent/core/navigation.tsx", "utf8")).toMatch(
+      /afferent-comment-\$\{commentId\}/,
+    );
+    expect(
+      fs.readFileSync("ui/afferent/board/discussion.tsx", "utf8"),
+    ).toContain("id={afferentCommentAnchorId(comment.id)}");
     const styles = fs.readFileSync("ui/afferent/afferent.css", "utf8");
     expect(styles).toMatch(/@media \(min-width: 768px\)/);
     expect(styles).toMatch(

@@ -10,6 +10,7 @@ import {
 } from "afferent/react.js";
 
 import { useAfferentUi } from "@/components/afferent/core/afferent-ui-provider";
+import { afferentCommentAnchorId } from "@/components/afferent/core/navigation";
 import {
   AfferentStateRegion,
   afferentErrorText,
@@ -111,6 +112,7 @@ export function AfferentDiscussionView({
         {comments.items.map((comment) => (
           <li
             key={comment.id}
+            id={afferentCommentAnchorId(comment.id)}
             data-comment-id={comment.id}
             data-parent-comment-id={comment.parentCommentId}
             className={

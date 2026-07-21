@@ -232,6 +232,7 @@
 .afferent-comment {
   border-inline-start: 2px solid var(--border);
   padding-inline-start: 16px;
+  scroll-margin-block-start: 24px;
 }
 
 .afferent-comment--reply {
@@ -551,6 +552,81 @@
   gap: 8px;
 }
 
+.afferent-notifications__list {
+  display: grid;
+  gap: 16px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.afferent-notification {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px;
+}
+
+.afferent-notification[data-notification-unread="true"] {
+  border-inline-start: 4px solid var(--primary);
+}
+
+.afferent-notification > header {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.afferent-notification a {
+  color: var(--foreground);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.afferent-notification__type,
+.afferent-notification__metadata {
+  color: var(--muted-foreground);
+  font-size: 14px;
+}
+
+.afferent-notifications-popover {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 18%);
+  color: var(--foreground);
+  max-height: min(640px, calc(100vh - 32px));
+  max-width: calc(100vw - 32px);
+  overflow: auto;
+  width: 400px;
+  z-index: 50;
+}
+
+.afferent-notifications-popover .afferent-notifications {
+  gap: 24px;
+  padding: 24px;
+}
+
+.afferent-notifications-trigger__count {
+  align-items: center;
+  background: var(--primary-foreground);
+  border-radius: 999px;
+  color: var(--primary);
+  display: inline-flex;
+  font-size: 12px;
+  justify-content: center;
+  min-height: 20px;
+  min-width: 20px;
+  padding-inline: 6px;
+}
+
 @media (min-width: 640px) {
   .afferent-board {
     padding-inline: 32px;
@@ -572,7 +648,8 @@
   }
 
   .afferent-roadmap-card,
-  .afferent-changelog-entry {
+  .afferent-changelog-entry,
+  .afferent-notification {
     padding: 24px;
   }
 }
@@ -594,7 +671,8 @@
 
 @media (pointer: coarse) {
   .afferent-button,
-  .afferent-public-header select {
+  .afferent-public-header select,
+  .afferent-notification button {
     min-height: 44px;
     min-width: 44px;
   }

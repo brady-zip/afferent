@@ -109,20 +109,50 @@ export type AfferentUiCopy = Readonly<{
   }>;
   roadmap: Readonly<{
     title: string;
+    description: string;
+    boardLabel: string;
+    allBoards: string;
+    loadingGroup: (groupName: string) => string;
     emptyGroup: (groupName: string) => string;
     emptyGroupBody: (groupName: string) => string;
+    loadErrorHeading: (groupName: string) => string;
+    loadMore: (groupName: string) => string;
+    loadingMore: (groupName: string) => string;
   }>;
   changelog: Readonly<{
     title: string;
+    description: string;
+    loading: string;
+    loadingEntry: string;
+    loadErrorHeading: string;
+    entryErrorHeading: string;
+    notFoundHeading: string;
+    notFoundBody: string;
     emptyHeading: string;
     emptyBody: string;
+    entriesLabel: string;
+    entryDetail: string;
+    linkedFeedback: string;
+    loadMore: string;
+    loadingMore: string;
+    publishedAt: (value: number) => string;
   }>;
   notifications: Readonly<{
     title: string;
+    description: string;
+    loading: string;
+    loadErrorHeading: string;
+    signInBody: string;
     emptyHeading: string;
     emptyBody: string;
+    unreadCount: (count: number) => string;
+    unread: string;
+    typeLabel: (type: string) => string;
     markRead: string;
+    markingRead: string;
     loadMore: string;
+    loadingMore: string;
+    trigger: string;
   }>;
   admin: Readonly<{
     title: string;
@@ -264,22 +294,63 @@ export const englishAfferentUiCopy: AfferentUiCopy = {
   },
   roadmap: {
     title: "Roadmap",
+    description: "See what is planned, in progress, and complete.",
+    boardLabel: "Roadmap board",
+    allBoards: "All boards",
+    loadingGroup: (groupName) => `Loading ${groupName} roadmap…`,
     emptyGroup: (groupName) => `Nothing in ${groupName}`,
     emptyGroupBody: (groupName) =>
       `Feedback will appear here when its status changes to ${groupName}.`,
+    loadErrorHeading: (groupName) => `We couldn't load ${groupName} roadmap`,
+    loadMore: (groupName) => `Load more ${groupName}`,
+    loadingMore: (groupName) => `Loading more ${groupName}…`,
   },
   changelog: {
     title: "Changelog",
+    description: "Read published product updates in chronological order.",
+    loading: "Loading changelog…",
+    loadingEntry: "Loading changelog entry…",
+    loadErrorHeading: "We couldn't load changelog",
+    entryErrorHeading: "We couldn't load this changelog entry",
+    notFoundHeading: "Changelog entry not found",
+    notFoundBody: "It may have been unpublished or made unavailable.",
     emptyHeading: "Updates will appear here",
     emptyBody: "Published product updates haven't been added yet.",
+    entriesLabel: "Published product updates",
+    entryDetail: "Changelog entry detail",
+    linkedFeedback: "Linked feedback",
+    loadMore: "Load more changelog entries",
+    loadingMore: "Loading more changelog entries…",
+    publishedAt: (value) => `Published ${value}`,
   },
   notifications: {
     title: "Notifications",
+    description:
+      "Review replies, feedback status changes, and product updates.",
+    loading: "Loading notifications…",
+    loadErrorHeading: "We couldn't load notifications",
+    signInBody: "Sign in through this application to view notifications.",
     emptyHeading: "You're all caught up",
     emptyBody:
       "New replies, status changes, and changelog updates will appear here.",
+    unreadCount: (count) =>
+      `${count} unread ${count === 1 ? "notification" : "notifications"}`,
+    unread: "Unread",
+    typeLabel: (type) => {
+      const labels: Readonly<Record<string, string>> = {
+        status_changed: "Feedback status changed",
+        admin_replied: "Administrator replied",
+        comment_replied: "New reply",
+        mentioned: "You were mentioned",
+        changelog_published: "Changelog published",
+      };
+      return labels[type] ?? "Notification";
+    },
     markRead: "Mark notification read",
+    markingRead: "Marking notification read…",
     loadMore: "Load more notifications",
+    loadingMore: "Loading more notifications…",
+    trigger: "Open notifications",
   },
   admin: {
     title: "Feedback management",

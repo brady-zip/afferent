@@ -1,7 +1,7 @@
 [
   {
     "path": "afferent.css",
-    "sha256": "da231bbd1648ba6f16358978316b2f0be8b694cb50101761f36858e0ab189313"
+    "sha256": "1d61019b138a8ab64319903ff0a0daa956f95d54968143acee58a28c0f614405"
   },
   {
     "path": "board/activity.tsx",
@@ -13,7 +13,7 @@
   },
   {
     "path": "board/discussion.tsx",
-    "sha256": "b2c103fdcbd472f3b92128b6995cf4c1e36b9473df28433737344dc58c9b5ddc"
+    "sha256": "01ab0e62f2c327304bc9eed35ad26b028b0513aae0f47f3476b2c45b4bfc3a5d"
   },
   {
     "path": "board/feedback-card.tsx",
@@ -36,12 +36,20 @@
     "sha256": "989c6bf8000e86ff35e1ae78d531cfad43d8f3e33a810ba8088a1ac2ddc3cd82"
   },
   {
+    "path": "changelog/changelog-entry.tsx",
+    "sha256": "03406753c8881f73a1fd2755fabc1f5e04464ce2d1ee5a122ddd496b959d4a21"
+  },
+  {
+    "path": "changelog/changelog-screen.tsx",
+    "sha256": "0184ddf22554c9c1d4493ffa3a549da588f5eee186bf95111b034d5ea51277a3"
+  },
+  {
     "path": "core/afferent-ui-provider.tsx",
     "sha256": "1946dcd864403cfcad08eaa5871160aba980a14451772c4f5436311801e75aea"
   },
   {
     "path": "core/copy.ts",
-    "sha256": "eaa44cd7f68ccedd8ff0c5c893e9d003a37b15d1ef343e873183df7cfe116698"
+    "sha256": "dceb50f0b612e9ac1a6fd64514f1b2d96b43bfc8ad1c7b11ee4e3d2d4abb822c"
   },
   {
     "path": "core/icons.tsx",
@@ -49,7 +57,7 @@
   },
   {
     "path": "core/navigation.tsx",
-    "sha256": "7338fd430e8bd383b97df41ccc23bb9183a295d58a6744ccbc1e1484ea00dc2d"
+    "sha256": "81c61482a558ea08fb5789654ea6ca203b410790bdf17695d906c8a7231be351"
   },
   {
     "path": "core/state-region.tsx",
@@ -58,5 +66,25 @@
   {
     "path": "core/utils.ts",
     "sha256": "d1f1e0d62cb8d8d1e04c26e14de842d8a151f75812d81b046c65b5d1fe8e4b27"
+  },
+  {
+    "path": "notifications/notifications-list.tsx",
+    "sha256": "438fc4e19c277170f420651576b13ea898ddb0db9663bcf75dbbe3004dfa756d"
+  },
+  {
+    "path": "notifications/notifications-popover.tsx",
+    "sha256": "c2cf73965e968811aaf5ad4be1745505a8a034aa949708902283ebe7ad9df3f2"
+  },
+  {
+    "path": "roadmap/roadmap-card.tsx",
+    "sha256": "37b15d6d0c1cf1b7fda2c9ed56b6f63a5c0ea802090047779f5713a33a401c3a"
+  },
+  {
+    "path": "roadmap/roadmap-group.tsx",
+    "sha256": "64620e74c83a0cfea3dc3fed6eb170be146c36e2ca9286fbff1d646d608dcd3b"
+  },
+  {
+    "path": "roadmap/roadmap-screen.tsx",
+    "sha256": "8eb7167a7c35332f86b34f2142e8847e43f1766a16b43b53305aa6f6d8ceab00"
   }
 ]

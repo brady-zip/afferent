@@ -18,6 +18,16 @@ export type AfferentNavigation = Readonly<{
   currentLocation: string;
 }>;
 
+export function afferentCommentAnchorId(commentId: string) {
+  return `afferent-comment-${commentId}`;
+}
+
+export function afferentPostHref(postHref: string, commentId?: string) {
+  return commentId
+    ? `${postHref}#${afferentCommentAnchorId(commentId)}`
+    : postHref;
+}
+
 export function NativeAfferentLink(props: AfferentLinkProps) {
   return <a {...props} />;
 }

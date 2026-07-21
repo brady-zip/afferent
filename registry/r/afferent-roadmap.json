@@ -1,0 +1,37 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "afferent-roadmap",
+  "title": "afferent-roadmap",
+  "description": "Source-owned public roadmap over Afferent hooks.",
+  "dependencies": [
+    "class-variance-authority@0.7.1",
+    "clsx@2.1.1",
+    "lucide-react@1.20.0",
+    "radix-ui@1.6.0",
+    "tailwind-merge@3.6.0"
+  ],
+  "registryDependencies": [
+    "./afferent-ui-core.json"
+  ],
+  "files": [
+    {
+      "path": "ui/afferent/roadmap/roadmap-card.tsx",
+      "content": "import type { RoadmapItemDto } from \"afferent\";\n\nimport { useAfferentUi } from \"@/components/afferent/core/afferent-ui-provider\";\n\nexport function AfferentRoadmapCard({\n  item,\n}: Readonly<{ item: RoadmapItemDto }>) {\n  const { copy, navigation } = useAfferentUi();\n  const Link = navigation.Link;\n  return (\n    <article className=\"afferent-roadmap-card\">\n      <h3>\n        <Link href={navigation.href.post(item.id)}>{item.title}</Link>\n      </h3>\n      <p className=\"afferent-roadmap-card__status\">{item.status.label}</p>\n      <p className=\"afferent-roadmap-card__board\">{item.board.name}</p>\n      <dl className=\"afferent-roadmap-card__totals\">\n        <div>\n          <dt>Votes</dt>\n          <dd>{copy.board.voteCount(item.voteCount)}</dd>\n        </div>\n        <div>\n          <dt>Comments</dt>\n          <dd>{copy.board.commentCount(item.commentCount)}</dd>\n        </div>\n      </dl>\n    </article>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/afferent/roadmap/roadmap-card.tsx"
+    },
+    {
+      "path": "ui/afferent/roadmap/roadmap-group.tsx",
+      "content": "import type { RoadmapGroupState } from \"afferent/react.js\";\n\nimport { AfferentStateRegion } from \"@/components/afferent/core/state-region\";\nimport { useAfferentUi } from \"@/components/afferent/core/afferent-ui-provider\";\nimport { AfferentRoadmapCard } from \"@/components/afferent/roadmap/roadmap-card\";\n\nexport function AfferentRoadmapGroup({\n  groupKey,\n  name,\n  group,\n}: Readonly<{\n  groupKey: \"planned\" | \"in_progress\" | \"complete\";\n  name: \"Planned\" | \"In Progress\" | \"Complete\";\n  group: RoadmapGroupState;\n}>) {\n  const { copy } = useAfferentUi();\n  return (\n    <section\n      className=\"afferent-roadmap-group\"\n      data-roadmap-group={groupKey}\n      aria-labelledby={`afferent-roadmap-${groupKey}`}\n    >\n      <header>\n        <h2 id={`afferent-roadmap-${groupKey}`}>{name}</h2>\n        <span aria-label={`${group.items.length} ${name} items`}>\n          {group.items.length}\n        </span>\n      </header>\n      {renderGroup(name, group, copy)}\n    </section>\n  );\n}\n\nfunction renderGroup(\n  name: \"Planned\" | \"In Progress\" | \"Complete\",\n  group: RoadmapGroupState,\n  copy: ReturnType<typeof useAfferentUi>[\"copy\"],\n) {\n  switch (group.status) {\n    case \"unsupported\": {\n      return (\n        <AfferentStateRegion title={copy.common.unsupportedHeading}>\n          <p>{copy.common.unsupportedBody}</p>\n        </AfferentStateRegion>\n      );\n    }\n    case \"loading\": {\n      return <AfferentStateRegion title={copy.roadmap.loadingGroup(name)} />;\n    }\n    case \"empty\": {\n      return (\n        <AfferentStateRegion title={copy.roadmap.emptyGroup(name)}>\n          <p>{copy.roadmap.emptyGroupBody(name)}</p>\n        </AfferentStateRegion>\n      );\n    }\n    case \"error\": {\n      return (\n        <AfferentStateRegion\n          title={copy.roadmap.loadErrorHeading(name)}\n          tone=\"error\"\n          action={\n            <button\n              type=\"button\"\n              className=\"afferent-button afferent-button--secondary\"\n              onClick={group.loadMore}\n            >\n              {copy.common.tryLoadingAgain}\n            </button>\n          }\n        />\n      );\n    }\n    case \"ready\": {\n      return (\n        <>\n          <ol className=\"afferent-roadmap-group__list\">\n            {group.items.map((item) => (\n              <li key={item.id}>\n                <AfferentRoadmapCard item={item} />\n              </li>\n            ))}\n          </ol>\n          {group.canLoadMore ? (\n            <button\n              type=\"button\"\n              className=\"afferent-button afferent-button--secondary\"\n              onClick={group.loadMore}\n              disabled={group.isLoadingMore}\n              aria-busy={group.isLoadingMore}\n            >\n              {group.isLoadingMore\n                ? copy.roadmap.loadingMore(name)\n                : copy.roadmap.loadMore(name)}\n            </button>\n          ) : null}\n        </>\n      );\n    }\n  }\n}\n",
+      "type": "registry:component",
+      "target": "components/afferent/roadmap/roadmap-group.tsx"
+    },
+    {
+      "path": "ui/afferent/roadmap/roadmap-screen.tsx",
+      "content": "\"use client\";\n\nimport { useId, useState } from \"react\";\nimport type { BoardDto } from \"afferent\";\nimport { useRoadmap } from \"afferent/react.js\";\n\nimport { useAfferentUi } from \"@/components/afferent/core/afferent-ui-provider\";\nimport { AfferentRoadmapGroup } from \"@/components/afferent/roadmap/roadmap-group\";\n\nexport function AfferentRoadmapScreen({\n  boards = [],\n  initialBoardId,\n  pageOwner = true,\n}: Readonly<{\n  boards?: readonly BoardDto[];\n  initialBoardId?: BoardDto[\"id\"];\n  pageOwner?: boolean;\n}>) {\n  const { copy } = useAfferentUi();\n  const [boardId, setBoardId] = useState<BoardDto[\"id\"] | undefined>(\n    initialBoardId,\n  );\n  const controlId = useId();\n  const roadmap = useRoadmap({ boardId });\n  const body = (\n    <div className=\"afferent-roadmap\" data-afferent-screen=\"roadmap\">\n      <header className=\"afferent-public-header\">\n        <div>\n          <h1>{copy.roadmap.title}</h1>\n          <p>{copy.roadmap.description}</p>\n        </div>\n        {boards.length > 0 ? (\n          <label htmlFor={controlId}>\n            {copy.roadmap.boardLabel}\n            <select\n              id={controlId}\n              name=\"roadmap-board\"\n              value={boardId ?? \"\"}\n              onChange={(event) =>\n                setBoardId(\n                  event.currentTarget.value\n                    ? (event.currentTarget.value as BoardDto[\"id\"])\n                    : undefined,\n                )\n              }\n            >\n              <option value=\"\">{copy.roadmap.allBoards}</option>\n              {boards.map((candidate) => (\n                <option key={candidate.id} value={candidate.id}>\n                  {candidate.name}\n                </option>\n              ))}\n            </select>\n          </label>\n        ) : null}\n      </header>\n      <div className=\"afferent-roadmap__groups\">\n        <AfferentRoadmapGroup\n          groupKey=\"planned\"\n          name=\"Planned\"\n          group={roadmap.groups.planned}\n        />\n        <AfferentRoadmapGroup\n          groupKey=\"in_progress\"\n          name=\"In Progress\"\n          group={roadmap.groups.inProgress}\n        />\n        <AfferentRoadmapGroup\n          groupKey=\"complete\"\n          name=\"Complete\"\n          group={roadmap.groups.complete}\n        />\n      </div>\n    </div>\n  );\n  return pageOwner ? <main>{body}</main> : body;\n}\n",
+      "type": "registry:component",
+      "target": "components/afferent/roadmap/roadmap-screen.tsx"
+    }
+  ],
+  "type": "registry:block"
+}

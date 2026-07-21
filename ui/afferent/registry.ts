@@ -57,6 +57,63 @@ export const afferentRegistry = {
       ],
     },
     {
+      name: "afferent-roadmap",
+      description: "Source-owned public roadmap over Afferent hooks.",
+      registryDependencies: ["./afferent-ui-core.json"],
+      files: [
+        {
+          path: "ui/afferent/roadmap/roadmap-screen.tsx",
+          type: "registry:component",
+          target: "components/afferent/roadmap/roadmap-screen.tsx",
+        },
+        {
+          path: "ui/afferent/roadmap/roadmap-group.tsx",
+          type: "registry:component",
+          target: "components/afferent/roadmap/roadmap-group.tsx",
+        },
+        {
+          path: "ui/afferent/roadmap/roadmap-card.tsx",
+          type: "registry:component",
+          target: "components/afferent/roadmap/roadmap-card.tsx",
+        },
+      ],
+    },
+    {
+      name: "afferent-changelog",
+      description: "Source-owned public changelog over Afferent hooks.",
+      registryDependencies: ["./afferent-ui-core.json"],
+      files: [
+        {
+          path: "ui/afferent/changelog/changelog-screen.tsx",
+          type: "registry:component",
+          target: "components/afferent/changelog/changelog-screen.tsx",
+        },
+        {
+          path: "ui/afferent/changelog/changelog-entry.tsx",
+          type: "registry:component",
+          target: "components/afferent/changelog/changelog-entry.tsx",
+        },
+      ],
+    },
+    {
+      name: "afferent-notifications",
+      description:
+        "Source-owned notification list and popover over Afferent hooks.",
+      registryDependencies: ["./afferent-ui-core.json"],
+      files: [
+        {
+          path: "ui/afferent/notifications/notifications-list.tsx",
+          type: "registry:component",
+          target: "components/afferent/notifications/notifications-list.tsx",
+        },
+        {
+          path: "ui/afferent/notifications/notifications-popover.tsx",
+          type: "registry:component",
+          target: "components/afferent/notifications/notifications-popover.tsx",
+        },
+      ],
+    },
+    {
       name: "afferent-ui-core",
       description: "Shared source-owned Afferent UI adapters and tokens.",
       registryDependencies: [],

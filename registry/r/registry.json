@@ -68,6 +68,95 @@
         "radix-ui@1.6.0",
         "tailwind-merge@3.6.0"
       ],
+      "description": "Source-owned public changelog over Afferent hooks.",
+      "files": [
+        {
+          "path": "ui/afferent/changelog/changelog-entry.tsx",
+          "target": "components/afferent/changelog/changelog-entry.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "ui/afferent/changelog/changelog-screen.tsx",
+          "target": "components/afferent/changelog/changelog-screen.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "name": "afferent-changelog",
+      "registryDependencies": [
+        "./afferent-ui-core.json"
+      ],
+      "title": "afferent-changelog",
+      "type": "registry:block"
+    },
+    {
+      "dependencies": [
+        "class-variance-authority@0.7.1",
+        "clsx@2.1.1",
+        "lucide-react@1.20.0",
+        "radix-ui@1.6.0",
+        "tailwind-merge@3.6.0"
+      ],
+      "description": "Source-owned notification list and popover over Afferent hooks.",
+      "files": [
+        {
+          "path": "ui/afferent/notifications/notifications-list.tsx",
+          "target": "components/afferent/notifications/notifications-list.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "ui/afferent/notifications/notifications-popover.tsx",
+          "target": "components/afferent/notifications/notifications-popover.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "name": "afferent-notifications",
+      "registryDependencies": [
+        "./afferent-ui-core.json"
+      ],
+      "title": "afferent-notifications",
+      "type": "registry:block"
+    },
+    {
+      "dependencies": [
+        "class-variance-authority@0.7.1",
+        "clsx@2.1.1",
+        "lucide-react@1.20.0",
+        "radix-ui@1.6.0",
+        "tailwind-merge@3.6.0"
+      ],
+      "description": "Source-owned public roadmap over Afferent hooks.",
+      "files": [
+        {
+          "path": "ui/afferent/roadmap/roadmap-card.tsx",
+          "target": "components/afferent/roadmap/roadmap-card.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "ui/afferent/roadmap/roadmap-group.tsx",
+          "target": "components/afferent/roadmap/roadmap-group.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "ui/afferent/roadmap/roadmap-screen.tsx",
+          "target": "components/afferent/roadmap/roadmap-screen.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "name": "afferent-roadmap",
+      "registryDependencies": [
+        "./afferent-ui-core.json"
+      ],
+      "title": "afferent-roadmap",
+      "type": "registry:block"
+    },
+    {
+      "dependencies": [
+        "class-variance-authority@0.7.1",
+        "clsx@2.1.1",
+        "lucide-react@1.20.0",
+        "radix-ui@1.6.0",
+        "tailwind-merge@3.6.0"
+      ],
       "description": "Shared source-owned Afferent UI adapters and tokens.",
       "files": [
         {

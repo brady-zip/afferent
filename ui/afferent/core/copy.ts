@@ -135,14 +135,24 @@ export type AfferentUiCopy = Readonly<{
     linkedFeedback: string;
     loadMore: string;
     loadingMore: string;
-    publishedAt: (timestamp: number) => string;
+    publishedAt: (value: number) => string;
   }>;
   notifications: Readonly<{
     title: string;
+    description: string;
+    loading: string;
+    loadErrorHeading: string;
+    signInBody: string;
     emptyHeading: string;
     emptyBody: string;
+    unreadCount: (count: number) => string;
+    unread: string;
+    typeLabel: (type: string) => string;
     markRead: string;
+    markingRead: string;
     loadMore: string;
+    loadingMore: string;
+    trigger: string;
   }>;
   admin: Readonly<{
     title: string;
@@ -311,15 +321,36 @@ export const englishAfferentUiCopy: AfferentUiCopy = {
     linkedFeedback: "Linked feedback",
     loadMore: "Load more changelog entries",
     loadingMore: "Loading more changelog entries…",
-    publishedAt: (timestamp) => `Published ${timestamp}`,
+    publishedAt: (value) => `Published ${value}`,
   },
   notifications: {
     title: "Notifications",
+    description:
+      "Review replies, feedback status changes, and product updates.",
+    loading: "Loading notifications…",
+    loadErrorHeading: "We couldn't load notifications",
+    signInBody: "Sign in through this application to view notifications.",
     emptyHeading: "You're all caught up",
     emptyBody:
       "New replies, status changes, and changelog updates will appear here.",
+    unreadCount: (count) =>
+      `${count} unread ${count === 1 ? "notification" : "notifications"}`,
+    unread: "Unread",
+    typeLabel: (type) => {
+      const labels: Readonly<Record<string, string>> = {
+        status_changed: "Feedback status changed",
+        admin_replied: "Administrator replied",
+        comment_replied: "New reply",
+        mentioned: "You were mentioned",
+        changelog_published: "Changelog published",
+      };
+      return labels[type] ?? "Notification";
+    },
     markRead: "Mark notification read",
+    markingRead: "Marking notification read…",
     loadMore: "Load more notifications",
+    loadingMore: "Loading more notifications…",
+    trigger: "Open notifications",
   },
   admin: {
     title: "Feedback management",
