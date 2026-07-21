@@ -17,7 +17,7 @@ export function AfferentTagManager({
     if (name.trim()) void management.createTag({ name: name.trim() });
   }
   return (
-    <section>
+    <section className="afferent-tag-manager">
       <h2>{copy.admin.manageTags}</h2>
       <form onSubmit={create}>
         <label>

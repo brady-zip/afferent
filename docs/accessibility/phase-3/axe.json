@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "claim": "Supplemental automated regression net, not WCAG certification",
+  "tools": {
+    "axe": "4.11.0",
+    "chromium": "147.0.7727.15",
+    "playwright": "1.59.1"
+  },
+  "scenarios": [
+    {
+      "id": "AX-01-public",
+      "violations": []
+    },
+    {
+      "id": "AX-01-admin",
+      "violations": []
+    }
+  ]
+}

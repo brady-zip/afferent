@@ -683,6 +683,10 @@
     align-items: center;
     display: inline-flex;
   }
+
+  .afferent-changelog-editor fieldset label {
+    min-height: 44px;
+  }
 }
 
 @media (min-width: 1024px) {
@@ -701,10 +705,25 @@
 .afferent-admin-workspace,
 .afferent-admin-detail,
 .afferent-admin-form,
+.afferent-tag-manager,
 .afferent-changelog-editor,
 .afferent-changelog-editor form {
   display: grid;
   gap: 16px;
+}
+
+.afferent-admin h1 {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.afferent-admin h2 {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 0;
 }
 .afferent-admin-queue {
   display: grid;
@@ -728,6 +747,50 @@
   color: var(--muted-foreground);
   content: attr(data-admin-label) ": ";
   font-size: 14px;
+}
+
+.afferent-admin button {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--foreground);
+  font: 600 16px/1.5 var(--font-sans);
+  min-height: 44px;
+  padding: 8px 16px;
+}
+
+.afferent-admin .afferent-button {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.afferent-tag-manager form,
+.afferent-tag-manager li,
+.afferent-changelog-editor fieldset label {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.afferent-tag-manager ul,
+.afferent-changelog-editor ol {
+  display: grid;
+  gap: 16px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.afferent-changelog-editor fieldset {
+  display: grid;
+  gap: 8px;
+}
+
+.afferent-changelog-editor input[type="checkbox"] {
+  min-height: 24px;
+  width: 24px;
 }
 .afferent-admin-form label,
 .afferent-changelog-editor label,

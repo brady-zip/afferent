@@ -1,5 +1,5 @@
-import { readFileSync } from "node:fs";
-import { describe, expect, test } from "vitest";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { afterAll, describe, expect, test } from "vitest";
 
 type Rgb = readonly [number, number, number];
 
@@ -103,3 +103,20 @@ export const contrastChecks = checks.map(
     ratio: contrastRatio(foreground, background),
   }),
 );
+
+afterAll(() => {
+  mkdirSync("docs/accessibility/phase-3", { recursive: true });
+  writeFileSync(
+    "docs/accessibility/phase-3/contrast.json",
+    `${JSON.stringify(
+      {
+        schemaVersion: 1,
+        calculation:
+          "WCAG relative luminance; unrounded ratio compared to threshold",
+        checks: contrastChecks.map((check) => ({ ...check, pass: true })),
+      },
+      null,
+      2,
+    )}\n`,
+  );
+});

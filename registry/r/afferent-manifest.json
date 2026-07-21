@@ -25,11 +25,11 @@
   },
   {
     "path": "admin/tag-manager.tsx",
-    "sha256": "b10c187cdc4bdc7e1e3ed0baa8918c09135decaa4ed57695f444ca5526ee09f9"
+    "sha256": "0c9d30ea2c921caf7452e27fa0c2de44b6b1f1f537b49069ade6d4c3d2594098"
   },
   {
     "path": "afferent.css",
-    "sha256": "e98d25a0fb1a50f99ccdd47ad2293a612f78ada3ab5429ac79879100d5ce2f00"
+    "sha256": "2aa1eba82b949e85b1e71b2087070fc4fa37943ae3453f1b020a15c18573fd5f"
   },
   {
     "path": "board/activity.tsx",

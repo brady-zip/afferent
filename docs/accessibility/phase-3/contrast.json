@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "calculation": "WCAG relative luminance; unrounded ratio compared to threshold",
+  "checks": [
+    {
+      "id": "light foreground",
+      "criterion": "1.4.3",
+      "foreground": "#18181b",
+      "background": "#ffffff",
+      "minimum": 4.5,
+      "ratio": 17.71676507806213,
+      "pass": true
+    },
+    {
+      "id": "light muted text",
+      "criterion": "1.4.3",
+      "foreground": "#52525b",
+      "background": "#f4f4f5",
+      "minimum": 4.5,
+      "ratio": 7.032446443609283,
+      "pass": true
+    },
+    {
+      "id": "light primary text",
+      "criterion": "1.4.3",
+      "foreground": "#ffffff",
+      "background": "#1d4ed8",
+      "minimum": 4.5,
+      "ratio": 6.701618401398807,
+      "pass": true
+    },
+    {
+      "id": "light destructive text",
+      "criterion": "1.4.3",
+      "foreground": "#b91c1c",
+      "background": "#ffffff",
+      "minimum": 4.5,
+      "ratio": 6.4700447145121895,
+      "pass": true
+    },
+    {
+      "id": "light border",
+      "criterion": "1.4.11",
+      "foreground": "#71717a",
+      "background": "#ffffff",
+      "minimum": 3,
+      "ratio": 4.832895561154151,
+      "pass": true
+    },
+    {
+      "id": "light focus ring",
+      "criterion": "1.4.11",
+      "foreground": "#1d4ed8",
+      "background": "#ffffff",
+      "minimum": 3,
+      "ratio": 6.701618401398807,
+      "pass": true
+    },
+    {
+      "id": "dark foreground",
+      "criterion": "1.4.3",
+      "foreground": "#fafafa",
+      "background": "#09090b",
+      "minimum": 4.5,
+      "ratio": 19.061142529601344,
+      "pass": true
+    },
+    {
+      "id": "dark muted text",
+      "criterion": "1.4.3",
+      "foreground": "#d4d4d8",
+      "background": "#18181b",
+      "minimum": 4.5,
+      "ratio": 11.986974864049339,
+      "pass": true
+    },
+    {
+      "id": "dark primary text",
+      "criterion": "1.4.3",
+      "foreground": "#09090b",
+      "background": "#60a5fa",
+      "minimum": 4.5,
+      "ratio": 7.825354064212425,
+      "pass": true
+    },
+    {
+      "id": "dark destructive text",
+      "criterion": "1.4.3",
+      "foreground": "#f87171",
+      "background": "#09090b",
+      "minimum": 4.5,
+      "ratio": 7.192449869784669,
+      "pass": true
+    },
+    {
+      "id": "dark border",
+      "criterion": "1.4.11",
+      "foreground": "#71717a",
+      "background": "#09090b",
+      "minimum": 3,
+      "ratio": 4.116653754467922,
+      "pass": true
+    },
+    {
+      "id": "dark focus ring",
+      "criterion": "1.4.11",
+      "foreground": "#60a5fa",
+      "background": "#09090b",
+      "minimum": 3,
+      "ratio": 7.825354064212425,
+      "pass": true
+    }
+  ]
+}

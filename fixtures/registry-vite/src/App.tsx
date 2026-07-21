@@ -252,6 +252,7 @@ function queryValue(name: string, args: Record<string, unknown>) {
   }
   if (name === "evidence:adminCapability") return true;
   if (name === "evidence:adminFeedback") {
+    if (args.visibility === "hidden") return page(1, []);
     return page(1, [adminPost, canonicalAdminPost]);
   }
   if (name === "evidence:adminPost") return adminPost;

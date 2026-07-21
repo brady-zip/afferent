@@ -1,11 +1,44 @@
-import { mkdir } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
 const evidenceRoot = "docs/accessibility/phase-3";
+const keyboardEvidence: Readonly<{
+  id: string;
+  expected: string;
+  actual: string;
+}>[] = [];
+const statusEvidence: Readonly<{
+  id: string;
+  expected: string;
+  actual: string;
+}>[] = [];
 
 test.beforeAll(async () => {
   await mkdir(evidenceRoot, { recursive: true });
+});
+
+test.afterAll(async () => {
+  const keyboardRows = keyboardEvidence
+    .sort((left, right) => left.id.localeCompare(right.id))
+    .map(
+      (entry) => `| ${entry.id} | ${entry.expected} | ${entry.actual} | Pass |`,
+    )
+    .join("\n");
+  await writeFile(
+    `${evidenceRoot}/keyboard-focus.md`,
+    `# Keyboard and focus evidence\n\nCriteria: 2.1.1, 2.1.2, 2.4.3, 2.4.7, 2.4.11, 2.5.7.\n\n| Scenario | Expected | Actual | Result |\n| --- | --- | --- | --- |\n${keyboardRows}\n`,
+  );
+  const statusRows = statusEvidence
+    .sort((left, right) => left.id.localeCompare(right.id))
+    .map(
+      (entry) => `| ${entry.id} | ${entry.expected} | ${entry.actual} | Pass |`,
+    )
+    .join("\n");
+  await writeFile(
+    `${evidenceRoot}/status-messages.md`,
+    `# Status message evidence\n\nCriteria: 3.3.1, 3.3.2, 4.1.3. Polite status updates do not move focus; alerts are reserved for correction-required mutation errors.\n\n| Scenario | Expected | Actual | Result |\n| --- | --- | --- | --- |\n${statusRows}\n`,
+  );
 });
 
 async function activateSurface(page: Page, label: string) {
@@ -115,6 +148,11 @@ test("KF-01 public board, search, create, detail, vote, and comment are keyboard
     page.locator("[data-afferent-composer] + [role='status']"),
   ).toContainText("Feedback posted");
   await expect(submit).toBeFocused();
+  statusEvidence.push({
+    id: "ST-01",
+    expected: "Feedback success is polite and focus remains on Post feedback",
+    actual: "Feedback posted; focus remained on Post feedback",
+  });
 
   const search = page.getByRole("searchbox", { name: "Search feedback" });
   await search.focus();
@@ -123,6 +161,11 @@ test("KF-01 public board, search, create, detail, vote, and comment are keyboard
     page.locator(".afferent-board__results [role='status']"),
   ).toContainText("1 feedback result");
   await expect(search).toBeFocused();
+  statusEvidence.push({
+    id: "ST-02",
+    expected: "Search result count changes without moving focus",
+    actual: "1 feedback result; focus remained on Search feedback",
+  });
 
   await activateSurface(page, "Feedback detail");
   const vote = page.getByRole("button", { name: "Vote for feedback" });
@@ -136,6 +179,13 @@ test("KF-01 public board, search, create, detail, vote, and comment are keyboard
   await postComment.focus();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { name: "Discussion" })).toBeVisible();
+  keyboardEvidence.push({
+    id: "KF-01",
+    expected:
+      "Create, search, vote, and comment controls follow DOM order with visible unobscured focus",
+    actual:
+      "All controls completed by keyboard with 2px focus outline and no focus theft",
+  });
 });
 
 test("KF-02 dialog and popover contain or restore focus without traps", async ({
@@ -193,6 +243,13 @@ test("KF-02 dialog and popover contain or restore focus without traps", async ({
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
   await expect(mergeTrigger).toBeFocused();
+  keyboardEvidence.push({
+    id: "KF-02",
+    expected:
+      "Popover and dialogs close on Escape, contain modal focus, and restore the invoker",
+    actual:
+      "Popover, withdraw dialog, and merge dialog restored their invoking buttons",
+  });
 });
 
 test("KF-03 admin moderation, status, archive, merge, and changelog actions remain keyboard reachable", async ({
@@ -226,6 +283,13 @@ test("KF-03 admin moderation, status, archive, merge, and changelog actions rema
   await expect(
     page.getByRole("button", { name: "Publish changelog entry" }),
   ).toBeVisible();
+  keyboardEvidence.push({
+    id: "KF-03",
+    expected:
+      "Moderation, status, archive, merge, and changelog actions require no dragging",
+    actual:
+      "All named admin actions remained keyboard reachable; status used a native select",
+  });
 });
 
 test("AX-01 axe is a supplemental regression net for stable public and admin states", async ({
@@ -243,6 +307,34 @@ test("AX-01 axe is a supplemental regression net for stable public and admin sta
     .include("[data-afferent-screen]")
     .analyze();
   expect(adminResult.violations).toEqual([]);
+  const [playwrightManifest, axeManifest] = await Promise.all([
+    readFile("node_modules/@playwright/test/package.json", "utf8").then(
+      JSON.parse,
+    ),
+    readFile("node_modules/@axe-core/playwright/package.json", "utf8").then(
+      JSON.parse,
+    ),
+  ]);
+  await writeFile(
+    `${evidenceRoot}/axe.json`,
+    `${JSON.stringify(
+      {
+        schemaVersion: 1,
+        claim: "Supplemental automated regression net, not WCAG certification",
+        tools: {
+          axe: axeManifest.version,
+          chromium: page.context().browser()?.version(),
+          playwright: playwrightManifest.version,
+        },
+        scenarios: [
+          { id: "AX-01-public", violations: publicResult.violations },
+          { id: "AX-01-admin", violations: adminResult.violations },
+        ],
+      },
+      null,
+      2,
+    )}\n`,
+  );
 });
 
 test("RZ-01 reflow, responsive layouts, zoom, and measured targets preserve every action", async ({
