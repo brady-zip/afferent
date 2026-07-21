@@ -217,10 +217,19 @@ describe("public contract privacy", () => {
       "title",
       "totals",
       "voteCount",
+      "viewerCanEdit",
+      "viewerCanWithdraw",
+      "viewerHasVoted",
     ]);
     expect(
       Object.keys(publicPostDtoValidator.fields.author.fields).sort(),
     ).toEqual(["avatarUrl", "displayName", "id"]);
+    const validatorsSource = fs.readFileSync(
+      "src/component/validators.ts",
+      "utf8",
+    );
+    expect(validatorsSource).toContain("postDtoValidator = v.object({\n  contractVersion: v.literal(2)");
+    expect(validatorsSource).toContain("feedbackPostDtoValidator = v.object({\n  contractVersion: v.literal(3)");
   });
 
   test("makes bounded post counts explicit in the public result validator", () => {

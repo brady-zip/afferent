@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import { describe, expect, test, vi } from "vitest";
 
 import {
@@ -6,6 +7,13 @@ import {
 } from "../../src/react/hooks/feedback.js";
 
 describe("headless feedback feed", () => {
+  test("uses exact desired-state viewer vote delta for feed and detail caches", () => {
+    const source = fs.readFileSync("src/react/hooks/feedback.ts", "utf8");
+    expect(source).toContain("viewerHasVoted");
+    expect(source).toMatch(/\(desired \? 1 : 0\).*viewerHasVoted/s);
+    expect(source).toContain("getAllQueries");
+    expect(source).toContain("getQuery");
+  });
   test.each([
     ["LoadingFirstPage", "loading"],
     ["CanLoadMore", "ready"],

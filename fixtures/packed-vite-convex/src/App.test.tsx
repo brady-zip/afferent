@@ -65,9 +65,13 @@ test("the form submit handler writes through the host wrapper and renders the pu
 
   expect(readPost).toEqual(createdPost);
   expect(readPost).toMatchObject({
+    contractVersion: 2,
     title: browserArgs.title,
     voteCount: 0,
     commentCount: 0,
+    viewerHasVoted: false,
+    viewerCanEdit: true,
+    viewerCanWithdraw: true,
   });
 
   const transcriptPath = process.env.AFFERENT_TRANSCRIPT_PATH;

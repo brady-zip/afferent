@@ -1397,6 +1397,68 @@ describe("mounted ordered pagination", () => {
 });
 
 describe("mounted identity-generation isolation", () => {
+  test("installs exact desired-state vote optimism for feed and detail caches", async () => {
+    const client = new ControlledWatchClient();
+    const mounted = renderHarness(client, {
+      status: "authenticated",
+      identityToken: "actor-a",
+    } as never);
+    await act(async () => {});
+    await act(async () => {
+      await mutationProbe!.setVote("post:1" as never, true);
+    });
+    const optimistic = client.mutationCalls.at(-1)?.options?.optimisticUpdate;
+    expect(optimistic).toBeTypeOf("function");
+    const feedbackPost = {
+      contractVersion: 3,
+      id: "post:1",
+      voteCount: 4,
+      totals: { votes: 4, comments: 0 },
+      viewerHasVoted: false,
+      viewerCanEdit: false,
+      viewerCanWithdraw: false,
+    };
+    const feedValue = page([feedbackPost]);
+    const detailValue = {
+      contractVersion: 2,
+      status: "post",
+      post: feedbackPost,
+    };
+    const writes: unknown[] = [];
+    optimistic!(
+      {
+        getAllQueries: () => [
+          { args: { sessionGeneration: 1 }, value: feedValue },
+        ],
+        getQuery: () => detailValue,
+        setQuery: (_reference: unknown, _args: unknown, value: unknown) =>
+          writes.push(value),
+      },
+      { postId: "post:1", desired: true },
+    );
+    expect(writes).toContainEqual(
+      expect.objectContaining({
+        posts: [
+          expect.objectContaining({
+            voteCount: 5,
+            totals: { votes: 5, comments: 0 },
+            viewerHasVoted: true,
+          }),
+        ],
+      }),
+    );
+    expect(writes).toContainEqual({
+      ...detailValue,
+      post: {
+        ...detailValue.post,
+        voteCount: 5,
+        totals: { votes: 5, comments: 0 },
+        viewerHasVoted: true,
+      },
+    });
+    mounted.unmount();
+  });
+
   test("clears actor pages and capabilities on the first A to B to A renders", async () => {
     const client = new ControlledWatchClient();
     client.resolver = (name, args) => {
