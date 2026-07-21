@@ -95,3 +95,16 @@ test("the packed fixture wires the optional comment feed through trusted host bo
   );
   assert.doesNotMatch(applicationSource, /\.\.\/\.\.\/src\//);
 });
+
+test("the real merge harness drives installed comment and activity pagination", async () => {
+  const source = await readFile(
+    join(repositoryRoot, "scripts/test-merge-backend.mjs"),
+    "utf8",
+  );
+  assert.match(source, /listComments/);
+  assert.match(source, /listPostActivity/);
+  assert.match(source, /paginationOpts/);
+  assert.match(source, /endCursor/);
+  assert.match(source, /maximumRowsRead/);
+  assert.match(source, /malformed/);
+});

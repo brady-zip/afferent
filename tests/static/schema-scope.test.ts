@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import schema from "../../src/component/schema.js";
 import { deriveScopeId } from "../../src/client/scope.js";
+import { readFile } from "node:fs/promises";
 
 describe("scope-complete schema", () => {
   test("requires scopeId on every table and leads every database index with it", () => {
@@ -40,5 +41,24 @@ describe("scope-complete schema", () => {
     await expect(deriveScopeId("   ")).rejects.toThrow(
       "verified external identity key",
     );
+  });
+
+  test("routes comments and activity through one index-bounded merged paginator", async () => {
+    const [comments, activity] = await Promise.all([
+      readFile(
+        new URL("../../src/component/public/comments.ts", import.meta.url),
+        "utf8",
+      ),
+      readFile(
+        new URL("../../src/component/admin/activity.ts", import.meta.url),
+        "utf8",
+      ),
+    ]);
+
+    for (const source of [comments, activity]) {
+      expect(source).toMatch(/paginateMergedPostStream/);
+      expect(source).not.toMatch(/\.filter\(/);
+      expect(source).not.toMatch(/startsWith\("merge:"\)/);
+    }
   });
 });

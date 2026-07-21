@@ -2,7 +2,7 @@ import { convexTest } from "convex-test";
 import { describe, expect, test, vi } from "vitest";
 
 import { createScopedAfferentClient } from "../../src/client/server.js";
-import { api } from "../../src/component/_generated/api.js";
+import { api, internal } from "../../src/component/_generated/api.js";
 import type { ComponentApi } from "../../src/component/_generated/component.js";
 import schema from "../../src/component/schema.js";
 import { withRateLimiter } from "../helpers/rate-limiter.js";
@@ -28,6 +28,210 @@ function client(scopeId: string, actorKey: string, admin = false) {
 }
 
 describe("duplicate merge lifecycle", () => {
+  test("pages exact merged comment and activity ties with pinned reset-safe cursors", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-20T12:00:00.000Z"));
+    const backend = withRateLimiter(convexTest(schema, modules));
+    const ctx = context(backend) as never;
+    const admin = client("scope:pagination", "pagination:admin", true);
+    const install = await admin.admin.configureInstallation(ctx, {
+      readPolicy: "public",
+      boards: [{ slug: "feedback", name: "Feedback" }],
+    });
+    const canonical = await admin.participation.createPost(ctx, {
+      boardId: install.boards[0].id,
+      title: "Canonical pagination",
+      body: "Canonical pagination body",
+    });
+    const source = await admin.participation.createPost(ctx, {
+      boardId: install.boards[0].id,
+      title: "Source pagination",
+      body: "Source pagination body",
+    });
+
+    await backend.run(async (runCtx) => {
+      const canonicalId = runCtx.db.normalizeId("posts", canonical.id)!;
+      const sourceId = runCtx.db.normalizeId("posts", source.id)!;
+      const actorId = (
+        await runCtx.db
+          .query("actors")
+          .withIndex("by_scope_external_key", (q) =>
+            q
+              .eq("scopeId", "scope:pagination")
+              .eq("externalKey", "pagination:admin"),
+          )
+          .unique()
+      )!._id;
+      for (let index = 0; index < 8; index += 1) {
+        const postId = index % 2 === 0 ? canonicalId : sourceId;
+        await runCtx.db.insert("comments", {
+          scopeId: "scope:pagination",
+          postId,
+          actorId,
+          body: `comment ${index}`,
+        });
+        await runCtx.db.insert("postActivity", {
+          scopeId: "scope:pagination",
+          postId,
+          actorId,
+          type: "edit",
+          occurredAt: 42,
+          changedFields: [`field-${index}`],
+        });
+      }
+      for (let index = 0; index < 51; index += 1) {
+        const voterId = await runCtx.db.insert("actors", {
+          scopeId: "scope:pagination",
+          externalKey: `pagination:voter:${index}`,
+        });
+        await runCtx.db.insert("votes", {
+          scopeId: "scope:pagination",
+          postId: sourceId,
+          actorId: voterId,
+        });
+      }
+      await runCtx.db.patch(canonicalId, { commentCount: 4 });
+      await runCtx.db.patch(sourceId, { commentCount: 4, voteCount: 51 });
+    });
+
+    await backend.mutation(api.admin.merge.mergePost, {
+      scopeId: "scope:pagination",
+      actor: { externalKey: "pagination:admin" },
+      sourcePostId: source.id,
+      canonicalPostId: canonical.id,
+    });
+    const jobId = await backend.run(async (runCtx) =>
+      String(
+        (
+          await runCtx.db
+            .query("mergeJobs")
+            .withIndex("by_scope_source", (q) =>
+              q
+                .eq("scopeId", "scope:pagination")
+                .eq("sourcePostId", runCtx.db.normalizeId("posts", source.id)!),
+            )
+            .unique()
+        )!._id,
+      ),
+    );
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      const state = await backend.run(async (runCtx) =>
+        (await runCtx.db.get(runCtx.db.normalizeId("mergeJobs", jobId)!))!.state,
+      );
+      if (state === "cutover_done") break;
+      await backend.mutation(internal.jobs.merge.continueMerge, { jobId });
+    }
+    expect(
+      await backend.run(async (runCtx) =>
+        (await runCtx.db.get(runCtx.db.normalizeId("mergeJobs", jobId)!))!.state,
+      ),
+    ).toBe("cutover_done");
+
+    const expected = await backend.run(async (runCtx) => {
+      const canonicalId = runCtx.db.normalizeId("posts", canonical.id)!;
+      const sourceId = runCtx.db.normalizeId("posts", source.id)!;
+      const comments = (
+        await Promise.all(
+          [canonicalId, sourceId].map((postId) =>
+            runCtx.db
+              .query("comments")
+              .withIndex("by_scope_post", (q) =>
+                q.eq("scopeId", "scope:pagination").eq("postId", postId),
+              )
+              .collect(),
+          ),
+        )
+      )
+        .flat()
+        .sort(
+          (left, right) =>
+            left._creationTime - right._creationTime ||
+            String(left._id).localeCompare(String(right._id)),
+        )
+        .map((row) => String(row._id));
+      const activity = (
+        await Promise.all(
+          [canonicalId, sourceId].map((postId) =>
+            runCtx.db
+              .query("postActivity")
+              .withIndex("by_scope_post_occurred", (q) =>
+                q.eq("scopeId", "scope:pagination").eq("postId", postId),
+              )
+              .collect(),
+          ),
+        )
+      )
+        .flat()
+        .sort(
+          (left, right) =>
+            right.occurredAt - left.occurredAt ||
+            right._creationTime - left._creationTime ||
+            String(right._id).localeCompare(String(left._id)),
+        )
+        .map((row) => String(row._id));
+      return { comments, activity };
+    });
+
+    const readAll = async (
+      reference: typeof api.public.comments.listComments | typeof api.admin.activity.listPostActivity,
+      extra: Record<string, unknown>,
+    ) => {
+      const ids: string[] = [];
+      let cursor: string | null = null;
+      for (let pageNumber = 0; pageNumber < 20; pageNumber += 1) {
+        const page = await backend.query(reference as any, {
+          scopeId: "scope:pagination",
+          postId: canonical.id,
+          ...extra,
+          paginationOpts: { numItems: 2, cursor },
+        });
+        ids.push(...page.page.map((row: { id: string }) => row.id));
+        if (page.isDone) return ids;
+        cursor = page.continueCursor;
+      }
+      throw new Error("pagination did not finish");
+    };
+
+    expect(
+      await readAll(api.public.comments.listComments, {
+        viewerAuthenticated: true,
+      }),
+    ).toEqual(expected.comments);
+    expect(await readAll(api.admin.activity.listPostActivity, {})).toEqual(
+      expected.activity,
+    );
+
+    const first = await backend.query(api.public.comments.listComments, {
+      scopeId: "scope:pagination",
+      postId: canonical.id,
+      viewerAuthenticated: true,
+      paginationOpts: { numItems: 2, cursor: null },
+    });
+    const pinned = await backend.query(api.public.comments.listComments, {
+      scopeId: "scope:pagination",
+      postId: canonical.id,
+      viewerAuthenticated: true,
+      paginationOpts: {
+        numItems: 2,
+        cursor: null,
+        endCursor: first.continueCursor,
+      },
+    });
+    expect(pinned.page.map((row) => row.id)).toEqual(
+      first.page.map((row) => row.id),
+    );
+    const reset = await backend.query(api.public.comments.listComments, {
+      scopeId: "scope:pagination",
+      postId: canonical.id,
+      viewerAuthenticated: true,
+      paginationOpts: { numItems: 2, cursor: "malformed" },
+    });
+    expect(reset.page.map((row) => row.id)).toEqual(
+      first.page.map((row) => row.id),
+    );
+    vi.useRealTimers();
+  });
+
   test("keeps every original untouched while a large merge is preparing", async () => {
     vi.useFakeTimers();
     const backend = withRateLimiter(convexTest(schema, modules));
