@@ -7,6 +7,7 @@ import test from "node:test";
 import {
   assertExactPublicationSequence,
   createExpectedPublicationModel,
+  extractDescriptorChain,
 } from "../helpers/headless-publication-oracle.mjs";
 
 const repositoryRoot = resolve(
@@ -156,6 +157,93 @@ test("the exact publication oracle accepts coupled first middle and tail faults"
   );
 });
 
+test("the scoped extraction seam rejects every extra or malformed active record", () => {
+  const record = (paginationOpts) => ({
+    active: 1,
+    name: "harness:listProductComments",
+    args: { scopeId: "scope-a", paginationOpts: { id: 17, ...paginationOpts } },
+  });
+  const exact = [
+    record({ cursor: null, endCursor: "after-1", numItems: 1 }),
+    record({ cursor: "after-1", endCursor: "after-2", numItems: 1 }),
+    record({ cursor: "after-2", numItems: 1 }),
+  ];
+  assert.deepEqual(
+    extractDescriptorChain(exact, {
+      name: "harness:listProductComments",
+      scopeId: "scope-a",
+      sessionId: 17,
+    }),
+    exact.map((entry) => ({
+      cursor: entry.args.paginationOpts.cursor,
+      ...(entry.args.paginationOpts.endCursor === undefined
+        ? {}
+        : { endCursor: entry.args.paginationOpts.endCursor }),
+      numItems: entry.args.paginationOpts.numItems,
+    })),
+  );
+  for (const [label, records] of [
+    [
+      "overlap",
+      [...exact, record({ cursor: "after-1", numItems: 1 })],
+    ],
+    [
+      "gap",
+      [exact[0], record({ cursor: "after-gap", numItems: 1 })],
+    ],
+    [
+      "extra active tail",
+      [...exact, record({ cursor: "orphan", numItems: 1 })],
+    ],
+  ]) {
+    assert.throws(
+      () =>
+        extractDescriptorChain(records, {
+          name: "harness:listProductComments",
+          scopeId: "scope-a",
+          sessionId: 17,
+        }),
+      undefined,
+      label,
+    );
+  }
+});
+
+test("the oracle rejects cross-page cleanup loss duplication and stale publications", () => {
+  const exact = publication({ ids: ["a", "b", "c", "d", "e", "f"] });
+  for (const [label, actual] of [
+    [
+      "cleanup dropped cross-page row",
+      publication({ ids: ["a", "b", "d", "e", "f"] }),
+    ],
+    [
+      "cleanup duplicated cross-page row",
+      publication({ ids: ["a", "b", "c", "c", "d", "e", "f"] }),
+    ],
+    [
+      "store accepted stale result",
+      [exact, publication({ ids: ["old-a", "old-b"] })],
+    ],
+    [
+      "store surfaced stale error",
+      [
+        exact,
+        publication({ status: "Error", ids: [], errorCode: "TRANSIENT" }),
+      ],
+    ],
+  ]) {
+    assert.throws(
+      () =>
+        assertExactPublicationSequence(
+          Array.isArray(actual) ? actual : [actual],
+          exactModel([exact]),
+        ),
+      undefined,
+      label,
+    );
+  }
+});
+
 test("the Phase 2 gate includes mounted headless and real watch-query proofs", async () => {
   const manifest = JSON.parse(
     await readFile(join(repositoryRoot, "package.json"), "utf8"),
@@ -240,6 +328,11 @@ test("the real watch harness drives installed merged comment and activity public
   assert.match(source, /product merge length 2 to 1/);
   assert.match(source, /cleanupPublications\.comments > 0/);
   assert.match(source, /cleanupPublications\.activity > 0/);
+  assert.match(source, /initialNumItems = 1/);
+  assert.match(source, /minimumDescriptorCount:\s*3/);
+  assert.match(source, /betaPublications/);
+  assert.match(source, /currentPublications/);
+  assert.match(source, /publicationCount/);
   assert.match(source, /product comment identity A to B to A/i);
   assert.match(source, /product activity identity A to B to A/i);
 });
