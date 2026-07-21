@@ -15,7 +15,7 @@ Afferent reaches its first public release through four coarse vertical slices. T
 - [x] **Phase 2: Complete Feedback-to-Changelog Workflow** - All 17 plans are implemented and independently verified at 64/64 must-haves. (completed 2026-07-21)
 - [x] **Phase 2.1: Server-Derived Viewer Capability Contract** - Add server-derived vote membership and edit/withdraw capabilities required by the copied UI without accepting client authority facts. (INSERTED) (completed 2026-07-21)
 - [x] **Phase 2.2: Notification Navigation Target Contract** - Project versioned, public, accessible notification destinations without exposing polymorphic internal identifiers. (INSERTED) (completed 2026-07-21)
-- [ ] **Phase 2.3: Admin Read and Projection Completion** - Complete server-authorized admin reads and presentation-ready moderation, changelog, and activity projections. (INSERTED)
+- [x] **Phase 2.3: Admin Read and Projection Completion** - Complete server-authorized admin reads and presentation-ready moderation, changelog, and activity projections. (INSERTED) (completed 2026-07-21)
 - [ ] **Phase 3: Source-Owned Product Interface** - Consumers can install accessible, responsive public and admin shadcn interfaces from one canonical source.
 - [ ] **Phase 4: Hosted Production Release** - The published package, registry, documentation, and isolated public demo work together against real Convex.
 
@@ -210,11 +210,11 @@ Plans:
 4. Activity DTOs expose readable board names/slugs, tag names, and changelog titles/slugs that survive deletion or unlisting, without leaking relation IDs.
 5. Exact DTO/page versions, trusted authority matrices, index/no-scan guards, packed/headless consumption, and the complete Phase 2 regression prove all five locked gaps.
 
-**Plans:** 0/1 plans complete
+**Plans:** 1/1 plans complete
 
 Plans:
 
-- [ ] `02.3-01-PLAN.md` — Add indexed authorized admin reads, complete moderation/changelog projections, and snapshot-backed readable activity.
+- [x] `02.3-01-PLAN.md` — Add indexed authorized admin reads, complete moderation/changelog projections, and snapshot-backed readable activity.
 
 ### Phase 3: Source-Owned Product Interface
 
@@ -297,7 +297,7 @@ Phases execute sequentially: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 3 -> 4
 | 2. Complete Feedback-to-Changelog Workflow | 17/17 | Complete    | 2026-07-21 |
 | 2.1 Server-Derived Viewer Capability Contract | 1/1 | Complete   | 2026-07-21 |
 | 2.2 Notification Navigation Target Contract | 2/2 | Complete   | 2026-07-21 |
-| 2.3 Admin Read and Projection Completion   | 0/1            | In progress      | -          |
+| 2.3 Admin Read and Projection Completion   | 1/1 | Complete   | 2026-07-21 |
 | 3. Source-Owned Product Interface          | 2/6            | In progress      | -          |
 | 4. Hosted Production Release               | 0/TBD          | Not started      | -          |
 

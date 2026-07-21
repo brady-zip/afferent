@@ -4,17 +4,17 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 02.3
 current_phase_name: Admin Read and Projection Completion
-status: executing
-stopped_at: Phase 02.2 verified at 6/6 and completed; ready to execute Phase 02.3 Plan 02.3-01
-last_updated: "2026-07-21T20:04:03Z"
+status: verifying
+stopped_at: Completed 02.3-01-PLAN.md; awaiting independent Phase 02.3 verification before Phase 03-04 resumes
+last_updated: "2026-07-21T20:18:48.188Z"
 last_activity: 2026-07-21
 last_activity_desc: Phase 02.2 complete, transitioned to Phase 02.3
 progress:
   total_phases: 7
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 35
-  completed_plans: 30
-  percent: 86
+  completed_plans: 31
+  percent: 71
 ---
 
 # Project State
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-07-17)
 
 Phase: 02.3 — Admin Read and Projection Completion
 Plan: 02.3-01 of 1
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-07-21 — Phase 02.2 complete, transitioned to Phase 02.3
 
 Progress: [█████████░] 86%
@@ -93,6 +93,7 @@ _Updated after each plan completion_
 | Phase 03 P02 | 15 min | 3 tasks | 32 files |
 | Phase 02.2 P01 | 17min | 3 tasks | 16 files |
 | Phase 02.2 P02 | 8min | 2 tasks | 2 files |
+| Phase 02.3 P01 | 13min | 3 tasks | 31 files |
 
 ## Accumulated Context
 
@@ -189,6 +190,9 @@ Recent decisions affecting current work:
 - [Phase 02.2]: Resolve notification targets only from trusted same-scope event, post, comment, and changelog records; omit invalid optional comment anchors. — Consumers receive presentation-ready truth without browser authority, ID leakage, or per-row reads.
 - [Phase 02.2]: Always canonicalize notification event postId during merge and rewrite entityId only for status_changed. — Comment and changelog identity remains available for exact navigation in both merge modes.
 - [Phase 02.2]: Use comment-specific notification wording if and only if a validated commentId is emitted. — Accessible labels must describe the actual destination while invalid optional relations degrade without metadata leakage.
+- [Phase 02.3]: Admin feedback wraps the unchanged public feedback DTO with exact moderation truth. — Keeps moderation-only fields off the public contract while aligning reads and writes.
+- [Phase 02.3]: Admin changelog and activity projections use v2 presentation shapes instead of bare relation IDs. — Canonical link summaries and snapshot-backed labels eliminate browser joins and ID leakage.
+- [Phase 02.3]: Legacy activity resolves same-scope live referents before stable non-identifying fallbacks. — Historical rows remain readable without trusting or exposing cross-scope relations.
 
 ### Pending Todos
 
@@ -214,6 +218,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-21T20:04:03Z
-Stopped at: Phase 02.2 verified at 6/6 and completed; ready to execute Phase 02.3 Plan 02.3-01
+Last session: 2026-07-21T20:18:38.853Z
+Stopped at: Completed 02.3-01-PLAN.md; awaiting independent Phase 02.3 verification before Phase 03-04 resumes
 Resume file: None
