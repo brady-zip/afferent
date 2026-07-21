@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 3
-current_phase_name: Source-Owned Product Interface
+current_phase: 2
+current_phase_name: Complete Feedback-to-Changelog Workflow
 status: in_progress
-stopped_at: Completed additive 02-15 prerequisite; ready for 03-02
-last_updated: "2026-07-17T22:59:38.360Z"
-last_activity: 2026-07-17
-last_activity_desc: Completed additive 02-15 comment feed prerequisite
+stopped_at: Phase 2 reopened; ready to execute additive Plan 02-16
+last_updated: "2026-07-21T04:26:54.000Z"
+last_activity: 2026-07-20
+last_activity_desc: Planned additive merged-reader cursor correction 02-16
 progress:
   total_phases: 4
-  completed_phases: 2
-  total_plans: 29
+  completed_phases: 1
+  total_plans: 30
   completed_plans: 24
-  percent: 83
+  percent: 80
 ---
 
 # Project State
@@ -24,16 +24,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-17)
 
 **Core value:** SaaS teams can add deeply integrated product feedback to an existing Convex application while retaining native ownership of their data, identity, permissions, and user experience.
-**Current focus:** Phase 3 — Source-Owned Product Interface
+**Current focus:** Phase 2 — Complete Feedback-to-Changelog Workflow
 
 ## Current Position
 
-Phase: 3 — Source-Owned Product Interface
-Plan: 03-02 of 6
+Phase: 2 — Complete Feedback-to-Changelog Workflow
+Plan: 02-16 of 16
 Status: Ready to execute
-Last activity: 2026-07-17 — Completed additive Phase 2 Plan 02-15 comment feed prerequisite
+Last activity: 2026-07-20 — Planned additive merged comment/activity pagination correction
 
-Progress: [████████░░] 83%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
@@ -166,6 +166,7 @@ Recent decisions affecting current work:
 - [Phase 03]: Registry integration tests stage sibling registry dependency JSON beside the selected item before invoking pinned shadcn add. — shadcn 4.11.0 resolves explicit relative registryDependencies from the consumer working directory.
 - [Phase 02]: Expose comment reads as one optional public binding and map omission to an inert unsupported hook state. — Existing consumers remain compatible and React never falls through to direct backend access.
 - [Phase 02]: Reuse the closed flat CommentDto and shared atomic paginated watch store unchanged for useComments. — Replies preserve parentCommentId without a recursive tree, second cache, schema change, or generic CRUD surface.
+- [Phase 02]: Use one versioned composite-cursor stream for canonical-plus-source comments and activity, honoring both cursor boundaries and full stable tie keys. — The installed convex-helpers merged stream supplies index-bounded page pinning; public DTO and authority boundaries remain unchanged.
 
 ### Pending Todos
 
@@ -173,6 +174,7 @@ None yet.
 
 ### Blockers/Concerns
 
+- [Phase 2]: Plan 02-16 must close the verified merged comments/activity pagination gap before Phase 3 Plan 03-02 executes.
 - [Phase 4]: Prove every sandbox query, search, count, seed, reset, quota, and cleanup path is scope-complete.
 
 ## Deferred Items
@@ -185,6 +187,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-17T22:59:38.354Z
-Stopped at: Completed additive 02-15 prerequisite; ready for 03-02
-Resume file: .planning/phases/03-source-owned-product-interface/03-02-PLAN.md
+Last session: 2026-07-21T04:26:54.000Z
+Stopped at: Phase 2 reopened; ready to execute additive Plan 02-16
+Resume file: .planning/phases/02-complete-feedback-to-changelog-workflow/02-16-PLAN.md

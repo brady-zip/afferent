@@ -158,6 +158,18 @@ The acceptance boundary is exact and temporal. Mounted and disposable-real-Conve
 
 ---
 
+## Merged Comment and Activity Cursor Correction
+
+**Date:** 2026-07-20
+
+Independent re-verification after Plan 02-15 found one grouped product-path gap: the canonical-plus-source branches in `public/comments.ts` and `admin/activity.ts` hand-roll pagination with only the primary timestamp, ignore `paginationOpts.endCursor`, and advance late pages through post-prefix filters. The synthetic single-stream comment oracle therefore could not falsify skipped equal-key rows, pinned-window drift, or offset-scaling work in the shipped merged readers.
+
+At the user's direction, Codex consulted the live interactive Claude peer through radio ASK `#28702c664379d37c`, then used follow-up ASK `#ea36ec76646a7986` to resolve the activity-order and merge-lifecycle details against the installed `convex-helpers` stream implementation. The accepted additive correction is Plan 02-16: both length-1 and length-2 readers use one shared bounded `mergedStream` paginator; comments retain ascending `(_creationTime,_id)` and activity retains its existing index-native descending `(occurredAt,_creationTime,_id)` order. No activity field, index, writer, merge mutation, backfill, or migration changes. Cursor, endCursor, continueCursor, and splitCursor share one opaque versioned envelope carrying order kind and stream-set signature. Positions contain only repoint-invariant order keys. Cleanup row moves therefore preserve pinned windows, while 1-to-2 cutover, 2-to-1 completion, source-redirect, and malformed/stale/mismatched envelopes cleanly reset to a fresh maximal coherent prefix instead of throwing or overlapping. Public DTOs, merge truth, scope/auth derivation, and the React pagination store do not change.
+
+Acceptance must invoke the real installed component queries after actual small and staged merges. Red-first component and disposable real-Convex tests cover single-post parity, equal primary keys, three or more pages, pinned windows under insertion/deletion and cleanup repoint, both stream-set transitions, source redirects, cursor-envelope fuzz/reset, rapid load-more, first/middle/tail faults with exact prefix recovery, identity replacement with exact-once disposal, hidden/cross-scope privacy, and small-row-budget deep pages. Phase 3 Plan 03-02 now depends on completed Plan 02-16; Plans 02-01 through 02-15 remain preserved.
+
+---
+
 ## the agent's Discretion
 
 - Exact Trending constants, field sizes, rate-limit values/windows, Complete recency window, inbox cap, lease/retry thresholds, and debounce defaults.
