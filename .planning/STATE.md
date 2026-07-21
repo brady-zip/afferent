@@ -4,17 +4,17 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 2
 current_phase_name: Complete Feedback-to-Changelog Workflow
-status: in_progress
-stopped_at: Phase 2 reopened; ready to execute additive Plan 02-16
-last_updated: "2026-07-21T04:26:54.000Z"
+status: verifying
+stopped_at: Completed 02-16-PLAN.md; awaiting phase verification
+last_updated: "2026-07-21T04:55:18.099Z"
 last_activity: 2026-07-20
-last_activity_desc: Planned additive merged-reader cursor correction 02-16
+last_activity_desc: Executed merged comment/activity pagination correction
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 30
-  completed_plans: 24
-  percent: 80
+  completed_plans: 25
+  percent: 50
 ---
 
 # Project State
@@ -24,16 +24,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-17)
 
 **Core value:** SaaS teams can add deeply integrated product feedback to an existing Convex application while retaining native ownership of their data, identity, permissions, and user experience.
-**Current focus:** Phase 2 — Complete Feedback-to-Changelog Workflow
+**Current focus:** Phase 2 — verification of merged reader pagination closure
 
 ## Current Position
 
 Phase: 2 — Complete Feedback-to-Changelog Workflow
 Plan: 02-16 of 16
-Status: Ready to execute
-Last activity: 2026-07-20 — Planned additive merged comment/activity pagination correction
+Status: Executed — awaiting verification
+Last activity: 2026-07-20 — Executed merged comment/activity pagination correction
 
-Progress: [████████░░] 80%
+Progress: [████████░░] 83%
 
 ## Performance Metrics
 
@@ -86,6 +86,7 @@ _Updated after each plan completion_
 | Phase 02 P14 | 14min    | 3 tasks | 4 files  |
 | Phase 03 P01 | 14min    | 3 tasks | 35 files |
 | Phase 02 P15 | 100min   | 3 tasks | 11 files |
+| Phase 02 P16 | 17min    | 3 tasks | 9 files  |
 
 ## Accumulated Context
 
@@ -167,6 +168,9 @@ Recent decisions affecting current work:
 - [Phase 02]: Expose comment reads as one optional public binding and map omission to an inert unsupported hook state. — Existing consumers remain compatible and React never falls through to direct backend access.
 - [Phase 02]: Reuse the closed flat CommentDto and shared atomic paginated watch store unchanged for useComments. — Replies preserve parentCommentId without a recursive tree, second cache, schema change, or generic CRUD surface.
 - [Phase 02]: Use one versioned composite-cursor stream for canonical-plus-source comments and activity, honoring both cursor boundaries and full stable tie keys. — The installed convex-helpers merged stream supplies index-bounded page pinning; public DTO and authority boundaries remain unchanged.
+- [Phase 02]: Use the same mergedStream helper for one and two post IDs so cursor shape and reactive window semantics cannot diverge by reader cardinality.
+- [Phase 02]: Bind opaque cursor positions to reader, order, and hashed stream-set identity; any mismatch resets cursor and endCursor together instead of attempting partial reuse.
+- [Phase 02]: Keep comments ordered by _creationTime,_id and activity ordered by occurredAt,_creationTime,_id so cleanup repoints never change cursor position.
 
 ### Pending Todos
 
@@ -174,7 +178,6 @@ None yet.
 
 ### Blockers/Concerns
 
-- [Phase 2]: Plan 02-16 must close the verified merged comments/activity pagination gap before Phase 3 Plan 03-02 executes.
 - [Phase 4]: Prove every sandbox query, search, count, seed, reset, quota, and cleanup path is scope-complete.
 
 ## Deferred Items
@@ -187,6 +190,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-21T04:26:54.000Z
-Stopped at: Phase 2 reopened; ready to execute additive Plan 02-16
-Resume file: .planning/phases/02-complete-feedback-to-changelog-workflow/02-16-PLAN.md
+Last session: 2026-07-21T04:55:03.263Z
+Stopped at: Completed 02-16-PLAN.md; awaiting phase verification
+Resume file: None
