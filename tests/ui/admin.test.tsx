@@ -143,7 +143,9 @@ describe("admin product interface", () => {
   test("renders unsupported and not-authorized states without accepting authority props", async () => {
     const { AfferentAdminScreen } =
       await import("../../ui/afferent/admin/admin-screen.js");
-    const unsupported = renderUi(<AfferentAdminScreen boards={[board]} />);
+    const unsupported = renderUi(<AfferentAdminScreen boards={[board]} />, {
+      bindings: { public: adminBindings.public } as never,
+    });
     await act(async () => {});
     expect(unsupported.container.textContent).toContain(
       "This feature isn't configured",

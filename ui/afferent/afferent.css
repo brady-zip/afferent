@@ -684,6 +684,97 @@
   }
 }
 
+.afferent-admin {
+  display: grid;
+  gap: 24px;
+  margin-inline: auto;
+  max-width: 1280px;
+  padding: 32px 16px 48px;
+}
+.afferent-admin-workspace,
+.afferent-admin-detail,
+.afferent-admin-form,
+.afferent-changelog-editor,
+.afferent-changelog-editor form {
+  display: grid;
+  gap: 16px;
+}
+.afferent-admin-queue {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.afferent-admin-queue button {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--foreground);
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+  text-align: start;
+  width: 100%;
+}
+.afferent-admin-queue [data-admin-label]::before {
+  color: var(--muted-foreground);
+  content: attr(data-admin-label) ": ";
+  font-size: 14px;
+}
+.afferent-admin-form label,
+.afferent-changelog-editor label,
+.afferent-dialog label {
+  display: grid;
+  font-weight: 600;
+  gap: 8px;
+}
+.afferent-admin input,
+.afferent-admin textarea,
+.afferent-admin select,
+.afferent-dialog input,
+.afferent-dialog select {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--foreground);
+  min-height: 44px;
+  padding: 8px 12px;
+}
+.afferent-dialog-overlay {
+  background: rgb(0 0 0 / 50%);
+  inset: 0;
+  position: fixed;
+  z-index: 60;
+}
+.afferent-dialog {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--foreground);
+  display: grid;
+  gap: 16px;
+  left: 50%;
+  max-height: calc(100vh - 32px);
+  max-width: calc(100vw - 32px);
+  overflow: auto;
+  padding: 24px;
+  position: fixed;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 480px;
+  z-index: 61;
+}
+@media (min-width: 768px) {
+  .afferent-admin-workspace {
+    align-items: start;
+    grid-template-columns: minmax(280px, 35fr) minmax(0, 65fr);
+  }
+  .afferent-changelog-editor {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   [data-afferent-screen] *,
   [data-afferent-screen] *::before,
