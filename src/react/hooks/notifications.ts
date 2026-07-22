@@ -28,6 +28,7 @@ export interface NotificationPaginationState {
     "LoadingFirstPage" | "CanLoadMore" | "LoadingMore" | "Exhausted" | "Error";
   error?: AfferentError;
   loadMore: (count: number) => void;
+  retry: () => void;
 }
 
 export type NotificationFeedState =
@@ -54,6 +55,7 @@ export type NotificationFeedState =
       canLoadMore: false;
       error: AfferentError;
       loadMore: () => void;
+      retry: () => void;
     }>;
 
 export function mapNotificationFeedState(
@@ -87,6 +89,7 @@ export function mapNotificationFeedState(
       canLoadMore: false,
       error: pagination.error!,
       loadMore,
+      retry: pagination.retry,
     };
   }
   if (pagination.status === "Exhausted" && pagination.results.length === 0) {

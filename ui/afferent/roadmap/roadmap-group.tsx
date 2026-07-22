@@ -63,7 +63,7 @@ function renderGroup(
             <button
               type="button"
               className="afferent-button afferent-button--secondary"
-              onClick={group.loadMore}
+              onClick={group.retry}
             >
               {copy.common.tryLoadingAgain}
             </button>

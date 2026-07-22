@@ -99,7 +99,7 @@ function renderNotifications(notifications: NotificationControllerState) {
             <button
               type="button"
               className="afferent-button afferent-button--secondary"
-              onClick={notifications.loadMore}
+              onClick={notifications.retry}
             >
               {copy.common.tryLoadingAgain}
             </button>

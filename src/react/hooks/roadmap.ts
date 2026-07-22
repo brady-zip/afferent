@@ -15,6 +15,7 @@ export interface RoadmapPaginationState {
     "LoadingFirstPage" | "CanLoadMore" | "LoadingMore" | "Exhausted" | "Error";
   error?: AfferentError;
   loadMore: (count: number) => void;
+  retry: () => void;
 }
 
 export type RoadmapGroupState =
@@ -41,6 +42,7 @@ export type RoadmapGroupState =
       isLoadingMore: false;
       canLoadMore: false;
       loadMore: () => void;
+      retry: () => void;
     }>;
 
 export function mapRoadmapGroupState(
@@ -74,6 +76,7 @@ export function mapRoadmapGroupState(
       isLoadingMore: false,
       canLoadMore: false,
       loadMore,
+      retry: pagination.retry,
     };
   }
   if (pagination.status === "Exhausted" && pagination.results.length === 0) {
