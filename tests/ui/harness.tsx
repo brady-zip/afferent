@@ -9,8 +9,12 @@ import {
   type AfferentBindings,
 } from "../../src/react/index.js";
 import { AfferentUiProvider } from "../../ui/afferent/core/afferent-ui-provider.js";
+import type {
+  AfferentUiCopy,
+  DeepPartial,
+} from "../../ui/afferent/core/copy.js";
 
-interface QueryRecord {
+export interface QueryRecord {
   name: string;
   args: Record<string, unknown>;
   value: unknown;
@@ -212,6 +216,10 @@ export class ControlledUiClient {
       for (const listener of record.listeners) listener();
     }
   }
+
+  attempts(name: string) {
+    return this.records.filter((record) => record.name === `ui:${name}`);
+  }
 }
 
 export function renderUi(
@@ -220,6 +228,7 @@ export function renderUi(
     client?: ControlledUiClient;
     auth?: AfferentAuthState;
     bindings?: AfferentBindings;
+    copy?: DeepPartial<AfferentUiCopy>;
   } = {},
 ) {
   const client = options.client ?? new ControlledUiClient();
@@ -238,6 +247,7 @@ export function renderUi(
           client={client as never}
         >
           <AfferentUiProvider
+            copy={options.copy}
             href={{
               post: (id) => `/feedback/${id}`,
               roadmap: () => "/roadmap",

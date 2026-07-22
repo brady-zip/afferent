@@ -33,6 +33,10 @@ const notificationListModule =
 const notificationPopoverModule =
   "../../ui/afferent/notifications/notifications-popover.js";
 
+const approvedGuidance =
+  "Try loading it again. If the problem continues, contact the application owner.";
+const sentinelGuidance = "SENTINEL: use the host recovery channel.";
+
 const surfaceBindings = {
   ...uiBindings,
   roadmap: { listRoadmapGroup: surfaceReferences.roadmap },
@@ -186,6 +190,65 @@ class PublicSurfaceClient extends ControlledUiClient {
     }
     return super.watchQuery(reference, args);
   }
+}
+
+function withoutPaginationAttemptId(args: Record<string, unknown>) {
+  const pagination = args.paginationOpts as
+    | Record<string, unknown>
+    | undefined;
+  if (!pagination) return args;
+  const { id: _attemptId, ...paginationOpts } = pagination;
+  return { ...args, paginationOpts };
+}
+
+async function assertPublicRecovery(
+  mounted: ReturnType<typeof renderUi>,
+  options: {
+    region?: Element;
+    binding: string;
+    heading: string;
+    label: string;
+    guidance: string;
+    args: Record<string, unknown>;
+    retainedText?: string;
+  },
+) {
+  const region = options.region ?? mounted.container;
+  expect(region.textContent).toContain(options.heading);
+  expect(region.textContent).toContain(options.guidance);
+  if (options.guidance === sentinelGuidance) {
+    expect(region.textContent).not.toContain(approvedGuidance);
+  }
+  if (options.retainedText) {
+    expect(region.textContent).toContain(options.retainedText);
+  }
+  const attempts = mounted.client
+    .attempts(options.binding)
+    .filter((record) =>
+      Object.entries(options.args).every(
+        ([key, value]) => record.args[key] === value,
+      ),
+    );
+  const originatingArgs = attempts.at(-1)?.args;
+  expect(originatingArgs).toMatchObject(options.args);
+  const recordCount = mounted.client.records.length;
+  const action = [...region.querySelectorAll("button")].find(
+    (button) => button.textContent?.trim() === options.label,
+  );
+  expect(action).toBeDefined();
+  click(action!);
+  await act(async () => {});
+  expect(
+    mounted.client.records.slice(recordCount).map(({ name, args }) => ({
+      name,
+      args: withoutPaginationAttemptId(args),
+    })),
+  ).toEqual([
+    {
+      name: `ui:${options.binding}`,
+      args: withoutPaginationAttemptId(originatingArgs!),
+    },
+  ]);
 }
 
 function change(element: HTMLSelectElement, value: string) {
@@ -433,6 +496,111 @@ describe("closed public surface states", () => {
     );
     expect(loading.container.textContent).toContain("Reload changelog");
     loading.unmount();
+  });
+
+  test("every public surface query error preserves its domain action and exact watch arguments under default and custom guidance", async () => {
+    const { AfferentNotificationsList } = await import(
+      /* @vite-ignore */ notificationListModule
+    );
+    for (const guidance of [approvedGuidance, sentinelGuidance]) {
+      const copy =
+        guidance === sentinelGuidance
+          ? { common: { queryErrorGuidance: sentinelGuidance } }
+          : undefined;
+
+      const roadmapClient = new PublicSurfaceClient();
+      const roadmap = renderUi(
+        <AfferentRoadmapScreen boards={[board, roadmapBoard]} />,
+        { client: roadmapClient, bindings: surfaceBindings, copy },
+      );
+      await act(async () => {});
+      act(() => roadmapClient.fail("roadmap", new Error("roadmap offline")));
+      for (const group of [
+        { key: "planned", name: "Planned" },
+        { key: "in_progress", name: "In Progress" },
+        { key: "complete", name: "Complete" },
+      ] as const) {
+        await assertPublicRecovery(roadmap, {
+          region: roadmap.container.querySelector(
+            `[data-roadmap-group='${group.key}']`,
+          )!,
+          binding: "roadmap",
+          heading: `We couldn't load ${group.name} roadmap`,
+          label: "Try loading again",
+          guidance,
+          args: { status: group.key, sessionGeneration: 1 },
+        });
+      }
+      roadmap.unmount();
+
+      const changelogFeedClient = new PublicSurfaceClient();
+      const changelogFeed = renderUi(<AfferentChangelogScreen />, {
+        client: changelogFeedClient,
+        bindings: surfaceBindings,
+        copy,
+      });
+      await act(async () => {});
+      act(() =>
+        changelogFeedClient.fail(
+          "changelogFeed",
+          new Error("changelog feed offline"),
+        ),
+      );
+      await assertPublicRecovery(changelogFeed, {
+        binding: "changelogFeed",
+        heading: "We couldn't load changelog",
+        label: "Reload changelog",
+        guidance,
+        args: { sessionGeneration: 1 },
+      });
+      changelogFeed.unmount();
+
+      const changelogEntryClient = new PublicSurfaceClient();
+      const changelogEntry = renderUi(
+        <AfferentChangelogScreen slug="latest-release" />,
+        { client: changelogEntryClient, bindings: surfaceBindings, copy },
+      );
+      await act(async () => {});
+      act(() =>
+        changelogEntryClient.fail(
+          "changelogEntry",
+          new Error("changelog entry offline"),
+        ),
+      );
+      await assertPublicRecovery(changelogEntry, {
+        region: changelogEntry.container.querySelector(
+          ".afferent-changelog__detail",
+        )!,
+        binding: "changelogEntry",
+        heading: "We couldn't load this changelog entry",
+        label: "Retry changelog entry",
+        guidance,
+        args: { slug: "latest-release", sessionGeneration: 1 },
+      });
+      changelogEntry.unmount();
+
+      const notificationsClient = new PublicSurfaceClient();
+      const notificationList = renderUi(<AfferentNotificationsList />, {
+        client: notificationsClient,
+        bindings: surfaceBindings,
+        copy,
+      });
+      await act(async () => {});
+      act(() =>
+        notificationsClient.fail(
+          "notifications",
+          new Error("notifications offline"),
+        ),
+      );
+      await assertPublicRecovery(notificationList, {
+        binding: "notifications",
+        heading: "We couldn't load notifications",
+        label: "Try loading again",
+        guidance,
+        args: { sessionGeneration: 1 },
+      });
+      notificationList.unmount();
+    }
   });
 
   test("source and CSS retain server grouping, route agnosticism, hook ownership, and pointer sizing", () => {

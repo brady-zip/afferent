@@ -14,6 +14,60 @@ import {
   setInput,
 } from "./harness.js";
 
+const approvedGuidance =
+  "Try loading it again. If the problem continues, contact the application owner.";
+const sentinelGuidance = "SENTINEL: use the host recovery channel.";
+
+async function assertQueryRecovery(
+  mounted: ReturnType<typeof renderUi>,
+  options: {
+    binding: string;
+    heading: string;
+    label: string;
+    guidance: string;
+    args: Record<string, unknown>;
+    retainedText?: string;
+  },
+) {
+  act(() => mounted.client.fail(options.binding, new Error(`${options.binding} offline`)));
+  expect(mounted.container.textContent).toContain(options.heading);
+  expect(mounted.container.textContent).toContain(options.guidance);
+  expect(mounted.container.textContent).toContain(`${options.binding} offline`);
+  if (options.guidance === sentinelGuidance) {
+    expect(mounted.container.textContent).not.toContain(approvedGuidance);
+  }
+  if (options.retainedText) {
+    expect(mounted.container.textContent).toContain(options.retainedText);
+  }
+
+  const priorAttempts = mounted.client.attempts(options.binding);
+  const originatingArgs = priorAttempts.at(-1)?.args;
+  expect(originatingArgs).toMatchObject(options.args);
+  const recordCount = mounted.client.records.length;
+  const action = [...mounted.container.querySelectorAll("button")].find(
+    (button) => button.textContent?.trim() === options.label,
+  );
+  expect(action).toBeDefined();
+  click(action!);
+  await act(async () => {});
+  const expectedArgs = withoutPaginationAttemptId(originatingArgs!);
+  expect(
+    mounted.client.records.slice(recordCount).map(({ name, args }) => ({
+      name,
+      args: withoutPaginationAttemptId(args),
+    })),
+  ).toEqual([{ name: `ui:${options.binding}`, args: expectedArgs }]);
+}
+
+function withoutPaginationAttemptId(args: Record<string, unknown>) {
+  const pagination = args.paginationOpts as
+    | Record<string, unknown>
+    | undefined;
+  if (!pagination) return args;
+  const { id: _attemptId, ...paginationOpts } = pagination;
+  return { ...args, paginationOpts };
+}
+
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 });
@@ -274,6 +328,126 @@ describe("public feedback board", () => {
       loading.client.records.filter((record) => record.name === "ui:feed"),
     ).toHaveLength(watchCount + 1);
     loading.unmount();
+  });
+
+  test("every board query error preserves its domain action and exact watch arguments under default and custom guidance", async () => {
+    for (const guidance of [approvedGuidance, sentinelGuidance]) {
+      const copy =
+        guidance === sentinelGuidance
+          ? { common: { queryErrorGuidance: sentinelGuidance } }
+          : undefined;
+
+      const feed = renderUi(<AfferentBoardScreen boards={[board]} />, {
+        client: new ControlledUiClient(),
+        copy,
+      });
+      await act(async () => {});
+      await assertQueryRecovery(feed, {
+        binding: "feed",
+        heading: "We couldn't load feedback",
+        label: "Reload feedback",
+        guidance,
+        args: { order: "top", boardId: board.id, sessionGeneration: 1 },
+      });
+      feed.unmount();
+
+      const search = renderUi(<AfferentBoardScreen boards={[board]} />, {
+        client: new ControlledUiClient(),
+        copy,
+      });
+      await act(async () => {});
+      setInput(
+        search.container.querySelector<HTMLInputElement>("input[name='search']")!,
+        "keyboard",
+      );
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+      await assertQueryRecovery(search, {
+        binding: "search",
+        heading: "We couldn't search feedback",
+        label: "Retry feedback search",
+        guidance,
+        args: {
+          query: "keyboard",
+          boardId: board.id,
+          sessionGeneration: 1,
+        },
+      });
+      search.unmount();
+
+      const similar = renderUi(<AfferentBoardScreen boards={[board]} />, {
+        client: new ControlledUiClient(),
+        copy,
+      });
+      await act(async () => {});
+      click(
+        [...similar.container.querySelectorAll("button")].find(
+          (button) => button.textContent?.trim() === "Create feedback",
+        )!,
+      );
+      setInput(
+        similar.container.querySelector<HTMLInputElement>("input[name='title']")!,
+        "Keyboard shortcuts",
+      );
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+      await assertQueryRecovery(similar, {
+        binding: "similar",
+        heading: "We couldn't load similar feedback",
+        label: "Retry similar feedback",
+        guidance,
+        args: {
+          title: "Keyboard shortcuts",
+          body: "",
+          sessionGeneration: 1,
+        },
+      });
+      similar.unmount();
+
+      const detail = renderUi(
+        <AfferentBoardScreen boards={[board]} postId={feedbackPost.id} />,
+        { client: new ControlledUiClient(), copy },
+      );
+      await act(async () => {});
+      await assertQueryRecovery(detail, {
+        binding: "post",
+        heading: "We couldn't load feedback detail",
+        label: "Retry feedback detail",
+        guidance,
+        args: { postId: feedbackPost.id, sessionGeneration: 1 },
+      });
+      detail.unmount();
+
+      const discussion = renderUi(
+        <AfferentBoardScreen boards={[board]} postId={feedbackPost.id} />,
+        { client: new ControlledUiClient(), copy },
+      );
+      await act(async () => {});
+      await assertQueryRecovery(discussion, {
+        binding: "comments",
+        heading: "We couldn't load discussion",
+        label: "Retry discussion",
+        guidance,
+        args: { postId: feedbackPost.id, sessionGeneration: 1 },
+      });
+      discussion.unmount();
+
+      const activity = renderUi(
+        <AfferentBoardScreen boards={[board]} postId={feedbackPost.id} />,
+        { client: new ControlledUiClient(), copy },
+      );
+      await act(async () => {});
+      await assertQueryRecovery(activity, {
+        binding: "activity",
+        heading: "We couldn't load activity",
+        label: "Retry activity",
+        guidance,
+        args: { postId: feedbackPost.id, sessionGeneration: 1 },
+      });
+      activity.unmount();
+    }
   });
 
   test("merged and not-found detail states use a real canonical link", async () => {
