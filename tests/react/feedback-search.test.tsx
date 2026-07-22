@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
 import {
   DEFAULT_SEARCH_DEBOUNCE_MS,
@@ -45,5 +45,15 @@ describe("bounded discovery hooks", () => {
       items: [],
       hasMore: false,
     });
+  });
+
+  test("preserves direct-watch retry only on reloadable discovery errors", () => {
+    const retry = vi.fn();
+    const state = mapBoundedDiscoveryState(new Error("offline"), false, retry);
+    expect(state.status).toBe("error");
+    if (state.status !== "error") throw new Error("expected error state");
+    state.retry();
+    expect(retry).toHaveBeenCalledOnce();
+    expect(mapBoundedDiscoveryState(undefined, true)).not.toHaveProperty("retry");
   });
 });

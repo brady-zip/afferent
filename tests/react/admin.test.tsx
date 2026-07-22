@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import { describe, expect, test, vi } from "vitest";
 
 import {
@@ -48,5 +49,10 @@ describe("headless admin state", () => {
   test("does not model moderation as an optimistic cache mutation", () => {
     const mutate = vi.fn();
     expect(mutate).not.toHaveBeenCalled();
+  });
+
+  test("projects activity retry from the existing paginated watch", () => {
+    const source = fs.readFileSync("src/react/hooks/admin.ts", "utf8");
+    expect(source).toMatch(/status: "error"[\s\S]*retry: page\.retry/);
   });
 });

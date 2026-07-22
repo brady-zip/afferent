@@ -46,6 +46,21 @@ describe("headless feedback feed", () => {
     const second = { order: "newest" as const, status: "planned" as const };
     expect(JSON.stringify(first)).not.toBe(JSON.stringify(second));
   });
+
+  test("preserves the watch retry on feedback feed errors", () => {
+    const retry = vi.fn();
+    const state = mapFeedbackFeedState({
+      results: [],
+      status: "Error",
+      error: { contractVersion: 1, code: "TRANSIENT", message: "offline" },
+      loadMore: vi.fn(),
+      retry,
+    } as never);
+    expect(state.status).toBe("error");
+    if (state.status !== "error") throw new Error("expected error state");
+    state.retry();
+    expect(retry).toHaveBeenCalledOnce();
+  });
 });
 
 describe("headless comment feed", () => {
@@ -123,5 +138,17 @@ describe("headless comment feed", () => {
       items: [{ id: "root-1" }],
       error: { code: "TRANSIENT" },
     });
+    const retry = vi.fn();
+    const retryable = mapCommentFeedState({
+      results: [],
+      status: "Error",
+      error: { contractVersion: 1, code: "TRANSIENT", message: "offline" },
+      loadMore,
+      retry,
+    } as never);
+    expect(retryable.status).toBe("error");
+    if (retryable.status !== "error") throw new Error("expected error state");
+    retryable.retry();
+    expect(retry).toHaveBeenCalledOnce();
   });
 });

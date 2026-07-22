@@ -49,4 +49,19 @@ describe("headless changelog hooks", () => {
       status: "unsupported",
     });
   });
+
+  test("preserves the matching watch retry on public feed errors", () => {
+    const retry = vi.fn();
+    const state = mapChangelogFeedState({
+      results: [],
+      status: "Error",
+      error: { contractVersion: 1, code: "TRANSIENT", message: "offline" },
+      loadMore: vi.fn(),
+      retry,
+    } as never);
+    expect(state.status).toBe("error");
+    if (state.status !== "error") throw new Error("expected error state");
+    state.retry();
+    expect(retry).toHaveBeenCalledOnce();
+  });
 });
