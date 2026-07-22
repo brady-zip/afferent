@@ -428,6 +428,9 @@ describe("closed public surface states", () => {
     expect(loading.container.textContent).toContain(
       "We couldn't load changelog",
     );
+    expect(loading.container.textContent).toContain(
+      "Try loading it again. If the problem continues, contact the application owner.",
+    );
     expect(loading.container.textContent).toContain("Reload changelog");
     loading.unmount();
   });

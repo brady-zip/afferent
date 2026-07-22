@@ -113,4 +113,26 @@ describe("copied UI distribution contract", () => {
     expect(sources["changelog/changelog-screen.tsx"]).toMatch(/feed\.retry/);
     expect(sources["changelog/changelog-screen.tsx"]).toMatch(/detail\.retry/);
   });
+
+  test("centralizes approved query recovery guidance across every public error surface", () => {
+    const copy = fs.readFileSync(`${root}/core/copy.ts`, "utf8");
+    expect(copy).toContain("queryErrorGuidance: string");
+    expect(copy).toContain(
+      'queryErrorGuidance: "Try loading it again. If the problem continues, contact the application owner."',
+    );
+    for (const file of [
+      "board/board-screen.tsx",
+      "board/similar-feedback.tsx",
+      "board/post-detail.tsx",
+      "board/discussion.tsx",
+      "board/activity.tsx",
+      "roadmap/roadmap-group.tsx",
+      "changelog/changelog-screen.tsx",
+      "notifications/notifications-list.tsx",
+    ]) {
+      expect(fs.readFileSync(`${root}/${file}`, "utf8")).toContain(
+        "copy.common.queryErrorGuidance",
+      );
+    }
+  });
 });

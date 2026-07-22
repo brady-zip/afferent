@@ -258,6 +258,9 @@ describe("public feedback board", () => {
     expect(loading.container.textContent).toContain(
       "We couldn't load feedback",
     );
+    expect(loading.container.textContent).toContain(
+      "Try loading it again. If the problem continues, contact the application owner.",
+    );
     expect(loading.container.textContent).toContain("Reload feedback");
     const watchCount = loading.client.records.filter(
       (record) => record.name === "ui:feed",
