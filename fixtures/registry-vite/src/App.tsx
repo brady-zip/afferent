@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ConvexProvider } from "convex/react";
 import { getFunctionName, makeFunctionReference } from "convex/server";
 
@@ -161,6 +161,31 @@ const adminChangelogEntries = [
     updatedAt: 1,
     links: [],
   },
+  {
+    contractVersion: 2,
+    id: "changelog:published",
+    title: "Published update",
+    body: "Available now.",
+    slug: "published-update",
+    state: "published",
+    createdAt: Date.UTC(2026, 0, 14, 12),
+    updatedAt: Date.UTC(2026, 0, 15, 12),
+    firstPublishedAt: Date.UTC(2026, 0, 15, 12),
+    publishedAt: Date.UTC(2026, 0, 15, 12),
+    links: [],
+  },
+];
+const activity = [
+  {
+    contractVersion: 2,
+    id: "activity:status",
+    postId: fixturePost.id,
+    type: "status_change",
+    occurredAt: Date.UTC(2026, 0, 15, 12),
+    actor: fixturePost.author,
+    fromStatus: "open",
+    toStatus: "planned",
+  },
 ];
 const notifications = [
   {
@@ -210,7 +235,25 @@ function page(contractVersion: number, items: readonly unknown[]) {
   };
 }
 
-function queryValue(name: string, args: Record<string, unknown>) {
+type AdminScenario =
+  | "ready"
+  | "loading"
+  | "denied"
+  | "empty"
+  | "capability-error"
+  | "detail-error"
+  | "activity-error"
+  | "tags-error"
+  | "changelog-error"
+  | "loading-more";
+
+type MutationOutcome = "success" | "error-once" | "pending";
+
+function queryValue(
+  name: string,
+  args: Record<string, unknown>,
+  adminScenario: AdminScenario,
+) {
   if (name === "evidence:feed") return page(3, [fixturePost, canonicalPost]);
   if (name === "evidence:post") {
     return { contractVersion: 2, status: "post", post: fixturePost };
@@ -250,9 +293,25 @@ function queryValue(name: string, args: Record<string, unknown>) {
   if (name === "evidence:unread") {
     return { contractVersion: 1, count: 1 };
   }
-  if (name === "evidence:adminCapability") return true;
+  if (name === "evidence:adminCapability") {
+    if (adminScenario === "loading") return undefined;
+    if (adminScenario === "denied") return false;
+    return true;
+  }
   if (name === "evidence:adminFeedback") {
     if (args.visibility === "hidden") return page(1, []);
+    if (adminScenario === "empty") return page(1, []);
+    if (adminScenario === "loading-more") {
+      const cursor = (
+        args.paginationOpts as Readonly<{ cursor?: string | null }> | undefined
+      )?.cursor;
+      if (cursor === "admin-next") return undefined;
+      return {
+        ...page(1, [adminPost, canonicalAdminPost]),
+        isDone: false,
+        continueCursor: "admin-next",
+      };
+    }
     return page(1, [adminPost, canonicalAdminPost]);
   }
   if (name === "evidence:adminPost") return adminPost;
@@ -269,35 +328,82 @@ function queryValue(name: string, args: Record<string, unknown>) {
       ],
     };
   }
-  if (name === "evidence:activity") return page(2, []);
+  if (name === "evidence:activity") return page(2, activity);
   if (name === "evidence:adminChangelog") {
     return page(1, adminChangelogEntries);
   }
   return undefined;
 }
 
-const client = {
-  watchQuery(reference: unknown, args: Record<string, unknown> = {}) {
-    const value = queryValue(getFunctionName(reference as never), args);
-    return {
-      onUpdate() {
-        return () => {};
-      },
-      localQueryResult() {
-        return value;
-      },
-      localQueryLogs() {
-        return undefined;
-      },
-      journal() {
-        return undefined;
-      },
-    };
-  },
-  mutation() {
-    return Promise.resolve({ contractVersion: 1, ok: true, data: {} });
-  },
-};
+function queryFailure(name: string, adminScenario: AdminScenario) {
+  const failures: Partial<Record<AdminScenario, string>> = {
+    "capability-error": "evidence:adminCapability",
+    "detail-error": "evidence:adminPost",
+    "activity-error": "evidence:activity",
+    "tags-error": "evidence:tags",
+    "changelog-error": "evidence:adminChangelog",
+  };
+  const failingQuery = failures[adminScenario];
+  return failingQuery === name
+    ? new Error(
+        "The evidence fixture could not load this administrative state.",
+      )
+    : undefined;
+}
+
+function createEvidenceClient(
+  adminScenario: AdminScenario,
+  mutationOutcome: MutationOutcome,
+) {
+  const attempts = new Map<string, number>();
+  return {
+    watchQuery(reference: unknown, args: Record<string, unknown> = {}) {
+      const name = getFunctionName(reference as never);
+      const value = queryValue(name, args, adminScenario);
+      const failure = queryFailure(name, adminScenario);
+      return {
+        onUpdate() {
+          return () => {};
+        },
+        localQueryResult() {
+          if (failure) throw failure;
+          return value;
+        },
+        localQueryLogs() {
+          return undefined;
+        },
+        journal() {
+          return undefined;
+        },
+      };
+    },
+    mutation(reference: unknown) {
+      const name = getFunctionName(reference as never);
+      const attempt = (attempts.get(name) ?? 0) + 1;
+      attempts.set(name, attempt);
+      if (mutationOutcome === "pending") {
+        return new Promise((resolve) => {
+          setTimeout(
+            () => resolve({ contractVersion: 1, ok: true, data: {} }),
+            350,
+          );
+        });
+      }
+      if (mutationOutcome === "error-once" && attempt === 1) {
+        return Promise.resolve({
+          contractVersion: 1,
+          ok: false,
+          error: {
+            contractVersion: 1,
+            code: "VALIDATION",
+            message: "Resolve the fixture conflict before trying again.",
+          },
+        });
+      }
+      return Promise.resolve({ contractVersion: 1, ok: true, data: {} });
+    },
+  };
+}
 
 const bindings = {
   public: {
@@ -375,70 +481,138 @@ export function App() {
   const [adminMobileView, setAdminMobileView] = useState<"queue" | "detail">(
     "queue",
   );
+  const [adminScenario, setAdminScenario] = useState<AdminScenario>("ready");
+  const [mutationOutcome, setMutationOutcome] =
+    useState<MutationOutcome>("success");
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const client = useMemo(
+    () => createEvidenceClient(adminScenario, mutationOutcome),
+    [adminScenario, mutationOutcome],
+  );
   return (
-    <ConvexProvider client={client as never}>
-      <AfferentProvider
-        bindings={bindings}
-        auth={{ status: "authenticated", identityToken: "fixture-actor" }}
-        client={client as never}
-      >
-        <AfferentUiProvider
-          href={{
-            post: (id) => `/feedback/${id}`,
-            roadmap: () => "/roadmap",
-            changelog: (slug) => `/changelog/${slug}`,
-          }}
-          currentLocation={`/${surface}`}
+    <div data-evidence-theme={theme} className={theme === "dark" ? "dark" : ""}>
+      <ConvexProvider client={client as never}>
+        <AfferentProvider
+          bindings={bindings}
+          auth={{ status: "authenticated", identityToken: "fixture-actor" }}
+          client={client as never}
         >
-          <output
-            className="evidence-source"
-            data-evidence-source="packed-registry-installed"
+          <AfferentUiProvider
+            href={{
+              post: (id) => `/feedback/${id}`,
+              roadmap: () => "/roadmap",
+              changelog: (slug) => `/changelog/${slug}`,
+            }}
+            currentLocation={`/${surface}`}
           >
-            Packed package and generated registry source
-          </output>
-          <nav className="evidence-nav" aria-label="Evidence surfaces">
-            {surfaces.map((candidate) => (
-              <button
-                aria-current={surface === candidate.id ? "page" : undefined}
-                key={candidate.id}
-                onClick={() => setSurface(candidate.id)}
-                type="button"
-              >
-                {candidate.label}
-              </button>
-            ))}
-          </nav>
-          {surface === "board" ? (
-            <AfferentBoardScreen boards={[board, roadmapBoard] as never} />
-          ) : null}
-          {surface === "detail" ? (
-            <AfferentBoardScreen
-              boards={[board, roadmapBoard] as never}
-              postId={fixturePost.id as never}
-            />
-          ) : null}
-          {surface === "roadmap" ? (
-            <AfferentRoadmapScreen boards={[board, roadmapBoard] as never} />
-          ) : null}
-          {surface === "changelog" ? (
-            <AfferentChangelogScreen slug="accessible-feedback" />
-          ) : null}
-          {surface === "notifications" ? <AfferentNotificationsList /> : null}
-          {surface === "popover" ? (
-            <main className="evidence-popover-surface">
-              <h1>Notification preview</h1>
-              <AfferentNotificationsPopover />
-            </main>
-          ) : null}
-          {surface === "admin" ? (
-            <AfferentAdminScreen
-              boards={[board, roadmapBoard] as never}
-              mobileView={adminMobileView}
-              onMobileViewChange={setAdminMobileView}
-            />
-          ) : null}
-        </AfferentUiProvider>
-      </AfferentProvider>
-    </ConvexProvider>
+            <output
+              className="evidence-source"
+              data-evidence-source="packed-registry-installed"
+            >
+              Packed package and generated registry source
+            </output>
+            <nav className="evidence-nav" aria-label="Evidence surfaces">
+              {surfaces.map((candidate) => (
+                <button
+                  aria-current={surface === candidate.id ? "page" : undefined}
+                  key={candidate.id}
+                  onClick={() => setSurface(candidate.id)}
+                  type="button"
+                >
+                  {candidate.label}
+                </button>
+              ))}
+            </nav>
+            <section
+              className="evidence-controls"
+              aria-label="Evidence controls"
+            >
+              <label>
+                Theme
+                <select
+                  aria-label="Evidence theme"
+                  value={theme}
+                  onChange={(event) =>
+                    setTheme(event.currentTarget.value as "light" | "dark")
+                  }
+                >
+                  <option value="light">Light</option>
+                  <option value="dark">Dark</option>
+                </select>
+              </label>
+              <label>
+                Admin scenario
+                <select
+                  aria-label="Admin scenario"
+                  value={adminScenario}
+                  onChange={(event) => {
+                    setAdminScenario(
+                      event.currentTarget.value as AdminScenario,
+                    );
+                    setAdminMobileView("queue");
+                  }}
+                >
+                  <option value="ready">Ready</option>
+                  <option value="loading">Loading</option>
+                  <option value="denied">Denied</option>
+                  <option value="empty">Empty</option>
+                  <option value="capability-error">Capability error</option>
+                  <option value="detail-error">Detail error</option>
+                  <option value="activity-error">Activity error</option>
+                  <option value="tags-error">Tags error</option>
+                  <option value="changelog-error">Changelog error</option>
+                  <option value="loading-more">Loading more</option>
+                </select>
+              </label>
+              <label>
+                Mutation outcome
+                <select
+                  aria-label="Mutation outcome"
+                  value={mutationOutcome}
+                  onChange={(event) =>
+                    setMutationOutcome(
+                      event.currentTarget.value as MutationOutcome,
+                    )
+                  }
+                >
+                  <option value="success">Success</option>
+                  <option value="error-once">Error once</option>
+                  <option value="pending">Pending</option>
+                </select>
+              </label>
+            </section>
+            {surface === "board" ? (
+              <AfferentBoardScreen boards={[board, roadmapBoard] as never} />
+            ) : null}
+            {surface === "detail" ? (
+              <AfferentBoardScreen
+                boards={[board, roadmapBoard] as never}
+                postId={fixturePost.id as never}
+              />
+            ) : null}
+            {surface === "roadmap" ? (
+              <AfferentRoadmapScreen boards={[board, roadmapBoard] as never} />
+            ) : null}
+            {surface === "changelog" ? (
+              <AfferentChangelogScreen slug="accessible-feedback" />
+            ) : null}
+            {surface === "notifications" ? <AfferentNotificationsList /> : null}
+            {surface === "popover" ? (
+              <main className="evidence-popover-surface">
+                <h1>Notification preview</h1>
+                <AfferentNotificationsPopover />
+              </main>
+            ) : null}
+            {surface === "admin" ? (
+              <AfferentAdminScreen
+                boards={[board, roadmapBoard] as never}
+                mobileView={adminMobileView}
+                onMobileViewChange={setAdminMobileView}
+              />
+            ) : null}
+          </AfferentUiProvider>
+        </AfferentProvider>
+      </ConvexProvider>
+    </div>
   );
 }

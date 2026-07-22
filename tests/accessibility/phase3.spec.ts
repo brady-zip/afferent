@@ -326,7 +326,10 @@ test("KF-03 admin moderation, status, archive, merge, and changelog actions rema
   await saveDraft.focus();
   await page.keyboard.press("Enter");
   await expect(
-    page.getByRole("button", { name: "Publish changelog entry" }),
+    page.getByRole("button", {
+      name: "Publish changelog entry",
+      exact: true,
+    }),
   ).toBeVisible();
   keyboardEvidence.push({
     id: "KF-03",
@@ -411,7 +414,7 @@ test("KF-04 every consequential admin dialog supports cancel and accepted keyboa
 
   merge = await openConfirmation(page, "Merge duplicate", /Merge duplicate/);
   await merge.dialog
-    .getByRole("textbox", { name: "Duplicate feedback title" })
+    .getByRole("textbox", { name: "Duplicate title", exact: true })
     .fill("Keyboard shortcuts");
   await merge.dialog
     .getByRole("button", { name: "Merge duplicate" })
@@ -455,7 +458,7 @@ test("ST-03 every consequential dialog retains typed correction state and retrie
     );
     if (scenario.trigger === "Merge duplicate") {
       await opened.dialog
-        .getByRole("textbox", { name: "Duplicate feedback title" })
+        .getByRole("textbox", { name: "Duplicate title", exact: true })
         .fill("Keyboard shortcuts");
     }
     const confirm = opened.dialog.getByRole("button", {
@@ -503,7 +506,7 @@ test("ST-04 pending confirmation blocks duplicate submit and Escape dismissal", 
   await expect(confirm).toHaveAttribute("aria-busy", "true");
   await page.keyboard.press("Escape");
   await expect(opened.dialog).toBeVisible();
-  await expect(opened.dialog).toBeHidden({ timeout: 2_000 });
+  await expect(opened.dialog).toBeHidden({ timeout: 2000 });
   await expect(opened.trigger).toBeFocused();
   statusEvidence.push({
     id: "ST-04",
@@ -601,7 +604,10 @@ test("ST-05 installed admin states expose complete copy, recovery, and formatted
   await page.goto("/");
   await selectEvidenceOption(page, "Admin scenario", "loading-more");
   await activateSurface(page, "Administration");
-  const loadMore = page.getByRole("button", { name: "Load more feedback" });
+  const loadMore = page.locator(
+    'section[aria-label="Feedback queue"] > button',
+  );
+  await expect(loadMore).toHaveText("Load more managed feedback");
   await loadMore.press("Enter");
   await expect(loadMore).toBeDisabled();
   await expect(loadMore).toHaveAttribute("aria-busy", "true");
@@ -615,7 +621,9 @@ test("ST-05 installed admin states expose complete copy, recovery, and formatted
   ).toBeVisible();
   await expect(page.getByText("Draft", { exact: true })).toBeVisible();
   await expect(page.getByText("Published", { exact: true })).toBeVisible();
-  await expect(page.getByText(/Updated Jan 15, 2026/).first()).toBeVisible();
+  await expect(
+    page.getByText(/Updated January 15, 2026 at 12:00 PM UTC/).first(),
+  ).toBeVisible();
   await expect(
     page.locator("[data-afferent-screen='admin']"),
   ).not.toContainText(/status_change|1768\d{9,}/);
@@ -761,7 +769,9 @@ test("RZ-01 reflow, responsive layouts, zoom, and measured targets preserve ever
       "Save changelog draft",
       "Publish changelog entry",
     ]) {
-      await expect(page.getByRole("button", { name: action })).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: action, exact: true }),
+      ).toBeVisible();
     }
     await assertNoPageOverflow(page);
     const targets = await measuredTargets(page);
