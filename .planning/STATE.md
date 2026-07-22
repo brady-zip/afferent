@@ -4,17 +4,17 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 03
 current_phase_name: Source-Owned Product Interface
-status: complete
-stopped_at: Phase 03 Plan 03-10 complete; ready for verification
-last_updated: "2026-07-22T20:16:44Z"
+status: ready
+stopped_at: Final Phase 03 copy gap planned; ready to execute Plan 03-11
+last_updated: "2026-07-22T20:26:11.743Z"
 last_activity: 2026-07-22
-last_activity_desc: Closed public Activity states and query-owned recovery in Plan 03-09
+last_activity_desc: Planned 03-11 exact public query recovery-guidance closure
 progress:
   total_phases: 7
   completed_phases: 5
-  total_plans: 40
+  total_plans: 41
   completed_plans: 40
-  percent: 100
+  percent: 98
 ---
 
 # Project State
@@ -24,24 +24,24 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-17)
 
 **Core value:** SaaS teams can add deeply integrated product feedback to an existing Convex application while retaining native ownership of their data, identity, permissions, and user experience.
-**Current focus:** Phase 03 — Close canonical UI re-audit warnings without rewriting completed plans
+**Current focus:** Phase 03 — Close the final canonical UI-SPEC public recovery-guidance warning
 
 ## Current Position
 
 Phase: 03 — Source-Owned Product Interface
-Plan: 03-10 of 10
-Status: Phase 03 implementation complete; ready for verification
-Last activity: 2026-07-22 — Closed installed visual contracts and aggregate evidence in Plan 03-10
+Plan: 03-11 of 11
+Status: Final copy gap closure planned; ready to execute 03-11
+Last activity: 2026-07-22 — Planned 03-11 exact public query recovery-guidance closure
 
-Progress: [██████████] 100%
+Progress: [█████████░] 98%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 39
-- Average duration: 67 min
-- Total execution time: 2597 min
+- Total plans completed: 40
+- Average duration: 65 min
+- Total execution time: 2607 min
 
 **By Phase:**
 
@@ -51,12 +51,12 @@ Progress: [██████████] 100%
 | Phase 02   | 17    | 854 min | 50 min   |
 | Phase 02.1 | 1     | 68 min  | 68 min   |
 | Phase 02.3 | 2     | 33 min  | 17 min   |
-| Phase 03   | 9     | 1361 min | 151 min |
+| Phase 03   | 10    | 1371 min | 137 min |
 
 **Recent Trend:**
 
-- Last 5 plans: 17 min, 32 min, 9 min, 20h 38m, 8 min
-- Trend: Public recovery gap closure completed quickly after the installed evidence baseline
+- Last 5 plans: 32 min, 9 min, 20h 38m, 8 min, 10 min
+- Trend: Installed visual closure completed; one exact copy-contract gap remains planned
 
 _Updated after each plan completion_
 
@@ -103,6 +103,7 @@ _Updated after each plan completion_
 | Phase 03 P07   | 9min     | 3 tasks | 38 files |
 | Phase 03 P08   | 20h 38m | 3 tasks | 35 files |
 | Phase 03 P09   | 8min     | 3 tasks | 32 files |
+| Phase 03 P10   | 10min    | 3 tasks | 35 files |
 
 ## Accumulated Context
 
@@ -240,6 +241,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-22T20:07:24Z
-Stopped at: Plan 03-09 complete; ready to execute Plan 03-10
+Last session: 2026-07-22T20:26:11.743Z
+Stopped at: Planned 03-11-PLAN.md
 Resume file: None
