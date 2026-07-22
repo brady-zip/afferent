@@ -4,11 +4,11 @@
 
 **Baseline:** `03-UI-SPEC.md`
 
-**Gap work reviewed:** `03-09-PLAN.md` / `03-09-SUMMARY.md` and `03-10-PLAN.md` / `03-10-SUMMARY.md`
+**Gap work reviewed:** `03-09-PLAN.md` / `03-09-SUMMARY.md`, `03-10-PLAN.md` / `03-10-SUMMARY.md`, and `03-11-PLAN.md` / `03-11-SUMMARY.md`
 
-**Screenshots:** All 19 current installed-source captures were inspected, including the new `public-recovery-1280.png`. No new capture was needed because the gap summaries, versioned browser assertions, and current PNG set agree.
+**Screenshots:** All 19 current installed-source captures were previously inspected in the immediately preceding full audit; the 03-11 replacement `public-recovery-1280.png` was inspected again at original resolution. It visibly contains the exact approved guidance, typed detail, and `Retry activity` action.
 
-**Scope note:** The evidence-fixture banner, surface navigation, and evidence controls are test chrome and were excluded from product scoring. Their intentionally hostile `12px/1 serif` body and unstyled-button reset were used as integration evidence for portaled UI.
+**Scope note:** The evidence-fixture banner, surface navigation, and evidence controls are test chrome and are excluded from product scoring. Their intentionally hostile body/button reset remains valid portal-integration evidence.
 
 ---
 
@@ -16,112 +16,107 @@
 
 | Pillar | Score | Key Finding |
 | --- | ---: | --- |
-| 1. Copywriting | 3/4 | Public activity now uses the human formatter and every audited public query failure has a domain-specific recovery action, but search, similar-feedback, detail, discussion, and changelog errors still omit the baseline's general recovery-guidance sentence. |
-| 2. Visuals | 4/4 | Dialog hierarchy, detail-card composition, selection/error/destructive treatments, and administrative section chunking are visibly coherent across the complete light/dark and responsive evidence set. |
-| 3. Color | 4/4 | Accent, destructive, selected, error, unread, and focus treatments follow the semantic allocation; all 12 measured light/dark contrast checks pass. |
-| 4. Typography | 4/4 | Canonical screens and portaled dialogs own the four-size/two-weight system; hostile host inheritance no longer changes dialog or action typography. |
-| 5. Spacing | 4/4 | Dialog controls own 44px sizing and 8px/16px padding, action separation is measured, the stray 6px value is removed, and responsive/reflow evidence retains all actions without overflow. |
-| 6. Experience Design | 4/4 | Public activity exposes its complete typed state machine, every audited public failure has query-owned retry, and the admin, mobile, keyboard, focus, and recovery paths remain complete. |
+| 1. Copywriting | 4/4 | One typed common entry now supplies the exact approved recovery sentence to every canonical public query-error branch while retaining specific headings, details, and action labels. |
+| 2. Visuals | 4/4 | The added guidance fits the existing error hierarchy in `public-recovery-1280.png`; no CSS or structural visual repair from 03-10 regressed. |
+| 3. Color | 4/4 | Error, destructive, selected, unread, focus, light, and dark treatments are unchanged; the current 12/12 contrast suite passes. |
+| 4. Typography | 4/4 | Screen and portal typography remain owned by Afferent and the added paragraph uses the established body hierarchy. |
+| 5. Spacing | 4/4 | Dialog geometry, declared tokens, detail-card separation, section spacing, target sizing, reflow, and zoom evidence are unchanged. |
+| 6. Experience Design | 4/4 | Source inspection confirms every affected error retains its originating query-owned recovery callback and all previously closed public/admin states remain intact. |
 
-**Overall: 23/24**
+**Overall UI score: 24/24**
 
-**Release classification:** WARNING — no blocker remains. The implementation closes every prior visual, typography, spacing, and experience defect. One minor copy-contract mismatch remains: several public query errors provide a working, outcome-specific retry but not the baseline's prescribed general recovery-guidance sentence.
-
----
-
-## Top 3 Follow-ups
-
-1. **Close the remaining copy warning.** Reuse `Try loading it again. If the problem continues, contact the application owner.` (or formally amend the approved baseline) across public search, similar-feedback, detail, discussion, and changelog error regions while retaining their clearer domain-specific retry labels.
-2. **Run the final human product-design pass.** Judge aesthetic polish, rhythm, and administrative density across the 19-image matrix; current evidence proves the contract and shows no concrete defect, but desirability remains subjective.
-3. **Exercise adopter-specific host content and themes.** Stress unusually long product/board/status/count values and real host tokens beyond the deterministic fixture. The current seeded long-content, hostile-reset, reflow, and zoom cases pass; this is integration hardening, not a known contract failure.
+**Release classification: BLOCKER — verification integrity, not a product-UI defect.** The sole UI copy warning is closed in canonical, mirrored, registry, and captured installed source. However, the required anti-skip test currently fails deterministically, and the claimed every-surface mounted/installed proof is not present. Phase 03 cannot use the current evidence set as a green release gate until those objective verification defects are fixed.
 
 ---
 
-## Prior Finding Closure Ledger
+## Top 3 Priority Fixes
+
+1. **Repair the red anti-skip oracle.** `tests/integration/phase3-gate.test.mjs:77-86` requires `queryErrorGuidance` in the concatenated browser-spec and fixture source, but neither file contains that identifier. Make the oracle inspect installed/generated product source or add a meaningful installed custom-copy scenario; do not satisfy it with a dead fixture string.
+2. **Add the promised every-surface behavioral matrix.** Mount and exercise board feed/search, similar feedback, detail, discussion, Activity, each roadmap group, changelog feed/detail, and notifications in error state; assert the exact guidance, existing specific label, retained rows where applicable, and the exact callback/watch re-execution.
+3. **Prove the shared override contract from installed source.** Add a `DeepPartial<AfferentUiCopy>` override with a sentinel `common.queryErrorGuidance`, verify it reaches every public query-error branch, and extend the packed-consumer browser fixture beyond its current Activity-only public failure scenario.
+
+---
+
+## 03-11 Copy Warning Closure
+
+- **CLOSED in implementation — Exact sentence.** `ui/afferent/core/copy.ts` defines typed `common.queryErrorGuidance` with exactly `Try loading it again. If the problem continues, contact the application owner.` The former board-local duplicate is gone.
+- **CLOSED in implementation — Complete canonical wiring.** Board feed and search, similar feedback, feedback detail, discussion, Activity, each roadmap group, changelog feed and detail, and notifications each render `copy.common.queryErrorGuidance` in their query-error branch.
+- **CLOSED in implementation — Action specificity and callback ownership.** Existing labels remain outcome-specific. Source inspection confirms `feed.retry`, discovery `state.retry`, `lookup.retry`, `comments.retry`, Activity `state.retry`, roadmap `group.loadMore`, changelog `feed.retry` / `detail.retry`, and notification `notifications.loadMore` are still attached directly to the corresponding controls.
+- **CLOSED in distribution.** `npm run ui:check` passed after deterministic regeneration, and `git diff --exit-code -- registry examples/ui/afferent` remained clean. Canonical, example, and registry content agree.
+- **CLOSED in the named visual scenario.** `public-recovery-1280.png` shows the exact guidance between the Activity heading and sanitized error detail beside `Retry activity`. The browser source clicks that action and expects the formatted ready event.
+
+---
+
+## Prior Finding Regression Ledger
 
 ### Copywriting
 
-- **CLOSED — Public activity was machine-shaped.** `ui/afferent/board/activity.tsx` now renders ready events through `formatActivityDescription`, producing domain prose such as “Alex changed … from Open to Planned” instead of formatting raw event discriminants. The browser recovery path asserts the semantic sentence after retry.
-- **PARTIALLY CLOSED — Public query errors omitted recovery copy/action.** Search, similar-feedback, feedback detail, discussion, activity, and changelog now receive the matching query-owned `retry` and render descriptive controls such as `Retry activity`, `Retry feedback search`, and `Reload changelog`. The remaining mismatch is copy-only: most of those regions still omit the UI-SPEC line 166 guidance, `Try loading it again. If the problem continues, contact the application owner.`
-- **CLOSED — Required tag labels.** `ui/afferent/core/copy.ts` defines `Create feedback tag` and `Delete feedback tag`; mounted and browser assertions cover the rendered labels.
-- **CLOSED — Merge consequence copy.** The confirmation identifies both records, moved votes/comments/history, irreversibility, and the typed confirmation requirement.
-- **CLOSED — Raw administrative state discriminants.** Loading, denied, empty, query-error, loading-more, activity, and editorial states use domain copy.
-- **CLOSED — Activity and timestamps in the original administrative/notification scope.** The shared formatter supplies fixed-English activity and UTC date-time prose.
+- **CLOSED — Machine-shaped public activity.** Ready events still use `formatActivityDescription`; the Activity browser recovery expects the human sentence after retry.
+- **CLOSED — Inconsistent public recovery guidance.** All canonical public query errors now use the common exact sentence. No component-local copy duplicate remains.
+- **CLOSED — Administrative labels, consequence copy, discriminants, and timestamps.** The 03-11 delta only migrated two removed-key consumers to the common entry; focused admin tests pass.
 
 ### Visuals
 
-- **CLOSED — Portaled confirmation actions were raw and visually touching.** `.afferent-dialog` now owns its surface, border, radius, typography, focus treatment, and 16px composition gap; its buttons own border, radius, state colors, and control geometry, while `.afferent-dialog__actions` owns the 8px separation. `admin-confirmations-1280.png` shows two distinct, deliberate actions.
-- **CLOSED — Desktop detail cards collapsed title/body/stat hierarchy.** The detail workspace now stacks feedback-card metrics below the content. `detail-1280.png` shows readable title/body flow with a separated vote/comment row, and the browser geometry assertion proves content bottom does not cross the totals top.
-- **CLOSED — Administrative grouping was weak.** Moderation, tags, activity, merge, and changelog are now distinct bordered `.afferent-admin-section` regions with measured 16px gaps/padding. This chunking is visible at 320px, 768px, 1280px, dark theme, and 200% zoom.
-- **CLOSED — Persistent queue selection.** Selected rows retain a primary border, `Selected feedback` pill, `data-selected`, and `aria-current` after focus moves.
-- **CLOSED — Destructive actions looked ordinary.** Archive, delete-tag, merge, and unpublish use destructive styling and separated destructive regions.
-- **CLOSED — Error tone was visually inert.** Error regions carry a destructive border/tone, heading, body, and recovery control.
-- **CLOSED — Incomplete visual evidence matrix.** VIS-02 now versions 19 captures spanning public/admin, light/dark, confirmation/error/empty/recovery, popover, phone/tablet/desktop, reflow, and 200% zoom.
+- **CLOSED — Raw/touching portal actions, detail-card collisions, weak admin grouping, selection, destructive hierarchy, and inert error tone.** The 03-11 product delta contains no stylesheet, dialog, feedback-card, or admin-section structural change. The current recovery image retains the repaired error hierarchy.
 
 ### Color
 
-- **CLOSED — Popover trigger used primary accent.** The trigger uses the secondary treatment while unread count retains the allowed primary marker.
-- **CLOSED — Missing semantic selected/error/destructive color.** Selection uses primary; read errors and destructive boundaries use destructive; every color cue is accompanied by text or shape. `contrast.json` records 12/12 exact unrounded passes.
+- **CLOSED — Semantic selection/error/destructive/focus allocation.** No color source changed; fresh contrast verification passes 12/12.
 
 ### Typography
 
-- **CLOSED — Portaled dialogs depended on host typography.** `.afferent-dialog` explicitly establishes `400 16px/1.5` Afferent sans typography, and dialog buttons establish `600 16px/1.5`. VIS-01 verifies those computed values under the fixture's hostile serif reset.
-- **CLOSED — Prohibited 12px unread count.** The count uses the allowed 14px metadata size.
-- **CLOSED — Weight-only selection/unread hierarchy.** Selection and unread states also use border, pill/count shape, and explicit text.
+- **CLOSED — Portal ownership, 12px count, and weight-only state hierarchy.** No typography source changed in 03-11.
 
 ### Spacing
 
-- **CLOSED — Dialog actions lacked control spacing.** Portal buttons now have a 44px minimum height, 8px/16px padding, and an 8px action gap. VIS-01 checks the computed geometry rather than relying on source inspection alone.
-- **CLOSED — Undeclared 6px spacing remained.** Notification-count inline padding is now 8px. The static contract scan covers directional margin/padding, row/column gaps, and forbidden 6/12/20/40px values.
-- **CLOSED — 12px notification gap.** Notification stacks use 16px.
-- **CLOSED — 8px/12px admin input padding.** Admin and dialog inputs use 8px/16px.
-- **CLOSED — Responsive spacing/reflow risk.** Phone, tablet, desktop, 320px reflow, and 200% zoom captures retain every admin action without page-level horizontal overflow; coarse-pointer targets meet 44px.
+- **CLOSED — Portal control geometry, 6px token, notification gap, input padding, reflow, and zoom.** No CSS changed in 03-11; the static token/portal contract suite passes 5/5.
 
 ### Experience Design
 
-- **CLOSED — Public activity hid typed states.** `activity.tsx` now renders explicit unsupported, loading, empty, error, and ready branches, with an exhaustive guard rather than returning `null` for non-ready states.
-- **CLOSED — Public failures had no actionable retry.** The headless projections retain their originating watch's retry, and search, similar-feedback, feedback detail, discussion, activity, changelog feed, and changelog detail render the matching recovery action. `public-recovery-1280.png` shows the Activity error and `Retry activity`; the browser test clicks it and observes the ready semantic event.
-- **CLOSED — Consequential actions lacked confirmation.** Archive, tag delete, publish, unpublish, and merge retain exact consequence/escape copy, pending lockout, typed error/reset/retry, and focus restoration.
-- **CLOSED — Mobile rendered queue and detail together.** Host-owned `mobileView` presents one pane below 768px and both panes above it; both phone panes are versioned.
-- **CLOSED — Administrative states were incomplete.** Empty, query-error/retry, loading-more, activity, editorial, and formatted-time states have direct screenshot/test evidence.
-- **CLOSED — Selection semantics were incomplete.** `data-selected` and `aria-current` persist through phone navigation and the wide-layout transition.
+- **CLOSED in product — Typed Activity states and public recovery callbacks.** All prior state branches and direct query-owned actions remain in source.
+- **CLOSED — Consequential confirmations, phone pane model, admin states, and selection semantics.** Focused admin/hydration tests pass 9/9; headless retry projection tests pass 25/25.
+- **BLOCKER in evidence — Required anti-skip gate is red.** A fresh `node --test tests/integration/phase3-gate.test.mjs` run passes tests 1–2 and fails test 3 because `/queryErrorGuidance/` does not match the browser-spec/fixture concatenation. The 03-11 summary's full-green claim is therefore not reproducible from current HEAD.
 
 ---
 
-## Remaining Finding
+## Remaining Objective Findings
 
-### Pillar 1: Copywriting (3/4)
+### BLOCKER — The required Phase 3 anti-skip test fails
 
-- **WARNING — General public-query recovery guidance is not consistently rendered.** The board-feed error includes the UI-SPEC sentence `Try loading it again. If the problem continues, contact the application owner.`, but search, similar-feedback, feedback detail, discussion, and changelog errors render a typed error plus a working domain-specific retry without that guidance. This is not a recovery or task-completion failure: each control retries the correct originating watch, and the more specific labels are clearer than a bare `Retry`. It is a minor approved-baseline copy mismatch.
-- **Positive evidence.** Activity descriptions are human-readable; administrative and notification timestamps are formatted; query controls describe the affected outcome; no raw event discriminants appear in current product captures.
+`tests/integration/phase3-gate.test.mjs` searches only `tests/accessibility/phase3.spec.ts` plus `fixtures/registry-vite/src/App.tsx` for `queryErrorGuidance`. The identifier exists in canonical/generated UI, not either oracle file, so the assertion always fails at current HEAD. Because `test:phase3` composes this test, the release gate is not green.
 
-### Pillars 2–6
+### WARNING — Evidence does not cover every promised public error path
 
-- **No remaining contract finding.** Current code, computed-style assertions, accessibility reports, mounted/static tests, and all 19 screenshots agree that the prior visual, color, typography, spacing, and experience warnings are closed.
+- Mounted tests assert the exact default sentence for board feed and changelog feed only.
+- The static test confirms each listed canonical file contains `copy.common.queryErrorGuidance`, but it does not prove the occurrence is in every error branch or that each action invokes its originating callback.
+- Installed-browser evidence exercises only Activity error → `Retry activity` → ready. The fixture exposes no public-error selector for board search, similar feedback, detail, discussion, roadmap, changelog, or notifications.
+- No test supplies a custom `common.queryErrorGuidance` override and proves propagation, despite the 03-11 plan and summary claiming customizable every-surface coverage.
+
+These are verification defects, not observed UI failures. Direct source inspection found the implementation correct on every named surface.
 
 ---
 
 ## Human Review Still Required
 
-- **Overall aesthetic polish and desirability.** The neutral source-owned UI is coherent and satisfies its explicit visual contract across light/dark and responsive states. Whether its restrained styling feels sufficiently distinctive for a given adopter is subjective. `needs_human_review: true`; not a contract failure.
-- **Administrative density and rhythm.** The new section cards make moderation, tags, activity, merge, and changelog scannable at all captured sizes. A product designer should still judge the preferred amount of whitespace and progressive disclosure for real workflows. `needs_human_review: true`; no observed collision or hidden action remains.
-- **Adopter content/theme variability.** The deterministic fixture covers long content, hostile inherited typography/button resets, dark mode, reflow, coarse pointer, and 200% zoom. Real host token sets and more extreme localized content need adopter-level review. `needs_human_review: true`; the tested host-reset contract passes.
+- **Overall aesthetic polish and desirability.** The neutral source-owned UI is coherent and satisfies its explicit visual contract; whether it feels distinctive enough for an adopter remains subjective. `needs_human_review: true`; not a contract failure.
+- **Administrative density and rhythm.** Current section chunking is measurable and collision-free, but preferred whitespace and progressive disclosure remain product-design judgments. `needs_human_review: true`; not a contract failure.
+- **Adopter content/theme variability.** The deterministic fixture covers long content, hostile inherited resets, dark mode, reflow, coarse pointer, and 200% zoom. More extreme localization and host token sets remain adopter-level review. `needs_human_review: true`; not a known defect.
 
 ---
 
 ## Registry Audit
 
-The repository intentionally has no root `components.json`, and the UI-SPEC permits only official shadcn primitives plus the project-owned generated Afferent registry. The clean fixture uses no third-party registry. All generated items declare only approved pinned runtime packages and local sibling dependencies. **Registry audit: 0 third-party blocks required checking; no flags.**
+The repository intentionally has no root `components.json`, and the UI-SPEC permits only official shadcn primitives plus the project-owned generated Afferent registry. The clean fixture uses no third-party registry. **Registry audit: 0 third-party blocks required checking; no flags.**
 
 ---
 
 ## Evidence Inspected
 
-- Full role/workflow: `.codex/agents/gsd-ui-auditor.md`, `.codex/skills/gsd-ui-review/SKILL.md`, `.codex/gsd-core/workflows/ui-review.md`, `.codex/gsd-core/references/ui-brand.md`, and `AGENTS.md`.
-- Contracts/plans: `03-UI-SPEC.md`, the prior `03-UI-REVIEW.md`, and `03-09` / `03-10` plans and summaries.
-- Canonical source: repaired public activity/error surfaces, headless retry projections, admin dialogs/sections, shared copy/formatters, and `ui/afferent/afferent.css`.
-- Installed fixture: `fixtures/registry-vite/src/App.tsx`, its hostile-reset `src/index.css`, and the installed/generated source used by the browser gate.
-- Mounted/static/browser evidence: public/admin UI suites, headless retry suites, `tests/static/ui-contracts.test.ts`, and `tests/accessibility/phase3.spec.ts` including VIS-01, VIS-02, and RZ-01.
-- Reports: `docs/accessibility/phase-3/README.md`, `axe.json`, `contrast.json`, `keyboard-focus.md`, and `status-messages.md`.
-- All 19 PNGs: `admin-confirmations-1280.png`, `admin-detail-320.png`, `admin-empty-1280.png`, `admin-queue-320.png`, `admin-states-1280.png`, `board-1280.png`, `changelog-1280.png`, `dark-admin-1280.png`, `dark-public-1280.png`, `desktop-1280.png`, `detail-1280.png`, `notifications-1280.png`, `notifications-popover-1280.png`, `phone-320.png`, `public-recovery-1280.png`, `reflow-320.png`, `roadmap-1280.png`, `tablet-768.png`, and `zoom-200.png`.
-- Fresh focused verification: mounted UI/hydration 4 files / 22 tests passed; static UI contracts 1 file / 4 tests passed; headless retry projection 4 files / 25 tests passed. Current versioned reports record 12/12 contrast checks and zero axe violations.
+- Full auditor role and approved `03-UI-SPEC.md`, including the exact query-error sentence and closed-state/verification contracts.
+- Current `03-UI-REVIEW.md`, `03-11-PLAN.md`, and `03-11-SUMMARY.md`.
+- Central typed copy plus every canonical public error surface: board feed/search, similar feedback, detail, discussion, Activity, roadmap groups, changelog feed/detail, and notifications.
+- Generated examples and registry drift via `npm run ui:check`.
+- Mounted/static evidence: board/public-surface tests 13/13 passed; static UI contracts 5/5 passed.
+- Regression evidence: admin/hydration 9/9 passed; headless retry projection 25/25 passed; contrast 12/12 passed.
+- Installed evidence source, fixture controls, `public-recovery-1280.png`, evidence index, and anti-skip composition.
+- **Fresh failing evidence:** Phase 3 anti-skip 2/3 passed; test 3 failed on the unsatisfied `queryErrorGuidance` source assertion.
