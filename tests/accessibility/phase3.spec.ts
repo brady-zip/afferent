@@ -49,6 +49,36 @@ async function activateSurface(page: Page, label: string) {
   return control;
 }
 
+async function selectEvidenceOption(
+  page: Page,
+  control: "Evidence theme" | "Admin scenario" | "Mutation outcome",
+  value: string,
+) {
+  await page.getByRole("combobox", { name: control }).selectOption(value);
+}
+
+async function openAdminDetail(page: Page) {
+  await activateSurface(page, "Administration");
+  const row = page.locator("[data-admin-feedback] button").first();
+  await row.focus();
+  await page.keyboard.press("Enter");
+  await expect(row).toHaveAttribute("aria-current", "true");
+  return row;
+}
+
+async function openConfirmation(
+  page: Page,
+  triggerLabel: string,
+  dialogName: RegExp,
+) {
+  const trigger = page.getByRole("button", { name: triggerLabel }).first();
+  await trigger.focus();
+  await page.keyboard.press("Enter");
+  const dialog = page.getByRole("dialog", { name: dialogName });
+  await expect(dialog).toBeVisible();
+  return { dialog, trigger };
+}
+
 async function expectVisibleFocus(locator: Locator) {
   await expect(locator).toBeFocused();
   const result = await locator.evaluate((element) => {
@@ -270,6 +300,21 @@ test("KF-03 admin moderation, status, archive, merge, and changelog actions rema
   await archive.focus();
   await expectVisibleFocus(archive);
   await page.keyboard.press("Enter");
+  const archiveDialog = page.getByRole("dialog", {
+    name: /Archive “Keyboard shortcuts”/,
+  });
+  await expect(archiveDialog).toContainText(
+    "It will leave public feedback views until restored.",
+  );
+  await page.keyboard.press("Escape");
+  await expect(archiveDialog).toBeHidden();
+  await expect(archive).toBeFocused();
+  await page.keyboard.press("Enter");
+  await archiveDialog
+    .getByRole("button", { name: "Archive feedback" })
+    .press("Enter");
+  await expect(archiveDialog).toBeHidden();
+  await expect(archive).toBeFocused();
 
   const changelogTitle = page.getByRole("textbox", { name: "Changelog title" });
   await changelogTitle.focus();
@@ -289,6 +334,183 @@ test("KF-03 admin moderation, status, archive, merge, and changelog actions rema
       "Moderation, status, archive, merge, and changelog actions require no dragging",
     actual:
       "All named admin actions remained keyboard reachable; status used a native select",
+  });
+});
+
+test("KF-04 every consequential admin dialog supports cancel and accepted keyboard completion", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await openAdminDetail(page);
+
+  const scenarios = [
+    {
+      trigger: "Archive feedback",
+      dialog: /Archive “Keyboard shortcuts”/,
+      consequence: "It will leave public feedback views until restored.",
+      escape: "Keep feedback",
+    },
+    {
+      trigger: "Delete feedback tag",
+      dialog: /Delete “Important”/,
+      consequence:
+        "The tag will be removed from assigned feedback without deleting feedback.",
+      escape: "Keep tag",
+    },
+    {
+      trigger: "Publish changelog entry",
+      dialog: /Publish “Editor update” now/,
+      consequence: "It will become visible at its public changelog link.",
+      escape: "Return to editing",
+    },
+    {
+      trigger: "Unpublish changelog entry",
+      dialog: /Unpublish “Published update”/,
+      consequence:
+        "Its public changelog link will stop showing the entry until republished.",
+      escape: "Keep changelog published",
+    },
+  ] as const;
+
+  for (const scenario of scenarios) {
+    let opened = await openConfirmation(
+      page,
+      scenario.trigger,
+      scenario.dialog,
+    );
+    await expect(opened.dialog).toContainText(scenario.consequence);
+    await expect(
+      opened.dialog.getByRole("button", { name: scenario.escape }),
+    ).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(opened.dialog).toBeHidden();
+    await expect(opened.trigger).toBeFocused();
+
+    opened = await openConfirmation(page, scenario.trigger, scenario.dialog);
+    await opened.dialog
+      .getByRole("button", { name: scenario.trigger })
+      .press("Enter");
+    await expect(opened.dialog).toBeHidden();
+    await expect(opened.trigger).toBeFocused();
+  }
+
+  let merge = await openConfirmation(
+    page,
+    "Merge duplicate",
+    /Merge duplicate/,
+  );
+  await expect(merge.dialog).toContainText(
+    "Merge “Keyboard shortcuts” into “Editor productivity”? This moves its votes, comments, and history and cannot be undone.",
+  );
+  await expect(
+    merge.dialog.getByRole("button", { name: "Keep feedback" }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(merge.dialog).toBeHidden();
+  await expect(merge.trigger).toBeFocused();
+
+  merge = await openConfirmation(page, "Merge duplicate", /Merge duplicate/);
+  await merge.dialog
+    .getByRole("textbox", { name: "Duplicate feedback title" })
+    .fill("Keyboard shortcuts");
+  await merge.dialog
+    .getByRole("button", { name: "Merge duplicate" })
+    .press("Enter");
+  await expect(merge.dialog).toBeHidden();
+  await expect(merge.trigger).toBeFocused();
+  keyboardEvidence.push({
+    id: "KF-04",
+    expected:
+      "Archive, tag delete, publish, unpublish, and merge expose exact consequences, Escape actions, and accepted completion",
+    actual:
+      "All five dialogs cancelled and completed by keyboard, then restored their logical trigger",
+  });
+});
+
+test("ST-03 every consequential dialog retains typed correction state and retries", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await selectEvidenceOption(page, "Mutation outcome", "error-once");
+  await openAdminDetail(page);
+  const scenarios = [
+    { trigger: "Archive feedback", dialog: /Archive “Keyboard shortcuts”/ },
+    { trigger: "Delete feedback tag", dialog: /Delete “Important”/ },
+    {
+      trigger: "Publish changelog entry",
+      dialog: /Publish “Editor update” now/,
+    },
+    {
+      trigger: "Unpublish changelog entry",
+      dialog: /Unpublish “Published update”/,
+    },
+    { trigger: "Merge duplicate", dialog: /Merge duplicate/ },
+  ] as const;
+
+  for (const scenario of scenarios) {
+    const opened = await openConfirmation(
+      page,
+      scenario.trigger,
+      scenario.dialog,
+    );
+    if (scenario.trigger === "Merge duplicate") {
+      await opened.dialog
+        .getByRole("textbox", { name: "Duplicate feedback title" })
+        .fill("Keyboard shortcuts");
+    }
+    const confirm = opened.dialog.getByRole("button", {
+      name: scenario.trigger,
+    });
+    await confirm.press("Enter");
+    const alert = opened.dialog.getByRole("alert");
+    await expect(alert).toContainText(
+      "Resolve the fixture conflict before trying again.",
+    );
+    await expect(opened.dialog).toBeVisible();
+    await alert
+      .getByRole("button", { name: "Dismiss error and continue editing" })
+      .press("Enter");
+    await expect(alert).toBeHidden();
+    await confirm.press("Enter");
+    await expect(opened.dialog).toBeHidden();
+    await expect(opened.trigger).toBeFocused();
+  }
+  statusEvidence.push({
+    id: "ST-03",
+    expected:
+      "Rejected consequential mutations remain open with an urgent typed correction path and accept a retry",
+    actual:
+      "All five dialogs announced the typed fixture conflict, reset it, retried, and closed only after acceptance",
+  });
+});
+
+test("ST-04 pending confirmation blocks duplicate submit and Escape dismissal", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await selectEvidenceOption(page, "Mutation outcome", "pending");
+  await openAdminDetail(page);
+  const opened = await openConfirmation(
+    page,
+    "Archive feedback",
+    /Archive “Keyboard shortcuts”/,
+  );
+  const confirm = opened.dialog.getByRole("button", {
+    name: "Archive feedback",
+  });
+  await confirm.press("Enter");
+  await expect(confirm).toBeDisabled();
+  await expect(confirm).toHaveAttribute("aria-busy", "true");
+  await page.keyboard.press("Escape");
+  await expect(opened.dialog).toBeVisible();
+  await expect(opened.dialog).toBeHidden({ timeout: 2_000 });
+  await expect(opened.trigger).toBeFocused();
+  statusEvidence.push({
+    id: "ST-04",
+    expected:
+      "Pending confirmation disables duplicate submission and ignores Escape until the accepted result",
+    actual:
+      "Archive stayed modal and busy during the deferred result, then closed and restored focus after acceptance",
   });
 });
 
@@ -335,6 +557,186 @@ test("AX-01 axe is a supplemental regression net for stable public and admin sta
       2,
     )}\n`,
   );
+});
+
+test("ST-05 installed admin states expose complete copy, recovery, and formatted values", async ({
+  page,
+}) => {
+  const wholeScreenStates = [
+    { value: "loading", text: "Loading feedback management…" },
+    { value: "denied", text: "You don't have access to this area" },
+    { value: "empty", text: "No feedback to review" },
+    {
+      value: "capability-error",
+      text: "We couldn't load feedback management",
+    },
+  ] as const;
+  for (const scenario of wholeScreenStates) {
+    await page.goto("/");
+    await selectEvidenceOption(page, "Admin scenario", scenario.value);
+    await activateSurface(page, "Administration");
+    await expect(page.getByText(scenario.text, { exact: true })).toBeVisible();
+  }
+
+  const detailStates = [
+    { value: "detail-error", text: "We couldn't load feedback detail" },
+    { value: "activity-error", text: "We couldn't load feedback activity" },
+    { value: "tags-error", text: "We couldn't load feedback tags" },
+    {
+      value: "changelog-error",
+      text: "We couldn't load changelog entries",
+    },
+  ] as const;
+  for (const scenario of detailStates) {
+    await page.goto("/");
+    await selectEvidenceOption(page, "Admin scenario", scenario.value);
+    await openAdminDetail(page);
+    const state = page.getByText(scenario.text, { exact: true });
+    await expect(state).toBeVisible();
+    await expect(
+      state.locator("xpath=ancestor::*[@data-tone='error'][1]"),
+    ).toBeVisible();
+  }
+
+  await page.goto("/");
+  await selectEvidenceOption(page, "Admin scenario", "loading-more");
+  await activateSurface(page, "Administration");
+  const loadMore = page.getByRole("button", { name: "Load more feedback" });
+  await loadMore.press("Enter");
+  await expect(loadMore).toBeDisabled();
+  await expect(loadMore).toHaveAttribute("aria-busy", "true");
+
+  await page.goto("/");
+  await openAdminDetail(page);
+  await expect(
+    page.getByText("Alex changed the feedback status from Open to Planned.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(page.getByText("Draft", { exact: true })).toBeVisible();
+  await expect(page.getByText("Published", { exact: true })).toBeVisible();
+  await expect(page.getByText(/Updated Jan 15, 2026/).first()).toBeVisible();
+  await expect(
+    page.locator("[data-afferent-screen='admin']"),
+  ).not.toContainText(/status_change|1768\d{9,}/);
+  statusEvidence.push({
+    id: "ST-05",
+    expected:
+      "Loading, denied, empty, query-error, loading-more, activity, editorial, and time states use complete domain copy and recovery semantics",
+    actual:
+      "Installed hooks rendered every selected state with error tone, retry/correction controls, English activity/editorial labels, and UTC-formatted time",
+  });
+});
+
+test("RZ-02 the host controls one phone admin pane while wider layouts show both", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.goto("/");
+  await activateSurface(page, "Administration");
+  const workspace = page.locator("[data-admin-workspace]");
+  const queuePane = page.locator('[data-admin-pane="queue"]');
+  const detailPane = page.locator('[data-admin-pane="detail"]');
+  await expect(workspace).toHaveAttribute("data-mobile-view", "queue");
+  await expect(queuePane).toBeVisible();
+  await expect(detailPane).toBeHidden();
+  const selected = page.locator("[data-admin-feedback] button").first();
+  await selected.press("Enter");
+  await expect(workspace).toHaveAttribute("data-mobile-view", "detail");
+  await expect(queuePane).toBeHidden();
+  await expect(detailPane).toBeVisible();
+  await expect(selected).toHaveAttribute("aria-current", "true");
+  await page
+    .getByRole("button", { name: "Return to feedback queue" })
+    .first()
+    .press("Enter");
+  await expect(queuePane).toBeVisible();
+  await expect(detailPane).toBeHidden();
+  await expect(selected).toHaveAttribute("aria-current", "true");
+
+  for (const viewport of [
+    { width: 768, height: 1024 },
+    { width: 1280, height: 800 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await expect(queuePane).toBeVisible();
+    await expect(detailPane).toBeVisible();
+    await assertNoPageOverflow(page);
+  }
+  keyboardEvidence.push({
+    id: "KF-05",
+    expected:
+      "Host navigation shows one queue/detail pane below 768px, preserves current selection, and CSS restores both panes above it",
+    actual:
+      "Queue and detail alternated at 320px with aria-current retained; both panes were visible at 768px and 1280px",
+  });
+});
+
+test("VIS-01 computed styles preserve selected, error, destructive, notification, and exact-token hierarchy", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await activateSurface(page, "Notifications");
+  const notification = page.locator(".afferent-notification").first();
+  expect(
+    await notification.evaluate((node) => getComputedStyle(node).gap),
+  ).toBe("16px");
+  await activateSurface(page, "Notifications popover");
+  const trigger = page.locator(".afferent-notifications-trigger");
+  const triggerStyle = await trigger.evaluate((node) => {
+    const style = getComputedStyle(node);
+    const sample = document.createElement("span");
+    sample.style.backgroundColor = "var(--primary)";
+    document.body.append(sample);
+    const primary = getComputedStyle(sample).backgroundColor;
+    sample.remove();
+    return {
+      background: style.backgroundColor,
+      primary,
+      countSize: getComputedStyle(
+        node.querySelector(".afferent-notifications-trigger__count")!,
+      ).fontSize,
+    };
+  });
+  expect(triggerStyle.countSize).toBe("14px");
+  expect(triggerStyle.background).not.toBe(triggerStyle.primary);
+
+  await openAdminDetail(page);
+  const selected = page.locator('[data-admin-feedback][data-selected="true"]');
+  await expect(selected).toContainText("Selected feedback");
+  const selectionStyle = await selected.locator("button").evaluate((node) => ({
+    borderInlineStartWidth: getComputedStyle(node).borderInlineStartWidth,
+    paddingLeft: getComputedStyle(
+      document.querySelector(".afferent-admin input")!,
+    ).paddingLeft,
+  }));
+  expect(selectionStyle.borderInlineStartWidth).toBe("4px");
+  expect(selectionStyle.paddingLeft).toBe("16px");
+
+  const opened = await openConfirmation(
+    page,
+    "Delete feedback tag",
+    /Delete “Important”/,
+  );
+  await expect(opened.dialog).toHaveAttribute("data-tone", "destructive");
+  const destructiveStyle = await opened.dialog.evaluate((node) => ({
+    border: getComputedStyle(node).borderColor,
+    button: getComputedStyle(
+      node.querySelector(".afferent-button--destructive")!,
+    ).backgroundColor,
+  }));
+  expect(destructiveStyle.border).toBe(destructiveStyle.button);
+  await page.keyboard.press("Escape");
+
+  await page.goto("/");
+  await selectEvidenceOption(page, "Admin scenario", "capability-error");
+  await activateSurface(page, "Administration");
+  const error = page.locator('[data-tone="error"]');
+  const errorStyle = await error.evaluate((node) => ({
+    border: getComputedStyle(node).borderColor,
+    heading: getComputedStyle(node.querySelector("h2")!).color,
+  }));
+  expect(errorStyle.border).toBe(errorStyle.heading);
 });
 
 test("RZ-01 reflow, responsive layouts, zoom, and measured targets preserve every action", async ({
