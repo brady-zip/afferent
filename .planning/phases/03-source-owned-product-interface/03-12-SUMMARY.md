@@ -19,17 +19,29 @@ coverage:
   - id: D1
     description: Canonical, generated, mounted, and installed recovery evidence cannot be silently skipped or satisfied by dead strings.
     requirement: QUAL-07
-    verification: [{kind: integration, ref: "node --test tests/integration/phase3-gate.test.mjs", status: pass}]
+    verification:
+      - kind: integration
+        ref: "node --test tests/integration/phase3-gate.test.mjs"
+        status: pass
     human_judgment: false
   - id: D2
     description: Every public query error preserves exact default or custom guidance, its domain action, and the originating query arguments.
     requirement: QUAL-07
-    verification: [{kind: integration, ref: "tests/ui/board.test.tsx and tests/ui/public-surfaces.test.tsx", status: pass}]
+    verification:
+      - kind: integration
+        ref: "tests/ui/board.test.tsx and tests/ui/public-surfaces.test.tsx"
+        status: pass
     human_judgment: false
   - id: D3
     description: The packed installed consumer drives twelve public recovery families under default and sentinel guidance with deterministic evidence.
     requirement: QUAL-07
-    verification: [{kind: browser, ref: "tests/accessibility/phase3.spec.ts#ST-06", status: pass}, {kind: command, ref: "npm run test:phase3", status: pass}]
+    verification:
+      - kind: browser
+        ref: "tests/accessibility/phase3.spec.ts#ST-06"
+        status: pass
+      - kind: command
+        ref: "npm run test:phase3"
+        status: pass
     human_judgment: false
 duration: 22min
 completed: 2026-07-22
