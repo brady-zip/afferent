@@ -93,7 +93,7 @@ Requirements for the first production-ready public release. Roadmap creation wil
 - [x] **UI-01**: A React developer can use headless hooks and providers for public browsing, participation, roadmap, changelog, notifications, and admin operations.
 - [x] **UI-02**: The headless React layer accepts host-generated function references and does not require a specific auth provider, router, toast library, or packaged design system.
 - [x] **UI-03**: Headless APIs expose explicit authentication-loading, pagination, mutation-pending, empty, and error states.
-- [ ] **UI-04**: A developer can install source-owned shadcn components for the public feedback, roadmap, changelog, and notification experiences.
+- [x] **UI-04**: A developer can install source-owned shadcn components for the public feedback, roadmap, changelog, and notification experiences.
 - [x] **UI-05**: A developer can install source-owned shadcn components for feedback administration, moderation, roadmap status management, and changelog publishing.
 - [x] **UI-06**: A developer can obtain the canonical UI source from both a shadcn registry and mirrored repository examples.
 - [x] **UI-07**: Registry artifacts and repository examples are generated or checked against one canonical UI source to prevent incompatible copies.
@@ -117,7 +117,7 @@ Requirements for the first production-ready public release. Roadmap creation wil
 - [x] **QUAL-04**: A clean consumer fixture can install registry components and build them against the supported package version range.
 - [ ] **QUAL-05**: Browser tests verify the public feedback, roadmap, changelog, notification, and admin workflows against a real Convex deployment.
 - [ ] **QUAL-06**: Adversarial two-user tests verify that sandbox reads, writes, search, counts, seeds, resets, and cleanup never cross visitor scopes.
-- [ ] **QUAL-07**: Supplied public and admin interfaces meet documented WCAG 2.2 AA-oriented keyboard, focus, announcement, contrast, zoom, and reflow checks.
+- [x] **QUAL-07**: Supplied public and admin interfaces meet documented WCAG 2.2 AA-oriented keyboard, focus, announcement, contrast, zoom, and reflow checks.
 - [x] **QUAL-08**: Supplied public and admin interfaces support phone, tablet, and desktop layouts.
 
   Canonical re-audit `622e9b1` confirms Plans 03-09 and 03-10 closed every prior behavior and visual warning, then reopened only the exact general public-query recovery-guidance copy mismatch. Plan 03-11 closes that final warning additively while preserving completed Plans 03-01 through 03-10 and their evidence.
@@ -243,7 +243,7 @@ Every v1 requirement maps to exactly one roadmap phase.
 | UI-01       | Phase 2 | Complete |
 | UI-02       | Phase 2 | Complete |
 | UI-03       | Phase 2 | Complete |
-| UI-04       | Phase 3 | Pending  |
+| UI-04       | Phase 3 | Complete |
 | UI-05       | Phase 3 | Complete |
 | UI-06       | Phase 3 | Complete |
 | UI-07       | Phase 3 | Complete |
@@ -261,7 +261,7 @@ Every v1 requirement maps to exactly one roadmap phase.
 | QUAL-04     | Phase 3 | Complete |
 | QUAL-05     | Phase 4 | Pending  |
 | QUAL-06     | Phase 4 | Pending  |
-| QUAL-07     | Phase 3 | Pending  |
+| QUAL-07     | Phase 3 | Complete |
 | QUAL-08     | Phase 3 | Complete |
 | QUAL-09     | Phase 4 | Pending  |
 | QUAL-10     | Phase 1 | Complete |
