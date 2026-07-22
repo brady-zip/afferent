@@ -48,6 +48,12 @@ watcher has started and report the new ASK ID. If they report no event, do not r
 evidence: send one new directed ASK to the requested peer and correlate all subsequent waiting and
 replies with that new ID.
 
+Treat the user's watcher-miss report as the synchronization point. After that report, do not count
+any earlier send as visible delivery, even if it is still pending or appears in history. Record the
+current `refs/h5i/msg` tip, send a replacement ASK, and verify that the tip advanced. The replacement
+must contain the complete question and identify the ASK it supersedes so the peer can answer it
+without reconstructing stale context.
+
 Treat a watcher-start or watcher-miss report as an interrupt, even when an older ASK is pending:
 
 1. Stop any active `h5i msg wait` for the older ASK.
@@ -57,6 +63,19 @@ Treat a watcher-start or watcher-miss report as an interrupt, even when an older
    the older ASK for live correlation.
 4. Require both a new ASK ID and an advanced `refs/h5i/msg` tip before reporting visible delivery;
    then wait only for a reply correlated to the replacement ASK.
+
+Use this concrete recovery sequence:
+
+```bash
+before=$(git rev-parse refs/h5i/msg)
+h5i msg ask --from <self> <peer> "<complete question; supersedes ASK-...>"
+after=$(git rev-parse refs/h5i/msg)
+test "$before" != "$after"
+```
+
+If the ASK command succeeds but the ref does not advance, report a transport fault and investigate
+the shared-ref topology; do not claim the watcher should have seen the message and do not start the
+reply wait yet.
 
 The common failure is ordering: an ASK sent before the watcher starts is historical, and continuing
 to wait on it creates no new ref event for `watch` to display. The recovery is always a new send
@@ -111,7 +130,10 @@ Re-arm after a clean timeout; treat a nonzero wait exit as a channel fault, and 
 wait errors instead of reporting them as quiet. Never infer delivery from silence.
 
 If the wait times out, report that the live peer has not replied and leave the request pending.
-Do not spawn a replacement process.
+An advanced message ref proves delivery to the channel, not that a live peer operator is still
+armed. After repeated finite timeouts with a verified send, distinguish "peer operator may not be
+armed or responding" from no-send, stale-history, separate-ref-store, and tool-failure diagnoses.
+Do not imply that a reply is en route indefinitely, and do not spawn a replacement process.
 
 ## Respond
 
