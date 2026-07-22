@@ -48,11 +48,30 @@ test("the browser oracle is pinned, installed-source backed, and cannot skip", a
 });
 
 test("the browser oracle retains every repaired state and deterministic capture", async () => {
-  const [browserTest, fixture, evidenceIndex] = await Promise.all([
+  const [
+    browserTest,
+    fixture,
+    evidenceIndex,
+    canonicalCopy,
+    mirroredCopy,
+    registryCopy,
+  ] = await Promise.all([
     readFile("tests/accessibility/phase3.spec.ts", "utf8"),
     readFile("fixtures/registry-vite/src/App.tsx", "utf8"),
     readFile("docs/accessibility/phase-3/README.md", "utf8"),
+    readFile("ui/afferent/core/copy.ts", "utf8"),
+    readFile("examples/ui/afferent/core/copy.ts", "utf8"),
+    readFile("registry/r/afferent-ui-core.json", "utf8"),
   ]);
+  const approvedGuidance =
+    "Try loading it again. If the problem continues, contact the application owner.";
+  for (const copyArtifact of [canonicalCopy, mirroredCopy, registryCopy]) {
+    assert.match(copyArtifact, /queryErrorGuidance/);
+    assert.match(
+      copyArtifact,
+      new RegExp(approvedGuidance.replaceAll(".", String.raw`\.`)),
+    );
+  }
   for (const scenario of [
     "KF-04",
     "ST-03",
@@ -73,8 +92,6 @@ test("the browser oracle retains every repaired state and deterministic capture"
     "data-mobile-view",
     "activity-error",
     "Retry activity",
-    "Try loading it again. If the problem continues, contact the application owner.",
-    "queryErrorGuidance",
     "buttonHeight",
     "cardGeometry",
     "data-admin-section",
@@ -86,6 +103,22 @@ test("the browser oracle retains every repaired state and deterministic capture"
       new RegExp(required.replaceAll(".", String.raw`\.`)),
     );
   }
+  assert.match(
+    fixture,
+    /"activity-error":\s*"evidence:activity"/,
+  );
+  assert.match(
+    fixture,
+    /<option value="activity-error">Activity error<\/option>/,
+  );
+  assert.match(
+    browserTest,
+    /selectEvidenceOption\(page, "Admin scenario", "activity-error"\)/,
+  );
+  assert.match(
+    browserTest,
+    new RegExp(approvedGuidance.replaceAll(".", String.raw`\.`)),
+  );
   assert.match(browserTest, /document\.fonts\.ready/);
   assert.match(browserTest, /requestAnimationFrame/);
   assert.match(browserTest, /animations:\s*"disabled"/);
