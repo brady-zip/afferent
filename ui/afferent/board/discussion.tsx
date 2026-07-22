@@ -94,6 +94,11 @@ export function AfferentDiscussionView({
           <AfferentStateRegion
             title={copy.discussion.loadErrorHeading}
             tone="error"
+            action={
+              <button type="button" onClick={comments.retry}>
+                {copy.discussion.retryLoading}
+              </button>
+            }
           >
             <p>{afferentErrorText(comments.error)}</p>
             {comments.items.length ? <CommentRows /> : null}

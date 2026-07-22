@@ -283,8 +283,8 @@ function renderFeed(
         <AfferentStateRegion title={copy.board.loadErrorHeading} tone="error">
           <p>{copy.board.loadErrorBody}</p>
           <p>{afferentErrorText(feed.error)}</p>
-          <button type="button" onClick={feed.loadMore}>
-            {copy.common.tryLoadingAgain}
+          <button type="button" onClick={feed.retry}>
+            {copy.board.reloadFeedback}
           </button>
         </AfferentStateRegion>
       );
@@ -344,7 +344,15 @@ function renderSearch(
     }
     case "error": {
       return (
-        <AfferentStateRegion title={copy.board.searchErrorHeading} tone="error">
+        <AfferentStateRegion
+          title={copy.board.searchErrorHeading}
+          tone="error"
+          action={
+            <button type="button" onClick={state.retry}>
+              {copy.board.retrySearch}
+            </button>
+          }
+        >
           <p>{afferentErrorText(state.error)}</p>
         </AfferentStateRegion>
       );
