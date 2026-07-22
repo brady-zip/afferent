@@ -43,7 +43,15 @@ export function AfferentPostDetailView({
     }
     case "error": {
       return (
-        <AfferentStateRegion title={copy.detail.loadErrorHeading} tone="error">
+        <AfferentStateRegion
+          title={copy.detail.loadErrorHeading}
+          tone="error"
+          action={
+            <button type="button" onClick={lookup.retry}>
+              {copy.detail.retryLoading}
+            </button>
+          }
+        >
           <p>{afferentErrorText(lookup.error)}</p>
         </AfferentStateRegion>
       );

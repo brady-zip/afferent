@@ -54,6 +54,9 @@ export type AfferentUiCopy = Readonly<{
     clearFilters: string;
     loadErrorHeading: string;
     loadErrorBody: string;
+    reloadFeedback: string;
+    retrySearch: string;
+    retrySimilar: string;
     loadMore: string;
     loadingMore: string;
     voteCount: (count: number) => string;
@@ -62,6 +65,7 @@ export type AfferentUiCopy = Readonly<{
   detail: Readonly<{
     loading: string;
     loadErrorHeading: string;
+    retryLoading: string;
     notFoundHeading: string;
     notFoundBody: string;
     returnToFeedback: string;
@@ -92,6 +96,7 @@ export type AfferentUiCopy = Readonly<{
     emptyHeading: string;
     emptyBody: string;
     loadErrorHeading: string;
+    retryLoading: string;
     loadMore: string;
     loadingMore: string;
     anonymousAuthor: string;
@@ -106,10 +111,15 @@ export type AfferentUiCopy = Readonly<{
   }>;
   activity: Readonly<{
     heading: string;
+    unsupportedHeading: string;
+    unsupportedBody: string;
     loading: string;
+    emptyHeading: string;
+    emptyBody: string;
+    errorHeading: string;
+    retryLoading: string;
     loadMore: string;
     loadingMore: string;
-    event: (type: string, actor?: string) => string;
   }>;
   roadmap: Readonly<{
     title: string;
@@ -130,6 +140,8 @@ export type AfferentUiCopy = Readonly<{
     loadingEntry: string;
     loadErrorHeading: string;
     entryErrorHeading: string;
+    retryFeed: string;
+    retryEntry: string;
     notFoundHeading: string;
     notFoundBody: string;
     emptyHeading: string;
@@ -301,6 +313,9 @@ export const englishAfferentUiCopy: AfferentUiCopy = {
     loadErrorHeading: "We couldn't load feedback",
     loadErrorBody:
       "Try loading it again. If the problem continues, contact the application owner.",
+    reloadFeedback: "Reload feedback",
+    retrySearch: "Retry feedback search",
+    retrySimilar: "Retry similar feedback",
     loadMore: "Load more feedback",
     loadingMore: "Loading more feedback…",
     voteCount: (count) => `${count} ${count === 1 ? "vote" : "votes"}`,
@@ -309,6 +324,7 @@ export const englishAfferentUiCopy: AfferentUiCopy = {
   detail: {
     loading: "Loading feedback detail…",
     loadErrorHeading: "We couldn't load feedback detail",
+    retryLoading: "Retry feedback detail",
     notFoundHeading: "Feedback not found",
     notFoundBody: "It may have been withdrawn, archived, or made unavailable.",
     returnToFeedback: "Return to feedback",
@@ -339,6 +355,7 @@ export const englishAfferentUiCopy: AfferentUiCopy = {
     emptyHeading: "Start the discussion",
     emptyBody: "Be the first to add a comment to this feedback.",
     loadErrorHeading: "We couldn't load discussion",
+    retryLoading: "Retry discussion",
     loadMore: "Load more comments",
     loadingMore: "Loading more comments…",
     anonymousAuthor: "Anonymous contributor",
@@ -353,11 +370,16 @@ export const englishAfferentUiCopy: AfferentUiCopy = {
   },
   activity: {
     heading: "Activity",
+    unsupportedHeading: "Activity isn't configured",
+    unsupportedBody:
+      "The application needs to provide the activity function reference.",
     loading: "Loading activity…",
+    emptyHeading: "No activity yet",
+    emptyBody: "Updates to this feedback will appear here.",
+    errorHeading: "We couldn't load activity",
+    retryLoading: "Retry activity",
     loadMore: "Load more activity",
     loadingMore: "Loading more activity…",
-    event: (type, actor) =>
-      `${actor ?? "Someone"} recorded ${type.replaceAll("_", " ")}.`,
   },
   roadmap: {
     title: "Roadmap",
@@ -379,6 +401,8 @@ export const englishAfferentUiCopy: AfferentUiCopy = {
     loadingEntry: "Loading changelog entry…",
     loadErrorHeading: "We couldn't load changelog",
     entryErrorHeading: "We couldn't load this changelog entry",
+    retryFeed: "Reload changelog",
+    retryEntry: "Retry changelog entry",
     notFoundHeading: "Changelog entry not found",
     notFoundBody: "It may have been unpublished or made unavailable.",
     emptyHeading: "Updates will appear here",

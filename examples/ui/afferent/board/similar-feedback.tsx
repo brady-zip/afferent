@@ -45,6 +45,11 @@ export function AfferentSimilarFeedbackView({
         <AfferentStateRegion
           title={copy.board.similarErrorHeading}
           tone="error"
+          action={
+            <button type="button" onClick={state.retry}>
+              {copy.board.retrySimilar}
+            </button>
+          }
         >
           <p>{afferentErrorText(state.error)}</p>
         </AfferentStateRegion>

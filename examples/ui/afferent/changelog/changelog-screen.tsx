@@ -79,9 +79,9 @@ function renderFeed(
             <button
               type="button"
               className="afferent-button afferent-button--secondary"
-              onClick={feed.loadMore}
+              onClick={feed.retry}
             >
-              {copy.common.tryLoadingAgain}
+              {copy.changelog.retryFeed}
             </button>
           }
         >
@@ -144,6 +144,11 @@ function renderDetail(
         <AfferentStateRegion
           title={copy.changelog.entryErrorHeading}
           tone="error"
+          action={
+            <button type="button" onClick={detail.retry}>
+              {copy.changelog.retryEntry}
+            </button>
+          }
         >
           <p>{afferentErrorText(detail.error)}</p>
         </AfferentStateRegion>

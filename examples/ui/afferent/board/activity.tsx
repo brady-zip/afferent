@@ -1,11 +1,13 @@
 "use client";
 
-import type { PostActivityDto, PostId } from "afferent";
+import type { PostId } from "afferent";
 import { usePostActivity, type PostActivityState } from "afferent/react.js";
 
 import { useAfferentUi } from "@/components/afferent/core/afferent-ui-provider";
+import { formatActivityDescription } from "@/components/afferent/core/format";
 import {
   AfferentStateRegion,
+  afferentErrorText,
   assertNever,
 } from "@/components/afferent/core/state-region";
 
@@ -18,15 +20,37 @@ export function AfferentPostActivityView({
 }: Readonly<{ state: PostActivityState }>) {
   const { copy } = useAfferentUi();
   switch (state.status) {
-    case "unsupported":
+    case "unsupported": {
+      return (
+        <AfferentStateRegion title={copy.activity.unsupportedHeading}>
+          <p>{copy.activity.unsupportedBody}</p>
+        </AfferentStateRegion>
+      );
+    }
     case "empty": {
-      return null;
+      return (
+        <AfferentStateRegion title={copy.activity.emptyHeading}>
+          <p>{copy.activity.emptyBody}</p>
+        </AfferentStateRegion>
+      );
     }
     case "loading": {
       return <AfferentStateRegion title={copy.activity.loading} />;
     }
     case "error": {
-      return null;
+      return (
+        <AfferentStateRegion
+          title={copy.activity.errorHeading}
+          tone="error"
+          action={
+            <button type="button" onClick={state.retry}>
+              {copy.activity.retryLoading}
+            </button>
+          }
+        >
+          {state.error ? <p>{afferentErrorText(state.error)}</p> : null}
+        </AfferentStateRegion>
+      );
     }
     case "ready": {
       return (
@@ -37,7 +61,7 @@ export function AfferentPostActivityView({
           <h2 id="afferent-activity-heading">{copy.activity.heading}</h2>
           <ol>
             {state.items.map((item) => (
-              <li key={item.id}>{activityLabel(item, copy.activity)}</li>
+              <li key={item.id}>{formatActivityDescription(item)}</li>
             ))}
           </ol>
           {state.canLoadMore ? (
@@ -55,14 +79,7 @@ export function AfferentPostActivityView({
       );
     }
     default: {
-      return assertNever(state.status);
+      return assertNever(state);
     }
   }
-}
-
-function activityLabel(
-  item: PostActivityDto,
-  copy: ReturnType<typeof useAfferentUi>["copy"]["activity"],
-) {
-  return copy.event(item.type, item.actor?.displayName);
 }
