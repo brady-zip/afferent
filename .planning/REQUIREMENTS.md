@@ -94,7 +94,7 @@ Requirements for the first production-ready public release. Roadmap creation wil
 - [x] **UI-02**: The headless React layer accepts host-generated function references and does not require a specific auth provider, router, toast library, or packaged design system.
 - [x] **UI-03**: Headless APIs expose explicit authentication-loading, pagination, mutation-pending, empty, and error states.
 - [x] **UI-04**: A developer can install source-owned shadcn components for the public feedback, roadmap, changelog, and notification experiences.
-- [ ] **UI-05**: A developer can install source-owned shadcn components for feedback administration, moderation, roadmap status management, and changelog publishing.
+- [x] **UI-05**: A developer can install source-owned shadcn components for feedback administration, moderation, roadmap status management, and changelog publishing.
 - [x] **UI-06**: A developer can obtain the canonical UI source from both a shadcn registry and mirrored repository examples.
 - [x] **UI-07**: Registry artifacts and repository examples are generated or checked against one canonical UI source to prevent incompatible copies.
 - [x] **UI-08**: Post-bearing headless reads expose server-derived current-viewer vote membership and author edit/withdraw capabilities without accepting browser identity or authority facts.
@@ -117,10 +117,10 @@ Requirements for the first production-ready public release. Roadmap creation wil
 - [x] **QUAL-04**: A clean consumer fixture can install registry components and build them against the supported package version range.
 - [ ] **QUAL-05**: Browser tests verify the public feedback, roadmap, changelog, notification, and admin workflows against a real Convex deployment.
 - [ ] **QUAL-06**: Adversarial two-user tests verify that sandbox reads, writes, search, counts, seeds, resets, and cleanup never cross visitor scopes.
-- [ ] **QUAL-07**: Supplied public and admin interfaces meet documented WCAG 2.2 AA-oriented keyboard, focus, announcement, contrast, zoom, and reflow checks.
-- [ ] **QUAL-08**: Supplied public and admin interfaces support phone, tablet, and desktop layouts.
+- [x] **QUAL-07**: Supplied public and admin interfaces meet documented WCAG 2.2 AA-oriented keyboard, focus, announcement, contrast, zoom, and reflow checks.
+- [x] **QUAL-08**: Supplied public and admin interfaces support phone, tablet, and desktop layouts.
 
-  Plan 03-07 closed the canonical consequential dialogs, selected/error/destructive hierarchy, controlled phone navigation, token/copy drift, and complete administrative states. UI-05, QUAL-07, and QUAL-08 remain pending until Plan 03-08 refreshes the installed-browser and broad public/admin visual evidence. Axe remains a supplemental regression net rather than certification.
+  Plans 03-07 and 03-08 closed the canonical interaction audit and installed-source evidence refresh. The complete public/admin matrix covers consequential actions, state hierarchy, controlled phone navigation, light/dark themes, 320 CSS-pixel reflow, 200% zoom, and phone/tablet/desktop layouts. Axe remains a supplemental regression net rather than certification, and final aesthetic polish remains a human-review judgment.
 
 - [ ] **QUAL-09**: Documentation covers installation, component mounting, all three auth integrations, access policy, headless React usage, shadcn installation, customization, testing, deployment, and upgrades.
 - [x] **QUAL-10**: The repository and published package include the Apache-2.0 license.
@@ -244,7 +244,7 @@ Every v1 requirement maps to exactly one roadmap phase.
 | UI-02       | Phase 2 | Complete |
 | UI-03       | Phase 2 | Complete |
 | UI-04       | Phase 3 | Complete |
-| UI-05       | Phase 3 | Pending  |
+| UI-05       | Phase 3 | Complete |
 | UI-06       | Phase 3 | Complete |
 | UI-07       | Phase 3 | Complete |
 | UI-08       | Phase 2.1 | Complete |
@@ -261,8 +261,8 @@ Every v1 requirement maps to exactly one roadmap phase.
 | QUAL-04     | Phase 3 | Complete |
 | QUAL-05     | Phase 4 | Pending  |
 | QUAL-06     | Phase 4 | Pending  |
-| QUAL-07     | Phase 3 | Pending  |
-| QUAL-08     | Phase 3 | Pending  |
+| QUAL-07     | Phase 3 | Complete |
+| QUAL-08     | Phase 3 | Complete |
 | QUAL-09     | Phase 4 | Pending  |
 | QUAL-10     | Phase 1 | Complete |
 | QUAL-11     | Phase 4 | Pending  |

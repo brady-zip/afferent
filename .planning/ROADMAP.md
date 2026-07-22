@@ -16,7 +16,7 @@ Afferent reaches its first public release through four coarse vertical slices. T
 - [x] **Phase 2.1: Server-Derived Viewer Capability Contract** - Add server-derived vote membership and edit/withdraw capabilities required by the copied UI without accepting client authority facts. (INSERTED) (completed 2026-07-21)
 - [x] **Phase 2.2: Notification Navigation Target Contract** - Project versioned, public, accessible notification destinations without exposing polymorphic internal identifiers. (INSERTED) (completed 2026-07-21)
 - [x] **Phase 2.3: Admin Read and Projection Completion** - Complete server-authorized admin reads and presentation-ready moderation, changelog, and activity projections. (INSERTED) (completed 2026-07-21)
-- [ ] **Phase 3: Source-Owned Product Interface** - Plan 03-07 repaired the canonical consequential interactions, state hierarchy, tokens, and phone composition; Plan 03-08 remains for installed-source evidence refresh.
+- [x] **Phase 3: Source-Owned Product Interface** - Canonical and generated source-owned interfaces are complete with deterministic installed-source behavior, accessibility, responsive, and visual evidence. (completed 2026-07-22)
 - [ ] **Phase 4: Hosted Production Release** - The published package, registry, documentation, and isolated public demo work together against real Convex.
 
 ## Phase Details
@@ -234,7 +234,7 @@ Plans:
 4. Supplied public and admin interfaces pass documented WCAG 2.2 AA-oriented keyboard, focus, announcement, contrast, 320 CSS-pixel reflow, 200% zoom, and phone/tablet/desktop layout checks with versioned evidence.
 
 **UI hint**: yes
-**Plans:** 7/8 plans complete
+**Plans:** 8/8 plans complete
 
 - [x] 03-01-PLAN.md
 - [x] 03-02-PLAN.md
@@ -243,7 +243,7 @@ Plans:
 - [x] 03-05-PLAN.md
 - [x] 03-06-PLAN.md
 - [x] 03-07-PLAN.md
-- [ ] 03-08-PLAN.md
+- [x] 03-08-PLAN.md
 
 **Wave 1**
 
@@ -275,7 +275,7 @@ Plans:
 
 **Wave 8** _(UI audit evidence closure; blocked on Wave 7 completion)_
 
-- [ ] `03-08-PLAN.md` — Prove the repaired installed source and regenerate broad public/admin, state, theme, reflow, zoom, and responsive evidence.
+- [x] `03-08-PLAN.md` — Prove the repaired installed source and regenerate broad public/admin, state, theme, reflow, zoom, and responsive evidence.
 
 **Cross-cutting constraints:**
 
@@ -312,7 +312,7 @@ Phases execute sequentially: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 3 -> 4
 | 2.1 Server-Derived Viewer Capability Contract | 1/1            | Complete    | 2026-07-21 |
 | 2.2 Notification Navigation Target Contract   | 2/2            | Complete    | 2026-07-21 |
 | 2.3 Admin Read and Projection Completion      | 2/2            | Complete    | 2026-07-21 |
-| 3. Source-Owned Product Interface             | 7/8            | In progress | -          |
+| 3. Source-Owned Product Interface             | 8/8 | Complete   | 2026-07-22 |
 | 4. Hosted Production Release                  | 0/TBD          | Not started | -          |
 
 ---

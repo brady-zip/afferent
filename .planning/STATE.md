@@ -5,16 +5,16 @@ milestone_name: milestone
 current_phase: 03
 current_phase_name: Source-Owned Product Interface
 status: ready
-stopped_at: Plan 03-07 complete; ready to execute 03-08 evidence refresh
-last_updated: "2026-07-21T22:58:44.000Z"
-last_activity: 2026-07-21
-last_activity_desc: Completed 03-07 canonical UI audit interaction closure
+stopped_at: Plan 03-08 complete; ready for Phase 03 verification
+last_updated: "2026-07-22T19:40:57.247Z"
+last_activity: 2026-07-22
+last_activity_desc: Completed 03-08 installed-source UI evidence closure
 progress:
   total_phases: 7
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 38
-  completed_plans: 37
-  percent: 97
+  completed_plans: 38
+  percent: 86
 ---
 
 # Project State
@@ -24,24 +24,24 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-17)
 
 **Core value:** SaaS teams can add deeply integrated product feedback to an existing Convex application while retaining native ownership of their data, identity, permissions, and user experience.
-**Current focus:** Phase 03 — Source-Owned Product Interface
+**Current focus:** Phase 03 — Independent verification of the completed source-owned product interface
 
 ## Current Position
 
 Phase: 03 — Source-Owned Product Interface
 Plan: 03-08 of 8
-Status: Ready to refresh installed-source UI audit evidence
-Last activity: 2026-07-21 — Completed 03-07 canonical UI audit interaction closure
+Status: Implementation complete; ready for independent Phase 03 verification
+Last activity: 2026-07-22 — Completed 03-08 installed-source UI evidence closure
 
-Progress: [██████████] 97%
+Progress: [█████████░] 86%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 37
-- Average duration: 37 min
-- Total execution time: 1351 min
+- Total plans completed: 38
+- Average duration: 68 min
+- Total execution time: 2589 min
 
 **By Phase:**
 
@@ -51,12 +51,12 @@ Progress: [██████████] 97%
 | Phase 02   | 17    | 854 min | 50 min   |
 | Phase 02.1 | 1     | 68 min  | 68 min   |
 | Phase 02.3 | 2     | 33 min  | 17 min   |
-| Phase 03   | 7     | 115 min | 16 min   |
+| Phase 03   | 8     | 1353 min | 169 min |
 
 **Recent Trend:**
 
-- Last 5 plans: 9 min, 32 min, 17 min, 8 min, 20 min
-- Trend: Phase 3 canonical UI audit interaction closure completed in 9 minutes with deterministic clean-consumer proof
+- Last 5 plans: 8 min, 17 min, 32 min, 9 min, 20h 38m elapsed
+- Trend: Phase 3 implementation closed with a long-running installed evidence and full-regression session
 
 _Updated after each plan completion_
 
@@ -101,6 +101,7 @@ _Updated after each plan completion_
 | Phase 03 P05   | 17min    | 3 tasks | 15 files |
 | Phase 03 P06   | 32min    | 3 tasks | 42 files |
 | Phase 03 P07   | 9min     | 3 tasks | 38 files |
+| Phase 03 P08   | 20h 38m | 3 tasks | 35 files |
 
 ## Accumulated Context
 
@@ -210,6 +211,9 @@ Recent decisions affecting current work:
 - [Phase 02.3]: Legacy activity resolves same-scope live referents before stable non-identifying fallbacks. — Historical rows remain readable without trusting or exposing cross-scope relations.
 - [Phase 03]: Notification comment links and discussion rows share the `afferent-comment-${commentId}` anchor encoder; comment-specific labels receive fragments only when a validated commentId exists.
 - [Phase 03]: Notification list and popover compose directly over generation-fenced hooks; pending, errors, paging, unread state, and optimism remain headless-owned.
+- [Phase 03]: Reuse fixed UTC presentation for visible changelog publication time and ISO-8601 machine metadata. — Installed default UI must never expose raw numeric timestamps.
+- [Phase 03]: Accept versioned screenshots only alongside executable state, focus, target, overflow, and byte-determinism assertions. — Screenshot creation alone is not evidence closure.
+- [Phase 03]: Keep final aesthetic polish as explicit human judgment even when installed behavior, accessibility checks, and evidence bytes pass. — Automated evidence is scoped proof, not blanket certification.
 
 ### Pending Todos
 
@@ -235,6 +239,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-21T22:58:44Z
-Stopped at: Plan 03-07 complete; ready to execute 03-08 evidence refresh
+Last session: 2026-07-22T19:40:57.241Z
+Stopped at: Completed 03-08-PLAN.md
 Resume file: None
