@@ -5,7 +5,7 @@
   },
   {
     "path": "admin/admin-screen.tsx",
-    "sha256": "47ecc6d3e5ce967bfc6fc884a2439f0d20c66029b1146193b25172ddabb30df7"
+    "sha256": "d774c5f6bc708d56cc637fd419af036e20d641c20f960b183904b381a248edea"
   },
   {
     "path": "admin/changelog-editor.tsx",
@@ -33,7 +33,7 @@
   },
   {
     "path": "afferent.css",
-    "sha256": "8e6a08ec740b55371daa6830f157c27558bd42585a266f34759ddeb688196c37"
+    "sha256": "53c15040507ed4b76b53fd86caba54ca56e1c19200c81be651a47688fc248f60"
   },
   {
     "path": "board/activity.tsx",

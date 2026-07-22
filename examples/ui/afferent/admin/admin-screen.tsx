@@ -107,7 +107,9 @@ export function AfferentAdminScreen({
                 candidates={candidates}
                 onReturnToQueue={() => onMobileViewChange("queue")}
               />
-              <AfferentChangelogEditor feedback={candidates} />
+              <section className="afferent-admin-section" data-admin-section="changelog">
+                <AfferentChangelogEditor feedback={candidates} />
+              </section>
             </div>
           </div>
         );
@@ -211,10 +213,18 @@ function AdminPostDetail({
     case "ready": {
       return (
         <section className="afferent-admin-detail">
-          <AfferentModerationForm post={state.post} boards={boards} />
-          <AfferentTagManager post={state.post} />
-          <AdminActivity activity={activity} />
-          <AfferentMergeDialog source={state.post} candidates={candidates} />
+          <section className="afferent-admin-section" data-admin-section="moderation">
+            <AfferentModerationForm post={state.post} boards={boards} />
+          </section>
+          <section className="afferent-admin-section" data-admin-section="tags">
+            <AfferentTagManager post={state.post} />
+          </section>
+          <section className="afferent-admin-section" data-admin-section="activity">
+            <AdminActivity activity={activity} />
+          </section>
+          <section className="afferent-admin-section" data-admin-section="merge">
+            <AfferentMergeDialog source={state.post} candidates={candidates} />
+          </section>
         </section>
       );
     }
