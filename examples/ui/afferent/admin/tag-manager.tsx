@@ -59,7 +59,7 @@ export function AfferentTagManager({
         return (
           <AfferentStateRegion title={copy.admin.tagsErrorHeading} tone="error">
             {tags.error ? <p>{afferentErrorText(tags.error)}</p> : null}
-            <p>{copy.board.loadErrorBody}</p>
+            <p>{copy.common.queryErrorGuidance}</p>
           </AfferentStateRegion>
         );
       }

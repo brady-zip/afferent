@@ -51,6 +51,7 @@ export function AfferentSimilarFeedbackView({
             </button>
           }
         >
+          <p>{copy.common.queryErrorGuidance}</p>
           <p>{afferentErrorText(state.error)}</p>
         </AfferentStateRegion>
       );

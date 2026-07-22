@@ -48,6 +48,7 @@ export function AfferentPostActivityView({
             </button>
           }
         >
+          <p>{copy.common.queryErrorGuidance}</p>
           {state.error ? <p>{afferentErrorText(state.error)}</p> : null}
         </AfferentStateRegion>
       );

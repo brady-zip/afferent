@@ -10,6 +10,7 @@ export type AfferentUiCopy = Readonly<{
     unsupportedBody: string;
     loading: string;
     loadingParticipation: string;
+    queryErrorGuidance: string;
     tryLoadingAgain: string;
     dismissError: string;
   }>;
@@ -53,7 +54,6 @@ export type AfferentUiCopy = Readonly<{
     noMatchesBody: string;
     clearFilters: string;
     loadErrorHeading: string;
-    loadErrorBody: string;
     reloadFeedback: string;
     retrySearch: string;
     retrySimilar: string;
@@ -266,6 +266,7 @@ export const englishAfferentUiCopy: AfferentUiCopy = {
       "The application needs to provide the required Afferent function references.",
     loading: "Loading",
     loadingParticipation: "Loading participation…",
+    queryErrorGuidance: "Try loading it again. If the problem continues, contact the application owner.",
     tryLoadingAgain: "Try loading again",
     dismissError: "Dismiss error",
   },
@@ -311,8 +312,6 @@ export const englishAfferentUiCopy: AfferentUiCopy = {
     noMatchesBody: "Try a different search or clear the active filters.",
     clearFilters: "Clear feedback filters",
     loadErrorHeading: "We couldn't load feedback",
-    loadErrorBody:
-      "Try loading it again. If the problem continues, contact the application owner.",
     reloadFeedback: "Reload feedback",
     retrySearch: "Retry feedback search",
     retrySimilar: "Retry similar feedback",

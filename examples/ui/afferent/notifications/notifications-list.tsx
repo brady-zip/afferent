@@ -105,6 +105,7 @@ function renderNotifications(notifications: NotificationControllerState) {
             </button>
           }
         >
+          <p>{copy.common.queryErrorGuidance}</p>
           <p>{afferentErrorText(notifications.error)}</p>
           {notifications.items.length > 0 ? (
             <NotificationRows notifications={notifications} />

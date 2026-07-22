@@ -85,6 +85,7 @@ function renderFeed(
             </button>
           }
         >
+          <p>{copy.common.queryErrorGuidance}</p>
           <p>{afferentErrorText(feed.error)}</p>
         </AfferentStateRegion>
       );
@@ -150,6 +151,7 @@ function renderDetail(
             </button>
           }
         >
+          <p>{copy.common.queryErrorGuidance}</p>
           <p>{afferentErrorText(detail.error)}</p>
         </AfferentStateRegion>
       );

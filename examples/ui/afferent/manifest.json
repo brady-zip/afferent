@@ -5,7 +5,7 @@
   },
   {
     "path": "admin/admin-screen.tsx",
-    "sha256": "d774c5f6bc708d56cc637fd419af036e20d641c20f960b183904b381a248edea"
+    "sha256": "a46b7e6f85934f7457f1df1f3b9fe3ee251cc66f625d23d68158a4975b1e765f"
   },
   {
     "path": "admin/changelog-editor.tsx",
@@ -29,7 +29,7 @@
   },
   {
     "path": "admin/tag-manager.tsx",
-    "sha256": "2e61d84592c45010ebc8dbd897b63f02c726906afd59b500e7ba7be00e7f05c9"
+    "sha256": "8f689ecbed4c0444a70666f4eaa4e1b2b41e35109ed1d24f23d4b04864619842"
   },
   {
     "path": "afferent.css",
@@ -37,15 +37,15 @@
   },
   {
     "path": "board/activity.tsx",
-    "sha256": "c5e86deb6953262cff9c4d84f61194b7047e283d0a12c5aa2b644f710bb4e31a"
+    "sha256": "6ae1ea5d949f9ad6559cacdcbe9cf28ad65063e4ddb1952c15fd78fe50208418"
   },
   {
     "path": "board/board-screen.tsx",
-    "sha256": "2b8686ee515d434065560198ac69196a30ef558e199ce0a17c3cf92219cb853a"
+    "sha256": "5b4c6808f11ca7f90d2c81c2a473c268021eee30554c50e3ca8964a3a1079975"
   },
   {
     "path": "board/discussion.tsx",
-    "sha256": "c6a155b41206f3ce418519c329d523a2416ef9f76a881430b81766e80762ddc1"
+    "sha256": "dc82990c70df8da25677664809df598bdf7e389687060bbc839915c6d28b6afa"
   },
   {
     "path": "board/feedback-card.tsx",
@@ -61,11 +61,11 @@
   },
   {
     "path": "board/post-detail.tsx",
-    "sha256": "9747d6660526508751530d919c9261c127424d37fd2dc121980c4fcfb8af8fa7"
+    "sha256": "d50a400cf36f821f5b4129837ed07b67b2b861e4d53ac6404499e5cf8dac2ea3"
   },
   {
     "path": "board/similar-feedback.tsx",
-    "sha256": "97ff5ab0aaf33906ce897a43767b221a289a967c206ac335cf821c1f34415fdb"
+    "sha256": "fe8090c41dcb672db5288db54c22be32bd37a2ce6fd0822f50583a89ce847c4c"
   },
   {
     "path": "changelog/changelog-entry.tsx",
@@ -73,7 +73,7 @@
   },
   {
     "path": "changelog/changelog-screen.tsx",
-    "sha256": "c8a2cf48156d59a77e68054dec8f0095c2c0662008749fe0468ab629c0ba76d3"
+    "sha256": "52aa1ce898e550e9ef33a819b5ae1f91cff38bc73fc01427178ed9df00521f98"
   },
   {
     "path": "core/afferent-ui-provider.tsx",
@@ -81,7 +81,7 @@
   },
   {
     "path": "core/copy.ts",
-    "sha256": "47a1950793b8557e7e3eeca7736e189ea87505fe06f269c53994c7e195217aed"
+    "sha256": "df64feb96c0d820e66347136f6d8eac045b69d8b3f1baf2eab490a1f4879673a"
   },
   {
     "path": "core/format.ts",
@@ -105,7 +105,7 @@
   },
   {
     "path": "notifications/notifications-list.tsx",
-    "sha256": "5cae280cf0d232dca49cfbc4fd8123f5c553fe2b1027b51dced34345e7fd7efd"
+    "sha256": "5469a82374c1e0c1f61cd31433773114a56708bfbf406837a60d695143f73109"
   },
   {
     "path": "notifications/notifications-popover.tsx",
@@ -117,7 +117,7 @@
   },
   {
     "path": "roadmap/roadmap-group.tsx",
-    "sha256": "64620e74c83a0cfea3dc3fed6eb170be146c36e2ca9286fbff1d646d608dcd3b"
+    "sha256": "b6955d64a78a940236c4074c9a8d70c98056722d765b70032573586c1f730fc4"
   },
   {
     "path": "roadmap/roadmap-screen.tsx",
