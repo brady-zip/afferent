@@ -73,6 +73,8 @@ test("the browser oracle retains every repaired state and deterministic capture"
     "data-mobile-view",
     "activity-error",
     "Retry activity",
+    "Try loading it again. If the problem continues, contact the application owner.",
+    "queryErrorGuidance",
     "buttonHeight",
     "cardGeometry",
     "data-admin-section",

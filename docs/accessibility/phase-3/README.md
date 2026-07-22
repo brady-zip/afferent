@@ -42,7 +42,7 @@ Public light-theme surfaces:
 
 - `board-1280.png`: browse, filter, search, create, and feedback result hierarchy.
 - `detail-1280.png`: selected feedback, voting, subscription, editing, withdrawal, discussion, and activity.
-- `public-recovery-1280.png`: installed public Activity query error with its outcome-specific recovery control; the browser then retries the same watch and asserts the ready domain sentence.
+- `public-recovery-1280.png`: installed public Activity query error with the shared approved guidance and its outcome-specific recovery control; the browser then retries the same watch and asserts the ready domain sentence.
 - `roadmap-1280.png`: planned, in-progress, and complete status groups.
 - `changelog-1280.png`: published entry, valid machine time, and linked feedback.
 - `notifications-1280.png`: read/unread list, real target links, formatted time, and mutation action.

@@ -812,6 +812,7 @@ test("VIS-02 named whole-product light and dark capture matrix is complete", asy
   await selectEvidenceOption(page, "Admin scenario", "activity-error");
   await activateSurface(page, "Feedback detail");
   await expect(page.getByText("We couldn't load activity", { exact: true })).toBeVisible();
+  await expect(page.getByText("Try loading it again. If the problem continues, contact the application owner.", { exact: true })).toBeVisible();
   await captureEvidence(page, "public-recovery-1280.png");
   await page.getByRole("button", { name: "Retry activity" }).click();
   await expect(page.getByText("Alex changed the feedback status from Open to Planned.", { exact: true })).toBeVisible();
