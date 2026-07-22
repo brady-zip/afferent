@@ -163,6 +163,7 @@ export class ControlledUiClient {
   mutationCalls: { name: string; args: Record<string, unknown> }[] = [];
   values = new Map<string, unknown>();
   errors = new Map<string, unknown>();
+  errorFor?: (name: string, args: Record<string, unknown>) => unknown;
 
   watchQuery(reference: unknown, args: Record<string, unknown> = {}) {
     const name = getFunctionName(reference as never);
@@ -170,7 +171,7 @@ export class ControlledUiClient {
       name,
       args,
       value: this.values.has(name) ? this.values.get(name) : defaultValue(name),
-      error: this.errors.get(name),
+      error: this.errorFor?.(name, args) ?? this.errors.get(name),
       listeners: new Set(),
     };
     this.records.push(record);

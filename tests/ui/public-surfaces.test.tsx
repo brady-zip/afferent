@@ -211,6 +211,7 @@ async function assertPublicRecovery(
     guidance: string;
     args: Record<string, unknown>;
     retainedText?: string;
+    originating?: "first" | "last";
   },
 ) {
   const region = options.region ?? mounted.container;
@@ -229,7 +230,8 @@ async function assertPublicRecovery(
         ([key, value]) => record.args[key] === value,
       ),
     );
-  const originatingArgs = attempts.at(-1)?.args;
+  const originatingArgs =
+    options.originating === "first" ? attempts[0]?.args : attempts.at(-1)?.args;
   expect(originatingArgs).toMatchObject(options.args);
   const recordCount = mounted.client.records.length;
   const action = [...region.querySelectorAll("button")].find(
@@ -586,18 +588,26 @@ describe("closed public surface states", () => {
         copy,
       });
       await act(async () => {});
-      act(() =>
-        notificationsClient.fail(
-          "notifications",
-          new Error("notifications offline"),
-        ),
+      notificationsClient.errorFor = (name, args) =>
+        name === "ui:notifications" &&
+        (args.paginationOpts as { cursor?: string } | undefined)?.cursor ===
+          "next"
+          ? new Error("notifications offline")
+          : undefined;
+      click(
+        [...notificationList.container.querySelectorAll("button")].find(
+          (button) => button.textContent?.trim() === "Load more notifications",
+        )!,
       );
+      await act(async () => {});
       await assertPublicRecovery(notificationList, {
         binding: "notifications",
         heading: "We couldn't load notifications",
         label: "Try loading again",
         guidance,
         args: { sessionGeneration: 1 },
+        retainedText: `View comment on feedback: ${feedbackPost.title}`,
+        originating: "first",
       });
       notificationList.unmount();
     }
