@@ -132,6 +132,9 @@ async function captureEvidence(
     path: `${evidenceRoot}/${file}`,
     fullPage: options.fullPage ?? true,
     animations: "disabled",
+    caret: "hide",
+    style:
+      "*, *::before, *::after { animation: none !important; caret-color: transparent !important; transition: none !important; }",
   });
 }
 
