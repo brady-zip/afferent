@@ -21,8 +21,11 @@ const runtimeDependencies = [
   "tailwind-merge",
 ];
 
-function run(command, args, cwd) {
+function run(command, args, cwdOrOptions) {
   return new Promise((resolveRun, rejectRun) => {
+    const options =
+      typeof cwdOrOptions === "string" ? { cwd: cwdOrOptions } : cwdOrOptions;
+    const { cwd } = options;
     const env = { ...process.env, npm_config_workspaces: "false" };
     delete env.NODE_TEST_CONTEXT;
     const child = spawn(command, args, {
@@ -31,17 +34,48 @@ function run(command, args, cwd) {
       stdio: ["ignore", "pipe", "pipe"],
     });
     let output = "";
+    let settled = false;
+    const timeout = options.timeoutMs
+      ? setTimeout(() => {
+          if (settled) return;
+          settled = true;
+          child.kill("SIGTERM");
+          rejectRun(
+            new Error(
+              `${command} ${args.join(" ")} timed out after ${options.timeoutMs}ms:\n${output}`,
+            ),
+          );
+        }, options.timeoutMs)
+      : undefined;
     child.stdout.on("data", (chunk) => (output += chunk));
     child.stderr.on("data", (chunk) => (output += chunk));
-    child.once("error", rejectRun);
-    child.once("close", (code) =>
-      code === 0
-        ? resolveRun(output)
-        : rejectRun(
-            new Error(`${command} ${args.join(" ")} failed:\n${output}`),
-          ),
-    );
+    child.once("error", (error) => {
+      if (settled) return;
+      settled = true;
+      if (timeout) clearTimeout(timeout);
+      rejectRun(error);
+    });
+    child.once("close", (code) => {
+      if (settled) return;
+      settled = true;
+      if (timeout) clearTimeout(timeout);
+      if (code === 0) resolveRun(output);
+      else
+        rejectRun(new Error(`${command} ${args.join(" ")} failed:\n${output}`));
+    });
   });
+}
+
+async function runWithRetries(command, args, options) {
+  let lastError;
+  for (let attempt = 1; attempt <= options.attempts; attempt += 1) {
+    try {
+      return await run(command, args, options);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError;
 }
 
 export async function prepareRegistryConsumer(root = defaultRoot) {
@@ -88,14 +122,18 @@ export async function prepareRegistryConsumer(root = defaultRoot) {
         join(root, "registry/r", `${name}.json`),
         join(consumer, `${name}.json`),
       );
-    for (const item of featureItems)
-      transcript.push(
-        await run(
-          join(root, "node_modules/.bin/shadcn"),
-          ["add", "--yes", "--overwrite", `./afferent-${item}.json`],
-          consumer,
-        ),
-      );
+    transcript.push(
+      await runWithRetries(
+        join(root, "node_modules/.bin/shadcn"),
+        [
+          "add",
+          "--yes",
+          "--overwrite",
+          ...featureItems.map((item) => `./afferent-${item}.json`),
+        ],
+        { attempts: 3, cwd: consumer, timeoutMs: 30_000 },
+      ),
+    );
     transcript.push(await run("npm", ["run", "typecheck"], consumer));
     transcript.push(await run("npm", ["run", "build"], consumer));
     const manifest = JSON.parse(
