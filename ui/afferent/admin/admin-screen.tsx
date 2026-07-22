@@ -252,7 +252,7 @@ function AdminActivity({
           title={copy.admin.activityErrorHeading}
           tone="error"
           action={
-            <button type="button" onClick={activity.loadMore}>
+            <button type="button" onClick={activity.retry}>
               {copy.common.tryLoadingAgain}
             </button>
           }
@@ -291,7 +291,7 @@ function AdminActivity({
       );
     }
     default: {
-      return assertNever(activity.status as never);
+      return assertNever(activity);
     }
   }
 }
