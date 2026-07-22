@@ -100,6 +100,7 @@ export function AfferentDiscussionView({
               </button>
             }
           >
+            <p>{copy.common.queryErrorGuidance}</p>
             <p>{afferentErrorText(comments.error)}</p>
             {comments.items.length ? <CommentRows /> : null}
           </AfferentStateRegion>

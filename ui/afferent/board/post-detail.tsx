@@ -52,6 +52,7 @@ export function AfferentPostDetailView({
             </button>
           }
         >
+          <p>{copy.common.queryErrorGuidance}</p>
           <p>{afferentErrorText(lookup.error)}</p>
         </AfferentStateRegion>
       );

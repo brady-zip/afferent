@@ -281,7 +281,7 @@ function renderFeed(
     case "error": {
       return (
         <AfferentStateRegion title={copy.board.loadErrorHeading} tone="error">
-          <p>{copy.board.loadErrorBody}</p>
+          <p>{copy.common.queryErrorGuidance}</p>
           <p>{afferentErrorText(feed.error)}</p>
           <button type="button" onClick={feed.retry}>
             {copy.board.reloadFeedback}
@@ -353,6 +353,7 @@ function renderSearch(
             </button>
           }
         >
+          <p>{copy.common.queryErrorGuidance}</p>
           <p>{afferentErrorText(state.error)}</p>
         </AfferentStateRegion>
       );

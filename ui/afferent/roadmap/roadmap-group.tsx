@@ -68,7 +68,9 @@ function renderGroup(
               {copy.common.tryLoadingAgain}
             </button>
           }
-        />
+        >
+          <p>{copy.common.queryErrorGuidance}</p>
+        </AfferentStateRegion>
       );
     }
     case "ready": {

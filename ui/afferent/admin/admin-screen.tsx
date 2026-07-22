@@ -75,7 +75,7 @@ export function AfferentAdminScreen({
         return (
           <AfferentStateRegion title={copy.admin.loadError} tone="error">
             <p>{afferentErrorText(capability.error)}</p>
-            <p>{copy.board.loadErrorBody}</p>
+            <p>{copy.common.queryErrorGuidance}</p>
           </AfferentStateRegion>
         );
       }
