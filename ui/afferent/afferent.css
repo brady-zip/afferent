@@ -634,7 +634,7 @@
   justify-content: center;
   min-height: 20px;
   min-width: 20px;
-  padding-inline: 6px;
+  padding-inline: 8px;
 }
 
 .afferent-notifications-trigger {
@@ -649,6 +649,10 @@
   .afferent-feedback-card {
     grid-template-columns: minmax(0, 1fr) auto;
     padding: 24px;
+  }
+
+  .afferent-board__workspace .afferent-feedback-card {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .afferent-controls-grid {
@@ -886,6 +890,7 @@
   border-radius: var(--radius);
   color: var(--foreground);
   display: grid;
+  font: 400 16px/1.5 var(--font-sans);
   gap: 16px;
   left: 50%;
   max-height: calc(100vh - 32px);
@@ -897,6 +902,25 @@
   transform: translate(-50%, -50%);
   width: 480px;
   z-index: 61;
+}
+
+.afferent-dialog button {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--foreground);
+  font: 600 16px/1.5 var(--font-sans);
+  min-height: 44px;
+  padding: 8px 16px;
+}
+
+.afferent-dialog button:disabled {
+  opacity: 0.65;
+}
+
+.afferent-dialog button:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }
 
 .afferent-dialog[data-tone="destructive"] {
@@ -914,6 +938,15 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.afferent-admin-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: grid;
+  gap: 16px;
+  padding: 16px;
 }
 
 .afferent-destructive-actions {
