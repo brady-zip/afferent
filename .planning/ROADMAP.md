@@ -234,7 +234,7 @@ Plans:
 4. Supplied public and admin interfaces pass documented WCAG 2.2 AA-oriented keyboard, focus, announcement, contrast, 320 CSS-pixel reflow, 200% zoom, and phone/tablet/desktop layout checks with versioned evidence.
 
 **UI hint**: yes
-**Plans:** 8/8 plans complete
+**Plans:** 9/10 plans complete
 
 - [x] 03-01-PLAN.md
 - [x] 03-02-PLAN.md
@@ -244,7 +244,7 @@ Plans:
 - [x] 03-06-PLAN.md
 - [x] 03-07-PLAN.md
 - [x] 03-08-PLAN.md
-- [ ] 03-09-PLAN.md
+- [x] 03-09-PLAN.md
 - [ ] 03-10-PLAN.md
 
 **Wave 1**
@@ -281,7 +281,7 @@ Plans:
 
 **Wave 9** _(UI re-audit public-state closure; blocked on Wave 8 completion)_
 
-- [ ] `03-09-PLAN.md` — Preserve query-owned retry, render exhaustive public Activity states with domain language, and add outcome-specific recovery across public query surfaces.
+- [x] `03-09-PLAN.md` — Preserve query-owned retry, render exhaustive public Activity states with domain language, and add outcome-specific recovery across public query surfaces.
 
 **Wave 10** _(UI re-audit visual/evidence closure; blocked on Wave 9 completion)_
 
