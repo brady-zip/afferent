@@ -30,11 +30,11 @@ Evidence excludes wall-clock time, temporary paths, ports, process identifiers, 
 | 2.4.11 Focus Not Obscured (Minimum) | Focus rectangles are inside the viewport and hit-test to the active control rather than an overlay.                              |
 | 2.5.7 Dragging Movements            | KF-03 uses labelled native status controls; no representative workflow requires dragging.                                        |
 | 2.5.8 Target Size (Minimum)         | RZ-01 measures every visible interactive target at 24 by 24 CSS pixels minimum and at 44 by 44 for coarse pointers.              |
-| 3.3.1 Error Identification          | ST-03 through ST-05 distinguish typed mutation alerts from passive read failures and prove correction, retry, and pending paths. |
+| 3.3.1 Error Identification          | ST-03 through ST-06 distinguish typed mutation alerts from passive read failures and prove correction, retry, and pending paths. |
 | 3.3.2 Labels or Instructions        | Browser journeys resolve every tested input by its visible accessible label.                                                     |
 | 4.1.3 Status Messages               | `status-messages.md` records result and successful-mutation announcements without focus theft.                                   |
 
-`axe.json` is a supplemental automated regression net for the stable public and admin states. Axe cannot certify keyboard completion, focus restoration, announcement quality, zoom, or reflow and is not presented as certification. VIS-01 also verifies the portaled dialog's 16px typography, 44px controls, 8/16 padding, border, radius, focus, and action gap under a hostile host reset. VIS-02 adds programmatic 1280 non-overlap/overflow checks, measurable admin section borders and spacing, and a real installed activity error-to-retry-to-ready transition before producing the named whole-product capture matrix.
+`axe.json` is a supplemental automated regression net for the stable public and admin states. Axe cannot certify keyboard completion, focus restoration, announcement quality, zoom, or reflow and is not presented as certification. VIS-01 also verifies the portaled dialog's 16px typography, 44px controls, 8/16 padding, border, radius, focus, and action gap under a hostile host reset. ST-06 drives twelve installed public query-error scenarios twice—once with the approved default and once with a sentinel host override—while preserving domain labels and observing the originating query's second attempt. VIS-02 adds programmatic 1280 non-overlap/overflow checks, measurable admin section borders and spacing, and a real installed notification error-to-retry-to-ready transition before producing the named whole-product capture matrix.
 
 ## Captures
 
@@ -42,7 +42,7 @@ Public light-theme surfaces:
 
 - `board-1280.png`: browse, filter, search, create, and feedback result hierarchy.
 - `detail-1280.png`: selected feedback, voting, subscription, editing, withdrawal, discussion, and activity.
-- `public-recovery-1280.png`: installed public Activity query error with the shared approved guidance and its outcome-specific recovery control; the browser then retries the same watch and asserts the ready domain sentence.
+- `public-recovery-1280.png`: installed public Notifications query error with the shared approved guidance and its outcome-specific recovery control; the browser then retries the same watch and asserts the ready notification target.
 - `roadmap-1280.png`: planned, in-progress, and complete status groups.
 - `changelog-1280.png`: published entry, valid machine time, and linked feedback.
 - `notifications-1280.png`: read/unread list, real target links, formatted time, and mutation action.

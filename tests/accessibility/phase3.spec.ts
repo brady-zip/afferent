@@ -52,7 +52,12 @@ async function activateSurface(page: Page, label: string) {
 
 async function selectEvidenceOption(
   page: Page,
-  control: "Evidence theme" | "Admin scenario" | "Mutation outcome",
+  control:
+    | "Evidence theme"
+    | "Admin scenario"
+    | "Public recovery scenario"
+    | "Recovery guidance"
+    | "Mutation outcome",
   value: string,
 ) {
   await page.getByRole("combobox", { name: control }).selectOption(value);
@@ -658,6 +663,156 @@ test("ST-05 installed admin states expose complete copy, recovery, and formatted
   });
 });
 
+test("ST-06 packed public recovery matrix preserves guidance, domain actions, and query retries", async ({
+  page,
+}) => {
+  const cases = [
+    {
+      scenario: "public-feed-error",
+      surface: "Board",
+      heading: "We couldn't load feedback",
+      action: "Reload feedback",
+      attempt: "feed",
+    },
+    {
+      scenario: "public-search-error",
+      surface: "Board",
+      heading: "We couldn't search feedback",
+      action: "Retry feedback search",
+      attempt: "search",
+      prepare: "search",
+    },
+    {
+      scenario: "public-similar-error",
+      surface: "Board",
+      heading: "We couldn't load similar feedback",
+      action: "Retry similar feedback",
+      attempt: "similar",
+      prepare: "similar",
+    },
+    {
+      scenario: "public-detail-error",
+      surface: "Feedback detail",
+      heading: "We couldn't load feedback detail",
+      action: "Retry feedback detail",
+      attempt: "post",
+    },
+    {
+      scenario: "public-discussion-error",
+      surface: "Feedback detail",
+      heading: "We couldn't load discussion",
+      action: "Retry discussion",
+      attempt: "comments",
+    },
+    {
+      scenario: "public-activity-error",
+      surface: "Feedback detail",
+      heading: "We couldn't load activity",
+      action: "Retry activity",
+      attempt: "activity",
+    },
+    {
+      scenario: "public-roadmap-planned-error",
+      surface: "Roadmap",
+      heading: "We couldn't load Planned roadmap",
+      action: "Try loading again",
+      attempt: "roadmap:planned",
+    },
+    {
+      scenario: "public-roadmap-in-progress-error",
+      surface: "Roadmap",
+      heading: "We couldn't load In Progress roadmap",
+      action: "Try loading again",
+      attempt: "roadmap:in_progress",
+    },
+    {
+      scenario: "public-roadmap-complete-error",
+      surface: "Roadmap",
+      heading: "We couldn't load Complete roadmap",
+      action: "Try loading again",
+      attempt: "roadmap:complete",
+    },
+    {
+      scenario: "public-changelog-feed-error",
+      surface: "Changelog",
+      heading: "We couldn't load changelog",
+      action: "Reload changelog",
+      attempt: "changelogFeed",
+    },
+    {
+      scenario: "public-changelog-entry-error",
+      surface: "Changelog",
+      heading: "We couldn't load this changelog entry",
+      action: "Retry changelog entry",
+      attempt: "changelogEntry",
+    },
+    {
+      scenario: "public-notifications-error",
+      surface: "Notifications",
+      heading: "We couldn't load notifications",
+      action: "Try loading again",
+      attempt: "notifications",
+    },
+  ] as const;
+  const guidancePasses = [
+    {
+      value: "default",
+      text: "Try loading it again. If the problem continues, contact the application owner.",
+    },
+    { value: "sentinel", text: "SENTINEL: use the host recovery channel." },
+  ] as const;
+
+  for (const guidance of guidancePasses) {
+    for (const recovery of cases) {
+      await page.goto("/");
+      await selectEvidenceOption(page, "Recovery guidance", guidance.value);
+      await selectEvidenceOption(
+        page,
+        "Public recovery scenario",
+        recovery.scenario,
+      );
+      await activateSurface(page, recovery.surface);
+      if ("prepare" in recovery && recovery.prepare === "search") {
+        await page
+          .getByRole("searchbox", { name: "Search feedback" })
+          .fill("keyboard");
+      }
+      if ("prepare" in recovery && recovery.prepare === "similar") {
+        await page.getByRole("button", { name: "Create feedback" }).click();
+        await page
+          .getByRole("textbox", { name: "Feedback title" })
+          .fill("Keyboard shortcuts");
+      }
+      await expect(
+        page.getByText(recovery.heading, { exact: true }),
+      ).toBeVisible();
+      await expect(page.getByText(guidance.text, { exact: true })).toBeVisible();
+      if (guidance.value === "sentinel") {
+        await expect(
+          page.getByText(
+            "Try loading it again. If the problem continues, contact the application owner.",
+            { exact: true },
+          ),
+        ).toHaveCount(0);
+      }
+      await page.getByRole("button", { name: recovery.action, exact: true }).click();
+      await expect(
+        page.locator("[data-public-query-attempts]"),
+      ).toContainText(`"${recovery.attempt}":2`);
+      await expect(
+        page.getByText(recovery.heading, { exact: true }),
+      ).toHaveCount(0);
+    }
+  }
+  statusEvidence.push({
+    id: "ST-06",
+    expected:
+      "Every installed public query error uses shared default or host copy while preserving its domain action and query-owned retry",
+    actual:
+      "Twelve packed public recovery scenarios passed with default and sentinel guidance, unchanged labels, and observable second query attempts",
+  });
+});
+
 test("RZ-02 the host controls one phone admin pane while wider layouts show both", async ({
   page,
 }) => {
@@ -809,14 +964,28 @@ test("VIS-02 named whole-product light and dark capture matrix is complete", asy
   expect(cardGeometry.contentBottom).toBeLessThanOrEqual(cardGeometry.totalsTop);
   expect(cardGeometry.scrollWidth).toBeLessThanOrEqual(cardGeometry.clientWidth);
   await captureEvidence(page, "detail-1280.png");
-  await selectEvidenceOption(page, "Admin scenario", "activity-error");
-  await activateSurface(page, "Feedback detail");
-  await expect(page.getByText("We couldn't load activity", { exact: true })).toBeVisible();
+  await selectEvidenceOption(
+    page,
+    "Public recovery scenario",
+    "public-notifications-error",
+  );
+  await activateSurface(page, "Notifications");
+  await expect(
+    page.getByText("We couldn't load notifications", { exact: true }),
+  ).toBeVisible();
   await expect(page.getByText("Try loading it again. If the problem continues, contact the application owner.", { exact: true })).toBeVisible();
   await captureEvidence(page, "public-recovery-1280.png");
-  await page.getByRole("button", { name: "Retry activity" }).click();
-  await expect(page.getByText("Alex changed the feedback status from Open to Planned.", { exact: true })).toBeVisible();
-  await selectEvidenceOption(page, "Admin scenario", "ready");
+  await page.getByRole("button", { name: "Try loading again" }).click();
+  await expect(
+    page.getByText("View comment on feedback: Keyboard shortcuts", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await selectEvidenceOption(
+    page,
+    "Public recovery scenario",
+    "public-ready",
+  );
   await activateSurface(page, "Roadmap");
   await expect(page.locator('[data-afferent-screen="roadmap"]')).toBeVisible();
   await captureEvidence(page, "roadmap-1280.png");

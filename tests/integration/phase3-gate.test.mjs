@@ -55,6 +55,8 @@ test("the browser oracle retains every repaired state and deterministic capture"
     canonicalCopy,
     mirroredCopy,
     registryCopy,
+    boardRecoveryMatrix,
+    publicRecoveryMatrix,
   ] = await Promise.all([
     readFile("tests/accessibility/phase3.spec.ts", "utf8"),
     readFile("fixtures/registry-vite/src/App.tsx", "utf8"),
@@ -62,6 +64,8 @@ test("the browser oracle retains every repaired state and deterministic capture"
     readFile("ui/afferent/core/copy.ts", "utf8"),
     readFile("examples/ui/afferent/core/copy.ts", "utf8"),
     readFile("registry/r/afferent-ui-core.json", "utf8"),
+    readFile("tests/ui/board.test.tsx", "utf8"),
+    readFile("tests/ui/public-surfaces.test.tsx", "utf8"),
   ]);
   const approvedGuidance =
     "Try loading it again. If the problem continues, contact the application owner.";
@@ -77,6 +81,7 @@ test("the browser oracle retains every repaired state and deterministic capture"
     "ST-03",
     "ST-04",
     "ST-05",
+    "ST-06",
     "RZ-02",
     "VIS-01",
     "VIS-02",
@@ -119,6 +124,61 @@ test("the browser oracle retains every repaired state and deterministic capture"
     browserTest,
     new RegExp(approvedGuidance.replaceAll(".", String.raw`\.`)),
   );
+  assert.match(
+    boardRecoveryMatrix,
+    /every board query error preserves its domain action and exact watch arguments under default and custom guidance/,
+  );
+  for (const binding of [
+    "feed",
+    "search",
+    "similar",
+    "post",
+    "comments",
+    "activity",
+  ]) {
+    assert.match(boardRecoveryMatrix, new RegExp(`binding: "${binding}"`));
+  }
+  assert.match(
+    publicRecoveryMatrix,
+    /every public surface query error preserves its domain action and exact watch arguments under default and custom guidance/,
+  );
+  for (const binding of [
+    "roadmap",
+    "changelogFeed",
+    "changelogEntry",
+    "notifications",
+  ]) {
+    assert.match(publicRecoveryMatrix, new RegExp(`binding: "${binding}"`));
+  }
+  assert.match(boardRecoveryMatrix, /sentinelGuidance/);
+  assert.match(publicRecoveryMatrix, /sentinelGuidance/);
+  const publicRecoveryScenarios = [
+    "public-feed-error",
+    "public-search-error",
+    "public-similar-error",
+    "public-detail-error",
+    "public-discussion-error",
+    "public-activity-error",
+    "public-roadmap-planned-error",
+    "public-roadmap-in-progress-error",
+    "public-roadmap-complete-error",
+    "public-changelog-feed-error",
+    "public-changelog-entry-error",
+    "public-notifications-error",
+  ];
+  for (const scenario of publicRecoveryScenarios) {
+    assert.match(
+      fixture,
+      new RegExp(`<option value="${scenario}">`),
+    );
+    assert.match(browserTest, new RegExp(`scenario: "${scenario}"`));
+  }
+  assert.match(fixture, /publicFailures:\s*Partial<Record<PublicRecoveryScenario, string>>/);
+  assert.match(fixture, /roadmapFailures:\s*Partial</);
+  assert.match(fixture, /onPublicQueryAttempt\(attemptKey, queryAttempt\)/);
+  assert.match(browserTest, /for \(const recovery of cases\)/);
+  assert.match(browserTest, /name: recovery\.action, exact: true/);
+  assert.match(browserTest, /data-public-query-attempts/);
   assert.match(browserTest, /document\.fonts\.ready/);
   assert.match(browserTest, /requestAnimationFrame/);
   assert.match(browserTest, /animations:\s*"disabled"/);

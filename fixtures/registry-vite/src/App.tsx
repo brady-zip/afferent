@@ -249,6 +249,26 @@ type AdminScenario =
   | "changelog-error"
   | "loading-more";
 
+type PublicRecoveryScenario =
+  | "public-ready"
+  | "public-feed-error"
+  | "public-search-error"
+  | "public-similar-error"
+  | "public-detail-error"
+  | "public-discussion-error"
+  | "public-activity-error"
+  | "public-roadmap-planned-error"
+  | "public-roadmap-in-progress-error"
+  | "public-roadmap-complete-error"
+  | "public-changelog-feed-error"
+  | "public-changelog-entry-error"
+  | "public-notifications-error";
+
+type RecoveryGuidance = "default" | "sentinel";
+
+const sentinelRecoveryGuidance =
+  "SENTINEL: use the host recovery channel.";
+
 type MutationOutcome = "success" | "error-once" | "pending";
 
 function queryValue(
@@ -337,7 +357,12 @@ function queryValue(
   return undefined;
 }
 
-function queryFailure(name: string, adminScenario: AdminScenario) {
+function queryFailure(
+  name: string,
+  args: Record<string, unknown>,
+  adminScenario: AdminScenario,
+  publicRecoveryScenario: PublicRecoveryScenario,
+) {
   const failures: Partial<Record<AdminScenario, string>> = {
     "capability-error": "evidence:adminCapability",
     "detail-error": "evidence:adminPost",
@@ -345,17 +370,48 @@ function queryFailure(name: string, adminScenario: AdminScenario) {
     "tags-error": "evidence:tags",
     "changelog-error": "evidence:adminChangelog",
   };
-  const failingQuery = failures[adminScenario];
-  return failingQuery === name
-    ? new Error(
-        "The evidence fixture could not load this administrative state.",
-      )
+  if (failures[adminScenario] === name) {
+    return new Error(
+      "The evidence fixture could not load this administrative state.",
+    );
+  }
+  const publicFailures: Partial<Record<PublicRecoveryScenario, string>> = {
+    "public-feed-error": "evidence:feed",
+    "public-search-error": "evidence:search",
+    "public-similar-error": "evidence:similar",
+    "public-detail-error": "evidence:post",
+    "public-discussion-error": "evidence:comments",
+    "public-activity-error": "evidence:activity",
+    "public-changelog-feed-error": "evidence:changelogFeed",
+    "public-changelog-entry-error": "evidence:changelogEntry",
+    "public-notifications-error": "evidence:notifications",
+  };
+  const roadmapFailures: Partial<
+    Record<PublicRecoveryScenario, "planned" | "in_progress" | "complete">
+  > = {
+    "public-roadmap-planned-error": "planned",
+    "public-roadmap-in-progress-error": "in_progress",
+    "public-roadmap-complete-error": "complete",
+  };
+  const roadmapStatus = roadmapFailures[publicRecoveryScenario];
+  const publicFailure =
+    publicFailures[publicRecoveryScenario] === name ||
+    (name === "evidence:roadmap" && args.status === roadmapStatus);
+  return publicFailure
+    ? new Error("The evidence fixture could not load this public state.")
     : undefined;
+}
+
+function publicAttemptKey(name: string, args: Record<string, unknown>) {
+  if (name === "evidence:roadmap") return `roadmap:${String(args.status)}`;
+  return name.replace("evidence:", "");
 }
 
 function createEvidenceClient(
   adminScenario: AdminScenario,
+  publicRecoveryScenario: PublicRecoveryScenario,
   mutationOutcome: MutationOutcome,
+  onPublicQueryAttempt: (key: string, attempt: number) => void,
 ) {
   const attempts = new Map<string, number>();
   const queryAttempts = new Map<string, number>();
@@ -363,9 +419,14 @@ function createEvidenceClient(
     watchQuery(reference: unknown, args: Record<string, unknown> = {}) {
       const name = getFunctionName(reference as never);
       const value = queryValue(name, args, adminScenario);
-      const queryAttempt = (queryAttempts.get(name) ?? 0) + 1;
-      queryAttempts.set(name, queryAttempt);
-      const failure = queryAttempt === 1 ? queryFailure(name, adminScenario) : undefined;
+      const attemptKey = publicAttemptKey(name, args);
+      const queryAttempt = (queryAttempts.get(attemptKey) ?? 0) + 1;
+      queryAttempts.set(attemptKey, queryAttempt);
+      onPublicQueryAttempt(attemptKey, queryAttempt);
+      const failure =
+        queryAttempt === 1
+          ? queryFailure(name, args, adminScenario, publicRecoveryScenario)
+          : undefined;
       return {
         onUpdate() {
           return () => {};
@@ -487,12 +548,29 @@ export function App() {
     "queue",
   );
   const [adminScenario, setAdminScenario] = useState<AdminScenario>("ready");
+  const [publicRecoveryScenario, setPublicRecoveryScenario] =
+    useState<PublicRecoveryScenario>("public-ready");
+  const [recoveryGuidance, setRecoveryGuidance] =
+    useState<RecoveryGuidance>("default");
+  const [publicQueryAttempts, setPublicQueryAttempts] = useState<
+    Record<string, number>
+  >({});
   const [mutationOutcome, setMutationOutcome] =
     useState<MutationOutcome>("success");
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const client = useMemo(
-    () => createEvidenceClient(adminScenario, mutationOutcome),
-    [adminScenario, mutationOutcome],
+    () =>
+      createEvidenceClient(
+        adminScenario,
+        publicRecoveryScenario,
+        mutationOutcome,
+        (key, attempt) =>
+          setPublicQueryAttempts((current) => ({
+            ...current,
+            [key]: attempt,
+          })),
+      ),
+    [adminScenario, publicRecoveryScenario, mutationOutcome],
   );
   return (
     <div data-evidence-theme={theme} className={theme === "dark" ? "dark" : ""}>
@@ -503,6 +581,15 @@ export function App() {
           client={client as never}
         >
           <AfferentUiProvider
+            copy={
+              recoveryGuidance === "sentinel"
+                ? {
+                    common: {
+                      queryErrorGuidance: sentinelRecoveryGuidance,
+                    },
+                  }
+                : undefined
+            }
             href={{
               post: (id) => `/feedback/${id}`,
               roadmap: () => "/roadmap",
@@ -570,6 +657,48 @@ export function App() {
                 </select>
               </label>
               <label>
+                Public recovery scenario
+                <select
+                  aria-label="Public recovery scenario"
+                  value={publicRecoveryScenario}
+                  onChange={(event) => {
+                    setPublicQueryAttempts({});
+                    setPublicRecoveryScenario(
+                      event.currentTarget.value as PublicRecoveryScenario,
+                    );
+                  }}
+                >
+                  <option value="public-ready">Ready</option>
+                  <option value="public-feed-error">Feed error</option>
+                  <option value="public-search-error">Search error</option>
+                  <option value="public-similar-error">Similar error</option>
+                  <option value="public-detail-error">Detail error</option>
+                  <option value="public-discussion-error">Discussion error</option>
+                  <option value="public-activity-error">Activity error</option>
+                  <option value="public-roadmap-planned-error">Roadmap Planned error</option>
+                  <option value="public-roadmap-in-progress-error">Roadmap In Progress error</option>
+                  <option value="public-roadmap-complete-error">Roadmap Complete error</option>
+                  <option value="public-changelog-feed-error">Changelog feed error</option>
+                  <option value="public-changelog-entry-error">Changelog entry error</option>
+                  <option value="public-notifications-error">Notifications error</option>
+                </select>
+              </label>
+              <label>
+                Recovery guidance
+                <select
+                  aria-label="Recovery guidance"
+                  value={recoveryGuidance}
+                  onChange={(event) =>
+                    setRecoveryGuidance(
+                      event.currentTarget.value as RecoveryGuidance,
+                    )
+                  }
+                >
+                  <option value="default">Default</option>
+                  <option value="sentinel">Sentinel</option>
+                </select>
+              </label>
+              <label>
                 Mutation outcome
                 <select
                   aria-label="Mutation outcome"
@@ -586,6 +715,12 @@ export function App() {
                 </select>
               </label>
             </section>
+            <output
+              data-public-query-attempts
+              hidden
+            >
+              {JSON.stringify(publicQueryAttempts)}
+            </output>
             {surface === "board" ? (
               <AfferentBoardScreen boards={[board, roadmapBoard] as never} />
             ) : null}
