@@ -38,7 +38,7 @@ const UNCONFIGURED_PARTICIPATION_MUTATION = makeFunctionReference<"mutation">(
 
 export type PostLookupState =
   | Readonly<{ status: "unsupported" | "loading" | "notFound" }>
-  | Readonly<{ status: "error"; error: AfferentError }>
+  | Readonly<{ status: "error"; error: AfferentError; retry: () => void }>
   | Readonly<{ status: "post"; post: FeedbackPostDto }>
   | Readonly<{
       status: "merged";
@@ -118,6 +118,7 @@ export type FeedbackFeedState =
       isLoadingMore: false;
       canLoadMore: false;
       loadMore: () => void;
+      retry: () => void;
     }>;
 
 export interface FeedbackPaginationState {
@@ -126,6 +127,7 @@ export interface FeedbackPaginationState {
     "LoadingFirstPage" | "CanLoadMore" | "LoadingMore" | "Exhausted" | "Error";
   error?: AfferentError;
   loadMore: (count: number) => void;
+  retry: () => void;
 }
 
 export function mapFeedbackFeedState(
@@ -150,6 +152,7 @@ export function mapFeedbackFeedState(
       isLoadingMore: false,
       canLoadMore: false,
       loadMore,
+      retry: pagination.retry,
     };
   }
   if (pagination.status === "Exhausted" && pagination.results.length === 0) {
@@ -211,6 +214,7 @@ export type CommentFeedState =
       isLoadingMore: false;
       canLoadMore: false;
       loadMore: () => void;
+      retry: () => void;
     }>;
 
 export interface CommentPaginationState {
@@ -219,6 +223,7 @@ export interface CommentPaginationState {
     "LoadingFirstPage" | "CanLoadMore" | "LoadingMore" | "Exhausted" | "Error";
   error?: AfferentError;
   loadMore: (count: number) => void;
+  retry: () => void;
 }
 
 export function mapCommentFeedState(
@@ -253,6 +258,7 @@ export function mapCommentFeedState(
       isLoadingMore: false,
       canLoadMore: false,
       loadMore,
+      retry: pagination.retry,
     };
   }
   if (pagination.status === "Exhausted" && pagination.results.length === 0) {
@@ -324,11 +330,13 @@ export type BoundedDiscoveryState =
       items: DiscoveryPostDto[];
       hasMore: false;
       error: AfferentError;
+      retry: () => void;
     }>;
 
 export function mapBoundedDiscoveryState(
   result: SearchResultDto | SimilarPostResultDto | Error | undefined,
   unsupported = false,
+  retry?: () => void,
 ): BoundedDiscoveryState {
   if (unsupported) {
     return { status: "unsupported", items: [], hasMore: false };
@@ -337,11 +345,13 @@ export function mapBoundedDiscoveryState(
     return { status: "loading", items: [], hasMore: false };
   }
   if (result instanceof Error) {
+    if (!retry) throw new Error("Discovery error states require watch retry");
     return {
       status: "error",
       items: [],
       hasMore: false,
       error: mapAfferentError(result),
+      retry,
     };
   }
   if (result.items.length === 0) {
@@ -389,7 +399,13 @@ export function useFeedbackSearch(
   if (binding === undefined) return mapBoundedDiscoveryState(undefined, true);
   if (!enabled) return { status: "empty", items: [], hasMore: false };
   if (result.status === "error") {
-    return { status: "error", items: [], hasMore: false, error: result.error };
+    return {
+      status: "error",
+      items: [],
+      hasMore: false,
+      error: result.error,
+      retry: result.retry,
+    };
   }
   return mapBoundedDiscoveryState(
     result.status === "ready" ? result.value : undefined,
@@ -418,7 +434,13 @@ export function useSimilarPosts(args: SimilarPostsArgs): BoundedDiscoveryState {
   if (binding === undefined) return mapBoundedDiscoveryState(undefined, true);
   if (!enabled) return { status: "empty", items: [], hasMore: false };
   if (result.status === "error") {
-    return { status: "error", items: [], hasMore: false, error: result.error };
+    return {
+      status: "error",
+      items: [],
+      hasMore: false,
+      error: result.error,
+      retry: result.retry,
+    };
   }
   return mapBoundedDiscoveryState(
     result.status === "ready" ? result.value : undefined,

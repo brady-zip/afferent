@@ -32,6 +32,7 @@ export interface ChangelogPaginationState {
     "LoadingFirstPage" | "CanLoadMore" | "LoadingMore" | "Exhausted" | "Error";
   error?: AfferentError;
   loadMore: (count: number) => void;
+  retry: () => void;
 }
 
 export type ChangelogFeedState =
@@ -58,6 +59,7 @@ export type ChangelogFeedState =
       canLoadMore: false;
       error: AfferentError;
       loadMore: () => void;
+      retry: () => void;
     }>;
 
 export function mapChangelogFeedState(
@@ -91,6 +93,7 @@ export function mapChangelogFeedState(
       canLoadMore: false,
       error: pagination.error!,
       loadMore,
+      retry: pagination.retry,
     };
   }
   if (pagination.status === "Exhausted" && pagination.results.length === 0) {
@@ -132,7 +135,7 @@ export function useChangelogFeed(): ChangelogFeedState {
 export type ChangelogEntryState =
   | Readonly<{ status: "unsupported" | "loading" | "notFound" }>
   | Readonly<{ status: "ready"; entry: PublicChangelogEntryDto }>
-  | Readonly<{ status: "error"; error: AfferentError }>;
+  | Readonly<{ status: "error"; error: AfferentError; retry: () => void }>;
 
 export function mapChangelogEntryState(
   value: PublishedChangelogLookupDto | undefined,

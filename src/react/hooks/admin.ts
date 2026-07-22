@@ -228,14 +228,30 @@ export function usePostModeration() {
   );
 }
 
-export type PostActivityState = Readonly<{
-  status: "unsupported" | "loading" | "ready" | "empty" | "error";
-  items: PostActivityDto[];
-  isLoadingMore: boolean;
-  canLoadMore: boolean;
-  loadMore: () => void;
-  error?: ModerationError;
-}>;
+export type PostActivityState =
+  | Readonly<{
+      status: "unsupported" | "loading" | "empty";
+      items: PostActivityDto[];
+      isLoadingMore: false;
+      canLoadMore: false;
+      loadMore: () => void;
+    }>
+  | Readonly<{
+      status: "ready";
+      items: PostActivityDto[];
+      isLoadingMore: boolean;
+      canLoadMore: boolean;
+      loadMore: () => void;
+    }>
+  | Readonly<{
+      status: "error";
+      items: PostActivityDto[];
+      isLoadingMore: false;
+      canLoadMore: false;
+      loadMore: () => void;
+      error?: ModerationError;
+      retry: () => void;
+    }>;
 
 export function usePostActivity(postId: PostId): PostActivityState {
   const { bindings, auth, client, generation } = useAfferentContext();
@@ -277,6 +293,7 @@ export function usePostActivity(postId: PostId): PostActivityState {
       isLoadingMore: false,
       canLoadMore: false,
       loadMore,
+      retry: page.retry,
     };
   if (page.status === "Exhausted" && page.results.length === 0)
     return {
