@@ -16,7 +16,7 @@ Afferent reaches its first public release through four coarse vertical slices. T
 - [x] **Phase 2.1: Server-Derived Viewer Capability Contract** - Add server-derived vote membership and edit/withdraw capabilities required by the copied UI without accepting client authority facts. (INSERTED) (completed 2026-07-21)
 - [x] **Phase 2.2: Notification Navigation Target Contract** - Project versioned, public, accessible notification destinations without exposing polymorphic internal identifiers. (INSERTED) (completed 2026-07-21)
 - [x] **Phase 2.3: Admin Read and Projection Completion** - Complete server-authorized admin reads and presentation-ready moderation, changelog, and activity projections. (INSERTED) (completed 2026-07-21)
-- [x] **Phase 3: Source-Owned Product Interface** - Canonical and generated source-owned interfaces are complete with deterministic installed-source behavior, accessibility, responsive, and visual evidence. (completed 2026-07-22)
+- [ ] **Phase 3: Source-Owned Product Interface** - Canonical and generated source-owned interfaces require the remaining public recovery, portal ownership, spacing, desktop collision, admin density, and installed-evidence closures identified by the canonical re-audit.
 - [ ] **Phase 4: Hosted Production Release** - The published package, registry, documentation, and isolated public demo work together against real Convex.
 
 ## Phase Details
@@ -35,7 +35,7 @@ Afferent reaches its first public release through four coarse vertical slices. T
 4. A visitor can browse every permitted board under the installation-wide policy while an authenticated user can create, edit, withdraw, vote on, and discuss feedback with stable attribution and totals.
 5. Repeated vote operations remain one membership per actor, and comment replies identify one parent without creating nested discussion trees.
 
-**Plans:** 8/8 plans complete
+**Plans:** 8/10 plans complete
 
 - [x] 01-01-PLAN.md
 - [x] 01-02-PLAN.md
@@ -244,6 +244,8 @@ Plans:
 - [x] 03-06-PLAN.md
 - [x] 03-07-PLAN.md
 - [x] 03-08-PLAN.md
+- [ ] 03-09-PLAN.md
+- [ ] 03-10-PLAN.md
 
 **Wave 1**
 
@@ -276,6 +278,14 @@ Plans:
 **Wave 8** _(UI audit evidence closure; blocked on Wave 7 completion)_
 
 - [x] `03-08-PLAN.md` — Prove the repaired installed source and regenerate broad public/admin, state, theme, reflow, zoom, and responsive evidence.
+
+**Wave 9** _(UI re-audit public-state closure; blocked on Wave 8 completion)_
+
+- [ ] `03-09-PLAN.md` — Preserve query-owned retry, render exhaustive public Activity states with domain language, and add outcome-specific recovery across public query surfaces.
+
+**Wave 10** _(UI re-audit visual/evidence closure; blocked on Wave 9 completion)_
+
+- [ ] `03-10-PLAN.md` — Repair portal ownership, spacing tokens, 1280 detail composition, and admin chunking, then prove every closure through installed deterministic evidence and the full aggregate gate.
 
 **Cross-cutting constraints:**
 
@@ -312,7 +322,7 @@ Phases execute sequentially: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 3 -> 4
 | 2.1 Server-Derived Viewer Capability Contract | 1/1            | Complete    | 2026-07-21 |
 | 2.2 Notification Navigation Target Contract   | 2/2            | Complete    | 2026-07-21 |
 | 2.3 Admin Read and Projection Completion      | 2/2            | Complete    | 2026-07-21 |
-| 3. Source-Owned Product Interface             | 8/8 | Complete   | 2026-07-22 |
+| 3. Source-Owned Product Interface             | 8/10           | Gap closure planned | -          |
 | 4. Hosted Production Release                  | 0/TBD          | Not started | -          |
 
 ---
