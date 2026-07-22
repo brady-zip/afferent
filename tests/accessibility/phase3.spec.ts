@@ -751,11 +751,31 @@ test("VIS-01 computed styles preserve selected, error, destructive, notification
   await expect(opened.dialog).toHaveAttribute("data-tone", "destructive");
   const destructiveStyle = await opened.dialog.evaluate((node) => ({
     border: getComputedStyle(node).borderColor,
+    fontFamily: getComputedStyle(node).fontFamily,
+    fontSize: getComputedStyle(node).fontSize,
+    lineHeight: getComputedStyle(node).lineHeight,
     button: getComputedStyle(
       node.querySelector(".afferent-button--destructive")!,
     ).backgroundColor,
+    buttonHeight: getComputedStyle(
+      node.querySelector(".afferent-button--destructive")!,
+    ).minHeight,
+    buttonPadding: getComputedStyle(
+      node.querySelector(".afferent-button--destructive")!,
+    ).padding,
+    buttonRadius: getComputedStyle(
+      node.querySelector(".afferent-button--destructive")!,
+    ).borderRadius,
+    actionGap: getComputedStyle(node.querySelector(".afferent-dialog__actions")!).gap,
   }));
   expect(destructiveStyle.border).toBe(destructiveStyle.button);
+  expect(destructiveStyle.fontFamily).toContain("ui-sans-serif");
+  expect(destructiveStyle.fontSize).toBe("16px");
+  expect(destructiveStyle.lineHeight).toBe("24px");
+  expect(destructiveStyle.buttonHeight).toBe("44px");
+  expect(destructiveStyle.buttonPadding).toBe("8px 16px");
+  expect(destructiveStyle.buttonRadius).toBe("8px");
+  expect(destructiveStyle.actionGap).toBe("8px");
   await page.keyboard.press("Escape");
 
   await page.goto("/");
@@ -781,7 +801,21 @@ test("VIS-02 named whole-product light and dark capture matrix is complete", asy
   await captureEvidence(page, "board-1280.png");
   await activateSurface(page, "Feedback detail");
   await expect(page.getByRole("heading", { name: "Discussion" })).toBeVisible();
+  const cardGeometry = await page.locator(".afferent-feedback-card").first().evaluate((card) => {
+    const content = card.querySelector(".afferent-feedback-card__content")!.getBoundingClientRect();
+    const totals = card.querySelector(".afferent-feedback-card__totals")!.getBoundingClientRect();
+    return { contentBottom: content.bottom, totalsTop: totals.top, scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth };
+  });
+  expect(cardGeometry.contentBottom).toBeLessThanOrEqual(cardGeometry.totalsTop);
+  expect(cardGeometry.scrollWidth).toBeLessThanOrEqual(cardGeometry.clientWidth);
   await captureEvidence(page, "detail-1280.png");
+  await selectEvidenceOption(page, "Admin scenario", "activity-error");
+  await activateSurface(page, "Feedback detail");
+  await expect(page.getByText("We couldn't load activity", { exact: true })).toBeVisible();
+  await captureEvidence(page, "public-recovery-1280.png");
+  await page.getByRole("button", { name: "Retry activity" }).click();
+  await expect(page.getByText("Alex changed the feedback status from Open to Planned.", { exact: true })).toBeVisible();
+  await selectEvidenceOption(page, "Admin scenario", "ready");
   await activateSurface(page, "Roadmap");
   await expect(page.locator('[data-afferent-screen="roadmap"]')).toBeVisible();
   await captureEvidence(page, "roadmap-1280.png");
@@ -839,6 +873,17 @@ test("VIS-02 named whole-product light and dark capture matrix is complete", asy
   await page.setViewportSize({ width: 1280, height: 800 });
   await selectEvidenceOption(page, "Admin scenario", "ready");
   await openAdminDetail(page);
+  const sectionGeometry = await page.locator("[data-admin-section]").evaluateAll((sections) =>
+    sections.map((section) => ({
+      border: getComputedStyle(section).borderTopWidth,
+      gap: getComputedStyle(section).gap,
+      padding: getComputedStyle(section).padding,
+    })),
+  );
+  expect(sectionGeometry.length).toBeGreaterThanOrEqual(5);
+  expect(sectionGeometry.every((section) => section.border === "1px")).toBe(true);
+  expect(sectionGeometry.every((section) => section.gap === "16px")).toBe(true);
+  expect(sectionGeometry.every((section) => section.padding === "16px")).toBe(true);
   const merge = await openConfirmation(
     page,
     "Merge duplicate",

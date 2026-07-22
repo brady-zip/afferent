@@ -215,7 +215,8 @@
 
 .afferent-post-detail__actions button,
 .afferent-discussion button,
-.afferent-activity button {
+.afferent-activity button,
+.afferent-state button {
   background: var(--background);
   border: 1px solid var(--border);
   border-radius: var(--radius);

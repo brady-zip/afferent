@@ -358,11 +358,14 @@ function createEvidenceClient(
   mutationOutcome: MutationOutcome,
 ) {
   const attempts = new Map<string, number>();
+  const queryAttempts = new Map<string, number>();
   return {
     watchQuery(reference: unknown, args: Record<string, unknown> = {}) {
       const name = getFunctionName(reference as never);
       const value = queryValue(name, args, adminScenario);
-      const failure = queryFailure(name, adminScenario);
+      const queryAttempt = (queryAttempts.get(name) ?? 0) + 1;
+      queryAttempts.set(name, queryAttempt);
+      const failure = queryAttempt === 1 ? queryFailure(name, adminScenario) : undefined;
       return {
         onUpdate() {
           return () => {};
