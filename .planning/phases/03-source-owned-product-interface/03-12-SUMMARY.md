@@ -36,10 +36,10 @@ coverage:
     description: The packed installed consumer drives twelve public recovery families under default and sentinel guidance with deterministic evidence.
     requirement: QUAL-07
     verification:
-      - kind: browser
+      - kind: e2e
         ref: "tests/accessibility/phase3.spec.ts#ST-06"
         status: pass
-      - kind: command
+      - kind: integration
         ref: "npm run test:phase3"
         status: pass
     human_judgment: false
