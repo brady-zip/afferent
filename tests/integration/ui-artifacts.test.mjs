@@ -171,8 +171,8 @@ test("board source closes every feed state with deterministic accessible recover
     assert.match(source, new RegExp(`case ["']${state}["']`));
   }
   assert.match(source, /assertNever\(feed\)/);
-  assert.match(source, /copy\.common\.tryLoadingAgain/);
-  assert.match(source, /onClick=\{feed\.loadMore\}/);
+  assert.match(source, /copy\.board\.reloadFeedback/);
+  assert.match(source, /onClick=\{feed\.retry\}/);
   assert.match(cardSource, /navigation\.href\.post\(post\.id\)/);
   assert.doesNotMatch(
     `${source}\n${cardSource}`,
