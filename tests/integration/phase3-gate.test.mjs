@@ -72,6 +72,10 @@ test("the browser oracle retains every repaired state and deterministic capture"
     "Merge duplicate",
     "data-mobile-view",
     "activity-error",
+    "Retry activity",
+    "buttonHeight",
+    "cardGeometry",
+    "data-admin-section",
     "No feedback to review",
     "2026-01-15T12:00:00.000Z",
   ]) {
@@ -96,6 +100,7 @@ test("the browser oracle retains every repaired state and deterministic capture"
     "zoom-200.png",
     "board-1280.png",
     "detail-1280.png",
+    "public-recovery-1280.png",
     "roadmap-1280.png",
     "changelog-1280.png",
     "notifications-1280.png",

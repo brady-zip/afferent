@@ -34,7 +34,7 @@ Evidence excludes wall-clock time, temporary paths, ports, process identifiers, 
 | 3.3.2 Labels or Instructions        | Browser journeys resolve every tested input by its visible accessible label.                                                     |
 | 4.1.3 Status Messages               | `status-messages.md` records result and successful-mutation announcements without focus theft.                                   |
 
-`axe.json` is a supplemental automated regression net for the stable public and admin states. Axe cannot certify keyboard completion, focus restoration, announcement quality, zoom, or reflow and is not presented as certification. VIS-01 checks the computed selected, error, destructive, notification, and exact-token hierarchy. VIS-02 produces the named whole-product capture matrix from the same installed-source journey.
+`axe.json` is a supplemental automated regression net for the stable public and admin states. Axe cannot certify keyboard completion, focus restoration, announcement quality, zoom, or reflow and is not presented as certification. VIS-01 also verifies the portaled dialog's 16px typography, 44px controls, 8/16 padding, border, radius, focus, and action gap under a hostile host reset. VIS-02 adds programmatic 1280 non-overlap/overflow checks, measurable admin section borders and spacing, and a real installed activity error-to-retry-to-ready transition before producing the named whole-product capture matrix.
 
 ## Captures
 
@@ -42,6 +42,7 @@ Public light-theme surfaces:
 
 - `board-1280.png`: browse, filter, search, create, and feedback result hierarchy.
 - `detail-1280.png`: selected feedback, voting, subscription, editing, withdrawal, discussion, and activity.
+- `public-recovery-1280.png`: installed public Activity query error with its outcome-specific recovery control; the browser then retries the same watch and asserts the ready domain sentence.
 - `roadmap-1280.png`: planned, in-progress, and complete status groups.
 - `changelog-1280.png`: published entry, valid machine time, and linked feedback.
 - `notifications-1280.png`: read/unread list, real target links, formatted time, and mutation action.
@@ -69,7 +70,7 @@ These reports cover Afferent's documented default light and dark tokens. Hosts t
 
 ## Automated proof and human review
 
-The automated oracle proves packed-package installation, generated local shadcn source, mounted hooks, all five consequential dialogs, closed admin states, host-owned phone navigation, exact computed styles, keyboard/focus behavior, status and alert semantics, non-empty captures, no page-level horizontal overflow, minimum target size, exact contrast, zero supplemental axe violations, and deterministic evidence bytes. It does not replace human judgment of overall aesthetic polish, density, rhythm, or product desirability. The complete matrix is intentionally versioned so that final aesthetic review can inspect those qualities without weakening the executable release criteria.
+The automated oracle proves packed-package installation, generated local shadcn source, mounted hooks, all five consequential dialogs, portal ownership despite hostile host font/button resets, closed public/admin states, query-owned public retry, host-owned phone navigation, exact computed styles, 1280 content/metric non-intersection, measurable admin section hierarchy, keyboard/focus behavior, status and alert semantics, non-empty captures, no page-level horizontal overflow, minimum target size, exact contrast, zero supplemental axe violations, and deterministic evidence bytes. It does not replace human judgment of overall aesthetic polish, density, rhythm, or product desirability. The complete matrix is intentionally versioned so that final aesthetic review can inspect those qualities without weakening the executable release criteria.
 
 Evidence determinism is measured by running the installed-source browser suite twice and comparing a sorted SHA-256 manifest of every file in this directory. Fixtures use fixed `Date.UTC` values, capture waits settle fonts and focus paint, and reports exclude machine-local paths, ports, process identifiers, wall-clock time, and random values.
 
