@@ -69,7 +69,7 @@
   },
   {
     "path": "changelog/changelog-entry.tsx",
-    "sha256": "03406753c8881f73a1fd2755fabc1f5e04464ce2d1ee5a122ddd496b959d4a21"
+    "sha256": "ac2928115435573438e8878ea51fa462d0c1acfc74a5f0c4767b7486b28083aa"
   },
   {
     "path": "changelog/changelog-screen.tsx",
@@ -81,7 +81,7 @@
   },
   {
     "path": "core/copy.ts",
-    "sha256": "a8da7202f7c8e81e328950740e512844079ba88da4db61d923bd2ba4294ae800"
+    "sha256": "3260db7c00e80800733dd9a27eca666d53e05019c7852004004654a6930d5965"
   },
   {
     "path": "core/format.ts",

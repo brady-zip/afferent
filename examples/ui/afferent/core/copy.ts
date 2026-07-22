@@ -1,3 +1,5 @@
+import { formatAfferentDateTime } from "@/components/afferent/core/format";
+
 export type AfferentUiCopy = Readonly<{
   common: Readonly<{
     signIn: string;
@@ -386,7 +388,7 @@ export const englishAfferentUiCopy: AfferentUiCopy = {
     linkedFeedback: "Linked feedback",
     loadMore: "Load more changelog entries",
     loadingMore: "Loading more changelog entries…",
-    publishedAt: (value) => `Published ${value}`,
+    publishedAt: (value) => `Published ${formatAfferentDateTime(value)}`,
   },
   notifications: {
     title: "Notifications",

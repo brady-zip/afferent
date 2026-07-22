@@ -1,6 +1,7 @@
 import type { PublicChangelogEntryDto } from "afferent";
 
 import { useAfferentUi } from "@/components/afferent/core/afferent-ui-provider";
+import { formatAfferentDateTimeValue } from "@/components/afferent/core/format";
 
 export function AfferentChangelogEntry({
   entry,
@@ -23,7 +24,7 @@ export function AfferentChangelogEntry({
             </Link>
           )}
         </h2>
-        <time dateTime={String(entry.firstPublishedAt)}>
+        <time dateTime={formatAfferentDateTimeValue(entry.firstPublishedAt)}>
           {copy.changelog.publishedAt(entry.firstPublishedAt)}
         </time>
       </header>

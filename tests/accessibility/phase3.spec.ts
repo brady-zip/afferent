@@ -14,6 +14,8 @@ const statusEvidence: Readonly<{
   actual: string;
 }>[] = [];
 
+test.setTimeout(60_000);
+
 test.beforeAll(async () => {
   await mkdir(evidenceRoot, { recursive: true });
 });
@@ -43,8 +45,7 @@ test.afterAll(async () => {
 
 async function activateSurface(page: Page, label: string) {
   const control = page.getByRole("button", { name: label, exact: true });
-  await control.focus();
-  await page.keyboard.press("Enter");
+  await control.press("Enter");
   await expect(control).toHaveAttribute("aria-current", "page");
   return control;
 }
@@ -60,8 +61,7 @@ async function selectEvidenceOption(
 async function openAdminDetail(page: Page) {
   await activateSurface(page, "Administration");
   const row = page.locator("[data-admin-feedback] button").first();
-  await row.focus();
-  await page.keyboard.press("Enter");
+  await row.press("Enter");
   await expect(row).toHaveAttribute("aria-current", "true");
   return row;
 }
@@ -72,8 +72,7 @@ async function openConfirmation(
   dialogName: RegExp,
 ) {
   const trigger = page.getByRole("button", { name: triggerLabel }).first();
-  await trigger.focus();
-  await page.keyboard.press("Enter");
+  await trigger.press("Enter");
   const dialog = page.getByRole("dialog", { name: dialogName });
   await expect(dialog).toBeVisible();
   return { dialog, trigger };
@@ -114,6 +113,26 @@ async function assertNoPageOverflow(page: Page) {
     scrollWidth: document.documentElement.scrollWidth,
   }));
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
+}
+
+async function captureEvidence(
+  page: Page,
+  file: string,
+  options: Readonly<{ fullPage?: boolean }> = {},
+) {
+  await assertNoPageOverflow(page);
+  await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  );
+  await page.screenshot({
+    path: `${evidenceRoot}/${file}`,
+    fullPage: options.fullPage ?? true,
+    animations: "disabled",
+  });
 }
 
 async function measuredTargets(page: Page) {
@@ -291,6 +310,22 @@ test("KF-03 admin moderation, status, archive, merge, and changelog actions rema
   await firstRow.focus();
   await page.keyboard.press("Enter");
 
+  const changelogTitle = page.getByRole("textbox", { name: "Changelog title" });
+  await changelogTitle.focus();
+  await page.keyboard.type("Keyboard release");
+  const changelogBody = page.getByRole("textbox", { name: "Changelog body" });
+  await changelogBody.focus();
+  await page.keyboard.type("Every action remains keyboard reachable.");
+  const saveDraft = page.getByRole("button", { name: "Save changelog draft" });
+  await saveDraft.focus();
+  await page.keyboard.press("Enter");
+  await expect(
+    page.getByRole("button", {
+      name: "Publish changelog entry",
+      exact: true,
+    }),
+  ).toBeVisible();
+
   const status = page.getByRole("combobox", {
     name: "Update feedback status",
   });
@@ -315,22 +350,6 @@ test("KF-03 admin moderation, status, archive, merge, and changelog actions rema
     .press("Enter");
   await expect(archiveDialog).toBeHidden();
   await expect(archive).toBeFocused();
-
-  const changelogTitle = page.getByRole("textbox", { name: "Changelog title" });
-  await changelogTitle.focus();
-  await page.keyboard.type("Keyboard release");
-  const changelogBody = page.getByRole("textbox", { name: "Changelog body" });
-  await changelogBody.focus();
-  await page.keyboard.type("Every action remains keyboard reachable.");
-  const saveDraft = page.getByRole("button", { name: "Save changelog draft" });
-  await saveDraft.focus();
-  await page.keyboard.press("Enter");
-  await expect(
-    page.getByRole("button", {
-      name: "Publish changelog entry",
-      exact: true,
-    }),
-  ).toBeVisible();
   keyboardEvidence.push({
     id: "KF-03",
     expected:
@@ -361,17 +380,17 @@ test("KF-04 every consequential admin dialog supports cancel and accepted keyboa
       escape: "Keep tag",
     },
     {
-      trigger: "Publish changelog entry",
-      dialog: /Publish “Editor update” now/,
-      consequence: "It will become visible at its public changelog link.",
-      escape: "Return to editing",
-    },
-    {
       trigger: "Unpublish changelog entry",
       dialog: /Unpublish “Published update”/,
       consequence:
         "Its public changelog link will stop showing the entry until republished.",
       escape: "Keep changelog published",
+    },
+    {
+      trigger: "Publish changelog entry",
+      dialog: /Publish “Editor update” now/,
+      consequence: "It will become visible at its public changelog link.",
+      escape: "Return to editing",
     },
   ] as const;
 
@@ -440,12 +459,12 @@ test("ST-03 every consequential dialog retains typed correction state and retrie
     { trigger: "Archive feedback", dialog: /Archive “Keyboard shortcuts”/ },
     { trigger: "Delete feedback tag", dialog: /Delete “Important”/ },
     {
-      trigger: "Publish changelog entry",
-      dialog: /Publish “Editor update” now/,
-    },
-    {
       trigger: "Unpublish changelog entry",
       dialog: /Unpublish “Published update”/,
+    },
+    {
+      trigger: "Publish changelog entry",
+      dialog: /Publish “Editor update” now/,
     },
     { trigger: "Merge duplicate", dialog: /Merge duplicate/ },
   ] as const;
@@ -747,6 +766,119 @@ test("VIS-01 computed styles preserve selected, error, destructive, notification
   expect(errorStyle.border).toBe(errorStyle.heading);
 });
 
+test("VIS-02 named whole-product light and dark capture matrix is complete", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+  await expect(
+    page.locator('[data-evidence-source="packed-registry-installed"]'),
+  ).toBeVisible();
+
+  await captureEvidence(page, "board-1280.png");
+  await activateSurface(page, "Feedback detail");
+  await expect(page.getByRole("heading", { name: "Discussion" })).toBeVisible();
+  await captureEvidence(page, "detail-1280.png");
+  await activateSurface(page, "Roadmap");
+  await expect(page.locator('[data-afferent-screen="roadmap"]')).toBeVisible();
+  await captureEvidence(page, "roadmap-1280.png");
+  await activateSurface(page, "Changelog");
+  await expect(page.locator('[data-afferent-screen="changelog"]')).toBeVisible();
+  const publishedTime = page
+    .locator('[data-afferent-screen="changelog"] time')
+    .first();
+  await expect(publishedTime).toHaveText(
+    "Published January 15, 2026 at 12:00 PM UTC",
+  );
+  await expect(publishedTime).toHaveAttribute(
+    "datetime",
+    "2026-01-15T12:00:00.000Z",
+  );
+  await captureEvidence(page, "changelog-1280.png");
+  await activateSurface(page, "Notifications");
+  await expect(
+    page.locator('[data-afferent-screen="notifications"]'),
+  ).toBeVisible();
+  await captureEvidence(page, "notifications-1280.png");
+  await activateSurface(page, "Notifications popover");
+  const popoverTrigger = page.getByRole("button", {
+    name: /Open notifications, 1 unread notification/,
+  });
+  await popoverTrigger.press("Enter");
+  await expect(
+    page.locator("[data-afferent-notifications-popover]"),
+  ).toBeVisible();
+  await expectVisibleFocus(
+    page
+      .locator("[data-afferent-notifications-popover]")
+      .getByRole("button", { name: "Mark notification read" }),
+  );
+  await captureEvidence(page, "notifications-popover-1280.png");
+  await page.keyboard.press("Escape");
+  await expect(
+    page.locator("[data-afferent-notifications-popover]"),
+  ).toBeHidden();
+  await expect(popoverTrigger).toBeFocused();
+
+  await page.setViewportSize({ width: 320, height: 800 });
+  await activateSurface(page, "Administration");
+  const workspace = page.locator("[data-admin-workspace]");
+  await expect(workspace).toHaveAttribute("data-mobile-view", "queue");
+  await expect(page.locator('[data-admin-pane="queue"]')).toBeVisible();
+  await expect(page.locator('[data-admin-pane="detail"]')).toBeHidden();
+  await captureEvidence(page, "admin-queue-320.png");
+  await page.locator("[data-admin-feedback] button").first().press("Enter");
+  await expect(workspace).toHaveAttribute("data-mobile-view", "detail");
+  await expect(page.locator('[data-admin-pane="queue"]')).toBeHidden();
+  await expect(page.locator('[data-admin-pane="detail"]')).toBeVisible();
+  await captureEvidence(page, "admin-detail-320.png");
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await selectEvidenceOption(page, "Admin scenario", "ready");
+  await openAdminDetail(page);
+  const merge = await openConfirmation(
+    page,
+    "Merge duplicate",
+    /Merge duplicate/,
+  );
+  expect(
+    await merge.dialog.evaluate((element) =>
+      element.contains(document.activeElement),
+    ),
+  ).toBe(true);
+  await captureEvidence(page, "admin-confirmations-1280.png", {
+    fullPage: false,
+  });
+  await page.keyboard.press("Escape");
+  await expect(merge.trigger).toBeFocused();
+
+  await selectEvidenceOption(page, "Admin scenario", "activity-error");
+  await openAdminDetail(page);
+  await expect(
+    page.getByText("We couldn't load feedback activity", { exact: true }),
+  ).toBeVisible();
+  await captureEvidence(page, "admin-states-1280.png");
+
+  await page.goto("/");
+  await selectEvidenceOption(page, "Admin scenario", "empty");
+  await activateSurface(page, "Administration");
+  await expect(
+    page.getByText("No feedback to review", { exact: true }),
+  ).toBeVisible();
+  await captureEvidence(page, "admin-empty-1280.png");
+
+  await selectEvidenceOption(page, "Evidence theme", "dark");
+  await selectEvidenceOption(page, "Admin scenario", "ready");
+  await activateSurface(page, "Board");
+  await expect(page.locator('[data-afferent-screen="board"]')).toBeVisible();
+  await captureEvidence(page, "dark-public-1280.png");
+  await openAdminDetail(page);
+  await expect(
+    page.locator('[data-evidence-theme="dark"] [data-afferent-screen="admin"]'),
+  ).toBeVisible();
+  await captureEvidence(page, "dark-admin-1280.png");
+});
+
 test("RZ-01 reflow, responsive layouts, zoom, and measured targets preserve every action", async ({
   browser,
   page,
@@ -779,17 +911,9 @@ test("RZ-01 reflow, responsive layouts, zoom, and measured targets preserve ever
     expect(
       targets.filter((target) => target.width < 24 || target.height < 24),
     ).toEqual([]);
-    await page.screenshot({
-      path: `${evidenceRoot}/${capture.file}`,
-      fullPage: true,
-      animations: "disabled",
-    });
+    await captureEvidence(page, capture.file);
     if (capture.width === 320) {
-      await page.screenshot({
-        path: `${evidenceRoot}/reflow-320.png`,
-        fullPage: true,
-        animations: "disabled",
-      });
+      await captureEvidence(page, "reflow-320.png");
     }
   }
 
@@ -804,11 +928,7 @@ test("RZ-01 reflow, responsive layouts, zoom, and measured targets preserve ever
   await expect(
     page.getByRole("button", { name: "Merge duplicate" }),
   ).toBeVisible();
-  await page.screenshot({
-    path: `${evidenceRoot}/zoom-200.png`,
-    fullPage: true,
-    animations: "disabled",
-  });
+  await captureEvidence(page, "zoom-200.png");
 
   const coarse = await browser.newContext({
     baseURL: "http://127.0.0.1:4173",
