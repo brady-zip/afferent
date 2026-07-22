@@ -84,4 +84,26 @@ describe("copied UI distribution contract", () => {
       expect([14, 16, 20, 28]).toContain(Number(size.groups?.size));
     }
   });
+
+  test("keeps every public recovery action query-owned and activity domain-formatted", () => {
+    const sources = Object.fromEntries(
+      [
+        "board/board-screen.tsx",
+        "board/similar-feedback.tsx",
+        "board/post-detail.tsx",
+        "board/discussion.tsx",
+        "board/activity.tsx",
+        "changelog/changelog-screen.tsx",
+      ].map((file) => [file, fs.readFileSync(`${root}/${file}`, "utf8")]),
+    );
+    expect(sources["board/board-screen.tsx"]).toMatch(/onClick=\{feed\.retry\}/);
+    expect(sources["board/board-screen.tsx"]).toMatch(/onClick=\{state\.retry\}/);
+    expect(sources["board/similar-feedback.tsx"]).toMatch(/onClick=\{state\.retry\}/);
+    expect(sources["board/post-detail.tsx"]).toMatch(/onClick=\{lookup\.retry\}/);
+    expect(sources["board/discussion.tsx"]).toMatch(/onClick=\{comments\.retry\}/);
+    expect(sources["board/activity.tsx"]).toMatch(/formatActivityDescription/);
+    expect(sources["board/activity.tsx"]).not.toMatch(/replace\([^)]*_\)/);
+    expect(sources["changelog/changelog-screen.tsx"]).toMatch(/feed\.retry/);
+    expect(sources["changelog/changelog-screen.tsx"]).toMatch(/detail\.retry/);
+  });
 });

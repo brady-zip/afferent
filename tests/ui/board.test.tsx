@@ -97,6 +97,9 @@ describe("public feedback board", () => {
     );
     await act(async () => {});
     expect(mounted.container.textContent).toContain(feedbackPost.body);
+    expect(mounted.container.textContent).toContain(
+      "Alex created the feedback.",
+    );
     for (const label of [
       "Vote for feedback",
       "Subscribe to updates",
@@ -256,6 +259,17 @@ describe("public feedback board", () => {
       "We couldn't load feedback",
     );
     expect(loading.container.textContent).toContain("Try loading again");
+    const watchCount = loading.client.records.filter(
+      (record) => record.name === "ui:feed",
+    ).length;
+    click(
+      [...loading.container.querySelectorAll("button")].find(
+        (button) => button.textContent?.trim() === "Reload feedback",
+      )!,
+    );
+    expect(
+      loading.client.records.filter((record) => record.name === "ui:feed"),
+    ).toHaveLength(watchCount + 1);
     loading.unmount();
   });
 
