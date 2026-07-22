@@ -16,7 +16,7 @@ Afferent reaches its first public release through four coarse vertical slices. T
 - [x] **Phase 2.1: Server-Derived Viewer Capability Contract** - Add server-derived vote membership and edit/withdraw capabilities required by the copied UI without accepting client authority facts. (INSERTED) (completed 2026-07-21)
 - [x] **Phase 2.2: Notification Navigation Target Contract** - Project versioned, public, accessible notification destinations without exposing polymorphic internal identifiers. (INSERTED) (completed 2026-07-21)
 - [x] **Phase 2.3: Admin Read and Projection Completion** - Complete server-authorized admin reads and presentation-ready moderation, changelog, and activity projections. (INSERTED) (completed 2026-07-21)
-- [ ] **Phase 3: Source-Owned Product Interface** - Canonical and generated source-owned interfaces require the remaining public recovery, portal ownership, spacing, desktop collision, admin density, and installed-evidence closures identified by the canonical re-audit.
+- [x] **Phase 3: Source-Owned Product Interface** - Canonical and generated source-owned interfaces close public recovery, portal ownership, spacing, desktop composition, admin density, and installed evidence. (completed 2026-07-22)
 - [ ] **Phase 4: Hosted Production Release** - The published package, registry, documentation, and isolated public demo work together against real Convex.
 
 ## Phase Details
@@ -234,7 +234,7 @@ Plans:
 4. Supplied public and admin interfaces pass documented WCAG 2.2 AA-oriented keyboard, focus, announcement, contrast, 320 CSS-pixel reflow, 200% zoom, and phone/tablet/desktop layout checks with versioned evidence.
 
 **UI hint**: yes
-**Plans:** 9/10 plans complete
+**Plans:** 10/10 plans complete
 
 - [x] 03-01-PLAN.md
 - [x] 03-02-PLAN.md
@@ -245,7 +245,7 @@ Plans:
 - [x] 03-07-PLAN.md
 - [x] 03-08-PLAN.md
 - [x] 03-09-PLAN.md
-- [ ] 03-10-PLAN.md
+- [x] 03-10-PLAN.md
 
 **Wave 1**
 
@@ -285,7 +285,7 @@ Plans:
 
 **Wave 10** _(UI re-audit visual/evidence closure; blocked on Wave 9 completion)_
 
-- [ ] `03-10-PLAN.md` — Repair portal ownership, spacing tokens, 1280 detail composition, and admin chunking, then prove every closure through installed deterministic evidence and the full aggregate gate.
+- [x] `03-10-PLAN.md` — Repair portal ownership, spacing tokens, 1280 detail composition, and admin chunking, then prove every closure through installed deterministic evidence and the full aggregate gate.
 
 **Cross-cutting constraints:**
 
