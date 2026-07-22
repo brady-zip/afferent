@@ -357,12 +357,17 @@ function queryValue(
   return undefined;
 }
 
-function queryFailure(
-  name: string,
-  args: Record<string, unknown>,
-  adminScenario: AdminScenario,
-  publicRecoveryScenario: PublicRecoveryScenario,
-) {
+function queryFailure({
+  name,
+  args,
+  adminScenario,
+  publicRecoveryScenario,
+}: Readonly<{
+  name: string;
+  args: Record<string, unknown>;
+  adminScenario: AdminScenario;
+  publicRecoveryScenario: PublicRecoveryScenario;
+}>) {
   const failures: Partial<Record<AdminScenario, string>> = {
     "capability-error": "evidence:adminCapability",
     "detail-error": "evidence:adminPost",
@@ -407,12 +412,17 @@ function publicAttemptKey(name: string, args: Record<string, unknown>) {
   return name.replace("evidence:", "");
 }
 
-function createEvidenceClient(
-  adminScenario: AdminScenario,
-  publicRecoveryScenario: PublicRecoveryScenario,
-  mutationOutcome: MutationOutcome,
-  onPublicQueryAttempt: (key: string, attempt: number) => void,
-) {
+function createEvidenceClient({
+  adminScenario,
+  publicRecoveryScenario,
+  mutationOutcome,
+  onPublicQueryAttempt,
+}: Readonly<{
+  adminScenario: AdminScenario;
+  publicRecoveryScenario: PublicRecoveryScenario;
+  mutationOutcome: MutationOutcome;
+  onPublicQueryAttempt: (key: string, attempt: number) => void;
+}>) {
   const attempts = new Map<string, number>();
   const queryAttempts = new Map<string, number>();
   return {
@@ -425,7 +435,12 @@ function createEvidenceClient(
       onPublicQueryAttempt(attemptKey, queryAttempt);
       const failure =
         queryAttempt === 1
-          ? queryFailure(name, args, adminScenario, publicRecoveryScenario)
+          ? queryFailure({
+              name,
+              args,
+              adminScenario,
+              publicRecoveryScenario,
+            })
           : undefined;
       return {
         onUpdate() {
@@ -560,16 +575,16 @@ export function App() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const client = useMemo(
     () =>
-      createEvidenceClient(
+      createEvidenceClient({
         adminScenario,
         publicRecoveryScenario,
         mutationOutcome,
-        (key, attempt) =>
+        onPublicQueryAttempt: (key, attempt) =>
           setPublicQueryAttempts((current) => ({
             ...current,
             [key]: attempt,
           })),
-      ),
+      }),
     [adminScenario, publicRecoveryScenario, mutationOutcome],
   );
   return (
