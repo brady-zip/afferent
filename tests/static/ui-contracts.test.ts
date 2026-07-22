@@ -80,6 +80,13 @@ describe("copied UI distribution contract", () => {
     expect(styles).toMatch(/\[data-mobile-view="queue"\]/);
     expect(styles).toMatch(/\[data-mobile-view="detail"\]/);
     expect(styles).not.toMatch(/(?:font-size|gap|padding):[^;\n]*12px/);
+    expect(styles).not.toMatch(
+      /(?:padding(?:-inline|-block|-top|-right|-bottom|-left)?|margin(?:-inline|-block|-top|-right|-bottom|-left)?|row-gap|column-gap):[^;\n]*\b(?:6|12|20|40)px/,
+    );
+    expect(styles).toMatch(/\.afferent-dialog\s*\{[^}]*font: 400 16px\/1\.5/s);
+    expect(styles).toMatch(/\.afferent-dialog button\s*\{[^}]*min-height: 44px/s);
+    expect(styles).toMatch(/\.afferent-dialog button\s*\{[^}]*padding: 8px 16px/s);
+    expect(styles).toMatch(/\.afferent-admin-section/);
     for (const size of styles.matchAll(/font-size:\s*(?<size>\d+)px/g)) {
       expect([14, 16, 20, 28]).toContain(Number(size.groups?.size));
     }
