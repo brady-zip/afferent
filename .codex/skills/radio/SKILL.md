@@ -23,6 +23,11 @@ Then send the request and retain the returned ASK ID:
 h5i msg ask --from <self> <peer> "<question>"
 ```
 
+When Codex invokes this skill and the user has not named a different peer, `<peer>` is `claude`.
+A radio invocation is incomplete until Codex has emitted a fresh directed ASK to `claude`; reading
+history, describing the intended question, or waiting without that send does not count as using the
+radio.
+
 Do not replace `<question>` with a placeholder ellipsis. Send the user's actual request.
 
 Treat radio invocation as a send gate, not permission to inspect history and continue silently.
