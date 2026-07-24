@@ -1,27 +1,59 @@
-import type { AfferentClient } from "afferent";
+import {
+  boardListResultValidator,
+  changelogPageResultValidator,
+  feedbackPageResultValidator,
+  listBoardsIntentValidator,
+  listFeedbackIntentValidator,
+  listPublishedChangelogIntentValidator,
+  listRoadmapGroupIntentValidator,
+  roadmapGroupPageResultValidator,
+  searchFeedbackIntentValidator,
+  searchFeedbackResultValidator,
+} from "afferent";
+import type { ComponentApi } from "afferent/_generated/component.js";
+import { paginationOptsValidator } from "convex/server";
 
-export const SHOWCASE_BROWSER_READS = Object.freeze([
-  "listBoards",
-  "listFeedback",
-  "listComments",
-  "resolvePost",
-  "searchFeedback",
-  "suggestSimilarPosts",
-  "listRoadmapGroup",
-  "listPublishedChangelog",
-  "getPublishedChangelogBySlug",
-] as const);
+import { createShowcaseClient } from "./afferent.js";
+import { components } from "./_generated/api.js";
+import { query } from "./_generated/server.js";
 
-export function createShowcaseReads(client: AfferentClient) {
-  return Object.freeze({
-    listBoards: client.read.listBoards,
-    listFeedback: client.read.listFeedback,
-    listComments: client.read.listComments,
-    resolvePost: client.read.resolvePost,
-    searchFeedback: client.read.searchFeedback,
-    suggestSimilarPosts: client.read.suggestSimilarPosts,
-    listRoadmapGroup: client.read.listRoadmapGroup,
-    listPublishedChangelog: client.read.listPublishedChangelog,
-    getPublishedChangelogBySlug: client.read.getPublishedChangelogBySlug,
-  });
-}
+const client = createShowcaseClient(components.showcase as ComponentApi);
+
+export const listBoards = query({
+  args: listBoardsIntentValidator.fields,
+  returns: boardListResultValidator,
+  handler: (ctx, args) => client.read.listBoards(ctx, args),
+});
+
+export const listFeedback = query({
+  args: {
+    ...listFeedbackIntentValidator.fields,
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: feedbackPageResultValidator,
+  handler: (ctx, args) => client.read.listFeedback(ctx, args as never),
+});
+
+export const searchFeedback = query({
+  args: searchFeedbackIntentValidator.fields,
+  returns: searchFeedbackResultValidator,
+  handler: (ctx, args) => client.read.searchFeedback(ctx, args as never),
+});
+
+export const listRoadmapGroup = query({
+  args: {
+    ...listRoadmapGroupIntentValidator.fields,
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: roadmapGroupPageResultValidator,
+  handler: (ctx, args) => client.read.listRoadmapGroup(ctx, args as never),
+});
+
+export const listPublishedChangelog = query({
+  args: {
+    ...listPublishedChangelogIntentValidator.fields,
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: changelogPageResultValidator,
+  handler: (ctx, args) => client.read.listPublishedChangelog(ctx, args),
+});
