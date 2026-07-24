@@ -26,7 +26,25 @@ describe("hosted demo static boundary", () => {
       "src/component/schema.ts",
     ];
     for (const file of componentFiles) {
-      expect(await read(file)).not.toMatch(/@convex-dev\/auth|clerk|better-auth/);
+      expect(await read(file)).not.toMatch(
+        /@convex-dev\/auth|clerk|better-auth/,
+      );
     }
+  });
+
+  it("mounts showcase reads only and keeps sandbox authority server-side", async () => {
+    const showcase = await read("example/convex/showcase.ts");
+    expect(showcase).not.toMatch(
+      /\bmutation\b|createPost|admin\.|seed|reset|cleanup/,
+    );
+    const authority = await read("example/convex/sandboxAuthority.ts");
+    expect(authority).toMatch(/getAuthUserId/);
+    expect(authority).toMatch(/normalizeConvexAuthUserId/);
+    expect(authority).not.toMatch(
+      /args\.(?:userId|isAdmin|scopeId|generation)|v\.(?:string|boolean)\(/,
+    );
+    expect(await read("example/convex/afferent.ts")).toMatch(
+      /createScopedAfferentClient/,
+    );
   });
 });
