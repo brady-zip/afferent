@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { describe, expect, it, vi } from "vitest";
 
 import {
@@ -143,6 +144,61 @@ describe("generation-fenced sandbox lifecycle", () => {
     expect(serialized).not.toContain(USER);
     expect(serialized).not.toMatch(
       /owner|logical|scopeId|generation|lease|provider/iu,
+    );
+  });
+
+  it("re-creates an active sandbox after seven days without activity", async () => {
+    let now = 1_000;
+    const seed = vi.fn<SeedGeneration>(async () => undefined);
+    const lifecycle = createSandboxLifecycle({
+      seedGeneration: seed,
+      now: () => now,
+    });
+    await lifecycle.ensure(USER);
+    const first = await lifecycle.inspectForTest(USER);
+
+    now += 7 * 24 * 60 * 60 * 1_000 + 1;
+    await lifecycle.ensure(USER);
+    const refreshed = await lifecycle.inspectForTest(USER);
+
+    expect(seed).toHaveBeenCalledTimes(2);
+    expect(refreshed.activeGeneration).toBe(2);
+    expect(refreshed.activePhysicalScope).not.toBe(first.activePhysicalScope);
+    expect(refreshed.retiredGenerations).toEqual([1]);
+  });
+
+  it("mounts the canonical sandbox surface behind empty lifecycle intents", async () => {
+    const source = await readFile(
+      new URL("../../example/convex/sandbox.ts", import.meta.url),
+      "utf8",
+    );
+    const expectedOperations = [
+      "listFeedback",
+      "listComments",
+      "resolvePost",
+      "searchFeedback",
+      "listRoadmapGroup",
+      "listPublishedChangelog",
+      "createPost",
+      "setVote",
+      "addComment",
+      "listNotifications",
+      "listAdminFeedback",
+      "setPostStatus",
+      "createChangelogDraft",
+      "publishChangelog",
+    ];
+    for (const operation of expectedOperations) {
+      expect(source).toContain(`export const ${operation} =`);
+    }
+    expect(source).toMatch(
+      /export const ensureSandbox = action\(\{\s*args: \{\}/u,
+    );
+    expect(source).toMatch(
+      /export const resetSandbox = action\(\{\s*args: \{\}/u,
+    );
+    expect(source).not.toMatch(
+      /args:\s*\{[^}]*\b(?:ownerKey|userId|isAdmin|scopeId|generation)\b/su,
     );
   });
 });
