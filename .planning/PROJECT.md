@@ -19,7 +19,7 @@ SaaS teams can add deeply integrated product feedback to an existing Convex appl
 
 ## Current State
 
-Phases 1 and 2 are complete and verified. The packed Convex component now supports provider-neutral trusted-host integration for Convex Auth, Clerk, and Better Auth; secure multi-board feedback; ranked and searchable discovery; participation and moderation; a status-driven roadmap; manually published linked changelog entries; in-app notifications and a host delivery outbox; and the complete framework-light headless React contract. Phase 3 is defining the accessible, responsive, source-owned shadcn interface and its registry distribution path.
+Phases 1 through 3 are complete and verified. The packed Convex component supports provider-neutral trusted-host integration for Convex Auth, Clerk, and Better Auth; secure multi-board feedback; ranked and searchable discovery; participation and moderation; a status-driven roadmap; manually published linked changelog entries; in-app notifications and a host delivery outbox; and the complete framework-light headless React contract. The accessible, responsive public and admin interfaces now ship from one canonical source through mirrored examples and a deterministic shadcn registry. Phase 4 is preparing the published package, documentation, and isolated hosted demo as one production release.
 
 ## Requirements
 
@@ -34,10 +34,10 @@ Phases 1 and 2 are complete and verified. The packed Convex component now suppor
 - [x] Selected workflow statuses form a public, status-driven roadmap. — Validated in Phase 2.
 - [x] Administrators can manually create and publish changelog entries and optionally link them to completed feedback posts. — Validated in Phase 2.
 - [x] Developers can build custom interfaces using headless React hooks and providers. — Validated in Phase 2.
+- [x] Developers can adopt complete user-facing and admin interfaces as source-owned shadcn components from both a shadcn registry and repository examples. — Validated in Phase 3: Source-Owned Product Interface.
 
 ### Active
 
-- [ ] Developers can adopt complete user-facing and admin interfaces as source-owned shadcn components from both a shadcn registry and repository examples.
 - [ ] A publicly accessible Vite application demonstrates the complete integration using Convex Auth.
 - [ ] Each signed-in demo visitor receives a private, seeded admin sandbox that they can modify and reset without affecting other visitors.
 - [ ] The first public release includes typed APIs, automated tests, integration documentation, UI installation documentation, npm distribution, shadcn registry distribution, and a deployed working example.
@@ -88,8 +88,8 @@ The repository itself is also the product showcase. Its Vite example must be pub
 | Represent one product per installation | Keeps tenancy and authorization simple for the first production-ready release | — Pending |
 | Use installation-wide access policy | Provides useful configurability without introducing per-board policy complexity | — Pending |
 | Keep identity and admin authorization in the host app | Convex component isolation prevents direct `ctx.auth` access and provider-neutral wrappers support all target auth systems | — Pending |
-| Ship headless React plus copyable shadcn source | Gives consumers a fast polished start while preserving full styling and ownership | — Pending |
-| Publish UI through both a shadcn registry and repository examples | Supports convenient installation and transparent reference implementations | — Pending |
+| Ship headless React plus copyable shadcn source | Gives consumers a fast polished start while preserving full styling and ownership | ✓ Validated in Phase 3 |
+| Publish UI through both a shadcn registry and repository examples | Supports convenient installation and transparent reference implementations | ✓ Validated in Phase 3 |
 | Use a Vite React app for the hosted example | Demonstrates a simple client-side integration without tying the component to a full-stack React framework | — Pending |
 | Use Convex Auth in the hosted example | Keeps the canonical demo within the Convex ecosystem while other auth providers remain documented and tested integrations | — Pending |
 | Provide private per-user demo sandboxes | Enables safe hands-on admin evaluation without shared-state vandalism or browser-session cleanup complexity | — Pending |
@@ -117,4 +117,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-17 after Phase 2 completion*
+*Last updated: 2026-07-24 after Phase 3 completion*
