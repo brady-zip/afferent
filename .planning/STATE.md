@@ -5,16 +5,16 @@ milestone_name: milestone
 current_phase: 4
 current_phase_name: Hosted Production Release
 status: ready_to_execute
-stopped_at: Phase 4 planned — ready to execute 04-01
-last_updated: "2026-07-24T04:11:44Z"
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-07-24T04:25:54.679Z"
 last_activity: 2026-07-24
-last_activity_desc: Planned Phase 4 in nine dependency-ordered release plans
+last_activity_desc: Completed Phase 4 Plan 04-01 package release baseline
 progress:
   total_phases: 7
   completed_phases: 6
   total_plans: 51
-  completed_plans: 42
-  percent: 82
+  completed_plans: 43
+  percent: 84
 ---
 
 # Project State
@@ -29,19 +29,19 @@ See: .planning/PROJECT.md (updated 2026-07-24)
 ## Current Position
 
 Phase: 4 — Hosted Production Release
-Plan: 0 of 9
-Status: Ready to execute 04-01
-Last activity: 2026-07-24 — Planned nine release plans
+Plan: 1 of 9
+Status: Ready to execute 04-02
+Last activity: 2026-07-24 — Completed package release baseline
 
-Progress: [████████░░] 82%
+Progress: [████████░░] 84%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 42
-- Average duration: 63 min
-- Total execution time: 2637 min
+- Total plans completed: 43
+- Average duration: 62 min
+- Total execution time: 2649 min
 
 **By Phase:**
 
@@ -52,11 +52,12 @@ Progress: [████████░░] 82%
 | Phase 02.1 | 1     | 68 min  | 68 min   |
 | Phase 02.3 | 2     | 33 min  | 17 min   |
 | Phase 03   | 12    | 1401 min | 117 min |
+| Phase 04   | 1     | 12 min  | 12 min   |
 
 **Recent Trend:**
 
-- Last 5 plans: 20h 38m, 8 min, 10 min, 8 min, 22 min
-- Trend: Phase 3 product and verification-integrity closure complete
+- Last 5 plans: 8 min, 10 min, 8 min, 22 min, 12 min
+- Trend: Phase 4 release packaging started with a verified single-tarball baseline
 
 _Updated after each plan completion_
 
@@ -106,6 +107,7 @@ _Updated after each plan completion_
 | Phase 03 P10   | 10min    | 3 tasks | 35 files |
 | Phase 03 P11   | 8min     | 3 tasks | 36 files |
 | Phase 03 P12 | 22min | 3 tasks | 30 files |
+| Phase 04 P01 | 12 min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -221,6 +223,9 @@ Recent decisions affecting current work:
 - [Phase 03]: Ground anti-skip assertions in the artifact that owns each key, sentence, scenario, and executable action. — Dead identifiers in unrelated files cannot satisfy release evidence.
 - [Phase 03]: Expose paginated retry on roadmap and notification error states while reserving loadMore for ready pagination. — Recovery actions must create a new originating query attempt from Error.
 - [Phase 03]: Keep installed public recovery scenarios independent from administrative states and expose attempt counts only as hidden evidence metadata. — The packed browser can prove callback ownership without injecting product markup or authority.
+- [Phase 04]: Publish afferent/test only as compiled JavaScript plus declarations; raw source is excluded from the npm allowlist.
+- [Phase 04]: Reuse one exact tarball across content audit, clean consumer, publint, and ATTW release checks.
+- [Phase 04]: Keep offline package verification deterministic and run npm identity/runtime checks only in explicit online-preflight mode.
 
 ### Pending Todos
 
@@ -246,6 +251,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-24T04:11:44Z
-Stopped at: Phase 4 planned — ready to execute 04-01
-Resume file: .planning/phases/04-hosted-production-release/04-01-PLAN.md
+Last session: 2026-07-24T04:25:54.672Z
+Stopped at: Completed 04-01-PLAN.md
+Resume file: None
