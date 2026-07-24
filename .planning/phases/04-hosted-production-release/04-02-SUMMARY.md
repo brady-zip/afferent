@@ -74,6 +74,8 @@ status: complete
 3. Task 2 RED - `4541976`
 4. Task 2 GREEN - `a27177e`
 5. Task 3 gate - `b0244b4`
+6. Remediation RED - `dbe7096`
+7. Remediation GREEN - `75c5cf6`
 
 ## Decisions Made
 
@@ -94,16 +96,25 @@ status: complete
 ## Verification
 
 - `npm run build` passed.
-- `npm run test:demo:boundary` passed build, hosted typecheck, and 5 authority/static tests.
+- `npm run test:demo:boundary` passed anonymous real Convex codegen/deployment compilation, hosted typecheck, and 6 authority/static tests.
 - No identity, admin, scope, or generation browser validator exists.
+
+## Remediation
+
+The first implementation was type-only: generated host references were absent and
+`showcase.ts` returned a plain method object rather than browser-callable Convex queries.
+The reopened plan added the Convex Auth host schema, disposable anonymous codegen,
+committed bindings for both named instances, and actual read-only query wrappers. The
+RED gate now rejects missing generated references and non-callable wrappers.
 
 ## Known Stubs
 
-None. Physical sandbox lifecycle resolution is an intentional injected contract implemented by Plan 04-03.
+None after remediation. Physical sandbox lifecycle resolution is the intentional Plan
+04-03 dependency.
 
 ## Self-Check: PASSED
 
-- All declared artifacts and five task commits exist.
+- All declared artifacts and seven task/remediation commits exist.
 - The unrelated TypeScript 7 manifest/lock experiment remains unstaged.
 
 ---
