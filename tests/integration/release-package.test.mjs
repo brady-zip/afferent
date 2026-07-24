@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  validateNpmNameResult,
   validatePackageCandidate,
   validateRuntimeFloor,
 } from "../../scripts/verify-package-release.mjs";
@@ -125,5 +126,29 @@ test("trusted publishing runtime floor is explicit", () => {
   assert.throws(
     () => validateRuntimeFloor({ node: "22.14.0", npm: "11.4.9" }),
     /npm 11\.5\.1/,
+  );
+});
+
+test("npm name preflight accepts only availability or the canonical release", () => {
+  assert.doesNotThrow(() =>
+    validateNpmNameResult({ status: "available-at-check-time" }),
+  );
+  assert.doesNotThrow(() =>
+    validateNpmNameResult({
+      status: "published",
+      name: "afferent",
+      version: "0.1.0",
+      repository: "git+https://github.com/bradywatkinson/afferent.git",
+    }),
+  );
+  assert.throws(
+    () =>
+      validateNpmNameResult({
+        status: "published",
+        name: "afferent",
+        version: "9.9.9",
+        repository: "https://example.invalid/occupied.git",
+      }),
+    /ownership or version drift/,
   );
 });

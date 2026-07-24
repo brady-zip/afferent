@@ -57,6 +57,25 @@ export function validateRuntimeFloor(runtime) {
   }
 }
 
+export function validateNpmNameResult(result) {
+  if (result.status === "available-at-check-time") return result;
+  const repository =
+    typeof result.repository === "string"
+      ? result.repository
+      : result.repository?.url;
+  if (
+    result.status !== "published" ||
+    result.name !== requiredIdentity.name ||
+    result.version !== requiredIdentity.version ||
+    !repository?.includes("github.com/bradywatkinson/afferent")
+  ) {
+    throw new Error(
+      "npm package ownership or version drift detected for afferent; do not rename or publish",
+    );
+  }
+  return result;
+}
+
 function exportTargets(exports) {
   return Object.values(exports).flatMap((entry) => {
     if (typeof entry === "string") return [entry];
@@ -143,6 +162,29 @@ async function npmVersion() {
   return (await run("npm", ["--version"])).stdout.trim();
 }
 
+async function npmNamePreflight() {
+  try {
+    const result = await run("npm", [
+      "view",
+      requiredIdentity.name,
+      "name",
+      "version",
+      "repository",
+      "--json",
+    ]);
+    return validateNpmNameResult({
+      status: "published",
+      ...JSON.parse(result.stdout),
+    });
+  } catch (error) {
+    const output = error instanceof Error ? error.message : String(error);
+    if (/\bE404\b|404 Not Found/.test(output)) {
+      return validateNpmNameResult({ status: "available-at-check-time" });
+    }
+    throw error;
+  }
+}
+
 async function verifyOfflineCandidate() {
   const temporaryRoot = await mkdtemp(join(tmpdir(), "afferent-release-"));
   try {
@@ -217,6 +259,7 @@ async function main() {
       node: process.versions.node,
       npm: await npmVersion(),
     });
+    result.npmName = await npmNamePreflight();
   }
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
 }
