@@ -317,7 +317,54 @@ Plans:
 4. Browser tests run the public feedback, roadmap, changelog, notification, and admin workflows against real Convex using the artifacts that consumers install.
 5. Documentation covers installation through upgrades for all supported auth and UI paths, and a validated npm release publishes exports, declarations, provenance, and synchronized package, registry, documentation, and demo versions.
 
-**Plans:** TBD
+**Plans:** 9 plans
+
+- [ ] 04-01-PLAN.md
+- [ ] 04-02-PLAN.md
+- [ ] 04-03-PLAN.md
+- [ ] 04-04-PLAN.md
+- [ ] 04-05-PLAN.md
+- [ ] 04-06-PLAN.md
+- [ ] 04-07-PLAN.md
+- [ ] 04-08-PLAN.md
+- [ ] 04-09-PLAN.md
+
+**Wave 1**
+
+- [ ] `04-01-PLAN.md` — Close the compiled package/export baseline, especially the release-blocking raw TypeScript `afferent/test` export, and prove one exact tarball in clean consumers.
+
+**Wave 2** _(blocked on Wave 1 completion)_
+
+- [ ] `04-02-PLAN.md` — Mount immutable showcase and private sandbox component instances behind Convex Auth and server-derived host authority.
+
+**Wave 3** _(blocked on Wave 2 completion)_
+
+- [ ] `04-03-PLAN.md` — Seed representative content and implement generation-fenced first access, reset, failure recovery, and seven-day expiry.
+
+**Wave 4** _(blocked on Wave 3 completion)_
+
+- [ ] `04-04-PLAN.md` — Enforce bounded quotas and exhaustively clean every scoped table and rate-limiter child path through leased resumable maintenance.
+
+**Wave 5** _(blocked on Wave 4 completion)_
+
+- [ ] `04-05-PLAN.md` — Assemble the canonical responsive hosted UI from the exact packed package and generated registry artifacts.
+
+**Wave 6** _(blocked on Wave 5 completion)_
+
+- [ ] `04-06-PLAN.md` — Prove full public/admin, two-user scope isolation, lifecycle, responsive, keyboard, and axe behavior against real Convex.
+
+**Wave 7** _(blocked on Wave 6 completion)_
+
+- [ ] `04-07-PLAN.md` — Publish executable VitePress and README guidance for install, all auth providers, headless/registry UI, testing, deployment, and upgrades.
+
+**Wave 8** _(blocked on Wave 7 completion)_
+
+- [ ] `04-08-PLAN.md` — Synchronize Changesets/versioned artifacts and build drift-proof CI, isolated previews, and npm OIDC/provenance release automation.
+
+**Wave 9** _(human-present external release; blocked on Wave 8 completion)_
+
+- [ ] `04-09-PLAN.md` — Provision exact external accounts, publish npm then registry/docs then production app, and close public remote smoke and release evidence.
+
 **UI hint**: yes
 
 ## Progress
@@ -325,15 +372,15 @@ Plans:
 **Execution Order:**
 Phases execute sequentially: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 3 -> 4
 
-| Phase                                         | Plans Complete | Status      | Completed  |
-| --------------------------------------------- | -------------- | ----------- | ---------- |
-| 1. Secure Installable Feedback Board          | 8/8            | Complete    | 2026-07-16 |
-| 2. Complete Feedback-to-Changelog Workflow    | 17/17          | Complete    | 2026-07-21 |
-| 2.1 Server-Derived Viewer Capability Contract | 1/1            | Complete    | 2026-07-21 |
-| 2.2 Notification Navigation Target Contract   | 2/2            | Complete    | 2026-07-21 |
-| 2.3 Admin Read and Projection Completion      | 2/2            | Complete    | 2026-07-21 |
-| 3. Source-Owned Product Interface             | 12/12 | Complete   | 2026-07-22 |
-| 4. Hosted Production Release                  | 0/TBD          | Not started | -          |
+| Phase                                         | Plans Complete | Status   | Completed  |
+| --------------------------------------------- | -------------- | -------- | ---------- |
+| 1. Secure Installable Feedback Board          | 8/8            | Complete | 2026-07-16 |
+| 2. Complete Feedback-to-Changelog Workflow    | 17/17          | Complete | 2026-07-21 |
+| 2.1 Server-Derived Viewer Capability Contract | 1/1            | Complete | 2026-07-21 |
+| 2.2 Notification Navigation Target Contract   | 2/2            | Complete | 2026-07-21 |
+| 2.3 Admin Read and Projection Completion      | 2/2            | Complete | 2026-07-21 |
+| 3. Source-Owned Product Interface             | 12/12          | Complete | 2026-07-22 |
+| 4. Hosted Production Release                  | 0/9            | Planned  | -          |
 
 ---
 
