@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import schema from "../../src/component/schema.js";
 import { deriveScopeId } from "../../src/client/scope.js";
+import { SCOPED_TABLE_DISPOSITIONS } from "../../src/component/maintenance/sandbox.js";
 import { readFile } from "node:fs/promises";
 
 describe("scope-complete schema", () => {
@@ -29,6 +30,33 @@ describe("scope-complete schema", () => {
           `${tableName}.${search.indexDescriptor} must filter by scope`,
         ).toContain("scopeId");
       }
+    }
+  });
+
+  test("fails closed unless every scoped table has an indexed usage and cleanup disposition", () => {
+    const schemaTables = Object.keys(schema.tables).sort();
+    const disposedTables = Object.keys(SCOPED_TABLE_DISPOSITIONS).sort();
+
+    expect(schemaTables).toHaveLength(26);
+    expect(disposedTables).toEqual(schemaTables);
+
+    for (const [tableName, disposition] of Object.entries(
+      SCOPED_TABLE_DISPOSITIONS,
+    )) {
+      const table = schema.tables[tableName as keyof typeof schema.tables];
+      const index = [...table.indexes, ...table.stagedDbIndexes].find(
+        ({ indexDescriptor }) =>
+          indexDescriptor === disposition.scopeIndex,
+      );
+      expect(
+        index,
+        `${tableName}.${disposition.scopeIndex} must exist`,
+      ).toBeDefined();
+      expect(index?.fields[0]).toBe("scopeId");
+      expect(disposition.usage).toMatch(
+        /^(?:root|derived|activity|work|identity|installation)$/,
+      );
+      expect(disposition.cleanupOrder).toBeGreaterThanOrEqual(0);
     }
   });
 
