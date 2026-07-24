@@ -8,6 +8,7 @@ import {
 } from "../../example/convex/_generated/api.js";
 import schema from "../../example/convex/schema.js";
 import { deriveLogicalSandboxKey } from "../../example/convex/sandboxScope.js";
+import { SANDBOX_INACTIVITY_MS } from "../../example/convex/sandboxLifecycle.js";
 import { register } from "../../src/test.js";
 
 const hostedModules = import.meta.glob("../../example/convex/**/*.ts");
@@ -136,5 +137,69 @@ describe("leased retired-generation cleanup", () => {
         paginationOpts: { numItems: 20, cursor: null },
       }),
     ).resolves.toEqual(before);
+  });
+
+  test("expires an indexed bounded owner page and reuses the shared cleanup worker", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-24T00:00:00.000Z"));
+    const backend = hostedBackend();
+    const expired = backend.withIdentity({
+      issuer: "https://afferent.test",
+      subject: "scheduled-expired-owner",
+    });
+    const active = backend.withIdentity({
+      issuer: "https://afferent.test",
+      subject: "scheduled-active-owner",
+    });
+    await expired.action(api.sandbox.ensureSandbox, {});
+    await active.action(api.sandbox.ensureSandbox, {});
+    const expiredOwnerKey = await deriveLogicalSandboxKey(
+      "scheduled-expired-owner",
+    );
+    await backend.run(async (ctx) => {
+      const owner = await ctx.db
+        .query("sandboxOwners")
+        .withIndex("by_owner_key", (query) =>
+          query.eq("ownerKey", expiredOwnerKey),
+        )
+        .unique();
+      if (owner === null) throw new Error("missing owner fixture");
+      await ctx.db.patch(owner._id, {
+        lastActivityAt: Date.now() - SANDBOX_INACTIVITY_MS - 1,
+      });
+    });
+
+    await backend.mutation(internal.sandboxCleanup.scanExpiredSandboxes, {
+      currentTime: Date.now(),
+    });
+    await expect(
+      expired.query(api.sandbox.getSandboxLifecycle, {}),
+    ).resolves.toMatchObject({ state: "expired" });
+    await expect(
+      active.query(api.sandbox.getSandboxLifecycle, {}),
+    ).resolves.toMatchObject({ state: "ready" });
+    await backend.finishAllScheduledFunctions(() => vi.runAllTimers());
+    await expect(
+      expired.action(api.sandbox.ensureSandbox, {}),
+    ).resolves.toMatchObject({ state: "ready" });
+    const states = await backend.run(async (ctx) =>
+      (
+        await ctx.db
+          .query("sandboxGenerations")
+          .withIndex("by_owner_generation", (query) =>
+            query.eq("ownerKey", expiredOwnerKey),
+          )
+          .collect()
+      ).map(({ state, cleanupState }) => ({ state, cleanupState })),
+    );
+    expect(states).toContainEqual({
+      state: "retired",
+      cleanupState: "complete",
+    });
+    expect(states).toContainEqual({
+      state: "active",
+      cleanupState: undefined,
+    });
+    vi.useRealTimers();
   });
 });
