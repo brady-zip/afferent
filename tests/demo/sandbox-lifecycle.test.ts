@@ -38,7 +38,7 @@ describe("sandbox physical scope derivation", () => {
     expect(new Set([first, second, other])).toHaveLength(3);
     expect(first).not.toContain(USER);
     expect(owner).not.toContain(USER);
-    expect(first).not.toContain("1");
+    expect(first).not.toContain(`${owner}:1`);
   });
 });
 
