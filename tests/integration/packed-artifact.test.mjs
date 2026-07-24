@@ -106,8 +106,8 @@ test("the release gate covers every suite and every supported packed export", as
       `packed test helper audit is missing ${required}`,
     );
   }
-  assert.match(gate, /await import\("afferent\/test"\)/);
-  assert.match(gate, /\.register\(.*"installedAfferent"/s);
+  assert.match(gate, /import\\s\*\\\{\\s\*register/);
+  assert.match(gate, /register\\\(backend,\\s\*"afferent"\\\)/);
 });
 
 test("the Phase 2 gate covers the public React artifact and complete consumer", async () => {

@@ -138,7 +138,8 @@ for (const required of [
   "dist/component/convex.config.js",
   "dist/component/_generated/component.d.ts",
   "dist/component/tsconfig.json",
-  "src/test.ts",
+  "dist/test.js",
+  "dist/test.d.ts",
 ]) {
   if (!packedPaths.has(required))
     throw new Error(`tarball is missing ${required}`);
@@ -179,7 +180,7 @@ const smoke = [
   "afferent/adapters/better-auth.js",
 ];
 // Convex's bundler injects definition paths, so Node only resolves this export.
-const resolutionOnly = ["afferent/convex.config.js", "afferent/test"];
+const resolutionOnly = ["afferent/convex.config.js"];
 await run(
   process.execPath,
   [
@@ -189,6 +190,21 @@ await run(
   ],
   { cwd: materializedConsumer },
 );
+
+const consumerTestSource = await readFile(
+  join(materializedConsumer, "src/App.test.tsx"),
+  "utf8",
+);
+if (
+  !/import\s*\{\s*register\s*\}\s*from\s*"afferent\/test"/.test(
+    consumerTestSource,
+  ) ||
+  !/register\(backend,\s*"afferent"\)/.test(consumerTestSource)
+) {
+  throw new Error(
+    "clean consumer must import and invoke the installed afferent/test helper",
+  );
+}
 
 const interactionPath = join(artifactRoot, "afferent-interaction.json");
 await run("npm", ["test"], {
@@ -279,7 +295,8 @@ const resolvedPaths = await Promise.all(
     "dist/component/convex.config.js",
     "dist/component/_generated/component.d.ts",
     "dist/component/tsconfig.json",
-    "src/test.ts",
+    "dist/test.js",
+    "dist/test.d.ts",
     "package.json",
   ].map((path) => realpath(join(installedPackage, path))),
 );
