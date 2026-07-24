@@ -5,16 +5,16 @@ milestone_name: milestone
 current_phase: 4
 current_phase_name: Hosted Production Release
 status: ready_to_execute
-stopped_at: Completed 04-02-PLAN.md
-last_updated: "2026-07-24T04:31:05.530Z"
+stopped_at: Completed 04-03-PLAN.md
+last_updated: "2026-07-24T16:15:09Z"
 last_activity: 2026-07-24
-last_activity_desc: Completed hosted authentication boundary
+last_activity_desc: Completed generation-fenced sandbox lifecycle and deterministic seed
 progress:
   total_phases: 7
   completed_phases: 6
   total_plans: 51
-  completed_plans: 44
-  percent: 86
+  completed_plans: 45
+  percent: 88
 ---
 
 # Project State
@@ -29,19 +29,19 @@ See: .planning/PROJECT.md (updated 2026-07-24)
 ## Current Position
 
 Phase: 4 — Hosted Production Release
-Plan: 2 of 9
-Status: Ready to execute 04-03
-Last activity: 2026-07-24 — Completed hosted authentication boundary
+Plan: 3 of 9
+Status: Ready to execute 04-04
+Last activity: 2026-07-24 — Completed sandbox lifecycle and deterministic seed
 
-Progress: [█████████░] 86%
+Progress: [█████████░] 88%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 43
-- Average duration: 62 min
-- Total execution time: 2649 min
+- Total plans completed: 45
+- Average duration: 74 min
+- Total execution time: 3349 min
 
 **By Phase:**
 
@@ -52,12 +52,12 @@ Progress: [█████████░] 86%
 | Phase 02.1 | 1     | 68 min  | 68 min   |
 | Phase 02.3 | 2     | 33 min  | 17 min   |
 | Phase 03   | 12    | 1401 min | 117 min |
-| Phase 04   | 1     | 12 min  | 12 min   |
+| Phase 04   | 3     | 712 min | 237 min  |
 
 **Recent Trend:**
 
-- Last 5 plans: 8 min, 10 min, 8 min, 22 min, 12 min
-- Trend: Phase 4 release packaging started with a verified single-tarball baseline
+- Last 5 plans: 8 min, 22 min, 12 min, 3 min, 697 min
+- Trend: Phase 4 package, host boundary, and lifecycle foundations are complete
 
 _Updated after each plan completion_
 
@@ -109,6 +109,7 @@ _Updated after each plan completion_
 | Phase 03 P12 | 22min | 3 tasks | 30 files |
 | Phase 04 P01 | 12 min | 3 tasks | 6 files |
 | Phase 04 P02 | 3 min | 3 tasks | 12 files |
+| Phase 04 P03 | 697 min | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -227,6 +228,8 @@ Recent decisions affecting current work:
 - [Phase 04]: Publish afferent/test only as compiled JavaScript plus declarations; raw source is excluded from the npm allowlist.
 - [Phase 04]: Reuse one exact tarball across content audit, clean consumer, publint, and ATTW release checks.
 - [Phase 04]: Keep offline package verification deterministic and run npm identity/runtime checks only in explicit online-preflight mode.
+- [Phase 04]: Activate a fully seeded opaque physical generation before exposing a private sandbox; reset and expiry never expose partial state.
+- [Phase 04]: Keep lifecycle authority and identifiers server-only while the browser receives a closed signed-out/preparing/ready/resetting/expired/error DTO.
 
 ### Pending Todos
 
@@ -252,6 +255,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-24T04:31:05.523Z
-Stopped at: Completed 04-02-PLAN.md
+Last session: 2026-07-24T16:15:09Z
+Stopped at: Completed 04-03-PLAN.md
 Resume file: None
