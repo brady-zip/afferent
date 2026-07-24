@@ -83,7 +83,12 @@ import {
   mutation,
   query,
   type ActionCtx,
+  type MutationCtx,
 } from "./_generated/server.js";
+import {
+  enforceSandboxQuota,
+  type SandboxQuotaResource,
+} from "./sandboxQuotas.js";
 import {
   readSandboxLifecycle,
   resolveActivePhysicalScope,
@@ -101,6 +106,13 @@ async function requireVerifiedUser(ctx: Parameters<typeof getAuthUserId>[0]) {
   const userId = await getAuthUserId(ctx);
   if (userId === null) throw new Error("AUTHENTICATION_REQUIRED");
   return userId;
+}
+
+async function enforceWriteQuota(
+  ctx: MutationCtx,
+  resource: SandboxQuotaResource,
+) {
+  await enforceSandboxQuota(ctx, await requireVerifiedUser(ctx), resource);
 }
 
 async function prepareSandbox(
@@ -271,13 +283,19 @@ export const getPublishedChangelogBySlug = query({
 export const createPost = mutation({
   args: createPostIntentValidator.fields,
   returns: publicPostActionResultValidator,
-  handler: (ctx, args) => client.participation.createPost(ctx, args as never),
+  handler: async (ctx, args) => {
+    await enforceWriteQuota(ctx, "posts");
+    return client.participation.createPost(ctx, args as never);
+  },
 });
 
 export const editPost = mutation({
   args: editPostIntentValidator.fields,
   returns: publicPostActionResultValidator,
-  handler: (ctx, args) => client.participation.editPost(ctx, args as never),
+  handler: async (ctx, args) => {
+    await enforceWriteQuota(ctx, "notificationActivity");
+    return client.participation.editPost(ctx, args as never);
+  },
 });
 
 export const withdrawPost = mutation({
@@ -289,13 +307,19 @@ export const withdrawPost = mutation({
 export const setVote = mutation({
   args: setVoteIntentValidator.fields,
   returns: publicPostActionResultValidator,
-  handler: (ctx, args) => client.participation.setVote(ctx, args as never),
+  handler: async (ctx, args) => {
+    if (args.desired) await enforceWriteQuota(ctx, "votes");
+    return client.participation.setVote(ctx, args as never);
+  },
 });
 
 export const addComment = mutation({
   args: addCommentIntentValidator.fields,
   returns: publicCommentActionResultValidator,
-  handler: (ctx, args) => client.participation.addComment(ctx, args as never),
+  handler: async (ctx, args) => {
+    await enforceWriteQuota(ctx, "comments");
+    return client.participation.addComment(ctx, args as never);
+  },
 });
 
 export const getPostSubscription = query({
@@ -308,8 +332,10 @@ export const getPostSubscription = query({
 export const setPostSubscription = mutation({
   args: setPostSubscriptionIntentValidator.fields,
   returns: postSubscriptionActionResultValidator,
-  handler: (ctx, args) =>
-    client.notifications.setPostSubscription(ctx, args as never),
+  handler: async (ctx, args) => {
+    if (args.desired) await enforceWriteQuota(ctx, "subscriptions");
+    return client.notifications.setPostSubscription(ctx, args as never);
+  },
 });
 
 export const listNotifications = query({
@@ -415,7 +441,10 @@ export const listTags = query({
 export const createTag = mutation({
   args: createTagIntentValidator.fields,
   returns: tagResultValidator,
-  handler: (ctx, args) => client.admin.createTag(ctx, args),
+  handler: async (ctx, args) => {
+    await enforceWriteQuota(ctx, "tags");
+    return client.admin.createTag(ctx, args);
+  },
 });
 
 export const renameTag = mutation({
@@ -427,7 +456,10 @@ export const renameTag = mutation({
 export const setPostTag = mutation({
   args: setPostTagIntentValidator.fields,
   returns: adminFeedbackPostResultValidator,
-  handler: (ctx, args) => client.admin.setPostTag(ctx, args as never),
+  handler: async (ctx, args) => {
+    if (args.desired) await enforceWriteQuota(ctx, "totalRecords");
+    return client.admin.setPostTag(ctx, args as never);
+  },
 });
 
 export const deleteTag = mutation({
@@ -439,13 +471,19 @@ export const deleteTag = mutation({
 export const mergePost = mutation({
   args: mergePostIntentValidator.fields,
   returns: mergePostResultValidator,
-  handler: (ctx, args) => client.admin.mergePost(ctx, args as never),
+  handler: async (ctx, args) => {
+    await enforceWriteQuota(ctx, "mergeWork");
+    return client.admin.mergePost(ctx, args as never);
+  },
 });
 
 export const createChangelogDraft = mutation({
   args: createChangelogDraftIntentValidator.fields,
   returns: adminChangelogEntryResultValidator,
-  handler: (ctx, args) => client.admin.createChangelogDraft(ctx, args as never),
+  handler: async (ctx, args) => {
+    await enforceWriteQuota(ctx, "changelogEntries");
+    return client.admin.createChangelogDraft(ctx, args as never);
+  },
 });
 
 export const editChangelog = mutation({
@@ -457,13 +495,19 @@ export const editChangelog = mutation({
 export const setChangelogLinks = mutation({
   args: setChangelogLinksIntentValidator.fields,
   returns: adminChangelogEntryResultValidator,
-  handler: (ctx, args) => client.admin.setChangelogLinks(ctx, args as never),
+  handler: async (ctx, args) => {
+    await enforceWriteQuota(ctx, "totalRecords");
+    return client.admin.setChangelogLinks(ctx, args as never);
+  },
 });
 
 export const publishChangelog = mutation({
   args: publishChangelogIntentValidator.fields,
   returns: adminChangelogEntryResultValidator,
-  handler: (ctx, args) => client.admin.publishChangelog(ctx, args as never),
+  handler: async (ctx, args) => {
+    await enforceWriteQuota(ctx, "notificationActivity");
+    return client.admin.publishChangelog(ctx, args as never);
+  },
 });
 
 export const unpublishChangelog = mutation({

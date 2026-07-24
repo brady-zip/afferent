@@ -20,6 +20,7 @@ import type * as jobs_fanout from "../jobs/fanout.js";
 import type * as jobs_merge from "../jobs/merge.js";
 import type * as jobs_outbox from "../jobs/outbox.js";
 import type * as jobs_tag_cleanup from "../jobs/tag_cleanup.js";
+import type * as maintenance_sandbox from "../maintenance/sandbox.js";
 import type * as model_activity from "../model/activity.js";
 import type * as model_actors from "../model/actors.js";
 import type * as model_changelog from "../model/changelog.js";
@@ -76,6 +77,7 @@ const fullApi: ApiFromModules<{
   "jobs/merge": typeof jobs_merge;
   "jobs/outbox": typeof jobs_outbox;
   "jobs/tag_cleanup": typeof jobs_tag_cleanup;
+  "maintenance/sandbox": typeof maintenance_sandbox;
   "model/activity": typeof model_activity;
   "model/actors": typeof model_actors;
   "model/changelog": typeof model_changelog;

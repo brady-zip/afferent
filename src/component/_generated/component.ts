@@ -3182,6 +3182,34 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         Name
       >;
     };
+    maintenance: {
+      sandbox: {
+        getScopedUsage: FunctionReference<
+          "query",
+          "internal",
+          { documentBudget?: number; scopeId: string },
+          {
+            complete: boolean;
+            contractVersion: 1;
+            documentCount: number;
+            roots: {
+              boards: number;
+              changelogEntries: number;
+              comments: number;
+              mergeWork: number;
+              notificationActivity: number;
+              posts: number;
+              subscriptions: number;
+              tags: number;
+              votes: number;
+            };
+            scannedTableCount: number;
+            semanticBytes: number;
+          },
+          Name
+        >;
+      };
+    };
     notifications: {
       inbox: {
         getUnreadCount: FunctionReference<
