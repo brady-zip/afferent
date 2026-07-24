@@ -81,7 +81,9 @@ test("package candidate requires exact metadata and existing export targets", ()
     () =>
       validatePackageCandidate({
         manifest,
-        packedFiles: new Set([...files].filter((file) => file !== "dist/test.d.ts")),
+        packedFiles: new Set(
+          [...files].filter((file) => file !== "dist/test.d.ts"),
+        ),
         registry: { name: "afferent", compatibleVersion: "0.1.0" },
       }),
     /dist\/test\.d\.ts/,

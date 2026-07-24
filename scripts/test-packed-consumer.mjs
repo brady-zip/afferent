@@ -8,6 +8,9 @@ const repositoryRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const consumerFlag = process.argv.indexOf("--consumer-dir");
 const consumerDir =
   consumerFlag === -1 ? null : resolve(process.argv[consumerFlag + 1] ?? "");
+const tarballFlag = process.argv.indexOf("--tarball");
+const suppliedTarball =
+  tarballFlag === -1 ? null : resolve(process.argv[tarballFlag + 1] ?? "");
 const printJson = process.argv.includes("--json");
 const packedFixtureContract = "fixtures/packed-vite-convex";
 
@@ -93,56 +96,61 @@ for (const file of fixtureFiles) {
   }
 }
 
-for (const suite of [
-  "test:static",
-  "test:model",
-  "test:component",
-  "test:auth-conformance",
-  "test:scope",
-  "test:backend",
-  "test:react",
-]) {
-  await run("npm", ["run", suite], { cwd: repositoryRoot });
-}
-await run("npm", ["run", "codegen:component"], { cwd: repositoryRoot });
-await run("npm", ["run", "typecheck"], { cwd: repositoryRoot });
-await run("npm", ["run", "build"], { cwd: repositoryRoot });
-
 const artifactRoot = dirname(materializedConsumer);
-const packResult = await run(
-  "npm",
-  ["pack", "--ignore-scripts", "--json", "--pack-destination", artifactRoot],
-  { cwd: repositoryRoot },
-);
-const packJsonStart = packResult.stdout.indexOf("[");
-if (packJsonStart === -1)
-  throw new Error(`npm pack did not return JSON: ${packResult.stdout}`);
-const [packed] = JSON.parse(packResult.stdout.slice(packJsonStart));
-const tarballPath = await realpath(join(artifactRoot, packed.filename));
-const packedPaths = new Set(packed.files.map((file) => file.path));
-for (const required of [
-  "LICENSE",
-  "package.json",
-  "dist/client/index.js",
-  "dist/client/index.d.ts",
-  "dist/client/server.js",
-  "dist/client/server.d.ts",
-  "dist/react/index.js",
-  "dist/react/index.d.ts",
-  "dist/client/adapters/convex-auth.js",
-  "dist/client/adapters/convex-auth.d.ts",
-  "dist/client/adapters/clerk.js",
-  "dist/client/adapters/clerk.d.ts",
-  "dist/client/adapters/better-auth.js",
-  "dist/client/adapters/better-auth.d.ts",
-  "dist/component/convex.config.js",
-  "dist/component/_generated/component.d.ts",
-  "dist/component/tsconfig.json",
-  "dist/test.js",
-  "dist/test.d.ts",
-]) {
-  if (!packedPaths.has(required))
-    throw new Error(`tarball is missing ${required}`);
+let tarballPath;
+if (suppliedTarball) {
+  tarballPath = await realpath(suppliedTarball);
+} else {
+  for (const suite of [
+    "test:static",
+    "test:model",
+    "test:component",
+    "test:auth-conformance",
+    "test:scope",
+    "test:backend",
+    "test:react",
+  ]) {
+    await run("npm", ["run", suite], { cwd: repositoryRoot });
+  }
+  await run("npm", ["run", "codegen:component"], { cwd: repositoryRoot });
+  await run("npm", ["run", "typecheck"], { cwd: repositoryRoot });
+  await run("npm", ["run", "build"], { cwd: repositoryRoot });
+
+  const packResult = await run(
+    "npm",
+    ["pack", "--ignore-scripts", "--json", "--pack-destination", artifactRoot],
+    { cwd: repositoryRoot },
+  );
+  const packJsonStart = packResult.stdout.indexOf("[");
+  if (packJsonStart === -1)
+    throw new Error(`npm pack did not return JSON: ${packResult.stdout}`);
+  const [packed] = JSON.parse(packResult.stdout.slice(packJsonStart));
+  tarballPath = await realpath(join(artifactRoot, packed.filename));
+  const packedPaths = new Set(packed.files.map((file) => file.path));
+  for (const required of [
+    "LICENSE",
+    "package.json",
+    "dist/client/index.js",
+    "dist/client/index.d.ts",
+    "dist/client/server.js",
+    "dist/client/server.d.ts",
+    "dist/react/index.js",
+    "dist/react/index.d.ts",
+    "dist/client/adapters/convex-auth.js",
+    "dist/client/adapters/convex-auth.d.ts",
+    "dist/client/adapters/clerk.js",
+    "dist/client/adapters/clerk.d.ts",
+    "dist/client/adapters/better-auth.js",
+    "dist/client/adapters/better-auth.d.ts",
+    "dist/component/convex.config.js",
+    "dist/component/_generated/component.d.ts",
+    "dist/component/tsconfig.json",
+    "dist/test.js",
+    "dist/test.d.ts",
+  ]) {
+    if (!packedPaths.has(required))
+      throw new Error(`tarball is missing ${required}`);
+  }
 }
 
 await rm(join(materializedConsumer, "node_modules"), {
@@ -237,7 +245,10 @@ const bindingDeclaration = await readFile(
   join(installedPackage, "dist/react/bindings.d.ts"),
   "utf8",
 );
-for (const required of ["identityToken: string", "client: AfferentWatchClient"]) {
+for (const required of [
+  "identityToken: string",
+  "client: AfferentWatchClient",
+]) {
   if (!providerDeclaration.includes(required)) {
     throw new Error(`packed provider declaration is missing ${required}`);
   }
