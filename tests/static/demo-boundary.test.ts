@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { access } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 
 const read = (path: string) => readFile(path, "utf8");
@@ -34,6 +35,7 @@ describe("hosted demo static boundary", () => {
 
   it("mounts showcase reads only and keeps sandbox authority server-side", async () => {
     const showcase = await read("example/convex/showcase.ts");
+    expect(showcase).toMatch(/export const \w+\s*=\s*query\(\{/);
     expect(showcase).not.toMatch(
       /\bmutation\b|createPost|admin\.|seed|reset|cleanup/,
     );
@@ -46,5 +48,13 @@ describe("hosted demo static boundary", () => {
     expect(await read("example/convex/afferent.ts")).toMatch(
       /createScopedAfferentClient/,
     );
+  });
+
+  it("commits generated hosted references for both component instances", async () => {
+    await access("example/convex/_generated/api.d.ts");
+    await access("example/convex/_generated/server.d.ts");
+    const api = await read("example/convex/_generated/api.d.ts");
+    expect(api).toMatch(/showcase/);
+    expect(api).toMatch(/sandbox/);
   });
 });
