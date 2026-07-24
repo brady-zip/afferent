@@ -5,16 +5,16 @@ milestone_name: milestone
 current_phase: 4
 current_phase_name: Hosted Production Release
 status: ready_to_execute
-stopped_at: Completed 04-03-PLAN.md
-last_updated: "2026-07-24T16:15:09Z"
+stopped_at: Completed 04-04-PLAN.md
+last_updated: "2026-07-24T17:24:47.508Z"
 last_activity: 2026-07-24
-last_activity_desc: Completed generation-fenced sandbox lifecycle and deterministic seed
+last_activity_desc: Completed sandbox quotas, expiry, and leased cleanup
 progress:
   total_phases: 7
   completed_phases: 6
   total_plans: 51
-  completed_plans: 45
-  percent: 88
+  completed_plans: 46
+  percent: 90
 ---
 
 # Project State
@@ -29,35 +29,35 @@ See: .planning/PROJECT.md (updated 2026-07-24)
 ## Current Position
 
 Phase: 4 — Hosted Production Release
-Plan: 3 of 9
-Status: Ready to execute 04-04
-Last activity: 2026-07-24 — Completed sandbox lifecycle and deterministic seed
+Plan: 4 of 9
+Status: Ready to execute 04-05
+Last activity: 2026-07-24 — Completed sandbox quotas, expiry, and leased cleanup
 
-Progress: [█████████░] 88%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 45
+- Total plans completed: 46
 - Average duration: 74 min
-- Total execution time: 3349 min
+- Total execution time: 3417 min
 
 **By Phase:**
 
-| Phase      | Plans | Total   | Avg/Plan |
-| ---------- | ----- | ------- | -------- |
-| Phase 01   | 8     | 299 min | 37 min   |
-| Phase 02   | 17    | 854 min | 50 min   |
-| Phase 02.1 | 1     | 68 min  | 68 min   |
-| Phase 02.3 | 2     | 33 min  | 17 min   |
-| Phase 03   | 12    | 1401 min | 117 min |
-| Phase 04   | 3     | 712 min | 237 min  |
+| Phase      | Plans | Total    | Avg/Plan |
+| ---------- | ----- | -------- | -------- |
+| Phase 01   | 8     | 299 min  | 37 min   |
+| Phase 02   | 17    | 854 min  | 50 min   |
+| Phase 02.1 | 1     | 68 min   | 68 min   |
+| Phase 02.3 | 2     | 33 min   | 17 min   |
+| Phase 03   | 12    | 1401 min | 117 min  |
+| Phase 04   | 4     | 780 min  | 195 min  |
 
 **Recent Trend:**
 
-- Last 5 plans: 8 min, 22 min, 12 min, 3 min, 697 min
-- Trend: Phase 4 package, host boundary, and lifecycle foundations are complete
+- Last 5 plans: 22 min, 12 min, 3 min, 697 min, 68 min
+- Trend: Phase 4 package, host boundary, lifecycle, and maintenance foundations are complete
 
 _Updated after each plan completion_
 
@@ -102,14 +102,15 @@ _Updated after each plan completion_
 | Phase 03 P05   | 17min    | 3 tasks | 15 files |
 | Phase 03 P06   | 32min    | 3 tasks | 42 files |
 | Phase 03 P07   | 9min     | 3 tasks | 38 files |
-| Phase 03 P08   | 20h 38m | 3 tasks | 35 files |
+| Phase 03 P08   | 20h 38m  | 3 tasks | 35 files |
 | Phase 03 P09   | 8min     | 3 tasks | 32 files |
 | Phase 03 P10   | 10min    | 3 tasks | 35 files |
 | Phase 03 P11   | 8min     | 3 tasks | 36 files |
-| Phase 03 P12 | 22min | 3 tasks | 30 files |
-| Phase 04 P01 | 12 min | 3 tasks | 6 files |
-| Phase 04 P02 | 3 min | 3 tasks | 12 files |
-| Phase 04 P03 | 697 min | 3 tasks | 10 files |
+| Phase 03 P12   | 22min    | 3 tasks | 30 files |
+| Phase 04 P01   | 12 min   | 3 tasks | 6 files  |
+| Phase 04 P02   | 3 min    | 3 tasks | 12 files |
+| Phase 04 P03   | 697 min  | 3 tasks | 10 files |
+| Phase 04 P04   | 68 min   | 3 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -230,6 +231,9 @@ Recent decisions affecting current work:
 - [Phase 04]: Keep offline package verification deterministic and run npm identity/runtime checks only in explicit online-preflight mode.
 - [Phase 04]: Activate a fully seeded opaque physical generation before exposing a private sandbox; reset and expiry never expose partial state.
 - [Phase 04]: Keep lifecycle authority and identifiers server-only while the browser receives a closed signed-out/preparing/ready/resetting/expired/error DTO.
+- [Phase 04]: Count every active, pending, failed, and retired-not-cleaned physical generation toward one logical sandbox footprint.
+- [Phase 04]: Reset documented exact rate-limiter name/key rows before deleting preserved actor IDs.
+- [Phase 04]: Keep write and reset abuse windows on the logical owner so cleanup cannot erase them.
 
 ### Pending Todos
 
@@ -255,6 +259,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-24T16:15:09Z
-Stopped at: Completed 04-03-PLAN.md
+Last session: 2026-07-24T17:24:10Z
+Stopped at: Completed 04-04-PLAN.md
 Resume file: None

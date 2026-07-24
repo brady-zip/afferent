@@ -317,12 +317,12 @@ Plans:
 4. Browser tests run the public feedback, roadmap, changelog, notification, and admin workflows against real Convex using the artifacts that consumers install.
 5. Documentation covers installation through upgrades for all supported auth and UI paths, and a validated npm release publishes exports, declarations, provenance, and synchronized package, registry, documentation, and demo versions.
 
-**Plans:** 3/9 plans executed
+**Plans:** 4/9 plans executed
 
 - [x] 04-01-PLAN.md
 - [x] 04-02-PLAN.md
 - [x] 04-03-PLAN.md
-- [ ] 04-04-PLAN.md
+- [x] 04-04-PLAN.md
 - [ ] 04-05-PLAN.md
 - [ ] 04-06-PLAN.md
 - [ ] 04-07-PLAN.md
@@ -343,7 +343,7 @@ Plans:
 
 **Wave 4** _(blocked on Wave 3 completion)_
 
-- [ ] `04-04-PLAN.md` — Enforce bounded quotas and exhaustively clean every scoped table and rate-limiter child path through leased resumable maintenance.
+- [x] `04-04-PLAN.md` — Enforce bounded quotas and exhaustively clean every scoped table and rate-limiter child path through leased resumable maintenance.
 
 **Wave 5** _(blocked on Wave 4 completion)_
 
@@ -372,15 +372,15 @@ Plans:
 **Execution Order:**
 Phases execute sequentially: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 3 -> 4
 
-| Phase                                         | Plans Complete | Status   | Completed  |
-| --------------------------------------------- | -------------- | -------- | ---------- |
-| 1. Secure Installable Feedback Board          | 8/8            | Complete | 2026-07-16 |
-| 2. Complete Feedback-to-Changelog Workflow    | 17/17          | Complete | 2026-07-21 |
-| 2.1 Server-Derived Viewer Capability Contract | 1/1            | Complete | 2026-07-21 |
-| 2.2 Notification Navigation Target Contract   | 2/2            | Complete | 2026-07-21 |
-| 2.3 Admin Read and Projection Completion      | 2/2            | Complete | 2026-07-21 |
-| 3. Source-Owned Product Interface             | 12/12          | Complete | 2026-07-22 |
-| 4. Hosted Production Release                  | 3/9            | In Progress | 2026-07-24 |
+| Phase                                         | Plans Complete | Status      | Completed  |
+| --------------------------------------------- | -------------- | ----------- | ---------- |
+| 1. Secure Installable Feedback Board          | 8/8            | Complete    | 2026-07-16 |
+| 2. Complete Feedback-to-Changelog Workflow    | 17/17          | Complete    | 2026-07-21 |
+| 2.1 Server-Derived Viewer Capability Contract | 1/1            | Complete    | 2026-07-21 |
+| 2.2 Notification Navigation Target Contract   | 2/2            | Complete    | 2026-07-21 |
+| 2.3 Admin Read and Projection Completion      | 2/2            | Complete    | 2026-07-21 |
+| 3. Source-Owned Product Interface             | 12/12          | Complete    | 2026-07-22 |
+| 4. Hosted Production Release                  | 4/9            | In Progress |            |
 
 ---
 
