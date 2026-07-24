@@ -317,10 +317,10 @@ Plans:
 4. Browser tests run the public feedback, roadmap, changelog, notification, and admin workflows against real Convex using the artifacts that consumers install.
 5. Documentation covers installation through upgrades for all supported auth and UI paths, and a validated npm release publishes exports, declarations, provenance, and synchronized package, registry, documentation, and demo versions.
 
-**Plans:** 1/9 plans executed
+**Plans:** 2/9 plans executed
 
 - [x] 04-01-PLAN.md
-- [ ] 04-02-PLAN.md
+- [x] 04-02-PLAN.md
 - [ ] 04-03-PLAN.md
 - [ ] 04-04-PLAN.md
 - [ ] 04-05-PLAN.md
@@ -335,7 +335,7 @@ Plans:
 
 **Wave 2** _(blocked on Wave 1 completion)_
 
-- [ ] `04-02-PLAN.md` — Mount immutable showcase and private sandbox component instances behind Convex Auth and server-derived host authority.
+- [x] `04-02-PLAN.md` — Mount immutable showcase and private sandbox component instances behind Convex Auth and server-derived host authority.
 
 **Wave 3** _(blocked on Wave 2 completion)_
 
@@ -380,7 +380,7 @@ Phases execute sequentially: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 3 -> 4
 | 2.2 Notification Navigation Target Contract   | 2/2            | Complete | 2026-07-21 |
 | 2.3 Admin Read and Projection Completion      | 2/2            | Complete | 2026-07-21 |
 | 3. Source-Owned Product Interface             | 12/12          | Complete | 2026-07-22 |
-| 4. Hosted Production Release                  | 1/9            | In Progress | 2026-07-24 |
+| 4. Hosted Production Release                  | 2/9            | In Progress | 2026-07-24 |
 
 ---
 
