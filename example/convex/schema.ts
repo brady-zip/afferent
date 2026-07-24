@@ -17,6 +17,13 @@ export default defineSchema({
       v.literal("expired"),
       v.literal("error"),
     ),
+    preparationReason: v.optional(
+      v.union(
+        v.literal("first_access"),
+        v.literal("reset"),
+        v.literal("expired"),
+      ),
+    ),
     leaseOwner: v.optional(v.string()),
     leaseUntil: v.optional(v.number()),
     leaseVersion: v.number(),

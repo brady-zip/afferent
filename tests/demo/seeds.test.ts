@@ -139,10 +139,12 @@ describe("representative demo seed", () => {
 
   it("keeps showcase seeding internal-only", async () => {
     const source = await readFile(
-      new URL("../../example/convex/showcase.ts", import.meta.url),
+      new URL("../../example/convex/seeds.ts", import.meta.url),
       "utf8",
     );
-    expect(source).not.toMatch(/seedShowcase\s*=\s*(?:query|mutation|action)\s*\(/u);
+    expect(source).not.toMatch(
+      /seedShowcase\s*=\s*(?:query|mutation|action)\s*\(/u,
+    );
     expect(source).toMatch(/seedShowcase\s*=\s*internalMutation\s*\(/u);
   });
 });

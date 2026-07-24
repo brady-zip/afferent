@@ -1,11 +1,28 @@
 import { v } from "convex/values";
+import { createScopedAfferentClient } from "afferent/server.js";
+import type { ComponentApi } from "afferent/_generated/component.js";
 
+import { components } from "./_generated/api.js";
+import {
+  internalMutation,
+  type MutationCtx,
+  type QueryCtx,
+} from "./_generated/server.js";
 import {
   deriveLogicalSandboxKey,
   derivePhysicalSandboxScope,
 } from "./sandboxScope.js";
+import {
+  REPRESENTATIVE_SEED_STEP_COUNT,
+  SEED_VERSION,
+  createComponentSeedOperations,
+  createConvexSeedProgressStore,
+  runRepresentativeSeed,
+} from "./seeds.js";
 
 export const SANDBOX_INACTIVITY_MS = 7 * 24 * 60 * 60 * 1_000;
+const PREPARATION_LEASE_MS = 5 * 60 * 1_000;
+const sandboxComponent = components.sandbox as ComponentApi;
 
 export const sandboxLifecycleStateValidator = v.union(
   v.literal("signed_out"),
@@ -24,12 +41,7 @@ export const sandboxLifecycleResultValidator = v.object({
 });
 
 export type SandboxLifecycleState =
-  | "signed_out"
-  | "preparing"
-  | "ready"
-  | "resetting"
-  | "expired"
-  | "error";
+  "signed_out" | "preparing" | "ready" | "resetting" | "expired" | "error";
 
 export type SandboxLifecycleResult = Readonly<{
   state: SandboxLifecycleState;
@@ -86,6 +98,8 @@ export type SandboxLifecycle = Readonly<{
     leaseVersion: number;
   }>;
 }>;
+
+type SandboxHostReadContext = Pick<QueryCtx, "db">;
 
 function readyResult(owner: OwnerRecord): SandboxLifecycleResult {
   return {
@@ -214,6 +228,9 @@ export function createSandboxLifecycle(
     const current = inFlight.get(owner.logicalOwnerKey);
     if (current !== undefined) return current;
     if (owner.activeGeneration !== null) {
+      if (now() - owner.lastActivityAt > SANDBOX_INACTIVITY_MS) {
+        return startPreparation(owner, "expired");
+      }
       owner.lastActivityAt = now();
       return readyResult(owner);
     }
@@ -278,3 +295,376 @@ export function createSandboxLifecycle(
 
   return { ensure, reset, resolvePhysicalScope, inspectForTest };
 }
+
+function safeLifecycleResult(
+  state: SandboxLifecycleState,
+  owner?: { lastActivityAt: number },
+): SandboxLifecycleResult {
+  if (state === "ready" && owner !== undefined) {
+    return {
+      state,
+      message: "Your private sandbox is ready.",
+      lastActivityAt: owner.lastActivityAt,
+      expiresAt: owner.lastActivityAt + SANDBOX_INACTIVITY_MS,
+    };
+  }
+  const message: Record<Exclude<SandboxLifecycleState, "ready">, string> = {
+    signed_out: "Sign in to open your private sandbox.",
+    preparing: "We're restoring the deterministic demo content.",
+    resetting: "Resetting your private sandbox.",
+    expired:
+      "The previous sandbox expired after 7 days without activity. We're restoring the demo baseline now.",
+    error:
+      "We couldn't open your sandbox. Your previous sandbox has not been changed.",
+  };
+  return { state, message: message[state as Exclude<typeof state, "ready">] };
+}
+
+async function ownerByKey(ctx: SandboxHostReadContext, ownerKey: string) {
+  return ctx.db
+    .query("sandboxOwners")
+    .withIndex("by_owner_key", (query) => query.eq("ownerKey", ownerKey))
+    .unique();
+}
+
+async function generationByNumber(
+  ctx: SandboxHostReadContext,
+  ownerKey: string,
+  generation: number,
+) {
+  return ctx.db
+    .query("sandboxGenerations")
+    .withIndex("by_owner_generation", (query) =>
+      query.eq("ownerKey", ownerKey).eq("generation", generation),
+    )
+    .unique();
+}
+
+export async function readSandboxLifecycle(
+  ctx: SandboxHostReadContext,
+  verifiedUserId: string,
+  currentTime = Date.now(),
+): Promise<SandboxLifecycleResult> {
+  const owner = await ownerByKey(
+    ctx,
+    await deriveLogicalSandboxKey(verifiedUserId),
+  );
+  if (owner === null) return safeLifecycleResult("preparing");
+  if (
+    owner.activeGeneration !== undefined &&
+    owner.pendingGeneration === undefined &&
+    currentTime - owner.lastActivityAt > SANDBOX_INACTIVITY_MS
+  ) {
+    return safeLifecycleResult("expired");
+  }
+  if (owner.pendingGeneration !== undefined) {
+    return safeLifecycleResult(
+      owner.preparationReason === "reset"
+        ? "resetting"
+        : owner.preparationReason === "expired"
+          ? "expired"
+          : "preparing",
+    );
+  }
+  if (owner.lifecycleState === "error") {
+    return safeLifecycleResult("error");
+  }
+  if (owner.activeGeneration !== undefined) {
+    return safeLifecycleResult("ready", owner);
+  }
+  return safeLifecycleResult("preparing");
+}
+
+export async function resolveActivePhysicalScope(
+  ctx: SandboxHostReadContext,
+  verifiedUserId: string,
+  currentTime = Date.now(),
+) {
+  const ownerKey = await deriveLogicalSandboxKey(verifiedUserId);
+  const owner = await ownerByKey(ctx, ownerKey);
+  if (
+    owner === null ||
+    owner.pendingGeneration !== undefined ||
+    owner.activeGeneration === undefined
+  ) {
+    throw new Error("SANDBOX_NOT_READY");
+  }
+  if (currentTime - owner.lastActivityAt > SANDBOX_INACTIVITY_MS) {
+    throw new Error("SANDBOX_EXPIRED");
+  }
+  const active = await generationByNumber(
+    ctx,
+    ownerKey,
+    owner.activeGeneration,
+  );
+  if (active?.state !== "active") throw new Error("SANDBOX_NOT_READY");
+  return active.physicalScopeId;
+}
+
+const preparationReasonValidator = v.union(
+  v.literal("first_access"),
+  v.literal("reset"),
+  v.literal("expired"),
+);
+
+export const beginPreparation = internalMutation({
+  args: {
+    ownerKey: v.string(),
+    requestedReason: v.union(v.literal("ensure"), v.literal("reset")),
+    leaseOwner: v.string(),
+    currentTime: v.number(),
+  },
+  handler: async (ctx, args) => {
+    let owner = await ownerByKey(ctx, args.ownerKey);
+    if (
+      owner?.pendingGeneration !== undefined &&
+      owner.leaseUntil !== undefined &&
+      owner.leaseUntil > args.currentTime
+    ) {
+      const pending = await generationByNumber(
+        ctx,
+        args.ownerKey,
+        owner.pendingGeneration,
+      );
+      if (pending?.state === "pending") {
+        return {
+          kind: "pending" as const,
+          generation: pending.generation,
+          leaseVersion: pending.leaseVersion,
+        };
+      }
+    }
+
+    if (owner?.pendingGeneration !== undefined) {
+      const stale = await generationByNumber(
+        ctx,
+        args.ownerKey,
+        owner.pendingGeneration,
+      );
+      if (stale?.state === "pending") {
+        await ctx.db.patch(stale._id, {
+          state: "failed",
+          failedAt: args.currentTime,
+        });
+      }
+      await ctx.db.patch(owner._id, {
+        pendingGeneration: undefined,
+        lifecycleState:
+          owner.activeGeneration === undefined ? "error" : "ready",
+        preparationReason: undefined,
+        leaseOwner: undefined,
+        leaseUntil: undefined,
+      });
+      owner = await ownerByKey(ctx, args.ownerKey);
+    }
+
+    const isExpired =
+      owner?.activeGeneration !== undefined &&
+      args.currentTime - owner.lastActivityAt > SANDBOX_INACTIVITY_MS;
+    if (
+      args.requestedReason === "ensure" &&
+      owner?.activeGeneration !== undefined &&
+      !isExpired
+    ) {
+      await ctx.db.patch(owner._id, {
+        lastActivityAt: args.currentTime,
+        lifecycleState: "ready",
+      });
+      return {
+        kind: "ready" as const,
+        result: safeLifecycleResult("ready", {
+          lastActivityAt: args.currentTime,
+        }),
+      };
+    }
+
+    const reason =
+      args.requestedReason === "reset"
+        ? ("reset" as const)
+        : isExpired
+          ? ("expired" as const)
+          : ("first_access" as const);
+    const generation = owner?.nextGeneration ?? 1;
+    const leaseVersion = (owner?.leaseVersion ?? 0) + 1;
+    const physicalScopeId = await derivePhysicalSandboxScope(
+      args.ownerKey,
+      generation,
+    );
+    await ctx.db.insert("sandboxGenerations", {
+      ownerKey: args.ownerKey,
+      generation,
+      physicalScopeId,
+      state: "pending",
+      createdAt: args.currentTime,
+      seedVersion: 0,
+      seedStep: 0,
+      leaseVersion,
+    });
+    const ownerPatch = {
+      pendingGeneration: generation,
+      nextGeneration: generation + 1,
+      lastActivityAt: owner?.lastActivityAt ?? args.currentTime,
+      lifecycleState:
+        reason === "reset"
+          ? ("resetting" as const)
+          : reason === "expired"
+            ? ("expired" as const)
+            : ("preparing" as const),
+      preparationReason: reason,
+      leaseOwner: args.leaseOwner,
+      leaseUntil: args.currentTime + PREPARATION_LEASE_MS,
+      leaseVersion,
+    };
+    if (owner === null) {
+      await ctx.db.insert("sandboxOwners", {
+        ownerKey: args.ownerKey,
+        ...ownerPatch,
+      });
+    } else {
+      await ctx.db.patch(owner._id, ownerPatch);
+    }
+    return { kind: "pending" as const, generation, leaseVersion };
+  },
+});
+
+export const seedPendingGeneration = internalMutation({
+  args: {
+    ownerKey: v.string(),
+    generation: v.number(),
+    leaseVersion: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const owner = await ownerByKey(ctx, args.ownerKey);
+    const pending = await generationByNumber(
+      ctx,
+      args.ownerKey,
+      args.generation,
+    );
+    if (
+      owner?.pendingGeneration !== args.generation ||
+      owner.leaseVersion !== args.leaseVersion ||
+      pending?.state !== "pending" ||
+      pending.leaseVersion !== args.leaseVersion
+    ) {
+      throw new Error("SANDBOX_PREPARATION_LEASE_LOST");
+    }
+    await runRepresentativeSeed({
+      physicalScopeId: pending.physicalScopeId,
+      operations: createComponentSeedOperations({
+        context: ctx,
+        createClient: (actor) =>
+          createScopedAfferentClient(sandboxComponent, {
+            resolveScope: async () => pending.physicalScopeId,
+            resolveActor: async () => actor,
+            resolveViewerActor: async () => actor,
+            authorizeAdmin: async () => true,
+            isAuthenticated: async () => true,
+          }),
+      }),
+      progress: createConvexSeedProgressStore(ctx),
+    });
+    await ctx.db.patch(pending._id, {
+      seedVersion: SEED_VERSION,
+      seedStep: REPRESENTATIVE_SEED_STEP_COUNT,
+    });
+  },
+});
+
+export const activatePendingGeneration = internalMutation({
+  args: {
+    ownerKey: v.string(),
+    generation: v.number(),
+    leaseVersion: v.number(),
+    currentTime: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const owner = await ownerByKey(ctx, args.ownerKey);
+    const pending = await generationByNumber(
+      ctx,
+      args.ownerKey,
+      args.generation,
+    );
+    if (
+      owner === null ||
+      owner.pendingGeneration !== args.generation ||
+      owner.leaseVersion !== args.leaseVersion ||
+      pending?.state !== "pending" ||
+      pending.seedVersion !== SEED_VERSION ||
+      pending.seedStep !== REPRESENTATIVE_SEED_STEP_COUNT
+    ) {
+      if (
+        owner?.activeGeneration === args.generation &&
+        pending?.state === "active"
+      ) {
+        return safeLifecycleResult("ready", owner);
+      }
+      throw new Error("SANDBOX_PREPARATION_LEASE_LOST");
+    }
+    if (owner.activeGeneration !== undefined) {
+      const previous = await generationByNumber(
+        ctx,
+        args.ownerKey,
+        owner.activeGeneration,
+      );
+      if (previous?.state === "active") {
+        await ctx.db.patch(previous._id, {
+          state: "retired",
+          retiredAt: args.currentTime,
+        });
+      }
+    }
+    await ctx.db.patch(pending._id, {
+      state: "active",
+      activatedAt: args.currentTime,
+    });
+    await ctx.db.patch(owner._id, {
+      activeGeneration: args.generation,
+      pendingGeneration: undefined,
+      lastActivityAt: args.currentTime,
+      lifecycleState: "ready",
+      preparationReason: undefined,
+      leaseOwner: undefined,
+      leaseUntil: undefined,
+      leaseVersion: owner.leaseVersion + 1,
+    });
+    return safeLifecycleResult("ready", { lastActivityAt: args.currentTime });
+  },
+});
+
+export const failPendingGeneration = internalMutation({
+  args: {
+    ownerKey: v.string(),
+    generation: v.number(),
+    leaseVersion: v.number(),
+    currentTime: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const owner = await ownerByKey(ctx, args.ownerKey);
+    const pending = await generationByNumber(
+      ctx,
+      args.ownerKey,
+      args.generation,
+    );
+    if (pending?.state === "pending") {
+      await ctx.db.patch(pending._id, {
+        state: "failed",
+        failedAt: args.currentTime,
+      });
+    }
+    if (
+      owner !== null &&
+      owner.pendingGeneration === args.generation &&
+      owner.leaseVersion === args.leaseVersion
+    ) {
+      await ctx.db.patch(owner._id, {
+        pendingGeneration: undefined,
+        lifecycleState: "error",
+        preparationReason: undefined,
+        leaseOwner: undefined,
+        leaseUntil: undefined,
+        leaseVersion: owner.leaseVersion + 1,
+      });
+    }
+    return safeLifecycleResult("error");
+  },
+});

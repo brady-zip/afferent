@@ -1,6 +1,9 @@
 import { readFile } from "node:fs/promises";
+import { convexTest } from "convex-test";
 import { describe, expect, it, vi } from "vitest";
 
+import { api } from "../../example/convex/_generated/api.js";
+import schema from "../../example/convex/schema.js";
 import {
   createSandboxLifecycle,
   type SeedGeneration,
@@ -9,8 +12,17 @@ import {
   deriveLogicalSandboxKey,
   derivePhysicalSandboxScope,
 } from "../../example/convex/sandboxScope.js";
+import { register } from "../../src/test.js";
 
 const USER = "verified-convex-auth-user";
+const hostedModules = import.meta.glob("../../example/convex/**/*.ts");
+
+function hostedBackend() {
+  const backend = convexTest(schema, hostedModules);
+  register(backend, "showcase");
+  register(backend, "sandbox");
+  return backend;
+}
 
 function deferred() {
   let resolve!: () => void;
@@ -200,5 +212,120 @@ describe("generation-fenced sandbox lifecycle", () => {
     expect(source).not.toMatch(
       /args:\s*\{[^}]*\b(?:ownerKey|userId|isAdmin|scopeId|generation)\b/su,
     );
+  });
+});
+
+describe("persisted hosted sandbox lifecycle", () => {
+  it("fails closed when anonymous and activates a fully seeded private sandbox", async () => {
+    const backend = hostedBackend();
+    await expect(backend.action(api.sandbox.ensureSandbox, {})).rejects.toThrow(
+      "AUTHENTICATION_REQUIRED",
+    );
+
+    const user = backend.withIdentity({
+      issuer: "https://afferent.test",
+      subject: "persisted-user",
+    });
+    await expect(
+      user.action(api.sandbox.ensureSandbox, {}),
+    ).resolves.toMatchObject({
+      state: "ready",
+    });
+    await expect(
+      user.query(api.sandbox.getSandboxLifecycle, {}),
+    ).resolves.toMatchObject({
+      state: "ready",
+    });
+
+    const feedback = await user.query(api.sandbox.listFeedback, {
+      order: "top",
+      paginationOpts: { numItems: 20, cursor: null },
+    });
+    expect(feedback.page.length).toBeGreaterThan(0);
+    expect(JSON.stringify(feedback)).not.toContain("physicalScopeId");
+  });
+
+  it("restores the deterministic baseline in a new generation without exposing lifecycle identifiers", async () => {
+    const backend = hostedBackend();
+    const user = backend.withIdentity({
+      issuer: "https://afferent.test",
+      subject: "reset-user",
+    });
+    await user.action(api.sandbox.ensureSandbox, {});
+    const before = await user.query(api.sandbox.listFeedback, {
+      order: "top",
+      paginationOpts: { numItems: 20, cursor: null },
+    });
+
+    const reset = await user.action(api.sandbox.resetSandbox, {});
+    expect(reset).toMatchObject({ state: "ready" });
+    expect(JSON.stringify(reset)).not.toMatch(
+      /owner|logical|scopeId|generation|lease|provider/iu,
+    );
+    const after = await user.query(api.sandbox.listFeedback, {
+      order: "top",
+      paginationOpts: { numItems: 20, cursor: null },
+    });
+    expect(after.page.map((post) => post.title)).toEqual(
+      before.page.map((post) => post.title),
+    );
+    expect(after.page.map((post) => post.id)).not.toEqual(
+      before.page.map((post) => post.id),
+    );
+  });
+
+  it("replaces an expired persisted generation and keeps another visitor unchanged", async () => {
+    const backend = hostedBackend();
+    const first = backend.withIdentity({
+      issuer: "https://afferent.test",
+      subject: "expired-user",
+    });
+    const second = backend.withIdentity({
+      issuer: "https://afferent.test",
+      subject: "other-user",
+    });
+    await first.action(api.sandbox.ensureSandbox, {});
+    await second.action(api.sandbox.ensureSandbox, {});
+    const firstBefore = await first.query(api.sandbox.listFeedback, {
+      order: "top",
+      paginationOpts: { numItems: 20, cursor: null },
+    });
+    const secondBefore = await second.query(api.sandbox.listFeedback, {
+      order: "top",
+      paginationOpts: { numItems: 20, cursor: null },
+    });
+
+    await backend.run(async (ctx) => {
+      const ownerKey = await deriveLogicalSandboxKey("expired-user");
+      const owner = await ctx.db
+        .query("sandboxOwners")
+        .withIndex("by_owner_key", (query) => query.eq("ownerKey", ownerKey))
+        .unique();
+      if (owner === null) throw new Error("missing owner fixture");
+      await ctx.db.patch(owner._id, { lastActivityAt: 0 });
+    });
+    await expect(
+      first.query(api.sandbox.getSandboxLifecycle, {}),
+    ).resolves.toMatchObject({
+      state: "expired",
+    });
+    await expect(
+      first.action(api.sandbox.ensureSandbox, {}),
+    ).resolves.toMatchObject({
+      state: "ready",
+    });
+
+    const firstAfter = await first.query(api.sandbox.listFeedback, {
+      order: "top",
+      paginationOpts: { numItems: 20, cursor: null },
+    });
+    const secondAfter = await second.query(api.sandbox.listFeedback, {
+      order: "top",
+      paginationOpts: { numItems: 20, cursor: null },
+    });
+    expect(firstAfter.page.map((post) => post.id)).not.toEqual(
+      firstBefore.page.map((post) => post.id),
+    );
+    expect(secondAfter).toEqual(secondBefore);
   });
 });

@@ -11,6 +11,7 @@
 import type * as afferent from "../afferent.js";
 import type * as auth from "../auth.js";
 import type * as http from "../http.js";
+import type * as sandbox from "../sandbox.js";
 import type * as sandboxAuthority from "../sandboxAuthority.js";
 import type * as sandboxLifecycle from "../sandboxLifecycle.js";
 import type * as sandboxScope from "../sandboxScope.js";
@@ -27,6 +28,7 @@ declare const fullApi: ApiFromModules<{
   afferent: typeof afferent;
   auth: typeof auth;
   http: typeof http;
+  sandbox: typeof sandbox;
   sandboxAuthority: typeof sandboxAuthority;
   sandboxLifecycle: typeof sandboxLifecycle;
   sandboxScope: typeof sandboxScope;

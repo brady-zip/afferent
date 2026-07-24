@@ -1,4 +1,3 @@
-import type { ComponentApi } from "afferent/_generated/component.js";
 import { createAfferentClient } from "afferent";
 import type {
   AfferentActionResult,
@@ -8,18 +7,16 @@ import type {
   PostId,
   VerifiedActor,
 } from "afferent";
+import type { ComponentApi } from "afferent/_generated/component.js";
 
-import type { MutationCtx } from "./_generated/server.js";
+import { components } from "./_generated/api.js";
+import { internalMutation, type MutationCtx } from "./_generated/server.js";
 
 export const SEED_VERSION = 1;
+export const REPRESENTATIVE_SEED_STEP_COUNT = 21;
 
 type StatusKey =
-  | "open"
-  | "under_review"
-  | "planned"
-  | "in_progress"
-  | "complete"
-  | "closed";
+  "open" | "under_review" | "planned" | "in_progress" | "complete" | "closed";
 
 type SeedEntity = Readonly<{
   semanticKey: string;
@@ -234,8 +231,7 @@ export async function runRepresentativeSeed(input: {
     ...REPRESENTATIVE_SEED.posts
       .filter(({ status }) => status !== "open")
       .map(
-        (post) => () =>
-          input.operations.setPostStatus(post.key, post.status),
+        (post) => () => input.operations.setPostStatus(post.key, post.status),
       ),
     ...REPRESENTATIVE_SEED.comments.map(
       (comment) => () => input.operations.addComment(comment),
@@ -244,9 +240,7 @@ export async function runRepresentativeSeed(input: {
       (vote) => () => input.operations.setVote(vote),
     ),
     () =>
-      input.operations.createPublishedChangelog(
-        REPRESENTATIVE_SEED.changelog,
-      ),
+      input.operations.createPublishedChangelog(REPRESENTATIVE_SEED.changelog),
   ];
 
   let completedStep =
@@ -258,11 +252,7 @@ export async function runRepresentativeSeed(input: {
     if (created !== undefined) {
       await input.progress.writeEntities(input.physicalScopeId, created);
     }
-    await input.progress.write(
-      input.physicalScopeId,
-      SEED_VERSION,
-      stepNumber,
-    );
+    await input.progress.write(input.physicalScopeId, SEED_VERSION, stepNumber);
     completedStep = stepNumber;
   }
   return { version: SEED_VERSION, complete: true as const };
@@ -339,7 +329,7 @@ export function createConvexSeedProgressStore(
   };
 }
 
-type SeedClient = ReturnType<typeof createAfferentClient>;
+export type SeedClient = ReturnType<typeof createAfferentClient>;
 
 function requireSeedResult<T>(
   result: AfferentActionResult<T>,
@@ -357,10 +347,8 @@ function requireSeedResult<T>(
 }
 
 export function createComponentSeedOperations(input: {
-  component: ComponentApi;
-  context: Parameters<
-    SeedClient["admin"]["configureInstallation"]
-  >[0];
+  context: Parameters<SeedClient["admin"]["configureInstallation"]>[0];
+  createClient: (actor: VerifiedActor) => SeedClient;
 }): SeedOperations {
   const actors = new Map<string, VerifiedActor>(
     REPRESENTATIVE_SEED.actors.map((actor) => [
@@ -380,12 +368,7 @@ export function createComponentSeedOperations(input: {
     if (actor === undefined) throw new Error("SANDBOX_SEED_ACTOR_MISSING");
     let existing = clients.get(actorKey);
     if (existing === undefined) {
-      existing = createAfferentClient(input.component, {
-        resolveActor: async () => actor,
-        resolveViewerActor: async () => actor,
-        authorizeAdmin: async () => true,
-        isAuthenticated: async () => true,
-      });
+      existing = input.createClient(actor);
       clients.set(actorKey, existing);
     }
     return existing;
@@ -408,9 +391,7 @@ export function createComponentSeedOperations(input: {
         boards: manifestBoards.map(({ slug, name }) => ({ slug, name })),
       });
       return manifestBoards.map((board) => {
-        const created = result.boards.find(
-          ({ slug }) => slug === board.slug,
-        );
+        const created = result.boards.find(({ slug }) => slug === board.slug);
         if (created === undefined) {
           throw new Error("SANDBOX_SEED_BOARD_MISSING");
         }
@@ -506,3 +487,25 @@ export function createComponentSeedOperations(input: {
     },
   };
 }
+
+const SHOWCASE_SCOPE = "afferent:single-product:v1";
+const showcaseComponent = components.showcase as ComponentApi;
+
+export const seedShowcase = internalMutation({
+  args: {},
+  handler: async (ctx) =>
+    runRepresentativeSeed({
+      physicalScopeId: SHOWCASE_SCOPE,
+      operations: createComponentSeedOperations({
+        context: ctx,
+        createClient: (actor) =>
+          createAfferentClient(showcaseComponent, {
+            resolveActor: async () => actor,
+            resolveViewerActor: async () => actor,
+            authorizeAdmin: async () => true,
+            isAuthenticated: async () => true,
+          }),
+      }),
+      progress: createConvexSeedProgressStore(ctx),
+    }),
+});

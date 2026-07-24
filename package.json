@@ -79,6 +79,7 @@
     "test:backend:real": "node scripts/test-pagination-backend.mjs",
     "test:component": "vitest run tests/component",
     "test:demo:boundary": "npm run codegen:demo && npm run typecheck:demo && vitest run tests/demo/host-boundary.test.ts tests/static/demo-boundary.test.ts",
+    "test:demo:lifecycle": "npm run codegen:demo && npm run typecheck:demo && vitest run tests/demo/seeds.test.ts tests/demo/sandbox-lifecycle.test.ts tests/demo/host-boundary.test.ts tests/static/demo-boundary.test.ts",
     "test:fixtures": "tsc --project fixtures/auth-convex-auth/tsconfig.json && tsc --project fixtures/auth-clerk/tsconfig.json && tsc --project fixtures/auth-better-auth/tsconfig.json",
     "test:model": "vitest run tests/model",
     "test:package": "node --test tests/integration/packed-artifact.test.mjs",
