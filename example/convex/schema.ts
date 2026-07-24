@@ -41,4 +41,20 @@ export default defineSchema({
   })
     .index("by_owner_generation", ["ownerKey", "generation"])
     .index("by_owner_state", ["ownerKey", "state"]),
+  demoSeedProgress: defineTable({
+    physicalScopeId: v.string(),
+    seedVersion: v.number(),
+    completedStep: v.number(),
+  }).index("by_physical_scope", ["physicalScopeId"]),
+  demoSeedEntities: defineTable({
+    physicalScopeId: v.string(),
+    semanticKey: v.string(),
+    kind: v.union(
+      v.literal("board"),
+      v.literal("post"),
+      v.literal("comment"),
+      v.literal("changelog"),
+    ),
+    entityId: v.string(),
+  }).index("by_scope_key", ["physicalScopeId", "semanticKey"]),
 });

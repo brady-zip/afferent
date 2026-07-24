@@ -12,6 +12,9 @@ import type * as afferent from "../afferent.js";
 import type * as auth from "../auth.js";
 import type * as http from "../http.js";
 import type * as sandboxAuthority from "../sandboxAuthority.js";
+import type * as sandboxLifecycle from "../sandboxLifecycle.js";
+import type * as sandboxScope from "../sandboxScope.js";
+import type * as seeds from "../seeds.js";
 import type * as showcase from "../showcase.js";
 
 import type {
@@ -25,6 +28,9 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   http: typeof http;
   sandboxAuthority: typeof sandboxAuthority;
+  sandboxLifecycle: typeof sandboxLifecycle;
+  sandboxScope: typeof sandboxScope;
+  seeds: typeof seeds;
   showcase: typeof showcase;
 }>;
 

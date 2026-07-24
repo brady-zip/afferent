@@ -15,9 +15,29 @@ import { paginationOptsValidator } from "convex/server";
 
 import { createShowcaseClient } from "./afferent.js";
 import { components } from "./_generated/api.js";
-import { query } from "./_generated/server.js";
+import { internalMutation, query } from "./_generated/server.js";
+import {
+  createComponentSeedOperations,
+  createConvexSeedProgressStore,
+  runRepresentativeSeed,
+} from "./seeds.js";
 
-const client = createShowcaseClient(components.showcase as ComponentApi);
+const showcaseComponent = components.showcase as ComponentApi;
+const client = createShowcaseClient(showcaseComponent);
+const SHOWCASE_SCOPE = "afferent:single-product:v1";
+
+export const seedShowcase = internalMutation({
+  args: {},
+  handler: async (ctx) =>
+    runRepresentativeSeed({
+      physicalScopeId: SHOWCASE_SCOPE,
+      operations: createComponentSeedOperations({
+        component: showcaseComponent,
+        context: ctx,
+      }),
+      progress: createConvexSeedProgressStore(ctx),
+    }),
+});
 
 export const listBoards = query({
   args: listBoardsIntentValidator.fields,
