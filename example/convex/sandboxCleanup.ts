@@ -8,10 +8,12 @@ import {
   type MutationCtx,
   type QueryCtx,
 } from "./_generated/server.js";
+import { SANDBOX_INACTIVITY_MS } from "./sandboxLifecycle.js";
 
 export const SANDBOX_CLEANUP_LEASE_MS = 30_000;
 export const SANDBOX_CLEANUP_RETRY_MS = 1_000;
 export const SANDBOX_HOST_CLEANUP_BATCH = 50;
+export const SANDBOX_EXPIRY_SCAN_BATCH = 25;
 
 const sandboxComponent = components.sandbox as ComponentApi;
 
@@ -260,6 +262,85 @@ export const releaseCleanupLease = internalMutation({
       SANDBOX_CLEANUP_RETRY_MS,
     );
     return { state: "pending" as const };
+  },
+});
+
+export const scanExpiredSandboxes = internalMutation({
+  args: {
+    cursor: v.optional(v.string()),
+    currentTime: v.optional(v.number()),
+  },
+  returns: v.object({
+    contractVersion: v.literal(1),
+    expired: v.number(),
+    done: v.boolean(),
+    cursor: v.optional(v.string()),
+  }),
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{
+    contractVersion: 1;
+    expired: number;
+    done: boolean;
+    cursor?: string;
+  }> => {
+    const currentTime = args.currentTime ?? Date.now();
+    const page = await ctx.db
+      .query("sandboxOwners")
+      .withIndex("by_last_activity", (query) =>
+        query.lt("lastActivityAt", currentTime - SANDBOX_INACTIVITY_MS),
+      )
+      .paginate({
+        numItems: SANDBOX_EXPIRY_SCAN_BATCH,
+        cursor: args.cursor ?? null,
+      });
+    let expired = 0;
+    for (const owner of page.page) {
+      if (
+        owner.activeGeneration === undefined ||
+        owner.pendingGeneration !== undefined
+      ) {
+        continue;
+      }
+      const generation = await generationByNumber(
+        ctx,
+        owner.ownerKey,
+        owner.activeGeneration,
+      );
+      if (generation?.state !== "active") continue;
+      await ctx.db.patch(generation._id, {
+        state: "retired",
+        retiredAt: currentTime,
+        cleanupState: "pending",
+        cleanupStage: 0,
+        cleanupLeaseVersion: generation.cleanupLeaseVersion ?? 0,
+        cleanupRetries: generation.cleanupRetries ?? 0,
+      });
+      await ctx.db.patch(owner._id, {
+        activeGeneration: undefined,
+        lifecycleState: "expired",
+        preparationReason: undefined,
+        leaseOwner: undefined,
+        leaseUntil: undefined,
+        leaseVersion: owner.leaseVersion + 1,
+      });
+      await scheduleNext(ctx, owner.ownerKey, generation.generation);
+      expired += 1;
+    }
+    if (!page.isDone) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.sandboxCleanup.scanExpiredSandboxes,
+        { cursor: page.continueCursor },
+      );
+    }
+    return {
+      contractVersion: 1,
+      expired,
+      done: page.isDone,
+      ...(page.isDone ? {} : { cursor: page.continueCursor }),
+    };
   },
 });
 

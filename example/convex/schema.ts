@@ -27,7 +27,13 @@ export default defineSchema({
     leaseOwner: v.optional(v.string()),
     leaseUntil: v.optional(v.number()),
     leaseVersion: v.number(),
-  }).index("by_owner_key", ["ownerKey"]),
+    resetWindowStartedAt: v.optional(v.number()),
+    resetAttempts: v.optional(v.number()),
+    writeWindowStartedAt: v.optional(v.number()),
+    writeCount: v.optional(v.number()),
+  })
+    .index("by_owner_key", ["ownerKey"])
+    .index("by_last_activity", ["lastActivityAt"]),
   sandboxGenerations: defineTable({
     ownerKey: v.string(),
     generation: v.number(),

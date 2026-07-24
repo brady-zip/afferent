@@ -10,6 +10,7 @@
 
 import type * as afferent from "../afferent.js";
 import type * as auth from "../auth.js";
+import type * as crons from "../crons.js";
 import type * as http from "../http.js";
 import type * as sandbox from "../sandbox.js";
 import type * as sandboxAuthority from "../sandboxAuthority.js";
@@ -29,6 +30,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   afferent: typeof afferent;
   auth: typeof auth;
+  crons: typeof crons;
   http: typeof http;
   sandbox: typeof sandbox;
   sandboxAuthority: typeof sandboxAuthority;

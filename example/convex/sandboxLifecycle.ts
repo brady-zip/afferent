@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { createScopedAfferentClient } from "afferent/server.js";
 import type { ComponentApi } from "afferent/_generated/component.js";
 
@@ -19,9 +19,11 @@ import {
   createConvexSeedProgressStore,
   runRepresentativeSeed,
 } from "./seeds.js";
+import { SANDBOX_QUOTAS } from "./sandboxQuotas.js";
 
 export const SANDBOX_INACTIVITY_MS = 7 * 24 * 60 * 60 * 1_000;
 const PREPARATION_LEASE_MS = 5 * 60 * 1_000;
+const RESET_WINDOW_MS = 60 * 60 * 1_000;
 const sandboxComponent = components.sandbox as ComponentApi;
 
 export const sandboxLifecycleStateValidator = v.union(
@@ -369,6 +371,9 @@ export async function readSandboxLifecycle(
   if (owner.lifecycleState === "error") {
     return safeLifecycleResult("error");
   }
+  if (owner.lifecycleState === "expired") {
+    return safeLifecycleResult("expired");
+  }
   if (owner.activeGeneration !== undefined) {
     return safeLifecycleResult("ready", owner);
   }
@@ -487,10 +492,43 @@ export const beginPreparation = internalMutation({
       };
     }
 
+    let resetBudget:
+      | { resetWindowStartedAt: number; resetAttempts: number }
+      | undefined;
+    if (
+      args.requestedReason === "reset" &&
+      owner?.activeGeneration !== undefined
+    ) {
+      const resetWindowStartedAt =
+        owner.resetWindowStartedAt ?? args.currentTime;
+      const inCurrentWindow =
+        args.currentTime - resetWindowStartedAt < RESET_WINDOW_MS;
+      const resetAttempts = inCurrentWindow
+        ? (owner.resetAttempts ?? 0)
+        : 0;
+      if (resetAttempts >= SANDBOX_QUOTAS.resetAttemptsPerHour) {
+        throw new ConvexError({
+          contractVersion: 1,
+          code: "SANDBOX_RESET_RATE_LIMITED",
+          retryAfterMs: Math.max(
+            1,
+            RESET_WINDOW_MS - (args.currentTime - resetWindowStartedAt),
+          ),
+          recovery: "Wait before resetting this private sandbox again.",
+        });
+      }
+      resetBudget = {
+        resetWindowStartedAt: inCurrentWindow
+          ? resetWindowStartedAt
+          : args.currentTime,
+        resetAttempts: resetAttempts + 1,
+      };
+    }
+
     const reason =
       args.requestedReason === "reset"
         ? ("reset" as const)
-        : isExpired
+        : isExpired || owner?.lifecycleState === "expired"
           ? ("expired" as const)
           : ("first_access" as const);
     const generation = owner?.nextGeneration ?? 1;
@@ -523,6 +561,7 @@ export const beginPreparation = internalMutation({
       leaseOwner: args.leaseOwner,
       leaseUntil: args.currentTime + PREPARATION_LEASE_MS,
       leaseVersion,
+      ...resetBudget,
     };
     if (owner === null) {
       await ctx.db.insert("sandboxOwners", {

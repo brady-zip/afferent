@@ -48,6 +48,7 @@ export type SandboxQuotaError = Readonly<{
 const sandboxComponent = components.sandbox as ComponentApi;
 const RECOVERY =
   "Delete content to free space, or reset after the current rate-limit window.";
+const WRITE_WINDOW_MS = 60_000;
 
 function emptyUsage(): SandboxQuotaUsage {
   return {
@@ -204,7 +205,7 @@ export async function readLogicalSandboxUsage(
 }
 
 export async function enforceSandboxQuota(
-  ctx: QuotaContext,
+  ctx: MutationCtx,
   verifiedUserId: string,
   expandingResource: SandboxQuotaResource,
 ) {
@@ -214,4 +215,36 @@ export async function enforceSandboxQuota(
     expandingResource,
   );
   if (rejected !== null) throw new ConvexError(rejected);
+  const owner = await ctx.db
+    .query("sandboxOwners")
+    .withIndex("by_owner_key", (query) => query.eq("ownerKey", ownerKey))
+    .unique();
+  if (owner?.activeGeneration === undefined) {
+    throw new Error("SANDBOX_NOT_READY");
+  }
+  const currentTime = Date.now();
+  const writeWindowStartedAt =
+    owner.writeWindowStartedAt ?? currentTime;
+  const inCurrentWindow =
+    currentTime - writeWindowStartedAt < WRITE_WINDOW_MS;
+  const writeCount = inCurrentWindow ? (owner.writeCount ?? 0) : 0;
+  if (writeCount >= SANDBOX_QUOTAS.writesPerMinute) {
+    throw new ConvexError({
+      contractVersion: 1,
+      code: "SANDBOX_WRITE_RATE_LIMITED",
+      retryAfterMs: Math.max(
+        1,
+        WRITE_WINDOW_MS - (currentTime - writeWindowStartedAt),
+      ),
+      current: writeCount,
+      limit: SANDBOX_QUOTAS.writesPerMinute,
+      recovery: "Wait before making another sandbox change.",
+    });
+  }
+  await ctx.db.patch(owner._id, {
+    writeWindowStartedAt: inCurrentWindow
+      ? writeWindowStartedAt
+      : currentTime,
+    writeCount: writeCount + 1,
+  });
 }
