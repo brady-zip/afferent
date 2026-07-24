@@ -95,6 +95,19 @@ test("the release gate covers every suite and every supported packed export", as
   assert.match(gate, /"--typecheck",\s*"enable"/);
   assert.match(gate, /rate-limiter child component/i);
   assert.match(gate, /private data-model export/);
+  assert.deepEqual(manifest.exports["./test"], {
+    types: "./dist/test.d.ts",
+    default: "./dist/test.js",
+  });
+  assert.deepEqual(manifest.files, ["dist", "LICENSE"]);
+  for (const required of ["dist/test.js", "dist/test.d.ts"]) {
+    assert.ok(
+      gate.includes(required),
+      `packed test helper audit is missing ${required}`,
+    );
+  }
+  assert.match(gate, /await import\("afferent\/test"\)/);
+  assert.match(gate, /\.register\(.*"installedAfferent"/s);
 });
 
 test("the Phase 2 gate covers the public React artifact and complete consumer", async () => {
