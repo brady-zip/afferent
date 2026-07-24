@@ -13,6 +13,7 @@ import type * as auth from "../auth.js";
 import type * as http from "../http.js";
 import type * as sandbox from "../sandbox.js";
 import type * as sandboxAuthority from "../sandboxAuthority.js";
+import type * as sandboxCleanup from "../sandboxCleanup.js";
 import type * as sandboxLifecycle from "../sandboxLifecycle.js";
 import type * as sandboxQuotas from "../sandboxQuotas.js";
 import type * as sandboxScope from "../sandboxScope.js";
@@ -31,6 +32,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   sandbox: typeof sandbox;
   sandboxAuthority: typeof sandboxAuthority;
+  sandboxCleanup: typeof sandboxCleanup;
   sandboxLifecycle: typeof sandboxLifecycle;
   sandboxQuotas: typeof sandboxQuotas;
   sandboxScope: typeof sandboxScope;

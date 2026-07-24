@@ -166,16 +166,39 @@ export async function readLogicalSandboxUsage(
   }
   const snapshots: SandboxQuotaUsage[] = [];
   for (const generation of generations) {
+    if (generation.cleanupState === "complete") continue;
     const snapshot = await ctx.runQuery(
       sandboxComponent.maintenance.sandbox.getScopedUsage,
       { scopeId: generation.physicalScopeId },
     );
+    const seedEntities = await ctx.db
+      .query("demoSeedEntities")
+      .withIndex("by_scope_key", (query) =>
+        query.eq("physicalScopeId", generation.physicalScopeId),
+      )
+      .take(129);
+    const seedProgress = await ctx.db
+      .query("demoSeedProgress")
+      .withIndex("by_physical_scope", (query) =>
+        query.eq("physicalScopeId", generation.physicalScopeId),
+      )
+      .unique();
     snapshots.push({
       complete: snapshot.complete,
-      documentCount: snapshot.documentCount,
-      semanticBytes: snapshot.semanticBytes,
+      documentCount:
+        snapshot.documentCount +
+        seedEntities.length +
+        (seedProgress === null ? 0 : 1),
+      semanticBytes:
+        snapshot.semanticBytes +
+        seedEntities.reduce(
+          (bytes, entity) => bytes + JSON.stringify(entity).length,
+          0,
+        ) +
+        (seedProgress === null ? 0 : JSON.stringify(seedProgress).length),
       roots: snapshot.roots,
     });
+    if (seedEntities.length > 128) snapshots.at(-1)!.complete = false;
   }
   return sumScopedUsage(snapshots);
 }

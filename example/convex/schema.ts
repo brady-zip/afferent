@@ -45,6 +45,20 @@ export default defineSchema({
     seedVersion: v.number(),
     seedStep: v.number(),
     leaseVersion: v.number(),
+    cleanupState: v.optional(
+      v.union(
+        v.literal("pending"),
+        v.literal("leased"),
+        v.literal("complete"),
+      ),
+    ),
+    cleanupStage: v.optional(v.number()),
+    cleanupCursor: v.optional(v.string()),
+    cleanupLeaseOwner: v.optional(v.string()),
+    cleanupLeaseUntil: v.optional(v.number()),
+    cleanupLeaseVersion: v.optional(v.number()),
+    cleanupRetries: v.optional(v.number()),
+    cleanedAt: v.optional(v.number()),
   })
     .index("by_owner_generation", ["ownerKey", "generation"])
     .index("by_owner_state", ["ownerKey", "state"]),

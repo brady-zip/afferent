@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { createScopedAfferentClient } from "afferent/server.js";
 import type { ComponentApi } from "afferent/_generated/component.js";
 
-import { components } from "./_generated/api.js";
+import { components, internal } from "./_generated/api.js";
 import {
   internalMutation,
   type MutationCtx,
@@ -445,7 +445,16 @@ export const beginPreparation = internalMutation({
         await ctx.db.patch(stale._id, {
           state: "failed",
           failedAt: args.currentTime,
+          cleanupState: "pending",
+          cleanupStage: 0,
+          cleanupLeaseVersion: stale.cleanupLeaseVersion ?? 0,
+          cleanupRetries: stale.cleanupRetries ?? 0,
         });
+        await ctx.scheduler.runAfter(
+          0,
+          internal.sandboxCleanup.runRetiredGenerationCleanup,
+          { ownerKey: args.ownerKey, generation: stale.generation },
+        );
       }
       await ctx.db.patch(owner._id, {
         pendingGeneration: undefined,
@@ -610,7 +619,16 @@ export const activatePendingGeneration = internalMutation({
         await ctx.db.patch(previous._id, {
           state: "retired",
           retiredAt: args.currentTime,
+          cleanupState: "pending",
+          cleanupStage: 0,
+          cleanupLeaseVersion: previous.cleanupLeaseVersion ?? 0,
+          cleanupRetries: previous.cleanupRetries ?? 0,
         });
+        await ctx.scheduler.runAfter(
+          0,
+          internal.sandboxCleanup.runRetiredGenerationCleanup,
+          { ownerKey: args.ownerKey, generation: previous.generation },
+        );
       }
     }
     await ctx.db.patch(pending._id, {
@@ -649,7 +667,16 @@ export const failPendingGeneration = internalMutation({
       await ctx.db.patch(pending._id, {
         state: "failed",
         failedAt: args.currentTime,
+        cleanupState: "pending",
+        cleanupStage: 0,
+        cleanupLeaseVersion: pending.cleanupLeaseVersion ?? 0,
+        cleanupRetries: pending.cleanupRetries ?? 0,
       });
+      await ctx.scheduler.runAfter(
+        0,
+        internal.sandboxCleanup.runRetiredGenerationCleanup,
+        { ownerKey: args.ownerKey, generation: pending.generation },
+      );
     }
     if (
       owner !== null &&

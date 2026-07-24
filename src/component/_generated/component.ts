@@ -3184,6 +3184,22 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
     };
     maintenance: {
       sandbox: {
+        cleanupScopeBatch: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            continuation?: { cursor?: string; stage: number };
+            documentBudget?: number;
+            scopeId: string;
+          },
+          {
+            continuation?: { cursor?: string; stage: number };
+            contractVersion: 1;
+            deleted: number;
+            done: boolean;
+          },
+          Name
+        >;
         getScopedUsage: FunctionReference<
           "query",
           "internal",

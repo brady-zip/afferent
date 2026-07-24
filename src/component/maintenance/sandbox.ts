@@ -1,6 +1,10 @@
 import { v } from "convex/values";
 
-import { query } from "../_generated/server.js";
+import { mutation, query } from "../_generated/server.js";
+import {
+  resetActorParticipationLimits,
+  resetScopeParticipationLimits,
+} from "../model/rateLimits.js";
 import { requireScope } from "../model/scope.js";
 
 export const SCOPED_TABLE_DISPOSITIONS = {
@@ -150,6 +154,7 @@ export const SANDBOX_MAINTENANCE_TABLES = TABLES_IN_CLEANUP_ORDER.map(
 );
 
 export const SANDBOX_USAGE_DOCUMENT_BUDGET = 2_501;
+export const SANDBOX_CLEANUP_DOCUMENT_BUDGET = 50;
 
 const rootUsageValidator = v.object({
   boards: v.number(),
@@ -293,6 +298,114 @@ export const getScopedUsage = query({
       documentCount,
       semanticBytes,
       roots,
+    };
+  },
+});
+
+const cleanupContinuationValidator = v.object({
+  stage: v.number(),
+  cursor: v.optional(v.string()),
+});
+
+const cleanupResultValidator = v.object({
+  contractVersion: v.literal(1),
+  done: v.boolean(),
+  deleted: v.number(),
+  continuation: v.optional(cleanupContinuationValidator),
+});
+
+/**
+ * Deletes one indexed page from one explicit disposition. The host may only
+ * call this after leasing a retired generation; callers cannot enumerate
+ * documents or request an arbitrary table.
+ */
+export const cleanupScopeBatch = mutation({
+  args: {
+    scopeId: v.string(),
+    continuation: v.optional(cleanupContinuationValidator),
+    documentBudget: v.optional(v.number()),
+  },
+  returns: cleanupResultValidator,
+  handler: async (ctx, args) => {
+    requireScope(args.scopeId);
+    const stage = Math.max(0, Math.floor(args.continuation?.stage ?? 0));
+    const documentBudget = Math.max(
+      1,
+      Math.min(
+        Math.floor(args.documentBudget ?? SANDBOX_CLEANUP_DOCUMENT_BUDGET),
+        SANDBOX_CLEANUP_DOCUMENT_BUDGET,
+      ),
+    );
+
+    if (stage > TABLES_IN_CLEANUP_ORDER.length) {
+      return {
+        contractVersion: 1 as const,
+        done: true,
+        deleted: 0,
+        continuation: { stage },
+      };
+    }
+    if (stage === TABLES_IN_CLEANUP_ORDER.length) {
+      await resetScopeParticipationLimits(ctx, args.scopeId);
+      return {
+        contractVersion: 1 as const,
+        done: false,
+        deleted: 0,
+        continuation: { stage: stage + 1 },
+      };
+    }
+
+    const [tableName, disposition] = TABLES_IN_CLEANUP_ORDER[stage]!;
+    const page = await (
+      ctx.db as unknown as {
+        query: (table: string) => {
+          withIndex: (
+            index: string,
+            range: (query: {
+              eq: (field: string, value: string) => unknown;
+            }) => unknown,
+          ) => {
+            paginate: (options: {
+              numItems: number;
+              cursor: string | null;
+            }) => Promise<{
+              page: { _id: string }[];
+              isDone: boolean;
+              continueCursor: string;
+            }>;
+          };
+        };
+      }
+    )
+      .query(tableName)
+      .withIndex(disposition.scopeIndex, (index) =>
+        index.eq("scopeId", args.scopeId),
+      )
+      .paginate({
+        numItems: documentBudget,
+        cursor: args.continuation?.cursor ?? null,
+      });
+
+    if (tableName === "actors") {
+      for (const actor of page.page) {
+        await resetActorParticipationLimits(
+          ctx,
+          args.scopeId,
+          String(actor._id),
+        );
+      }
+    }
+    for (const document of page.page) {
+      await ctx.db.delete(document._id as never);
+    }
+
+    return {
+      contractVersion: 1 as const,
+      done: false,
+      deleted: page.page.length,
+      continuation: page.isDone
+        ? { stage: stage + 1 }
+        : { stage, cursor: page.continueCursor },
     };
   },
 });

@@ -25,6 +25,34 @@ export const PARTICIPATION_LIMITS = {
 
 const limiter = new RateLimiter(components.rateLimiter, PARTICIPATION_LIMITS);
 
+const ACTOR_LIMIT_NAMES = [
+  "createPostActor",
+  "commentActor",
+  "voteActor",
+  "subscribeActor",
+] as const;
+
+const SCOPE_LIMIT_NAMES = ["createPostScope", "commentScope"] as const;
+
+export async function resetActorParticipationLimits(
+  ctx: MutationCtx,
+  scopeId: string,
+  actorKey: string,
+) {
+  for (const name of ACTOR_LIMIT_NAMES) {
+    await limiter.reset(ctx, name, { key: `${scopeId}:${actorKey}` });
+  }
+}
+
+export async function resetScopeParticipationLimits(
+  ctx: MutationCtx,
+  scopeId: string,
+) {
+  for (const name of SCOPE_LIMIT_NAMES) {
+    await limiter.reset(ctx, name, { key: scopeId });
+  }
+}
+
 export async function consumeParticipationLimit(
   ctx: MutationCtx,
   args: {
