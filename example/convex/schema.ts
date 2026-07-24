@@ -52,11 +52,7 @@ export default defineSchema({
     seedStep: v.number(),
     leaseVersion: v.number(),
     cleanupState: v.optional(
-      v.union(
-        v.literal("pending"),
-        v.literal("leased"),
-        v.literal("complete"),
-      ),
+      v.union(v.literal("pending"), v.literal("leased"), v.literal("complete")),
     ),
     cleanupStage: v.optional(v.number()),
     cleanupCursor: v.optional(v.string()),

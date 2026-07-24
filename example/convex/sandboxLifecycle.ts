@@ -493,8 +493,7 @@ export const beginPreparation = internalMutation({
     }
 
     let resetBudget:
-      | { resetWindowStartedAt: number; resetAttempts: number }
-      | undefined;
+      { resetWindowStartedAt: number; resetAttempts: number } | undefined;
     if (
       args.requestedReason === "reset" &&
       owner?.activeGeneration !== undefined
@@ -503,9 +502,7 @@ export const beginPreparation = internalMutation({
         owner.resetWindowStartedAt ?? args.currentTime;
       const inCurrentWindow =
         args.currentTime - resetWindowStartedAt < RESET_WINDOW_MS;
-      const resetAttempts = inCurrentWindow
-        ? (owner.resetAttempts ?? 0)
-        : 0;
+      const resetAttempts = inCurrentWindow ? (owner.resetAttempts ?? 0) : 0;
       if (resetAttempts >= SANDBOX_QUOTAS.resetAttemptsPerHour) {
         throw new ConvexError({
           contractVersion: 1,

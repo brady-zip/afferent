@@ -27,10 +27,9 @@ describe("sandbox maintenance intents", () => {
       body: "Usage is derived through scope-leading indexes.",
     });
 
-    const usage = await backend.query(
-      api.maintenance.sandbox.getScopedUsage,
-      { scopeId },
-    );
+    const usage = await backend.query(api.maintenance.sandbox.getScopedUsage, {
+      scopeId,
+    });
 
     expect(usage).toMatchObject({
       contractVersion: 1,
@@ -120,9 +119,8 @@ describe("sandbox maintenance intents", () => {
       { scopeId: secondScope },
     );
 
-    let continuation:
-      | { stage: number; cursor?: string }
-      | undefined = undefined;
+    let continuation: { stage: number; cursor?: string } | undefined =
+      undefined;
     let done = false;
     let calls = 0;
     while (!done && calls < 100) {

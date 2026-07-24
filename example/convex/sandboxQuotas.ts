@@ -14,10 +14,10 @@ export const SANDBOX_QUOTAS = {
     tags: 40,
     votes: 500,
     subscriptions: 500,
-    notificationActivity: 1_000,
+    notificationActivity: 1000,
     mergeWork: 100,
   },
-  totalRecords: 2_500,
+  totalRecords: 2500,
   semanticBytes: 2_000_000,
   writesPerMinute: 120,
   resetAttemptsPerHour: 3,
@@ -25,16 +25,14 @@ export const SANDBOX_QUOTAS = {
 
 export type SandboxRootResource = keyof typeof SANDBOX_QUOTAS.roots;
 export type SandboxQuotaResource =
-  | SandboxRootResource
-  | "totalRecords"
-  | "semanticBytes";
+  SandboxRootResource | "totalRecords" | "semanticBytes";
 
-export type SandboxQuotaUsage = {
+export interface SandboxQuotaUsage {
   complete: boolean;
   documentCount: number;
   semanticBytes: number;
   roots: Record<SandboxRootResource, number>;
-};
+}
 
 export type SandboxQuotaError = Readonly<{
   contractVersion: 1;
@@ -154,9 +152,7 @@ export async function readLogicalSandboxUsage(
   }
   const generations = await ctx.db
     .query("sandboxGenerations")
-    .withIndex("by_owner_generation", (query) =>
-      query.eq("ownerKey", ownerKey),
-    )
+    .withIndex("by_owner_generation", (query) => query.eq("ownerKey", ownerKey))
     .take(65);
   if (generations.length > 64) {
     return {
@@ -223,10 +219,8 @@ export async function enforceSandboxQuota(
     throw new Error("SANDBOX_NOT_READY");
   }
   const currentTime = Date.now();
-  const writeWindowStartedAt =
-    owner.writeWindowStartedAt ?? currentTime;
-  const inCurrentWindow =
-    currentTime - writeWindowStartedAt < WRITE_WINDOW_MS;
+  const writeWindowStartedAt = owner.writeWindowStartedAt ?? currentTime;
+  const inCurrentWindow = currentTime - writeWindowStartedAt < WRITE_WINDOW_MS;
   const writeCount = inCurrentWindow ? (owner.writeCount ?? 0) : 0;
   if (writeCount >= SANDBOX_QUOTAS.writesPerMinute) {
     throw new ConvexError({
@@ -242,9 +236,7 @@ export async function enforceSandboxQuota(
     });
   }
   await ctx.db.patch(owner._id, {
-    writeWindowStartedAt: inCurrentWindow
-      ? writeWindowStartedAt
-      : currentTime,
+    writeWindowStartedAt: inCurrentWindow ? writeWindowStartedAt : currentTime,
     writeCount: writeCount + 1,
   });
 }

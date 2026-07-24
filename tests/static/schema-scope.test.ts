@@ -45,8 +45,7 @@ describe("scope-complete schema", () => {
     )) {
       const table = schema.tables[tableName as keyof typeof schema.tables];
       const index = [...table.indexes, ...table.stagedDbIndexes].find(
-        ({ indexDescriptor }) =>
-          indexDescriptor === disposition.scopeIndex,
+        ({ indexDescriptor }) => indexDescriptor === disposition.scopeIndex,
       );
       expect(
         index,

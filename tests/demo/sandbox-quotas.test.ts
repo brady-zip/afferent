@@ -1,10 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { convexTest } from "convex-test";
 
-import {
-  api,
-  components,
-} from "../../example/convex/_generated/api.js";
+import { api, components } from "../../example/convex/_generated/api.js";
 import schema from "../../example/convex/schema.js";
 import {
   SANDBOX_QUOTAS,
@@ -24,9 +21,7 @@ function hostedBackend() {
   return backend;
 }
 
-function usage(
-  overrides: Partial<SandboxQuotaUsage> = {},
-): SandboxQuotaUsage {
+function usage(overrides: Partial<SandboxQuotaUsage> = {}): SandboxQuotaUsage {
   return {
     documentCount: 0,
     semanticBytes: 0,
@@ -158,12 +153,20 @@ describe("host-owned sandbox quotas", () => {
       subject: "logical-abuse-owner",
     });
     await user.action(api.sandbox.ensureSandbox, {});
-    for (let attempt = 0; attempt < SANDBOX_QUOTAS.resetAttemptsPerHour; attempt += 1) {
-      await expect(user.action(api.sandbox.resetSandbox, {})).resolves.toMatchObject({
+    for (
+      let attempt = 0;
+      attempt < SANDBOX_QUOTAS.resetAttemptsPerHour;
+      attempt += 1
+    ) {
+      await expect(
+        user.action(api.sandbox.resetSandbox, {}),
+      ).resolves.toMatchObject({
         state: "ready",
       });
     }
-    await expect(user.action(api.sandbox.resetSandbox, {})).rejects.toMatchObject({
+    await expect(
+      user.action(api.sandbox.resetSandbox, {}),
+    ).rejects.toMatchObject({
       data: {
         contractVersion: 1,
         code: "SANDBOX_RESET_RATE_LIMITED",

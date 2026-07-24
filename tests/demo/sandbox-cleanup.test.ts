@@ -56,13 +56,10 @@ describe("leased retired-generation cleanup", () => {
       };
     });
 
-    await backend.action(
-      internal.sandboxCleanup.runRetiredGenerationCleanup,
-      {
-        ownerKey: retired.ownerKey,
-        generation: retired.generation,
-      },
-    );
+    await backend.action(internal.sandboxCleanup.runRetiredGenerationCleanup, {
+      ownerKey: retired.ownerKey,
+      generation: retired.generation,
+    });
     await backend.finishAllScheduledFunctions(() => vi.runAllTimers());
 
     await expect(
@@ -182,16 +179,18 @@ describe("leased retired-generation cleanup", () => {
     await expect(
       expired.action(api.sandbox.ensureSandbox, {}),
     ).resolves.toMatchObject({ state: "ready" });
-    const states = await backend.run(async (ctx) =>
-      (
-        await ctx.db
-          .query("sandboxGenerations")
-          .withIndex("by_owner_generation", (query) =>
-            query.eq("ownerKey", expiredOwnerKey),
-          )
-          .collect()
-      ).map(({ state, cleanupState }) => ({ state, cleanupState })),
-    );
+    const states = await backend.run(async (ctx) => {
+      const generations = await ctx.db
+        .query("sandboxGenerations")
+        .withIndex("by_owner_generation", (query) =>
+          query.eq("ownerKey", expiredOwnerKey),
+        )
+        .collect();
+      return generations.map(({ state, cleanupState }) => ({
+        state,
+        cleanupState,
+      }));
+    });
     expect(states).toContainEqual({
       state: "retired",
       cleanupState: "complete",

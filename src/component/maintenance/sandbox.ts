@@ -153,7 +153,7 @@ export const SANDBOX_MAINTENANCE_TABLES = TABLES_IN_CLEANUP_ORDER.map(
   ([tableName]) => tableName,
 );
 
-export const SANDBOX_USAGE_DOCUMENT_BUDGET = 2_501;
+export const SANDBOX_USAGE_DOCUMENT_BUDGET = 2501;
 export const SANDBOX_CLEANUP_DOCUMENT_BUDGET = 50;
 
 const rootUsageValidator = v.object({
@@ -177,7 +177,7 @@ const scopedUsageValidator = v.object({
   roots: rootUsageValidator,
 });
 
-type RootUsage = {
+interface RootUsage {
   boards: number;
   posts: number;
   comments: number;
@@ -187,7 +187,7 @@ type RootUsage = {
   subscriptions: number;
   notificationActivity: number;
   mergeWork: number;
-};
+}
 
 function emptyRoots(): RootUsage {
   return {

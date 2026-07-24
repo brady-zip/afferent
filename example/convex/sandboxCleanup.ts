@@ -11,7 +11,7 @@ import {
 import { SANDBOX_INACTIVITY_MS } from "./sandboxLifecycle.js";
 
 export const SANDBOX_CLEANUP_LEASE_MS = 30_000;
-export const SANDBOX_CLEANUP_RETRY_MS = 1_000;
+export const SANDBOX_CLEANUP_RETRY_MS = 1000;
 export const SANDBOX_HOST_CLEANUP_BATCH = 50;
 export const SANDBOX_EXPIRY_SCAN_BATCH = 25;
 
@@ -42,12 +42,12 @@ type WorkerState =
   | { state: "pending" }
   | { state: "complete" };
 
-type LeaseState = {
+interface LeaseState {
   state: "leased";
   physicalScopeId: string;
   leaseVersion: number;
   continuation?: { stage: number; cursor?: string };
-};
+}
 
 type HostReadContext = Pick<QueryCtx | MutationCtx, "db">;
 
@@ -134,14 +134,12 @@ export const acquireCleanupLease = internalMutation({
 
 async function scheduleNext(
   ctx: Pick<MutationCtx, "scheduler">,
-  ownerKey: string,
-  generation: number,
-  delay = 0,
+  args: { ownerKey: string; generation: number; delay?: number },
 ) {
   await ctx.scheduler.runAfter(
-    delay,
+    args.delay ?? 0,
     internal.sandboxCleanup.runRetiredGenerationCleanup,
-    { ownerKey, generation },
+    { ownerKey: args.ownerKey, generation: args.generation },
   );
 }
 
@@ -179,7 +177,7 @@ export const recordCleanupBatch = internalMutation({
         cleanupLeaseOwner: undefined,
         cleanupLeaseUntil: undefined,
       });
-      await scheduleNext(ctx, args.ownerKey, args.generation);
+      await scheduleNext(ctx, args);
       return { state: "pending" as const };
     }
 
@@ -196,7 +194,7 @@ export const recordCleanupBatch = internalMutation({
         cleanupLeaseOwner: undefined,
         cleanupLeaseUntil: undefined,
       });
-      await scheduleNext(ctx, args.ownerKey, args.generation);
+      await scheduleNext(ctx, args);
       return { state: "pending" as const };
     }
     const progress = await ctx.db
@@ -212,7 +210,7 @@ export const recordCleanupBatch = internalMutation({
         cleanupLeaseOwner: undefined,
         cleanupLeaseUntil: undefined,
       });
-      await scheduleNext(ctx, args.ownerKey, args.generation);
+      await scheduleNext(ctx, args);
       return { state: "pending" as const };
     }
 
@@ -255,12 +253,7 @@ export const releaseCleanupLease = internalMutation({
       cleanupLeaseUntil: undefined,
       cleanupRetries: (generation.cleanupRetries ?? 0) + 1,
     });
-    await scheduleNext(
-      ctx,
-      args.ownerKey,
-      args.generation,
-      SANDBOX_CLEANUP_RETRY_MS,
-    );
+    await scheduleNext(ctx, { ...args, delay: SANDBOX_CLEANUP_RETRY_MS });
     return { state: "pending" as const };
   },
 });
@@ -325,7 +318,10 @@ export const scanExpiredSandboxes = internalMutation({
         leaseUntil: undefined,
         leaseVersion: owner.leaseVersion + 1,
       });
-      await scheduleNext(ctx, owner.ownerKey, generation.generation);
+      await scheduleNext(ctx, {
+        ownerKey: owner.ownerKey,
+        generation: generation.generation,
+      });
       expired += 1;
     }
     if (!page.isDone) {
@@ -369,16 +365,13 @@ export const runRetiredGenerationCleanup = internalAction({
           continuation: lease.continuation,
         },
       );
-      return await ctx.runMutation(
-        internal.sandboxCleanup.recordCleanupBatch,
-        {
-          ...args,
-          workerId,
-          leaseVersion: lease.leaseVersion,
-          result,
-          currentTime: Date.now(),
-        },
-      );
+      return await ctx.runMutation(internal.sandboxCleanup.recordCleanupBatch, {
+        ...args,
+        workerId,
+        leaseVersion: lease.leaseVersion,
+        result,
+        currentTime: Date.now(),
+      });
     } catch {
       return await ctx.runMutation(
         internal.sandboxCleanup.releaseCleanupLease,
