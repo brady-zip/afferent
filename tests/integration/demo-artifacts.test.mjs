@@ -10,7 +10,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { afterAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import {
   DEMO_CANDIDATE_DIR,
@@ -21,13 +21,6 @@ import {
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const candidate = join(root, DEMO_CANDIDATE_DIR);
-
-afterAll(async () => {
-  await rm(join(tmpdir(), "afferent-demo-origin-test"), {
-    force: true,
-    recursive: true,
-  });
-});
 
 describe("hosted demo release artifacts", () => {
   it(
@@ -71,20 +64,24 @@ describe("hosted demo release artifacts", () => {
     const fixtureRoot = await mkdtemp(
       join(tmpdir(), "afferent-demo-origin-test"),
     );
-    const sourceRoot = join(fixtureRoot, "example");
-    await mkdir(sourceRoot, { recursive: true });
-    await writeFile(
-      join(sourceRoot, "App.tsx"),
-      `import ${JSON.stringify(join(root, "src/react/index.ts"))};\n`,
-    );
+    try {
+      const sourceRoot = join(fixtureRoot, "example");
+      await mkdir(sourceRoot, { recursive: true });
+      await writeFile(
+        join(sourceRoot, "App.tsx"),
+        `import ${JSON.stringify(join(root, "src/react/index.ts"))};\n`,
+      );
 
-    await expect(
-      assertImportOrigins({
-        sourceRoot,
-        candidateRoot: fixtureRoot,
-        repositoryRoot: root,
-      }),
-    ).rejects.toThrow(/repository product source/i);
+      await expect(
+        assertImportOrigins({
+          sourceRoot,
+          candidateRoot: fixtureRoot,
+          repositoryRoot: root,
+        }),
+      ).rejects.toThrow(/repository product source/i);
+    } finally {
+      await rm(fixtureRoot, { force: true, recursive: true });
+    }
   });
 
   it("keeps the committed example artifact-shaped instead of checking in product UI", async () => {

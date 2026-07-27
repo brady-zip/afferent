@@ -1,11 +1,23 @@
 {
   "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "strict": true,
-    "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "skipLibCheck": true,
-    "types": ["node"]
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noUncheckedSideEffectImports": false,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "types": ["vite/client"],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
-  "include": ["convex/**/*.ts"]
+  "include": ["convex/**/*.ts", "src", "vite.config.ts"]
 }
