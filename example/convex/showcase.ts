@@ -1,11 +1,17 @@
 import {
   boardListResultValidator,
   changelogPageResultValidator,
+  commentPageResultValidator,
   feedbackPageResultValidator,
+  getPostIntentValidator,
+  getPublishedChangelogBySlugIntentValidator,
   listBoardsIntentValidator,
+  listCommentsIntentValidator,
   listFeedbackIntentValidator,
   listPublishedChangelogIntentValidator,
   listRoadmapGroupIntentValidator,
+  postLookupResultValidator,
+  publishedChangelogLookupResultValidator,
   roadmapGroupPageResultValidator,
   searchFeedbackIntentValidator,
   searchFeedbackResultValidator,
@@ -35,6 +41,21 @@ export const listFeedback = query({
   handler: (ctx, args) => client.read.listFeedback(ctx, args as never),
 });
 
+export const resolvePost = query({
+  args: getPostIntentValidator.fields,
+  returns: postLookupResultValidator,
+  handler: (ctx, args) => client.read.resolvePost(ctx, args as never),
+});
+
+export const listComments = query({
+  args: {
+    ...listCommentsIntentValidator.fields,
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: commentPageResultValidator,
+  handler: (ctx, args) => client.read.listComments(ctx, args as never),
+});
+
 export const searchFeedback = query({
   args: searchFeedbackIntentValidator.fields,
   returns: searchFeedbackResultValidator,
@@ -57,4 +78,10 @@ export const listPublishedChangelog = query({
   },
   returns: changelogPageResultValidator,
   handler: (ctx, args) => client.read.listPublishedChangelog(ctx, args),
+});
+
+export const getPublishedChangelogBySlug = query({
+  args: getPublishedChangelogBySlugIntentValidator.fields,
+  returns: publishedChangelogLookupResultValidator,
+  handler: (ctx, args) => client.read.getPublishedChangelogBySlug(ctx, args),
 });

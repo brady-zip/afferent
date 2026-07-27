@@ -1,0 +1,375 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light dark;
+  min-width: 320px;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  overflow-x: hidden;
+  background: var(--background);
+  color: var(--foreground);
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  line-height: 1.5;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+.host-app {
+  min-height: 100vh;
+}
+
+.host-skip-link {
+  position: fixed;
+  inset-block-start: 8px;
+  inset-inline-start: 8px;
+  z-index: 100;
+  transform: translateY(-160%);
+  border-radius: 8px;
+  background: var(--foreground);
+  color: var(--background);
+  padding: 8px 16px;
+}
+
+.host-skip-link:focus {
+  transform: translateY(0);
+}
+
+.host-header {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 30;
+  border-block-end: 1px solid var(--border);
+  background: color-mix(in srgb, var(--background) 94%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.host-header__inner,
+.host-product-nav,
+.host-content,
+.host-footer > div {
+  width: min(100%, 1200px);
+  margin-inline: auto;
+}
+
+.host-header__inner {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  min-height: 72px;
+  padding: 8px 16px;
+}
+
+.host-brand {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.host-brand > a:first-child {
+  font-size: 1.25rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.host-brand > a:last-child,
+.host-footer a,
+.host-footer span,
+.host-account {
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+
+.host-environment-nav,
+.host-product-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.host-environment-nav a,
+.host-product-nav a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  border-radius: 8px;
+  padding-inline: 16px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.host-environment-nav a[aria-current="page"],
+.host-product-nav a[aria-current="page"] {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.host-account {
+  margin-inline-start: auto;
+}
+
+.host-product-nav {
+  flex-wrap: wrap;
+  border-block-start: 1px solid var(--border);
+  padding: 8px 16px;
+}
+
+.host-content {
+  padding-inline: 16px;
+}
+
+.host-content > main {
+  min-width: 0;
+}
+
+.host-environment-note,
+.host-lifecycle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-block: 24px;
+  border: 1px solid var(--border);
+  border-inline-start: 4px solid var(--primary);
+  border-radius: 8px;
+  background: var(--card);
+  padding: 16px;
+}
+
+.host-environment-note p,
+.host-lifecycle p {
+  margin: 8px 0 0;
+  color: var(--muted-foreground);
+}
+
+.host-lifecycle h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+}
+
+.host-lifecycle--error {
+  border-inline-start-color: var(--destructive);
+}
+
+.host-lifecycle__actions,
+.host-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.host-auth-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-block-start: 16px;
+}
+
+.host-auth-fields label {
+  display: grid;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.host-auth-fields input {
+  min-height: 44px;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--background);
+  color: var(--foreground);
+  padding-inline: 16px;
+}
+
+.host-button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--background);
+  color: var(--foreground);
+  padding: 8px 16px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.host-button--primary {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.host-button--destructive {
+  border-color: var(--destructive);
+  background: var(--destructive);
+  color: #ffffff;
+}
+
+.host-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.host-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  font-weight: 700;
+}
+
+.host-footer {
+  margin-block-start: 48px;
+  border-block-start: 1px solid var(--border);
+}
+
+.host-footer > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 24px 16px;
+}
+
+.host-dialog__overlay {
+  position: fixed;
+  z-index: 60;
+  inset: 0;
+  background: rgb(0 0 0 / 58%);
+}
+
+.host-dialog {
+  position: fixed;
+  z-index: 70;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  width: min(calc(100vw - 32px), 36rem);
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--card-foreground);
+  padding: 24px;
+  box-shadow: 0 24px 48px rgb(0 0 0 / 24%);
+}
+
+.host-dialog h2 {
+  margin: 0;
+  color: var(--destructive);
+}
+
+.host-dialog p {
+  margin-block: 16px 24px;
+}
+
+:where(a, button, input):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+@media (max-width: 767px) {
+  .host-header__inner {
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    padding-block: 16px;
+  }
+
+  .host-brand {
+    flex: 1 1 auto;
+  }
+
+  .host-account {
+    margin-inline-start: 0;
+  }
+
+  .host-environment-nav {
+    order: 3;
+    width: 100%;
+  }
+
+  .host-environment-nav a {
+    flex: 1;
+  }
+
+  .host-environment-note,
+  .host-lifecycle {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .host-lifecycle__actions,
+  .host-dialog__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .host-lifecycle__actions > *,
+  .host-dialog__actions > * {
+    width: 100%;
+  }
+
+  .host-auth-fields {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 639px) {
+  .host-product-nav {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+
+  .host-product-nav a {
+    flex: 0 0 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+@media (forced-colors: active) {
+  .host-environment-note,
+  .host-lifecycle,
+  .host-dialog {
+    border: 2px solid CanvasText;
+  }
+
+  .host-button--primary,
+  .host-button--destructive {
+    forced-color-adjust: none;
+  }
+}

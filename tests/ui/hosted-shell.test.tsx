@@ -125,39 +125,39 @@ describe("hosted Afferent shell", () => {
   });
 
   test.each([
-    [
-      "checking",
-      "Checking your session…",
-      "Your sandbox has not been opened yet.",
-      true,
-    ],
-    [
-      "preparing",
-      "Preparing your private sandbox…",
-      "We're restoring the deterministic demo content.",
-      true,
-    ],
-    [
-      "resetting",
-      "Resetting your private sandbox…",
-      "Afferent will restore the original demo content.",
-      true,
-    ],
-    [
-      "expired",
-      "Preparing a fresh private sandbox…",
-      "expired after 7 days without activity",
-      true,
-    ],
-    [
-      "error",
-      "We couldn't open your sandbox",
-      "Your previous sandbox has not been changed.",
-      false,
-    ],
+    {
+      state: "checking",
+      heading: "Checking your session…",
+      body: "Your sandbox has not been opened yet.",
+      busy: true,
+    },
+    {
+      state: "preparing",
+      heading: "Preparing your private sandbox…",
+      body: "We're restoring the deterministic demo content.",
+      busy: true,
+    },
+    {
+      state: "resetting",
+      heading: "Resetting your private sandbox…",
+      body: "Afferent will restore the original demo content.",
+      busy: true,
+    },
+    {
+      state: "expired",
+      heading: "Preparing a fresh private sandbox…",
+      body: "expired after 7 days without activity",
+      busy: true,
+    },
+    {
+      state: "error",
+      heading: "We couldn't open your sandbox",
+      body: "Your previous sandbox has not been changed.",
+      busy: false,
+    },
   ] as const)(
-    "renders the closed %s lifecycle without stale product content",
-    (state, heading, body, busy) => {
+    "renders the closed $state lifecycle without stale product content",
+    ({ state, heading, body, busy }) => {
       const mounted = render(
         <SandboxLifecycle
           lifecycle={{ state, message: body }}
