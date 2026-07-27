@@ -61,29 +61,39 @@ describe("hosted demo release artifacts", () => {
     },
   );
 
-  it("fails closed when an example import resolves into repository product source", async () => {
-    const fixtureRoot = await mkdtemp(
-      join(tmpdir(), "afferent-demo-origin-test"),
-    );
-    try {
-      const sourceRoot = join(fixtureRoot, "example");
-      await mkdir(sourceRoot, { recursive: true });
-      await writeFile(
-        join(sourceRoot, "App.tsx"),
-        `import ${JSON.stringify(join(root, "src/react/index.ts"))};\n`,
+  it.each([
+    { boundary: "src/", target: "src/react/index.ts" },
+    { boundary: "ui/", target: "ui/afferent/core/copy.ts" },
+    {
+      boundary: "examples/ui/",
+      target: "examples/ui/afferent/board/feedback-card.tsx",
+    },
+  ])(
+    "fails closed when an example import resolves into repository $boundary product source",
+    async ({ target }) => {
+      const fixtureRoot = await mkdtemp(
+        join(tmpdir(), "afferent-demo-origin-test"),
       );
+      try {
+        const sourceRoot = join(fixtureRoot, "example");
+        await mkdir(sourceRoot, { recursive: true });
+        await writeFile(
+          join(sourceRoot, "App.tsx"),
+          `import ${JSON.stringify(join(root, target))};\n`,
+        );
 
-      await expect(
-        assertImportOrigins({
-          sourceRoot,
-          candidateRoot: fixtureRoot,
-          repositoryRoot: root,
-        }),
-      ).rejects.toThrow(/repository product source/i);
-    } finally {
-      await rm(fixtureRoot, { force: true, recursive: true });
-    }
-  });
+        await expect(
+          assertImportOrigins({
+            sourceRoot,
+            candidateRoot: fixtureRoot,
+            repositoryRoot: root,
+          }),
+        ).rejects.toThrow(/repository product source/i);
+      } finally {
+        await rm(fixtureRoot, { force: true, recursive: true });
+      }
+    },
+  );
 
   it("keeps the committed example artifact-shaped instead of checking in product UI", async () => {
     const [manifest, ignore, packageManifest] = await Promise.all([
