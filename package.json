@@ -81,6 +81,8 @@
     "test:demo:boundary": "npm run codegen:demo && npm run typecheck:demo && vitest run tests/demo/host-boundary.test.ts tests/static/demo-boundary.test.ts",
     "test:demo:lifecycle": "npm run codegen:demo && npm run typecheck:demo && vitest run tests/demo/seeds.test.ts tests/demo/sandbox-lifecycle.test.ts tests/demo/host-boundary.test.ts tests/static/demo-boundary.test.ts",
     "test:demo:maintenance": "npm run codegen:demo && npm run typecheck:demo && vitest run tests/static/schema-scope.test.ts tests/component/sandbox-maintenance.test.ts tests/demo/sandbox-quotas.test.ts tests/demo/sandbox-cleanup.test.ts && npm run test:scope",
+    "test:e2e:phase4": "node scripts/test-hosted-demo.mjs",
+    "test:e2e:phase4:remote": "node scripts/test-hosted-demo.mjs --remote",
     "test:fixtures": "tsc --project fixtures/auth-convex-auth/tsconfig.json && tsc --project fixtures/auth-clerk/tsconfig.json && tsc --project fixtures/auth-better-auth/tsconfig.json",
     "test:model": "vitest run tests/model",
     "test:package": "node --test tests/integration/packed-artifact.test.mjs",

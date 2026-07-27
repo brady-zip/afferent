@@ -1,10 +1,4 @@
-import {
-  mkdir,
-  mkdtemp,
-  readFile,
-  rm,
-  writeFile,
-} from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -82,9 +76,8 @@ describe("Phase 4 real-browser release gate", () => {
   });
 
   it("rejects missing, wrong-target, and wrong-artifact completion markers", async () => {
-    const { PHASE4_REQUIRED_SUITES, validateCompletionMarkers } = await import(
-      "../../scripts/test-hosted-demo.mjs"
-    );
+    const { PHASE4_REQUIRED_SUITES, validateCompletionMarkers } =
+      await import("../../scripts/test-hosted-demo.mjs");
     const directory = await mkdtemp(join(tmpdir(), "afferent-phase4-markers-"));
     const artifactDigest = "a".repeat(64);
     const targetId = "local:http://127.0.0.1:3210";
