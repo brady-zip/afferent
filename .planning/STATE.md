@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 4
-current_phase_name: Hosted Production Release
-status: ready_to_execute
-stopped_at: Completed 04-04-PLAN.md
-last_updated: "2026-07-24T17:24:47.508Z"
-last_activity: 2026-07-24
-last_activity_desc: Completed sandbox quotas, expiry, and leased cleanup
+current_phase: 04
+current_phase_name: hosted-production-release
+status: executing
+stopped_at: Completed 04-05-PLAN.md
+last_updated: "2026-07-27T22:36:40.463Z"
+last_activity: 2026-07-27
+last_activity_desc: Phase 04 execution started
 progress:
   total_phases: 7
   completed_phases: 6
   total_plans: 51
-  completed_plans: 46
-  percent: 90
+  completed_plans: 47
+  percent: 86
 ---
 
 # Project State
@@ -24,16 +24,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-24)
 
 **Core value:** SaaS teams can add deeply integrated product feedback to an existing Convex application while retaining native ownership of their data, identity, permissions, and user experience.
-**Current focus:** Phase 4 — plan and deliver the hosted production release
+**Current focus:** Phase 04 — hosted-production-release
 
 ## Current Position
 
-Phase: 4 — Hosted Production Release
-Plan: 4 of 9
-Status: Ready to execute 04-05
-Last activity: 2026-07-24 — Completed sandbox quotas, expiry, and leased cleanup
+Phase: 04 (hosted-production-release) — EXECUTING
+Plan: 6 of 9
+Status: Ready to execute
+Last activity: 2026-07-27 — Phase 04 execution started
 
-Progress: [█████████░] 90%
+Progress: [█████████░] 92%
 
 ## Performance Metrics
 
@@ -111,6 +111,7 @@ _Updated after each plan completion_
 | Phase 04 P02   | 3 min    | 3 tasks | 12 files |
 | Phase 04 P03   | 697 min  | 3 tasks | 10 files |
 | Phase 04 P04   | 68 min   | 3 tasks | 16 files |
+| Phase 04 P05   | 37 min   | 3 tasks | 20 files |
 
 ## Accumulated Context
 
@@ -234,6 +235,10 @@ Recent decisions affecting current work:
 - [Phase 04]: Count every active, pending, failed, and retired-not-cleaned physical generation toward one logical sandbox footprint.
 - [Phase 04]: Reset documented exact rate-limiter name/key rows before deleting preserved actor IDs.
 - [Phase 04]: Keep write and reset abuse windows on the logical owner so cleanup cannot erase them.
+- [Phase 04]: Expose separate typed showcase and sandbox binding maps; the showcase map has no participation, notification, or admin mutation references.
+- [Phase 04]: Remount the complete provider and product subtree on environment, authenticated-session epoch, and lifecycle cache epoch changes.
+- [Phase 04]: Run provenance-sensitive UI tests with Afferent headless code and canonical UI resolved from the prepared candidate, while sharing that candidate runtime graph.
+- [Phase 04]: Pin react-router 8.3.0 exactly and synthesize packed metadata from committed package state so unrelated experiments cannot enter release artifacts.
 
 ### Pending Todos
 
@@ -259,6 +264,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-24T17:24:10Z
-Stopped at: Completed 04-04-PLAN.md
+Last session: 2026-07-27T22:36:03.528Z
+Stopped at: Completed 04-05-PLAN.md
 Resume file: None

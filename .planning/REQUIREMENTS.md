@@ -101,13 +101,13 @@ Requirements for the first production-ready public release. Roadmap creation wil
 
 ### Hosted Example
 
-- [ ] **DEMO-01**: A visitor can open a publicly deployed Vite example that uses Convex Auth and the published Afferent integration path.
-- [ ] **DEMO-02**: A visitor can explore an immutable showcase populated with representative boards, feedback, roadmap items, and changelog entries.
-- [ ] **DEMO-03**: Each authenticated demo visitor receives a private admin sandbox isolated from every other visitor.
+- [x] **DEMO-01**: A visitor can open a publicly deployed Vite example that uses Convex Auth and the published Afferent integration path.
+- [x] **DEMO-02**: A visitor can explore an immutable showcase populated with representative boards, feedback, roadmap items, and changelog entries.
+- [x] **DEMO-03**: Each authenticated demo visitor receives a private admin sandbox isolated from every other visitor.
 - [ ] **DEMO-04**: The demo uses separate statically installed showcase and sandbox component instances so sandbox scoping does not change the normal one-product installation contract.
 - [ ] **DEMO-05**: The trusted demo host derives sandbox scope from the authenticated visitor and never accepts sandbox scope from browser arguments.
-- [ ] **DEMO-06**: An authenticated demo visitor can seed or reset their sandbox to a deterministic starting state.
-- [ ] **DEMO-07**: Sandbox quotas, rate limits, expiration, and cleanup prevent unbounded public-demo storage growth.
+- [x] **DEMO-06**: An authenticated demo visitor can seed or reset their sandbox to a deterministic starting state.
+- [x] **DEMO-07**: Sandbox quotas, rate limits, expiration, and cleanup prevent unbounded public-demo storage growth.
 
 ### Release Quality
 
@@ -181,91 +181,91 @@ Explicit exclusions for the first product direction, documented to prevent scope
 
 Every v1 requirement maps to exactly one roadmap phase.
 
-| Requirement | Phase   | Status   |
-| ----------- | ------- | -------- |
-| ACCS-01     | Phase 1 | Complete |
-| ACCS-02     | Phase 1 | Complete |
-| ACCS-03     | Phase 1 | Complete |
-| ACCS-04     | Phase 1 | Complete |
-| ACCS-05     | Phase 1 | Complete |
-| ACCS-06     | Phase 1 | Complete |
-| FDBK-01     | Phase 1 | Complete |
-| FDBK-02     | Phase 1 | Complete |
-| FDBK-03     | Phase 1 | Complete |
-| FDBK-04     | Phase 1 | Complete |
-| FDBK-05     | Phase 1 | Complete |
-| FDBK-06     | Phase 1 | Complete |
-| FDBK-07     | Phase 1 | Complete |
-| FDBK-08     | Phase 1 | Complete |
-| DISC-01     | Phase 2 | Complete |
-| DISC-02     | Phase 2 | Complete |
-| DISC-03     | Phase 2 | Complete |
-| DISC-04     | Phase 2 | Complete |
-| DISC-05     | Phase 2 | Complete |
-| DISC-06     | Phase 2 | Complete |
-| DISC-07     | Phase 2 | Complete |
-| DISC-08     | Phase 2 | Complete |
-| ADMN-01     | Phase 2 | Complete |
-| ADMN-02     | Phase 2 | Complete |
-| ADMN-03     | Phase 2 | Complete |
-| ADMN-04     | Phase 2 | Complete |
-| ADMN-05     | Phase 2 | Complete |
-| ADMN-06     | Phase 2 | Complete |
-| ADMN-07     | Phase 2 | Complete |
-| ADMN-08     | Phase 2 | Complete |
-| ADMN-09     | Phase 2 | Complete |
-| ADMN-10     | Phase 2 | Complete |
+| Requirement | Phase     | Status   |
+| ----------- | --------- | -------- |
+| ACCS-01     | Phase 1   | Complete |
+| ACCS-02     | Phase 1   | Complete |
+| ACCS-03     | Phase 1   | Complete |
+| ACCS-04     | Phase 1   | Complete |
+| ACCS-05     | Phase 1   | Complete |
+| ACCS-06     | Phase 1   | Complete |
+| FDBK-01     | Phase 1   | Complete |
+| FDBK-02     | Phase 1   | Complete |
+| FDBK-03     | Phase 1   | Complete |
+| FDBK-04     | Phase 1   | Complete |
+| FDBK-05     | Phase 1   | Complete |
+| FDBK-06     | Phase 1   | Complete |
+| FDBK-07     | Phase 1   | Complete |
+| FDBK-08     | Phase 1   | Complete |
+| DISC-01     | Phase 2   | Complete |
+| DISC-02     | Phase 2   | Complete |
+| DISC-03     | Phase 2   | Complete |
+| DISC-04     | Phase 2   | Complete |
+| DISC-05     | Phase 2   | Complete |
+| DISC-06     | Phase 2   | Complete |
+| DISC-07     | Phase 2   | Complete |
+| DISC-08     | Phase 2   | Complete |
+| ADMN-01     | Phase 2   | Complete |
+| ADMN-02     | Phase 2   | Complete |
+| ADMN-03     | Phase 2   | Complete |
+| ADMN-04     | Phase 2   | Complete |
+| ADMN-05     | Phase 2   | Complete |
+| ADMN-06     | Phase 2   | Complete |
+| ADMN-07     | Phase 2   | Complete |
+| ADMN-08     | Phase 2   | Complete |
+| ADMN-09     | Phase 2   | Complete |
+| ADMN-10     | Phase 2   | Complete |
 | ADMN-11     | Phase 2.3 | Complete |
-| RMAP-01     | Phase 2 | Complete |
-| RMAP-02     | Phase 2 | Complete |
-| RMAP-03     | Phase 2 | Complete |
-| CHLG-01     | Phase 2 | Complete |
-| CHLG-02     | Phase 2 | Complete |
-| CHLG-03     | Phase 2 | Complete |
-| CHLG-04     | Phase 2 | Complete |
-| CHLG-05     | Phase 2 | Complete |
-| CHLG-06     | Phase 2 | Complete |
-| NOTF-01     | Phase 2 | Complete |
-| NOTF-02     | Phase 2 | Complete |
-| NOTF-03     | Phase 2 | Complete |
-| NOTF-04     | Phase 2 | Complete |
-| NOTF-05     | Phase 2 | Complete |
-| NOTF-06     | Phase 2 | Complete |
-| NOTF-07     | Phase 2 | Complete |
+| RMAP-01     | Phase 2   | Complete |
+| RMAP-02     | Phase 2   | Complete |
+| RMAP-03     | Phase 2   | Complete |
+| CHLG-01     | Phase 2   | Complete |
+| CHLG-02     | Phase 2   | Complete |
+| CHLG-03     | Phase 2   | Complete |
+| CHLG-04     | Phase 2   | Complete |
+| CHLG-05     | Phase 2   | Complete |
+| CHLG-06     | Phase 2   | Complete |
+| NOTF-01     | Phase 2   | Complete |
+| NOTF-02     | Phase 2   | Complete |
+| NOTF-03     | Phase 2   | Complete |
+| NOTF-04     | Phase 2   | Complete |
+| NOTF-05     | Phase 2   | Complete |
+| NOTF-06     | Phase 2   | Complete |
+| NOTF-07     | Phase 2   | Complete |
 | NOTF-08     | Phase 2.2 | Complete |
-| COMP-01     | Phase 4 | Pending  |
-| COMP-02     | Phase 1 | Complete |
-| COMP-03     | Phase 1 | Complete |
-| COMP-04     | Phase 1 | Complete |
-| COMP-05     | Phase 1 | Complete |
-| COMP-06     | Phase 1 | Complete |
-| COMP-07     | Phase 1 | Complete |
-| UI-01       | Phase 2 | Complete |
-| UI-02       | Phase 2 | Complete |
-| UI-03       | Phase 2 | Complete |
-| UI-04       | Phase 3 | Complete |
-| UI-05       | Phase 3 | Complete |
-| UI-06       | Phase 3 | Complete |
-| UI-07       | Phase 3 | Complete |
+| COMP-01     | Phase 4   | Pending  |
+| COMP-02     | Phase 1   | Complete |
+| COMP-03     | Phase 1   | Complete |
+| COMP-04     | Phase 1   | Complete |
+| COMP-05     | Phase 1   | Complete |
+| COMP-06     | Phase 1   | Complete |
+| COMP-07     | Phase 1   | Complete |
+| UI-01       | Phase 2   | Complete |
+| UI-02       | Phase 2   | Complete |
+| UI-03       | Phase 2   | Complete |
+| UI-04       | Phase 3   | Complete |
+| UI-05       | Phase 3   | Complete |
+| UI-06       | Phase 3   | Complete |
+| UI-07       | Phase 3   | Complete |
 | UI-08       | Phase 2.1 | Complete |
-| DEMO-01     | Phase 4 | Pending  |
-| DEMO-02     | Phase 4 | Pending  |
-| DEMO-03     | Phase 4 | Pending  |
-| DEMO-04     | Phase 4 | Pending  |
-| DEMO-05     | Phase 4 | Pending  |
-| DEMO-06     | Phase 4 | Pending  |
-| DEMO-07     | Phase 4 | Pending  |
-| QUAL-01     | Phase 2 | Complete |
-| QUAL-02     | Phase 1 | Complete |
-| QUAL-03     | Phase 1 | Complete |
-| QUAL-04     | Phase 3 | Complete |
-| QUAL-05     | Phase 4 | Pending  |
-| QUAL-06     | Phase 4 | Pending  |
-| QUAL-07     | Phase 3 | Complete |
-| QUAL-08     | Phase 3 | Complete |
-| QUAL-09     | Phase 4 | Pending  |
-| QUAL-10     | Phase 1 | Complete |
-| QUAL-11     | Phase 4 | Pending  |
+| DEMO-01     | Phase 4   | Complete |
+| DEMO-02     | Phase 4   | Complete |
+| DEMO-03     | Phase 4   | Complete |
+| DEMO-04     | Phase 4   | Pending  |
+| DEMO-05     | Phase 4   | Pending  |
+| DEMO-06     | Phase 4   | Complete |
+| DEMO-07     | Phase 4   | Complete |
+| QUAL-01     | Phase 2   | Complete |
+| QUAL-02     | Phase 1   | Complete |
+| QUAL-03     | Phase 1   | Complete |
+| QUAL-04     | Phase 3   | Complete |
+| QUAL-05     | Phase 4   | Pending  |
+| QUAL-06     | Phase 4   | Pending  |
+| QUAL-07     | Phase 3   | Complete |
+| QUAL-08     | Phase 3   | Complete |
+| QUAL-09     | Phase 4   | Pending  |
+| QUAL-10     | Phase 1   | Complete |
+| QUAL-11     | Phase 4   | Pending  |
 
 **Coverage:**
 
