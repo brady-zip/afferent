@@ -1,5 +1,120 @@
-import { test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
-test("completes the immutable showcase and private admin evaluator journey", async () => {
-  throw new Error("PHASE4_HOSTED_DEMO_SUITE_IMPLEMENTATION_REQUIRED");
+import { recordPhase4Completion } from "../../scripts/test-hosted-demo.mjs";
+import {
+  administerFeedback,
+  createFeedback,
+  createPasswordAccount,
+  participateInFeedback,
+  searchForFeedback,
+} from "./phase4-helpers";
+
+test("completes the immutable showcase and private admin evaluator journey", async ({
+  page,
+}, testInfo) => {
+  await page.goto("/");
+  await expect(page.locator('[aria-label="Showcase mode"] strong')).toHaveText(
+    "Immutable showcase",
+  );
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Representative feedback" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", {
+      name: "Make invoice history easier to export",
+      exact: true,
+    }),
+  ).toBeVisible();
+
+  await page.getByRole("button", { name: "Create feedback" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Sign in to continue" }),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Post feedback" })).toHaveCount(
+    0,
+  );
+
+  await page.goto("/");
+  await page
+    .getByRole("link", {
+      name: "Make invoice history easier to export",
+      exact: true,
+    })
+    .click();
+  await expect(
+    page.getByRole("heading", {
+      level: 2,
+      name: "Make invoice history easier to export",
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Vote for feedback" }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "Sign in to continue" }),
+  ).toBeVisible();
+
+  await page.goto("/roadmap");
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Roadmap" }),
+  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Planned" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "In Progress" }),
+  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Complete" })).toBeVisible();
+
+  await page.goto("/changelog");
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Changelog" }),
+  ).toBeVisible();
+  await page
+    .getByRole("link", {
+      name: "Invoice export is now available",
+      exact: true,
+    })
+    .click();
+  await expect(
+    page.getByRole("region", { name: "Linked feedback" }).getByRole("link", {
+      name: "Make invoice history easier to export",
+    }),
+  ).toBeVisible();
+
+  const title = "Evaluator-controlled release notes";
+  const body = "Evaluator body proves the installed artifact can accept data.";
+  const moderatedBody =
+    "Moderated evaluator body proves trusted host administration.";
+  const changelogTitle = "Evaluator journey shipped";
+  await createPasswordAccount(page, "phase4-evaluator@example.test");
+  await createFeedback(page, title, body);
+  await participateInFeedback(page, title, "Evaluator journey comment");
+
+  const results = await searchForFeedback(page, title);
+  await expect(
+    results.getByRole("link", { name: title, exact: true }),
+  ).toHaveCount(1);
+
+  await administerFeedback(page, title, {
+    body: moderatedBody,
+    changelogTitle,
+    changelogBody: "The evaluator journey now exercises publication.",
+    tag: "Evaluator",
+  });
+
+  await page.goto("/sandbox/roadmap");
+  const inProgress = page
+    .locator('[data-roadmap-group="in_progress"]')
+    .getByRole("link", { name: title, exact: true });
+  await expect(inProgress).toBeVisible({ timeout: 90_000 });
+  await page.goto("/sandbox/changelog");
+  await page.getByRole("link", { name: changelogTitle, exact: true }).click();
+  await expect(
+    page.getByRole("region", { name: "Linked feedback" }).getByRole("link", {
+      name: title,
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(page.getByText(moderatedBody, { exact: true })).toHaveCount(0);
+
+  await recordPhase4Completion(testInfo);
 });
