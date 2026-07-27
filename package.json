@@ -86,6 +86,7 @@
     "test:package": "node --test tests/integration/packed-artifact.test.mjs",
     "test:react": "vitest run --config vitest.react.config.ts tests/react",
     "test:release:package": "node scripts/verify-package-release.mjs",
+    "verify:demo:artifacts": "node scripts/prepare-demo-consumer.mjs --gate",
     "test:backend:phase2": "npm run test:backend:real && node scripts/test-search-backend.mjs && node scripts/test-rate-limiter-backend.mjs && node scripts/test-tag-cleanup-backend.mjs && node scripts/test-fanout-backend.mjs && node scripts/test-outbox-backend.mjs && node scripts/test-merge-backend.mjs && node scripts/test-headless-backend.mjs",
     "test:phase1": "npm run build && npm run test:fixtures && npm run test:auth-conformance && npm run test:scope && npm run test:component && npm run test:static && npm run test:backend:real && npm run test:package",
     "test:phase2": "npm run build && npm run test:model && npm run test:component && npm run test:backend && npm run test:backend:phase2 && npm run test:static && npm run test:react && npm run test:auth-conformance && npm run test:scope && npm run typecheck && npm run lint && npm run test:package",

@@ -19,6 +19,7 @@ import { validatePackageCandidate } from "./verify-package-release.mjs";
 
 export const DEMO_CANDIDATE_DIR = ".demo-candidate";
 export const REACT_ROUTER_VERSION = "8.3.0";
+export const DEMO_GATE_STEPS = ["prepare", "typecheck", "build", "host-tests"];
 
 const repositoryRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const generatedUiRoot = "src/components/afferent";
@@ -135,6 +136,15 @@ async function sha256(path) {
   return createHash("sha256")
     .update(await readFile(path))
     .digest("hex");
+}
+
+async function directoryPayload(root) {
+  const absoluteFiles = await filesUnder(root);
+  const files = absoluteFiles.map((path) => relative(root, path));
+  return {
+    files: files.map((path) => path.split(sep).join("/")),
+    sha256: await digestPaths(root, files),
+  };
 }
 
 async function examplePayload(root = repositoryRoot) {
@@ -772,14 +782,133 @@ export async function verifyDemoCandidate(candidateDir) {
   };
 }
 
+export function validateDemoGateEvidence(gate) {
+  if (
+    gate?.schemaVersion !== 1 ||
+    gate.status !== "complete" ||
+    JSON.stringify(gate.steps) !== JSON.stringify(DEMO_GATE_STEPS)
+  ) {
+    throw new Error("demo aggregate gate has a skipped or reordered stage");
+  }
+  for (const name of [
+    "package",
+    "registry",
+    "example",
+    "installedUi",
+    "build",
+    "hostTests",
+  ]) {
+    if (!/^[a-f0-9]{64}$/.test(gate.digests?.[name] ?? "")) {
+      throw new Error(
+        `demo aggregate gate is missing digest evidence: ${name}`,
+      );
+    }
+  }
+  return gate;
+}
+
+async function writeGateEvidence(candidateRoot, gate) {
+  const provenancePath = join(candidateRoot, ".afferent-provenance.json");
+  const provenance = JSON.parse(await readFile(provenancePath, "utf8"));
+  provenance.gate = gate;
+  await writeFile(provenancePath, `${JSON.stringify(provenance, null, 2)}\n`);
+}
+
+export async function runDemoArtifactGate(options = {}) {
+  const candidateRoot = resolve(
+    options.candidateDir ?? join(repositoryRoot, DEMO_CANDIDATE_DIR),
+  );
+  assertSafeCandidatePath(candidateRoot);
+  const prepared = await prepareDemoConsumer({
+    candidateDir: candidateRoot,
+    force: true,
+  });
+  await run("npm", ["run", "typecheck"], { cwd: candidateRoot });
+  await run("npm", ["run", "build"], {
+    cwd: candidateRoot,
+    env: {
+      VITE_AFFERENT_SOURCE_COMMIT: prepared.sourceCommit,
+      VITE_CONVEX_URL:
+        process.env.VITE_CONVEX_URL ?? "https://demo-gate.convex.cloud",
+    },
+  });
+
+  const build = await directoryPayload(join(candidateRoot, "dist"));
+  const testingGate = {
+    schemaVersion: 1,
+    status: "testing",
+    steps: DEMO_GATE_STEPS.slice(0, 3),
+    digests: {
+      package: prepared.package.sha256,
+      registry: prepared.registry.sha256,
+      example: prepared.example.sha256,
+      installedUi: prepared.installedUi.sha256,
+      build: build.sha256,
+    },
+    build,
+  };
+  await writeGateEvidence(candidateRoot, testingGate);
+
+  const hostTestPath = join(repositoryRoot, "tests/ui/hosted-shell.test.tsx");
+  await run(
+    "npm",
+    [
+      "exec",
+      "--",
+      "vitest",
+      "run",
+      "--config",
+      "vitest.react.config.ts",
+      "tests/ui/hosted-shell.test.tsx",
+    ],
+    {
+      cwd: repositoryRoot,
+      env: {
+        AFFERENT_REQUIRE_DEMO_PROVENANCE: "1",
+        AFFERENT_DEMO_PROVENANCE: join(
+          candidateRoot,
+          ".afferent-provenance.json",
+        ),
+        AFFERENT_DEMO_UI_ROOT: join(candidateRoot, generatedUiRoot),
+        AFFERENT_DEMO_PACKAGE_ROOT: join(
+          candidateRoot,
+          "node_modules/afferent",
+        ),
+      },
+    },
+  );
+
+  const completeGate = {
+    ...testingGate,
+    status: "complete",
+    steps: [...DEMO_GATE_STEPS],
+    digests: {
+      ...testingGate.digests,
+      hostTests: await sha256(hostTestPath),
+    },
+  };
+  validateDemoGateEvidence(completeGate);
+  await writeGateEvidence(candidateRoot, completeGate);
+  await verifyDemoCandidate(candidateRoot);
+  return {
+    ...prepared,
+    gate: completeGate,
+  };
+}
+
 async function main() {
   const candidateDir = join(repositoryRoot, DEMO_CANDIDATE_DIR);
+  const gate = process.argv.includes("--gate");
   const verifyOnly = process.argv.includes("--verify");
   const fresh = process.argv.includes("--fresh");
-  const result =
-    verifyOnly && !fresh && (await pathExists(candidateDir))
-      ? await verifyDemoCandidate(candidateDir)
-      : await prepareDemoConsumer({ candidateDir, force: true });
+  let result;
+  if (gate) {
+    result = await runDemoArtifactGate({ candidateDir });
+  } else if (verifyOnly && !fresh && (await pathExists(candidateDir))) {
+    result = await verifyDemoCandidate(candidateDir);
+  } else {
+    result = await prepareDemoConsumer({ candidateDir, force: true });
+  }
   process.stdout.write(
     `${JSON.stringify(
       {
@@ -790,6 +919,7 @@ async function main() {
         reactRouter: result.reactRouter,
         sourceCommit: result.sourceCommit,
         steps: result.steps,
+        gate: result.gate,
       },
       null,
       2,
