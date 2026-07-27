@@ -55,7 +55,7 @@ key-decisions:
 requirements-completed: [DEMO-01, DEMO-02, DEMO-03, DEMO-06, DEMO-07]
 coverage:
   - id: D1
-    description: "The hosted app installs and resolves only the exact packed package and generated registry artifacts."
+    description: "The hosted app installs and resolves only the exact packed package and generated registry artifacts, rejecting example imports into repository src/, ui/, and examples/ui/ roots."
     requirement: DEMO-01
     verification:
       - kind: integration
@@ -121,6 +121,7 @@ status: complete
 4. **Task 2 GREEN: showcase and private sandbox shell** — `d187fcf`
 5. **Task 3 RED: installed aggregate gate contract** — `e544c37`
 6. **Task 3 GREEN: installed hosted demo gate** — `92a5a60`
+7. **Follow-up: all forbidden import-origin boundaries** — `b5d9561`
 
 ## Decisions Made
 
@@ -162,8 +163,8 @@ status: complete
 ## Test Results
 
 - `npm run verify:demo:artifacts` — passed: clean preparation, candidate typecheck, Vite production build, 15 candidate-installed host-shell tests, and complete digest evidence.
-- `npm exec -- vitest run tests/integration/demo-artifacts.test.mjs` — passed: 4 artifact/provenance tests.
-- `node scripts/prepare-demo-consumer.mjs --verify` — passed against source commit `92a5a60`.
+- `npm exec -- vitest run tests/integration/demo-artifacts.test.mjs` — passed: 6 artifact/provenance tests, including real-file resolutions into each forbidden `src/`, `ui/`, and `examples/ui/` root.
+- `node scripts/prepare-demo-consumer.mjs --verify` — passed after the focused import-origin follow-up.
 - `npm exec -- vitest run --config vitest.react.config.ts tests/ui/hosted-shell.test.tsx` — passed: 15 shell, lifecycle, quota, responsive, keyboard, reset, authority, and provenance tests.
 - Focused Oxlint and Prettier checks across hosted source, preparation, bindings, and tests — passed.
 
@@ -183,7 +184,7 @@ None for this plan's deterministic local gate. A real `VITE_CONVEX_URL` and immu
 
 ## Self-Check: PASSED
 
-- All 20 plan files and six RED/GREEN commits exist.
+- All 20 plan files, six RED/GREEN commits, and the import-origin follow-up commit exist.
 - Every declared task verification and the final aggregate installed-consumer gate pass.
 - The final candidate records source commit `92a5a60d54fc0a42721b9746c00e16334fe1d208` with complete four-stage evidence.
 - Unrelated TypeScript 7, package-lock, Codex/Claude hook, npm, debug, and Playwright files remain unstaged.
