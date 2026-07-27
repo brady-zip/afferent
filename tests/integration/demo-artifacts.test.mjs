@@ -16,6 +16,7 @@ import {
   DEMO_CANDIDATE_DIR,
   assertImportOrigins,
   prepareDemoConsumer,
+  validateDemoGateEvidence,
   verifyDemoCandidate,
 } from "../../scripts/prepare-demo-consumer.mjs";
 
@@ -100,5 +101,43 @@ describe("hosted demo release artifacts", () => {
     await expect(
       access(join(root, "example/src/components/afferent")),
     ).rejects.toThrow();
+  });
+
+  it("defines a fail-closed aggregate gate with complete digest evidence", async () => {
+    const packageManifest = await readFile(
+      join(root, "package.json"),
+      "utf8",
+    ).then(JSON.parse);
+    expect(packageManifest.scripts["verify:demo:artifacts"]).toBe(
+      "node scripts/prepare-demo-consumer.mjs --gate",
+    );
+
+    const digest = "a".repeat(64);
+    const complete = {
+      schemaVersion: 1,
+      status: "complete",
+      steps: ["prepare", "typecheck", "build", "host-tests"],
+      digests: {
+        package: digest,
+        registry: digest,
+        example: digest,
+        installedUi: digest,
+        build: digest,
+        hostTests: digest,
+      },
+    };
+    expect(validateDemoGateEvidence(complete)).toEqual(complete);
+    expect(() =>
+      validateDemoGateEvidence({
+        ...complete,
+        steps: complete.steps.filter((step) => step !== "host-tests"),
+      }),
+    ).toThrow(/skipped or reordered/i);
+    expect(() =>
+      validateDemoGateEvidence({
+        ...complete,
+        digests: { ...complete.digests, installedUi: undefined },
+      }),
+    ).toThrow(/digest evidence/i);
   });
 });

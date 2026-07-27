@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
-import { readFile } from "node:fs/promises";
+import { readFile, realpath } from "node:fs/promises";
+import { resolve, sep } from "node:path";
 import React, { act, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { MemoryRouter } from "react-router";
@@ -297,5 +298,102 @@ describe("hosted Afferent shell", () => {
     expect(sources.join("\n")).not.toMatch(
       /\b(?:userId|isAdmin|scopeId|ownerKey|physicalScope|generation)\b/,
     );
+  });
+
+  test("keeps keyboard destinations in environment, workflow, account, and reset order", () => {
+    const mounted = renderApp("/sandbox/admin", {
+      auth: { status: "signed_in", sessionEpoch: "session-1" },
+      lifecycle: {
+        state: "ready",
+        message: "Your private sandbox is ready.",
+      },
+    });
+    const destinations = [
+      ...mounted.container.querySelectorAll<
+        HTMLAnchorElement | HTMLButtonElement
+      >("a[href], button:not([disabled])"),
+    ].map((element) => element.textContent?.trim());
+
+    expect(destinations.indexOf("Showcase")).toBeLessThan(
+      destinations.indexOf("Feedback"),
+    );
+    expect(destinations.indexOf("Feedback")).toBeLessThan(
+      destinations.indexOf("Administration"),
+    );
+    expect(destinations.indexOf("Administration")).toBeLessThan(
+      destinations.indexOf("Reset my sandbox"),
+    );
+    expect(destinations).toContain("Sign out");
+    mounted.unmount();
+  });
+
+  test("keeps responsive shell rules explicit at phone, tablet, and desktop widths", async () => {
+    const css = await readFile("example/src/index.css", "utf8");
+    expect(css).toMatch(/min-width:\s*320px/);
+    expect(css).toMatch(/overflow-x:\s*hidden/);
+    expect(css).toMatch(/min-height:\s*44px/);
+    expect(css).toMatch(/@media \(max-width: 639px\)/);
+    expect(css).toMatch(/@media \(max-width: 767px\)/);
+    expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)/);
+    expect(css).toMatch(/@media \(forced-colors: active\)/);
+  });
+
+  test("renders safe quota recovery without exposing an internal identifier", () => {
+    const mounted = render(
+      <SandboxLifecycle
+        lifecycle={{
+          state: "error",
+          message: "A write reached its safe bound.",
+          quota: {
+            contractVersion: 1,
+            kind: "resource",
+            resource: "comments",
+            used: 200,
+            limit: 200,
+          },
+        }}
+        onEnsure={vi.fn()}
+        onReset={vi.fn()}
+      />,
+    );
+    expect(mounted.container.textContent).toContain("comments limit reached");
+    expect(mounted.container.textContent).toContain("200 of 200 comments");
+    expect(mounted.container.textContent).toContain("Reset my sandbox");
+    expect(mounted.container.textContent).not.toMatch(
+      /\b(?:scope|generation|owner|userId|isAdmin)\b/i,
+    );
+    mounted.unmount();
+  });
+
+  test("uses candidate-installed package and UI roots during the aggregate gate", async () => {
+    if (process.env.AFFERENT_REQUIRE_DEMO_PROVENANCE !== "1") return;
+
+    const provenancePath = process.env.AFFERENT_DEMO_PROVENANCE;
+    const uiRoot = process.env.AFFERENT_DEMO_UI_ROOT;
+    const packageRoot = process.env.AFFERENT_DEMO_PACKAGE_ROOT;
+    expect(provenancePath).toBeTruthy();
+    expect(uiRoot).toBeTruthy();
+    expect(packageRoot).toBeTruthy();
+
+    const candidateRoot = await realpath(resolve(".demo-candidate"));
+    const installedUiRoot = await realpath(resolve(uiRoot!));
+    const installedPackageRoot = await realpath(resolve(packageRoot!));
+    expect(installedUiRoot.startsWith(`${candidateRoot}${sep}`)).toBe(true);
+    expect(installedPackageRoot.startsWith(`${candidateRoot}${sep}`)).toBe(
+      true,
+    );
+
+    const manifest = JSON.parse(await readFile(provenancePath!, "utf8"));
+    expect(manifest.gate.status).toBe("testing");
+    expect(manifest.gate.steps).toEqual(["prepare", "typecheck", "build"]);
+    for (const name of [
+      "package",
+      "registry",
+      "example",
+      "installedUi",
+      "build",
+    ]) {
+      expect(manifest.gate.digests[name]).toMatch(/^[a-f0-9]{64}$/);
+    }
   });
 });
