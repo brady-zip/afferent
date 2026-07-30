@@ -150,14 +150,13 @@ describe("release workflow contracts", () => {
     );
 
     expect(() =>
-      validateReleaseWorkflow(source.replace("id-token: write", "id-token: none")),
+      validateReleaseWorkflow(
+        source.replace("id-token: write", "id-token: none"),
+      ),
     ).toThrow(/OIDC|id-token/iu);
     expect(() =>
       validateReleaseWorkflow(
-        source.replace(
-          "needs: verify-public-npm",
-          "needs: release-readiness",
-        ),
+        source.replace("needs: verify-public-npm", "needs: release-readiness"),
       ),
     ).toThrow(/dependency|public npm|publication/iu);
   });
