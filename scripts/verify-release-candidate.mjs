@@ -494,10 +494,7 @@ export async function buildReleaseCandidate(outputDirectory) {
       join(repositoryRoot, "registry"),
       join(candidateRoot, "registry"),
     ),
-    copyPayload(
-      join(repositoryRoot, "docs/.vitepress/dist"),
-      join(candidateRoot, "docs"),
-    ),
+    copyPayload(join(repositoryRoot, "dist/docs"), join(candidateRoot, "docs")),
     copyPayload(join(demoRoot, "dist"), join(candidateRoot, "demo/dist")),
     copyPayload(
       join(demoRoot, ".afferent-provenance.json"),
