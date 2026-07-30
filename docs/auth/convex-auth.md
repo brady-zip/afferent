@@ -9,7 +9,7 @@ access the host application's `ctx.auth`.
 Use the executable fixture at
 `fixtures/auth-convex-auth/convex/afferent.ts` as the source of truth:
 
-<!-- afferent-docs: executable fixture=fixtures/auth-convex-auth/convex/afferent.ts mode=exact -->
+<!-- afferent-docs: typescript mode=fixture context=convex-auth executable fixture=fixtures/auth-convex-auth/convex/afferent.ts -->
 
 ```ts
 import { getAuthUserId } from "@convex-dev/auth/server";

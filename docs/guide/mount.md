@@ -7,6 +7,8 @@ component references, and establishes the trusted host-wrapper boundary.
 
 Create or update `convex/convex.config.ts`:
 
+<!-- afferent-docs: typescript mode=syntax-only context=component-mount -->
+
 ```ts
 import afferent from "afferent/convex.config.js";
 import { defineApp } from "convex/server";
@@ -25,6 +27,8 @@ that installation rather than mounting dynamic product instances.
 Run the normal Convex development/code-generation path in the consuming
 application:
 
+<!-- afferent-docs: shell mode=syntax-only context=adopter reason=convex-codegen -->
+
 ```sh
 npx convex dev --once
 ```
@@ -37,6 +41,8 @@ documents and provider records must not cross into browser responses.
 The provider-specific guide supplies `resolveVerifiedActor` and
 `authorizeCurrentAdmin`. Both execute in Convex host functions and inspect
 current server-side identity or host-owned membership:
+
+<!-- afferent-docs: typescript mode=syntax-only context=trusted-host -->
 
 ```ts
 import { createAfferentClient, type AfferentClientOptions } from "afferent";
@@ -66,6 +72,8 @@ itself.
 For example, an admin-only installation mutation forwards only the validated
 installation intent:
 
+<!-- afferent-docs: typescript mode=syntax-only context=trusted-host -->
+
 ```ts
 import {
   configureInstallationIntentValidator,
@@ -83,6 +91,8 @@ export const configureAfferent = mutation({
 ```
 
 Call it once with the initial board configuration:
+
+<!-- afferent-docs: typescript mode=syntax-only context=adopter-client -->
 
 ```ts
 await convex.mutation(api.afferent.configureAfferent, {

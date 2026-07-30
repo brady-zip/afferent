@@ -13,6 +13,8 @@ generation, and map those generated function references to
 `fixtures/packed-vite-convex/src/App.tsx` exercises the complete binding map.
 A minimal map has this shape:
 
+<!-- afferent-docs: typescript mode=syntax-only context=headless-bindings -->
+
 ```ts
 import type { AfferentBindings } from "afferent/react.js";
 
@@ -42,6 +44,8 @@ where the host authenticates the actor and re-authorizes admin access.
 
 ## Mount the provider
 
+<!-- afferent-docs: typescript mode=syntax-only context=headless-provider -->
+
 ```tsx
 import { useConvex } from "convex/react";
 import { AfferentProvider } from "afferent/react.js";
@@ -68,6 +72,8 @@ changing it invalidates subscriptions and pending UI from the previous viewer.
 It is not sent to the component as authority.
 
 ## Consume closed hook states
+
+<!-- afferent-docs: typescript mode=syntax-only context=headless-hook -->
 
 ```tsx
 import { useFeedbackFeed } from "afferent/react.js";

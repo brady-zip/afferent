@@ -10,6 +10,8 @@ multiple feedback boards.
 After cloning the repository and running `npm install`, start the evaluator
 experience with one command:
 
+<!-- afferent-docs: shell mode=script-reference context=repository -->
+
 ```sh
 npm run dev:demo
 ```
@@ -22,12 +24,16 @@ model, and recovery steps.
 
 ## Install into a Convex application
 
+<!-- afferent-docs: shell mode=package-install context=adopter -->
+
 ```sh
 npm install afferent
 ```
 
 Mount `afferent/convex.config.js`, run Convex code generation, and expose only
 narrow host-owned wrapper functions:
+
+<!-- afferent-docs: typescript mode=syntax-only context=component-mount -->
 
 ```ts
 import afferent from "afferent/convex.config.js";

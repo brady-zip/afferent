@@ -9,7 +9,7 @@ application's `ctx.auth`.
 
 Use the executable fixture at `fixtures/auth-clerk/convex/afferent.ts`:
 
-<!-- afferent-docs: executable fixture=fixtures/auth-clerk/convex/afferent.ts mode=exact -->
+<!-- afferent-docs: typescript mode=fixture context=clerk executable fixture=fixtures/auth-clerk/convex/afferent.ts -->
 
 ```ts
 import {

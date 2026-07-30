@@ -9,7 +9,7 @@ access the host application's `ctx.auth` or the Better Auth component directly.
 Use the executable fixture at
 `fixtures/auth-better-auth/convex/afferent.ts`:
 
-<!-- afferent-docs: executable fixture=fixtures/auth-better-auth/convex/afferent.ts mode=exact -->
+<!-- afferent-docs: typescript mode=fixture context=better-auth executable fixture=fixtures/auth-better-auth/convex/afferent.ts -->
 
 ```ts
 import { createClient } from "@convex-dev/better-auth";

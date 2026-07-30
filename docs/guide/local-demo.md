@@ -22,6 +22,8 @@ install unrelated global packages to satisfy the launcher.
 
 Install the pinned dependencies once, then run the one evaluator command:
 
+<!-- afferent-docs: shell mode=script-reference context=repository -->
+
 ```sh
 npm install
 npm run dev:demo
@@ -69,6 +71,8 @@ multi-product API.
 If the launcher reports an old Node.js version, unavailable npm, or missing
 `convex`/`shadcn`, verify the versions above and rerun:
 
+<!-- afferent-docs: shell mode=script-reference context=repository -->
+
 ```sh
 npm install
 npm run dev:demo
@@ -81,6 +85,8 @@ package name or installing a similarly named package.
 
 The candidate is installed from a newly packed tarball and current generated
 registry. Confirm network access, remove no source files, and run:
+
+<!-- afferent-docs: shell mode=script-reference context=repository -->
 
 ```sh
 npm run test:release:package

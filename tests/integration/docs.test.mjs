@@ -36,10 +36,7 @@ test("the adopter entry path is concise, local-first, and versioned", async () =
   assert.match(mount, /afferent\/convex\.config\.js/);
   assert.match(mount, /createAfferentClient/);
   assert.match(config, /defineConfig/);
-  assert.equal(
-    packageJson.scripts["docs:build"],
-    "vitepress build docs",
-  );
+  assert.equal(packageJson.scripts["docs:build"], "vitepress build docs");
   assert.equal(packageJson.devDependencies.vitepress, "1.6.4");
 });
 

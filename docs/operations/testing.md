@@ -7,6 +7,8 @@ host wrapper, and real browser behavior against local Convex.
 
 Run:
 
+<!-- afferent-docs: shell mode=script-reference context=repository -->
+
 ```sh
 npm run test:release:package
 ```
@@ -18,6 +20,8 @@ Repository-relative imports are not an acceptable substitute.
 
 The provider fixtures can also be checked directly:
 
+<!-- afferent-docs: shell mode=script-reference context=repository -->
+
 ```sh
 npm run test:fixtures
 ```
@@ -25,6 +29,8 @@ npm run test:fixtures
 ## Clone-and-run local demo
 
 Run:
+
+<!-- afferent-docs: shell mode=script-reference context=repository -->
 
 ```sh
 npm run dev:demo
@@ -44,6 +50,8 @@ confirm one user's sandbox lifecycle never changes the other user's data.
 
 Run the real local-Convex suite:
 
+<!-- afferent-docs: shell mode=script-reference context=repository -->
+
 ```sh
 npm run test:e2e:phase4
 ```
@@ -54,6 +62,8 @@ for desktop, tablet, and mobile. The harness owns its backend and web processes
 and emits evidence only after every required suite completes.
 
 Before releasing, run the aggregate:
+
+<!-- afferent-docs: shell mode=script-reference context=repository -->
 
 ```sh
 npm run verify:phase4

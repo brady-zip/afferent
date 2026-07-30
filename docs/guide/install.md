@@ -16,6 +16,8 @@ routing, and external side effects.
 
 Install the package in the consuming application:
 
+<!-- afferent-docs: shell mode=package-install context=adopter -->
+
 ```sh
 npm install afferent
 ```

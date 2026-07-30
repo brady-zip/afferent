@@ -8,6 +8,8 @@ requirements go beyond them.
 
 Wrap copied screens in `AfferentUiProvider`:
 
+<!-- afferent-docs: typescript mode=syntax-only context=copied-ui -->
+
 ```tsx
 import { AfferentUiProvider } from "@/components/afferent/core/afferent-ui-provider";
 import { AfferentBoardScreen } from "@/components/afferent/board/board-screen";
@@ -47,6 +49,8 @@ None of these presentation props grants identity, admin permission, or scope.
 
 Import the copied `components/afferent/afferent.css` and map its standard
 shadcn-style variables into your theme:
+
+<!-- afferent-docs: css mode=syntax-only context=copied-ui -->
 
 ```css
 :root {

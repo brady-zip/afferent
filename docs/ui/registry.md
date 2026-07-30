@@ -28,6 +28,8 @@ shared layer is installed with it.
 
 From a configured shadcn application:
 
+<!-- afferent-docs: shell mode=registry-install context=adopter -->
+
 ```sh
 npx shadcn@4.11.0 add AFFERENT_RELEASE_REGISTRY_URL/r/afferent-board.json
 npx shadcn@4.11.0 add AFFERENT_RELEASE_REGISTRY_URL/r/afferent-roadmap.json

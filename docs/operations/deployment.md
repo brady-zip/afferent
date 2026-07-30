@@ -25,7 +25,7 @@ helpers.
 The following is an adopter-owned account action. Run it only after selecting
 the intended Convex team/project and reviewing the target shown by the CLI:
 
-<!-- afferent-docs: shell mode=syntax-only reason=adopter-account-required -->
+<!-- afferent-docs: shell mode=syntax-only context=adopter reason=adopter-account-required -->
 
 ```sh
 npx convex deploy
