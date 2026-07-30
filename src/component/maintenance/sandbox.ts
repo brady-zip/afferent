@@ -356,7 +356,9 @@ export const cleanupScopeBatch = mutation({
     }
 
     const [tableName, disposition] = TABLES_IN_CLEANUP_ORDER[stage]!;
-    const page = await (
+    // Components do not support cursor pagination. Delete a bounded prefix and
+    // revisit the same stage until the scope-leading index returns no rows.
+    const documents = await (
       ctx.db as unknown as {
         query: (table: string) => {
           withIndex: (
@@ -364,16 +366,7 @@ export const cleanupScopeBatch = mutation({
             range: (query: {
               eq: (field: string, value: string) => unknown;
             }) => unknown,
-          ) => {
-            paginate: (options: {
-              numItems: number;
-              cursor: string | null;
-            }) => Promise<{
-              page: { _id: string }[];
-              isDone: boolean;
-              continueCursor: string;
-            }>;
-          };
+          ) => { take: (count: number) => Promise<{ _id: string }[]> };
         };
       }
     )
@@ -381,13 +374,10 @@ export const cleanupScopeBatch = mutation({
       .withIndex(disposition.scopeIndex, (index) =>
         index.eq("scopeId", args.scopeId),
       )
-      .paginate({
-        numItems: documentBudget,
-        cursor: args.continuation?.cursor ?? null,
-      });
+      .take(documentBudget);
 
     if (tableName === "actors") {
-      for (const actor of page.page) {
+      for (const actor of documents) {
         await resetActorParticipationLimits(
           ctx,
           args.scopeId,
@@ -395,17 +385,17 @@ export const cleanupScopeBatch = mutation({
         );
       }
     }
-    for (const document of page.page) {
+    for (const document of documents) {
       await ctx.db.delete(document._id as never);
     }
 
     return {
       contractVersion: 1 as const,
       done: false,
-      deleted: page.page.length,
-      continuation: page.isDone
-        ? { stage: stage + 1 }
-        : { stage, cursor: page.continueCursor },
+      deleted: documents.length,
+      continuation: {
+        stage: documents.length === 0 ? stage + 1 : stage,
+      },
     };
   },
 });

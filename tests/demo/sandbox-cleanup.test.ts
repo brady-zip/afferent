@@ -37,6 +37,7 @@ describe("leased retired-generation cleanup", () => {
     const secondBefore = await second.query(api.sandbox.listFeedback, {
       order: "top",
       paginationOpts: { numItems: 20, cursor: null },
+      sessionGeneration: 0,
     });
     await first.action(api.sandbox.resetSandbox, {});
 
@@ -71,6 +72,7 @@ describe("leased retired-generation cleanup", () => {
       second.query(api.sandbox.listFeedback, {
         order: "top",
         paginationOpts: { numItems: 20, cursor: null },
+        sessionGeneration: 0,
       }),
     ).resolves.toEqual(secondBefore);
     await expect(
@@ -113,6 +115,7 @@ describe("leased retired-generation cleanup", () => {
     const before = await user.query(api.sandbox.listFeedback, {
       order: "top",
       paginationOpts: { numItems: 20, cursor: null },
+      sessionGeneration: 0,
     });
     await expect(
       backend.mutation(internal.sandboxCleanup.recordCleanupBatch, {
@@ -132,6 +135,7 @@ describe("leased retired-generation cleanup", () => {
       user.query(api.sandbox.listFeedback, {
         order: "top",
         paginationOpts: { numItems: 20, cursor: null },
+        sessionGeneration: 0,
       }),
     ).resolves.toEqual(before);
   });

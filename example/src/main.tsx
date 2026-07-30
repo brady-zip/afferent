@@ -96,7 +96,7 @@ function HostedExample() {
   useEffect(() => {
     if (
       !isAuthenticated ||
-      lifecycle.state !== "signed_out" ||
+      !["signed_out", "preparing"].includes(lifecycle.state) ||
       ensurePending.current
     ) {
       return;

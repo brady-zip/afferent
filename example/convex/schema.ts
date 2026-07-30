@@ -60,6 +60,7 @@ export default defineSchema({
     cleanupLeaseUntil: v.optional(v.number()),
     cleanupLeaseVersion: v.optional(v.number()),
     cleanupRetries: v.optional(v.number()),
+    cleanupLastError: v.optional(v.string()),
     cleanedAt: v.optional(v.number()),
   })
     .index("by_owner_generation", ["ownerKey", "generation"])

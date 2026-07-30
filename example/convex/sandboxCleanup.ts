@@ -176,6 +176,7 @@ export const recordCleanupBatch = internalMutation({
         cleanupCursor: args.result.continuation?.cursor,
         cleanupLeaseOwner: undefined,
         cleanupLeaseUntil: undefined,
+        cleanupLastError: undefined,
       });
       await scheduleNext(ctx, args);
       return { state: "pending" as const };
@@ -193,6 +194,7 @@ export const recordCleanupBatch = internalMutation({
         cleanupState: "pending",
         cleanupLeaseOwner: undefined,
         cleanupLeaseUntil: undefined,
+        cleanupLastError: undefined,
       });
       await scheduleNext(ctx, args);
       return { state: "pending" as const };
@@ -209,6 +211,7 @@ export const recordCleanupBatch = internalMutation({
         cleanupState: "pending",
         cleanupLeaseOwner: undefined,
         cleanupLeaseUntil: undefined,
+        cleanupLastError: undefined,
       });
       await scheduleNext(ctx, args);
       return { state: "pending" as const };
@@ -219,6 +222,7 @@ export const recordCleanupBatch = internalMutation({
       cleanupCursor: undefined,
       cleanupLeaseOwner: undefined,
       cleanupLeaseUntil: undefined,
+      cleanupLastError: undefined,
       cleanedAt: args.currentTime,
     });
     return { state: "complete" as const };
@@ -231,6 +235,7 @@ export const releaseCleanupLease = internalMutation({
     generation: v.number(),
     workerId: v.string(),
     leaseVersion: v.number(),
+    error: v.optional(v.string()),
   },
   returns: workerStateValidator,
   handler: async (ctx, args) => {
@@ -252,6 +257,7 @@ export const releaseCleanupLease = internalMutation({
       cleanupLeaseOwner: undefined,
       cleanupLeaseUntil: undefined,
       cleanupRetries: (generation.cleanupRetries ?? 0) + 1,
+      cleanupLastError: args.error,
     });
     await scheduleNext(ctx, { ...args, delay: SANDBOX_CLEANUP_RETRY_MS });
     return { state: "pending" as const };
@@ -372,13 +378,17 @@ export const runRetiredGenerationCleanup = internalAction({
         result,
         currentTime: Date.now(),
       });
-    } catch {
+    } catch (error) {
       return await ctx.runMutation(
         internal.sandboxCleanup.releaseCleanupLease,
         {
           ...args,
           workerId,
           leaseVersion: lease.leaseVersion,
+          error: (error instanceof Error
+            ? error.message
+            : "UNKNOWN_CLEANUP_FAILURE"
+          ).slice(0, 500),
         },
       );
     }

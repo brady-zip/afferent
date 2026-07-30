@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 const read = (path: string) => readFile(path, "utf8");
 
-describe("hosted demo static boundary", () => {
+describe("local demo static boundary", () => {
   it("installs exactly two named Afferent instances with Convex Auth ingress", async () => {
     const config = await read("example/convex/convex.config.ts");
     expect(config.match(/app\.use\(afferent/g)).toHaveLength(2);
@@ -50,7 +50,36 @@ describe("hosted demo static boundary", () => {
     );
   });
 
-  it("commits generated hosted references for both component instances", async () => {
+  it("consumes headless cache generations at the host wrapper boundary", async () => {
+    for (const path of [
+      "example/convex/showcase.ts",
+      "example/convex/sandbox.ts",
+    ]) {
+      const wrapper = await read(path);
+      expect(wrapper).toContain(
+        "const cacheGenerationValidator = { sessionGeneration: v.number() }",
+      );
+      expect(wrapper).toContain("withoutSessionGeneration(args)");
+      expect(wrapper).toMatch(
+        /listFeedbackIntentValidator\.fields,\s*\.\.\.cacheGenerationValidator/,
+      );
+      expect(wrapper).toMatch(
+        /searchFeedbackIntentValidator\.fields,\s*\.\.\.cacheGenerationValidator/,
+      );
+    }
+  });
+
+  it("starts first-access preparation after Convex Auth succeeds", async () => {
+    const entrypoint = await read("example/src/main.tsx");
+    expect(entrypoint).toContain(
+      '["signed_out", "preparing"].includes(lifecycle.state)',
+    );
+    expect(entrypoint).toMatch(
+      /ensurePending\.current = true;[\s\S]*ensureSandbox\(\{\}\)/,
+    );
+  });
+
+  it("commits generated references for both component instances", async () => {
     await access("example/convex/_generated/api.d.ts");
     await access("example/convex/_generated/server.d.ts");
     const api = await read("example/convex/_generated/api.d.ts");

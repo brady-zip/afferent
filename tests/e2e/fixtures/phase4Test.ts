@@ -55,6 +55,13 @@ export const inspect = internalQuery({
       retiredCleanupComplete:
         retired.length > 0 &&
         retired.every((generation) => generation.cleanupState === "complete"),
+      retiredGenerations: retired.map((generation) => ({
+        generation: generation.generation,
+        cleanupState: generation.cleanupState ?? null,
+        cleanupStage: generation.cleanupStage ?? null,
+        cleanupRetries: generation.cleanupRetries ?? 0,
+        cleanupLastError: generation.cleanupLastError ?? null,
+      })),
       lifecycleState: owner.lifecycleState,
       writeCount: owner.writeCount ?? 0,
     });

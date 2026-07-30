@@ -240,6 +240,7 @@ describe("persisted hosted sandbox lifecycle", () => {
     const feedback = await user.query(api.sandbox.listFeedback, {
       order: "top",
       paginationOpts: { numItems: 20, cursor: null },
+      sessionGeneration: 0,
     });
     expect(feedback.page.length).toBeGreaterThan(0);
     expect(JSON.stringify(feedback)).not.toContain("physicalScopeId");
@@ -255,6 +256,7 @@ describe("persisted hosted sandbox lifecycle", () => {
     const before = await user.query(api.sandbox.listFeedback, {
       order: "top",
       paginationOpts: { numItems: 20, cursor: null },
+      sessionGeneration: 0,
     });
 
     const reset = await user.action(api.sandbox.resetSandbox, {});
@@ -265,6 +267,7 @@ describe("persisted hosted sandbox lifecycle", () => {
     const after = await user.query(api.sandbox.listFeedback, {
       order: "top",
       paginationOpts: { numItems: 20, cursor: null },
+      sessionGeneration: 1,
     });
     expect(after.page.map((post) => post.title)).toEqual(
       before.page.map((post) => post.title),
@@ -289,10 +292,12 @@ describe("persisted hosted sandbox lifecycle", () => {
     const firstBefore = await first.query(api.sandbox.listFeedback, {
       order: "top",
       paginationOpts: { numItems: 20, cursor: null },
+      sessionGeneration: 0,
     });
     const secondBefore = await second.query(api.sandbox.listFeedback, {
       order: "top",
       paginationOpts: { numItems: 20, cursor: null },
+      sessionGeneration: 0,
     });
 
     await backend.run(async (ctx) => {
@@ -318,10 +323,12 @@ describe("persisted hosted sandbox lifecycle", () => {
     const firstAfter = await first.query(api.sandbox.listFeedback, {
       order: "top",
       paginationOpts: { numItems: 20, cursor: null },
+      sessionGeneration: 1,
     });
     const secondAfter = await second.query(api.sandbox.listFeedback, {
       order: "top",
       paginationOpts: { numItems: 20, cursor: null },
+      sessionGeneration: 0,
     });
     expect(firstAfter.page.map((post) => post.id)).not.toEqual(
       firstBefore.page.map((post) => post.id),

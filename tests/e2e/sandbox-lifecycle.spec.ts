@@ -63,12 +63,20 @@ test("keeps reset, expiry, quota, cleanup, and stale work isolated", async ({
     expect(cleanup.staleState).toBe("stale");
     await expect
       .poll(
-        async () =>
-          (
-            await runPhase4Internal("inspect", {
-              email: emailA,
-            })
-          ).retiredCleanupComplete,
+        async () => {
+          const state = await runPhase4Internal("inspect", {
+            email: emailA,
+          });
+          const failure = state.retiredGenerations.find(
+            (generation) => generation.cleanupLastError !== null,
+          );
+          if (failure !== undefined) {
+            throw new Error(
+              `retired generation cleanup failed: ${JSON.stringify(failure)}`,
+            );
+          }
+          return state.retiredCleanupComplete;
+        },
         { timeout: 90_000 },
       )
       .toBe(true);
