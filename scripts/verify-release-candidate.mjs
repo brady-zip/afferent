@@ -300,6 +300,9 @@ function actionStep(job, action) {
 export function validateReleaseWorkflow(source) {
   assertNoForbiddenWorkflowSurface(source);
   const workflow = parseWorkflow(source, "release.yml");
+  const githubTokenExpression = "$" + "{{ github.token }}";
+  const ciRunIdExpression = "$" + "{{ inputs.ci_run_id }}";
+  const sourceCommitExpression = "$" + "{{ inputs.source_commit }}";
   if (
     workflow.permissions?.contents !== "read" ||
     Object.keys(workflow.permissions).length !== 1
@@ -428,6 +431,48 @@ export function validateReleaseWorkflow(source) {
       "static publication permissions or environment are invalid",
     );
   }
+  for (const [name, job] of Object.entries({
+    "publish-npm": publish,
+    "verify-public-npm": verifyPublic,
+  })) {
+    if (
+      actionStep(job, "actions/setup-node")?.with?.["registry-url"] !==
+      undefined
+    ) {
+      throw new Error(
+        `${name} must not configure token-oriented npm registry authentication`,
+      );
+    }
+  }
+  const readinessSteps = readiness.steps ?? [];
+  const runIdentityIndex = readinessSteps.findIndex((step) =>
+    String(step.run ?? "").includes("--ci-run-metadata"),
+  );
+  const crossRunDownloadIndex = readinessSteps.findIndex((step) =>
+    String(step.uses ?? "").startsWith("actions/download-artifact@"),
+  );
+  const runIdentityStep = readinessSteps[runIdentityIndex];
+  const runIdentityCommand = String(runIdentityStep?.run ?? "");
+  if (
+    runIdentityIndex === -1 ||
+    crossRunDownloadIndex === -1 ||
+    runIdentityIndex >= crossRunDownloadIndex ||
+    runIdentityStep.if !== undefined ||
+    runIdentityStep?.env?.GH_TOKEN !== githubTokenExpression ||
+    runIdentityStep?.env?.AFFERENT_CI_RUN_ID !== ciRunIdExpression ||
+    runIdentityStep?.env?.AFFERENT_SOURCE_COMMIT !== sourceCommitExpression ||
+    !runIdentityCommand.includes(
+      'gh api --method GET "repos/$GITHUB_REPOSITORY/actions/runs/$AFFERENT_CI_RUN_ID" > "$RUNNER_TEMP/ci-run.json"',
+    ) ||
+    !runIdentityCommand.includes(
+      'npm run verify:release-candidate -- --ci-run-metadata "$RUNNER_TEMP/ci-run.json"',
+    ) ||
+    !runIdentityCommand.includes('"$AFFERENT_CI_RUN_ID" =~ ^[0-9]+$')
+  ) {
+    throw new Error(
+      "release readiness must bind CI run identity to candidate provenance before download",
+    );
+  }
   const publishCommands = commandFor(publish);
   const exactPublish =
     'npm publish "$RUNNER_TEMP/release-candidate/package/afferent-0.1.0.tgz" --access public --provenance';
@@ -543,6 +588,30 @@ export function validateExternalConfiguration(configuration) {
     }
   }
   return configuration;
+}
+
+export function validateCiRunMetadata(metadata, expected) {
+  const runId = String(expected?.runId ?? "");
+  const sourceCommit = String(expected?.sourceCommit ?? "");
+  if (!/^\d+$/u.test(runId) || !commitPattern.test(sourceCommit)) {
+    throw new Error("CI run metadata expectations are invalid");
+  }
+  if (
+    String(metadata?.id ?? "") !== runId ||
+    metadata?.path !== ".github/workflows/ci.yml" ||
+    metadata?.event !== "push" ||
+    metadata?.status !== "completed" ||
+    metadata?.conclusion !== "success" ||
+    metadata?.head_branch !== "main" ||
+    metadata?.head_sha !== sourceCommit ||
+    metadata?.repository?.full_name !== canonicalRepository ||
+    metadata?.head_repository?.full_name !== canonicalRepository
+  ) {
+    throw new Error(
+      "CI run metadata does not bind the successful main push to candidate provenance",
+    );
+  }
+  return metadata;
 }
 
 function candidateArtifactMap(record) {
@@ -1127,6 +1196,28 @@ async function main() {
       `${JSON.stringify({
         status: "verified",
         externalConfiguration: "confirmed",
+      })}\n`,
+    );
+    return;
+  }
+  if (process.argv.includes("--ci-run-metadata")) {
+    const metadataPath = option("--ci-run-metadata");
+    if (!metadataPath) {
+      throw new Error("--ci-run-metadata requires a JSON file path");
+    }
+    const metadata = JSON.parse(await readFile(metadataPath, "utf8"));
+    validateCiRunMetadata(metadata, {
+      runId: process.env.AFFERENT_CI_RUN_ID,
+      sourceCommit: process.env.AFFERENT_SOURCE_COMMIT,
+    });
+    process.stdout.write(
+      `${JSON.stringify({
+        status: "verified",
+        ciRun: {
+          id: metadata.id,
+          workflow: metadata.path,
+          commit: metadata.head_sha,
+        },
       })}\n`,
     );
     return;

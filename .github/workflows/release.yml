@@ -99,6 +99,18 @@ jobs:
           AFFERENT_RELEASE_OWNER: ${{ vars.AFFERENT_RELEASE_OWNER }}
           AFFERENT_NPM_TRUSTED_PUBLISHER: ${{ vars.AFFERENT_NPM_TRUSTED_PUBLISHER }}
           AFFERENT_STATIC_PUBLICATION: ${{ vars.AFFERENT_STATIC_PUBLICATION }}
+      - name: Verify the selected CI run identity
+        env:
+          AFFERENT_CI_RUN_ID: ${{ inputs.ci_run_id }}
+          AFFERENT_SOURCE_COMMIT: ${{ inputs.source_commit }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [[ ! "$AFFERENT_CI_RUN_ID" =~ ^[0-9]+$ ]]; then
+            echo "ci_run_id must contain only decimal digits" >&2
+            exit 1
+          fi
+          gh api --method GET "repos/$GITHUB_REPOSITORY/actions/runs/$AFFERENT_CI_RUN_ID" > "$RUNNER_TEMP/ci-run.json"
+          npm run verify:release-candidate -- --ci-run-metadata "$RUNNER_TEMP/ci-run.json"
       - name: Download the CI-verified candidate
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -148,7 +160,6 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .node-version
-          registry-url: https://registry.npmjs.org
           package-manager-cache: false
       - name: Install and assert the pinned npm client
         run: |
@@ -195,7 +206,6 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .node-version
-          registry-url: https://registry.npmjs.org
           package-manager-cache: false
       - name: Install the pinned npm release client
         run: |

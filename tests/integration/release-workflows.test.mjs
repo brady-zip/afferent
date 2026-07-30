@@ -45,7 +45,7 @@ const candidateRecord = {
 };
 
 const ciRunMetadata = {
-  id: 123456789,
+  id: 123_456_789,
   path: ".github/workflows/ci.yml",
   event: "push",
   status: "completed",
@@ -154,7 +154,7 @@ describe("release workflow contracts", () => {
     ).not.toThrow();
 
     for (const metadata of [
-      { ...ciRunMetadata, id: 987654321 },
+      { ...ciRunMetadata, id: 987_654_321 },
       { ...ciRunMetadata, path: ".github/workflows/release.yml" },
       { ...ciRunMetadata, event: "workflow_dispatch" },
       { ...ciRunMetadata, conclusion: "failure" },
