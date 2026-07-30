@@ -1,6 +1,6 @@
 {
   "name": "afferent",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "description": "A provider-neutral product feedback Convex component.",
   "license": "Apache-2.0",
   "repository": {
@@ -19,6 +19,7 @@
     "access": "public",
     "provenance": true
   },
+  "packageManager": "npm@11.15.0",
   "type": "module",
   "keywords": [
     "convex",
@@ -71,6 +72,7 @@
   "module": "./dist/client/index.js",
   "scripts": {
     "build": "rm -rf dist tsconfig.tsbuildinfo && tsc --project tsconfig.json && cp src/component/tsconfig.json dist/component/tsconfig.json",
+    "changeset": "changeset",
     "codegen:component": "node scripts/codegen-component.mjs",
     "codegen:demo": "npm run build && node scripts/codegen-demo.mjs",
     "dev:demo": "node scripts/dev-demo.mjs",
@@ -105,6 +107,8 @@
     "typecheck:demo": "node scripts/prepare-demo-consumer.mjs --gate",
     "ui:check": "npm run ui:generate && git diff --exit-code -- registry examples/ui/afferent",
     "ui:generate": "node scripts/generate-ui-artifacts.mjs",
+    "verify:version-sync": "node scripts/verify-version-sync.mjs",
+    "version:packages": "changeset version && npm install --package-lock-only --ignore-scripts",
     "lint": "oxlint",
     "prepare": "husky"
   },
@@ -121,6 +125,7 @@
     "@arethetypeswrong/cli": "0.18.5",
     "@auth/core": "0.41.2",
     "@axe-core/playwright": "4.11.0",
+    "@changesets/cli": "2.31.1",
     "@clerk/react": "6.12.4",
     "@commitlint/cli": "^21.2.1",
     "@commitlint/config-conventional": "^21.2.0",
