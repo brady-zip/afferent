@@ -57,5 +57,10 @@
       "target": "components/afferent/admin/tag-manager.tsx"
     }
   ],
+  "meta": {
+    "packageName": "afferent",
+    "packageVersion": "0.1.0",
+    "sourceTag": "v0.1.0"
+  },
   "type": "registry:block"
 }

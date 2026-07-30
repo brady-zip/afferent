@@ -1,6 +1,6 @@
 {
   "name": "afferent",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "A provider-neutral product feedback Convex component.",
   "license": "Apache-2.0",
   "repository": {

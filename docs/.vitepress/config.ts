@@ -1,5 +1,9 @@
 import { defineConfig } from "vitepress";
 
+import { loadReleaseIdentity } from "../../scripts/generate-release-manifest.mjs";
+
+const releaseIdentity = await loadReleaseIdentity();
+
 export default defineConfig({
   title: "Afferent",
   description:
@@ -19,7 +23,7 @@ export default defineConfig({
       { text: "Operations", link: "/operations/testing" },
       { text: "Local demo", link: "/guide/local-demo" },
       {
-        text: "v0.1",
+        text: `v${releaseIdentity.docsVersion}`,
         items: [
           { text: "Install", link: "/guide/install" },
           { text: "Mount", link: "/guide/mount" },

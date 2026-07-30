@@ -24,9 +24,9 @@ const temporaryRoots = [];
 
 afterEach(async () => {
   await Promise.all(
-    temporaryRoots.splice(0).map((path) =>
-      rm(path, { force: true, recursive: true }),
-    ),
+    temporaryRoots
+      .splice(0)
+      .map((path) => rm(path, { force: true, recursive: true })),
   );
 });
 

@@ -61,5 +61,10 @@
       "target": "components/afferent/core/utils.ts"
     }
   ],
+  "meta": {
+    "packageName": "afferent",
+    "packageVersion": "0.1.0",
+    "sourceTag": "v0.1.0"
+  },
   "type": "registry:block"
 }

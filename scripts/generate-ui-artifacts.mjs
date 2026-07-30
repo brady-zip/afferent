@@ -6,6 +6,8 @@ import { dirname, join, relative, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { loadReleaseIdentity } from "./generate-release-manifest.mjs";
+
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const canonicalRoot = join(root, "ui/afferent");
 const mirrorRoot = join(root, "examples/ui/afferent");
@@ -18,6 +20,7 @@ const generationLock = join(
 const { afferentRegistry } = await import(
   pathToFileURL(join(canonicalRoot, "registry.ts"))
 );
+const releaseIdentity = await loadReleaseIdentity(root);
 
 function stable(value) {
   if (Array.isArray(value)) return value.map(stable);
@@ -69,6 +72,11 @@ try {
       title: item.name,
       description: item.description,
       dependencies: [...afferentRegistry.dependencies],
+      meta: {
+        packageName: releaseIdentity.packageName,
+        packageVersion: releaseIdentity.registryVersion,
+        sourceTag: releaseIdentity.sourceTag,
+      },
       registryDependencies: [...item.registryDependencies].sort(),
       files: [...item.files].sort((left, right) =>
         left.path.localeCompare(right.path),
@@ -78,6 +86,8 @@ try {
     $schema: "https://ui.shadcn.com/schema/registry.json",
     name: afferentRegistry.name,
     homepage: afferentRegistry.homepage,
+    packageVersion: releaseIdentity.registryVersion,
+    sourceTag: releaseIdentity.sourceTag,
     items,
   };
 
@@ -90,6 +100,18 @@ try {
     "--output",
     outputRoot,
   ]);
+  const generatedCatalogPath = join(outputRoot, "registry.json");
+  const generatedCatalog = JSON.parse(
+    await readFile(generatedCatalogPath, "utf8"),
+  );
+  await writeFile(
+    generatedCatalogPath,
+    json({
+      ...generatedCatalog,
+      packageVersion: releaseIdentity.registryVersion,
+      sourceTag: releaseIdentity.sourceTag,
+    }),
+  );
 
   await rm(mirrorRoot, { recursive: true, force: true });
   const sourceFiles = new Set(

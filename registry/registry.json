@@ -48,6 +48,11 @@
           "type": "registry:component"
         }
       ],
+      "meta": {
+        "packageName": "afferent",
+        "packageVersion": "0.1.0",
+        "sourceTag": "v0.1.0"
+      },
       "name": "afferent-admin",
       "registryDependencies": [
         "./afferent-ui-core.json"
@@ -106,6 +111,11 @@
           "type": "registry:component"
         }
       ],
+      "meta": {
+        "packageName": "afferent",
+        "packageVersion": "0.1.0",
+        "sourceTag": "v0.1.0"
+      },
       "name": "afferent-board",
       "registryDependencies": [
         "./afferent-ui-core.json"
@@ -134,6 +144,11 @@
           "type": "registry:component"
         }
       ],
+      "meta": {
+        "packageName": "afferent",
+        "packageVersion": "0.1.0",
+        "sourceTag": "v0.1.0"
+      },
       "name": "afferent-changelog",
       "registryDependencies": [
         "./afferent-ui-core.json"
@@ -162,6 +177,11 @@
           "type": "registry:component"
         }
       ],
+      "meta": {
+        "packageName": "afferent",
+        "packageVersion": "0.1.0",
+        "sourceTag": "v0.1.0"
+      },
       "name": "afferent-notifications",
       "registryDependencies": [
         "./afferent-ui-core.json"
@@ -195,6 +215,11 @@
           "type": "registry:component"
         }
       ],
+      "meta": {
+        "packageName": "afferent",
+        "packageVersion": "0.1.0",
+        "sourceTag": "v0.1.0"
+      },
       "name": "afferent-roadmap",
       "registryDependencies": [
         "./afferent-ui-core.json"
@@ -253,11 +278,18 @@
           "type": "registry:lib"
         }
       ],
+      "meta": {
+        "packageName": "afferent",
+        "packageVersion": "0.1.0",
+        "sourceTag": "v0.1.0"
+      },
       "name": "afferent-ui-core",
       "registryDependencies": [],
       "title": "afferent-ui-core",
       "type": "registry:block"
     }
   ],
-  "name": "afferent"
+  "name": "afferent",
+  "packageVersion": "0.1.0",
+  "sourceTag": "v0.1.0"
 }
