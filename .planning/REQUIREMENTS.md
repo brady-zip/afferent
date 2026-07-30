@@ -80,7 +80,7 @@ Requirements for the first production-ready public release. Roadmap creation wil
 
 ### Component and Auth Integration
 
-- [ ] **COMP-01**: A developer can install Afferent from a published npm package as a reusable Convex component.
+- [x] **COMP-01**: A developer can install Afferent from a published npm package as a reusable Convex component.
 - [x] **COMP-02**: A developer can mount typed public-read, authenticated-participation, and authorized-admin wrapper APIs in the host Convex application.
 - [x] **COMP-03**: Public component contracts use stable provider-neutral DTOs and opaque string identifiers rather than exposing component-internal documents or provider records.
 - [x] **COMP-04**: A developer can integrate Afferent with Convex Auth using a documented adapter or recipe verified by an integration fixture.
@@ -123,7 +123,7 @@ Requirements for the first production-ready public release. Roadmap creation wil
 
   Plan 03-12 closes the `41e6b94` re-audit findings with a source-grounded anti-skip oracle, exhaustive mounted default/custom recovery matrices, twelve packed installed scenarios, and byte-identical evidence across consecutive runs.
 
-- [ ] **QUAL-09**: Documentation covers installation, component mounting, all three auth integrations, access policy, headless React usage, shadcn installation, customization, testing, host-application deployment, and upgrades. Demo documentation covers local anonymous development rather than a hosted Afferent deployment.
+- [x] **QUAL-09**: Documentation covers installation, component mounting, all three auth integrations, access policy, headless React usage, shadcn installation, customization, testing, host-application deployment, and upgrades. Demo documentation covers local anonymous development rather than a hosted Afferent deployment.
 - [x] **QUAL-10**: The repository and published package include the Apache-2.0 license.
 - [ ] **QUAL-11**: A validated npm release publishes explicit package exports, declarations, provenance, and synchronized package, registry, and documentation versions.
 
@@ -234,7 +234,7 @@ Every v1 requirement maps to exactly one roadmap phase.
 | NOTF-06     | Phase 2   | Complete |
 | NOTF-07     | Phase 2   | Complete |
 | NOTF-08     | Phase 2.2 | Complete |
-| COMP-01     | Phase 4   | Pending  |
+| COMP-01     | Phase 4   | Complete |
 | COMP-02     | Phase 1   | Complete |
 | COMP-03     | Phase 1   | Complete |
 | COMP-04     | Phase 1   | Complete |
@@ -265,7 +265,7 @@ Every v1 requirement maps to exactly one roadmap phase.
 | QUAL-06     | Phase 4   | Complete |
 | QUAL-07     | Phase 3   | Complete |
 | QUAL-08     | Phase 3   | Complete |
-| QUAL-09     | Phase 4   | Pending  |
+| QUAL-09     | Phase 4   | Complete |
 | QUAL-10     | Phase 1   | Complete |
 | QUAL-11     | Phase 4   | Pending  |
 

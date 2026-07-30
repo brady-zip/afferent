@@ -3,18 +3,18 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_phase: 04
-current_phase_name: hosted-production-release
+current_phase_name: Local Production Release
 status: executing
-stopped_at: Plan 04-06 complete; ready to execute 04-07 documentation
-last_updated: "2026-07-30"
+stopped_at: Completed 04-07-PLAN.md
+last_updated: "2026-07-30T21:00:51.169Z"
 last_activity: 2026-07-30
-last_activity_desc: Phase 04 Plan 06 completed the local anonymous Convex demo and real-browser gate
+last_activity_desc: Completed the clone-and-run local anonymous Convex demo and full real-browser gate
 progress:
   total_phases: 7
   completed_phases: 6
   total_plans: 51
-  completed_plans: 48
-  percent: 94
+  completed_plans: 49
+  percent: 86
 ---
 
 # Project State
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-07-24)
 ## Current Position
 
 Phase: 04 (Local Production Release) — EXECUTING
-Plan: 7 of 9
+Plan: 8 of 9
 Status: Ready to execute 04-07 adopter documentation
 Last activity: 2026-07-30 — Completed the clone-and-run local anonymous Convex demo and full real-browser gate
 
@@ -113,6 +113,7 @@ _Updated after each plan completion_
 | Phase 04 P04   | 68 min   | 3 tasks | 16 files |
 | Phase 04 P05   | 37 min   | 3 tasks | 20 files |
 | Phase 04 P06   | 81 min   | 3 tasks | 22 files |
+| Phase 04-hosted-production-release P07 | 53 min | 3 tasks | 19 files |
 
 ## Accumulated Context
 
@@ -240,6 +241,9 @@ Recent decisions affecting current work:
 - [Phase 04]: Remount the complete provider and product subtree on environment, authenticated-session epoch, and lifecycle cache epoch changes.
 - [Phase 04]: Run provenance-sensitive UI tests with Afferent headless code and canonical UI resolved from the prepared candidate, while sharing that candidate runtime graph.
 - [Phase 04]: Pin react-router 8.3.0 exactly and synthesize packed metadata from committed package state so unrelated experiments cannot enter release artifacts.
+- [Phase 04]: Pin VitePress 1.6.4 and keep the adopter documentation theme-neutral. — An exact stable version keeps local, CI, and packed-artifact documentation builds deterministic.
+- [Phase 04]: Require explicit validation metadata on every code fence and compile provider examples from the exact packed artifact. — Security-sensitive wrapper guidance must be executable release evidence rather than unverified prose.
+- [Phase 04]: Permit only four named AFFERENT_RELEASE tokens until Plans 04-08 and 04-09 provide verified publication facts. — The docs gate rejects premature hosted-demo, cloud deployment, or package publication claims.
 
 ### Pending Todos
 
@@ -265,6 +269,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-27T22:36:03.528Z
-Stopped at: Completed 04-05-PLAN.md
+Last session: 2026-07-30T21:00:51.163Z
+Stopped at: Completed 04-07-PLAN.md
 Resume file: None
