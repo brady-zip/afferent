@@ -69,7 +69,7 @@ test("provider, UI, and operations guides preserve the release contract", async 
   for (const providerGuide of [convexAuth, clerk, betterAuth]) {
     assert.match(providerGuide, /authorizeAdmin/);
     assert.match(providerGuide, /every (?:admin )?(?:call|invocation)/i);
-    assert.match(providerGuide, /component cannot access.*ctx\.auth/is);
+    assert.match(providerGuide, /component cannot\s+access.*ctx\.auth/is);
     assert.match(providerGuide, /userId/);
     assert.match(providerGuide, /isAdmin/);
     assert.match(providerGuide, /scopeId/);
