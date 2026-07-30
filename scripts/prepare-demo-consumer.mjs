@@ -421,13 +421,14 @@ async function sanitizeGeneratedBindings(candidateRoot) {
 
 async function writeCandidateManifest(candidateRoot) {
   const manifest = {
-    name: "afferent-hosted-demo-candidate",
+    name: "afferent-local-demo-candidate",
     version: "0.0.0",
     private: true,
     type: "module",
     scripts: {
       typecheck: "tsc --noEmit --project tsconfig.json",
       build: "vite build",
+      dev: "vite",
     },
     dependencies: {
       "@auth/core": "0.41.2",

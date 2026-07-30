@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { generateKeyPairSync, randomUUID } from "node:crypto";
 import { spawn } from "node:child_process";
 import { createServer } from "node:net";
 import {
@@ -28,14 +28,25 @@ const convexBinary = join(
 );
 const configuration = join(repositoryRoot, "playwright.phase4.config.ts");
 const readinessTimeoutMs = 120_000;
+const phase4FixtureSource = join(
+  repositoryRoot,
+  "tests/e2e/fixtures/phase4Test.ts",
+);
+const phase4InternalFunctions = new Set([
+  "inspect",
+  "saturateWrites",
+  "clearWriteWindow",
+  "expire",
+  "exerciseCleanupRecovery",
+]);
 
 export const PHASE4_REQUIRED_SUITES = [
-  { project: "chromium", spec: "hosted-demo.spec.ts" },
+  { project: "chromium", spec: "demo.spec.ts" },
   { project: "chromium", spec: "sandbox-isolation.spec.ts" },
   { project: "chromium", spec: "sandbox-lifecycle.spec.ts" },
-  { project: "chromium", spec: "hosted-accessibility.spec.ts" },
-  { project: "tablet", spec: "hosted-accessibility.spec.ts" },
-  { project: "mobile", spec: "hosted-accessibility.spec.ts" },
+  { project: "chromium", spec: "demo-accessibility.spec.ts" },
+  { project: "tablet", spec: "demo-accessibility.spec.ts" },
+  { project: "mobile", spec: "demo-accessibility.spec.ts" },
 ];
 
 function markerName(project, spec) {
@@ -120,7 +131,9 @@ function run(command, args, options = {}) {
     const child = spawn(command, args, {
       cwd: options.cwd ?? repositoryRoot,
       env: { ...process.env, ...options.env },
-      stdio: options.capture ? ["ignore", "pipe", "pipe"] : "inherit",
+      stdio: options.capture
+        ? [options.input === undefined ? "ignore" : "pipe", "pipe", "pipe"]
+        : "inherit",
     });
     let stdout = "";
     let stderr = "";
@@ -130,6 +143,7 @@ function run(command, args, options = {}) {
       child.stdout.on("data", (chunk) => (stdout += chunk));
       child.stderr.on("data", (chunk) => (stderr += chunk));
     }
+    if (options.input !== undefined) child.stdin.end(options.input);
     child.once("error", rejectRun);
     child.once("close", (code) => {
       if (code === 0) {
@@ -143,6 +157,39 @@ function run(command, args, options = {}) {
       );
     });
   });
+}
+
+function parseConvexResult(output) {
+  const value = JSON.parse(output.trim());
+  return typeof value === "string" ? JSON.parse(value) : value;
+}
+
+export async function runPhase4Internal(functionName, args) {
+  if (!phase4InternalFunctions.has(functionName)) {
+    throw new Error(`undeclared Phase 4 internal control: ${functionName}`);
+  }
+  const candidateRoot = process.env.PHASE4_CANDIDATE_ROOT;
+  if (!candidateRoot) {
+    throw new Error("PHASE4_CANDIDATE_ROOT is required for lifecycle controls");
+  }
+  const invocation = await run(
+    convexBinary,
+    [
+      "run",
+      `phase4Test:${functionName}`,
+      JSON.stringify(args),
+      "--typecheck",
+      "disable",
+      "--codegen",
+      "disable",
+    ],
+    {
+      cwd: candidateRoot,
+      capture: true,
+      env: { ...process.env, CONVEX_AGENT_MODE: "anonymous" },
+    },
+  );
+  return parseConvexResult(invocation.stdout);
 }
 
 async function allocatedPort() {
@@ -160,11 +207,42 @@ async function allocatedPort() {
 }
 
 function deploymentUrl(source) {
-  const match = /^CONVEX_URL=(?<url>.+)$/mu.exec(source);
+  const match = /^(?:CONVEX_URL|VITE_CONVEX_URL)=(?<url>.+)$/mu.exec(source);
   if (!match) {
     throw new Error("real Convex deployment did not write CONVEX_URL");
   }
   return match.groups.url.trim();
+}
+
+function localAuthKeys() {
+  const { privateKey, publicKey } = generateKeyPairSync("rsa", {
+    modulusLength: 2048,
+  });
+  const privateKeyPem = privateKey.export({
+    format: "pem",
+    type: "pkcs8",
+  });
+  return {
+    JWT_PRIVATE_KEY: privateKeyPem.trimEnd().replaceAll("\n", " "),
+    JWKS: JSON.stringify({
+      keys: [{ use: "sig", ...publicKey.export({ format: "jwk" }) }],
+    }),
+  };
+}
+
+async function configureLocalAuth(candidateRoot, siteUrl) {
+  const variables = {
+    ...localAuthKeys(),
+    SITE_URL: siteUrl,
+  };
+  for (const [name, value] of Object.entries(variables)) {
+    await run(convexBinary, ["env", "set", name], {
+      cwd: candidateRoot,
+      capture: true,
+      env: { ...process.env, CONVEX_AGENT_MODE: "anonymous" },
+      input: `${value}\n`,
+    });
+  }
 }
 
 async function waitForFile(path, timeoutMs = readinessTimeoutMs) {
@@ -180,13 +258,13 @@ async function waitForFile(path, timeoutMs = readinessTimeoutMs) {
   throw new Error(`timed out waiting for ${path}`);
 }
 
-function startConvex(candidateRoot) {
+function startConvex(candidateRoot, { detached = true } = {}) {
   const child = spawn(
     convexBinary,
     ["dev", "--typecheck", "disable", "--tail-logs", "disable"],
     {
       cwd: candidateRoot,
-      detached: process.platform !== "win32",
+      detached: detached && process.platform !== "win32",
       env: {
         ...process.env,
         CONVEX_AGENT_MODE: "anonymous",
@@ -234,10 +312,12 @@ async function withTimeout(promise, label, timeoutMs = readinessTimeoutMs) {
   }
 }
 
-async function stopOwned(child) {
+export async function stopOwned(child, { processGroup = true } = {}) {
   if (!child || child.exitCode !== null) return;
   if (process.platform === "win32") {
     child.kill("SIGTERM");
+  } else if (!processGroup) {
+    child.kill("SIGINT");
   } else {
     try {
       process.kill(-child.pid, "SIGINT");
@@ -250,7 +330,7 @@ async function stopOwned(child) {
     new Promise((resolveWait) => setTimeout(resolveWait, 5000)),
   ]);
   if (child.exitCode === null) {
-    if (process.platform === "win32") {
+    if (process.platform === "win32" || !processGroup) {
       child.kill("SIGTERM");
     } else {
       try {
@@ -263,27 +343,7 @@ async function stopOwned(child) {
 }
 
 function forwardedArguments() {
-  const values = [];
-  const consumed = new Set();
-  for (let index = 2; index < process.argv.length; index += 1) {
-    if (consumed.has(index)) continue;
-    const value = process.argv[index];
-    if (value === "--remote" || value === "--list") continue;
-    if (value === "--base-url") {
-      consumed.add(index + 1);
-      continue;
-    }
-    if (value.startsWith("--base-url=")) continue;
-    values.push(value);
-  }
-  return values;
-}
-
-function baseUrlArgument() {
-  const equals = process.argv.find((value) => value.startsWith("--base-url="));
-  if (equals) return equals.slice("--base-url=".length);
-  const index = process.argv.indexOf("--base-url");
-  return index === -1 ? undefined : process.argv[index + 1];
+  return process.argv.slice(2).filter((value) => value !== "--list");
 }
 
 function discoveredSuites(output) {
@@ -323,78 +383,71 @@ function isFocused(args) {
   );
 }
 
-async function localTarget() {
+export async function prepareLocalDemoTarget({
+  detachedProcesses = true,
+  includeTestControls = true,
+} = {}) {
   const candidateRoot = resolve(repositoryRoot, DEMO_CANDIDATE_DIR);
   const prepared = await prepareDemoConsumer({
     candidateDir: candidateRoot,
     force: true,
   });
-  const convex = startConvex(candidateRoot);
-  await withTimeout(convex.ready, "Convex functions ready");
-  const envPath = join(candidateRoot, ".env.local");
-  await waitForFile(envPath);
-  const backendUrl = deploymentUrl(await readFile(envPath, "utf8"));
-  await run(convexBinary, ["run", "seeds:seedShowcase", "{}"], {
-    cwd: candidateRoot,
-    env: { ...process.env, CONVEX_AGENT_MODE: "anonymous" },
-  });
-  await run("npm", ["run", "build"], {
-    cwd: candidateRoot,
-    env: {
-      ...process.env,
-      VITE_AFFERENT_SOURCE_COMMIT: prepared.sourceCommit,
-      VITE_CONVEX_URL: backendUrl,
-    },
-  });
-  const port = await allocatedPort();
-  const artifactDigest = prepared.package.sha256;
-  const targetId = `local:${backendUrl}:${artifactDigest.slice(0, 12)}`;
-  return {
-    artifactDigest,
-    backendUrl,
-    baseURL: `http://127.0.0.1:${port}`,
-    candidateRoot,
-    convex: convex.child,
-    sourceCommit: prepared.sourceCommit,
-    targetId,
-    webPort: port,
-  };
-}
-
-async function remoteTarget(baseURL) {
-  if (!baseURL) {
-    throw new Error("remote Phase 4 runs require --base-url <https-url>");
+  if (includeTestControls) {
+    await writeFile(
+      join(candidateRoot, "convex/phase4Test.ts"),
+      await readFile(phase4FixtureSource, "utf8"),
+    );
   }
-  const parsed = new URL(baseURL);
-  if (parsed.protocol !== "https:") {
-    throw new Error("remote Phase 4 base URL must use HTTPS");
+  const convex = startConvex(candidateRoot, { detached: detachedProcesses });
+  try {
+    await withTimeout(convex.ready, "Convex functions ready");
+    const envPath = join(candidateRoot, ".env.local");
+    await waitForFile(envPath);
+    const backendUrl = deploymentUrl(await readFile(envPath, "utf8"));
+    const port = await allocatedPort();
+    const baseURL = `http://127.0.0.1:${port}`;
+    await configureLocalAuth(candidateRoot, baseURL);
+    await run(convexBinary, ["run", "seeds:seedShowcase", "{}"], {
+      cwd: candidateRoot,
+      env: { ...process.env, CONVEX_AGENT_MODE: "anonymous" },
+    });
+    await run("npm", ["run", "build"], {
+      cwd: candidateRoot,
+      env: {
+        ...process.env,
+        VITE_AFFERENT_SOURCE_COMMIT: prepared.sourceCommit,
+        VITE_CONVEX_URL: backendUrl,
+      },
+    });
+    const artifactDigest = prepared.package.sha256;
+    const targetId = `local:${backendUrl}:${artifactDigest.slice(0, 12)}`;
+    return {
+      artifactDigest,
+      backendUrl,
+      baseURL,
+      candidateRoot,
+      convex: convex.child,
+      detachedProcesses,
+      sourceCommit: prepared.sourceCommit,
+      targetId,
+      webPort: port,
+    };
+  } catch (error) {
+    await stopOwned(convex.child, { processGroup: detachedProcesses });
+    throw error;
   }
-  const candidateRoot = resolve(repositoryRoot, DEMO_CANDIDATE_DIR);
-  const prepared = await prepareDemoConsumer({
-    candidateDir: candidateRoot,
-    force: true,
-  });
-  return {
-    artifactDigest: prepared.package.sha256,
-    baseURL: parsed.href.replace(/\/$/, ""),
-    candidateRoot,
-    sourceCommit: prepared.sourceCommit,
-    targetId: `remote:${parsed.origin}:${prepared.package.sha256.slice(0, 12)}`,
-  };
 }
 
 async function main() {
   const listOnly = process.argv.includes("--list");
-  const remote = process.argv.includes("--remote");
   const args = forwardedArguments();
   if (listOnly) {
     const outputRoot = await mkdtemp(join(tmpdir(), "afferent-phase4-list-"));
     try {
       const env = {
         ...process.env,
-        PHASE4_BASE_URL: "https://phase4-list.invalid",
+        PHASE4_BASE_URL: "http://127.0.0.1:1",
         PHASE4_OUTPUT_DIR: outputRoot,
-        PHASE4_REMOTE: "1",
       };
       const listed = await listSelected(env, args);
       if (
@@ -418,22 +471,19 @@ async function main() {
   let target;
   let evidenceRoot;
   try {
-    target = remote
-      ? await remoteTarget(baseUrlArgument())
-      : await localTarget();
+    target = await prepareLocalDemoTarget();
     const runId = randomUUID();
     evidenceRoot = join(target.candidateRoot, ".phase4-evidence", runId);
     await mkdir(evidenceRoot, { recursive: true });
     const env = {
       ...process.env,
       PHASE4_ARTIFACT_DIGEST: target.artifactDigest,
-      PHASE4_BACKEND_KIND: remote ? "remote" : "local-real-convex",
-      PHASE4_BACKEND_URL: target.backendUrl ?? "remote-hosted",
+      PHASE4_BACKEND_KIND: "local-real-convex",
+      PHASE4_BACKEND_URL: target.backendUrl,
       PHASE4_BASE_URL: target.baseURL,
       PHASE4_CANDIDATE_ROOT: target.candidateRoot,
       PHASE4_EVIDENCE_DIR: evidenceRoot,
       PHASE4_OUTPUT_DIR: join(evidenceRoot, "raw"),
-      PHASE4_REMOTE: remote ? "1" : "0",
       PHASE4_SOURCE_COMMIT: target.sourceCommit,
       PHASE4_TARGET_ID: target.targetId,
       PHASE4_WEB_PORT: target.webPort?.toString() ?? "",

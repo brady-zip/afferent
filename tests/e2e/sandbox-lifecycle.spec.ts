@@ -3,11 +3,12 @@ import { expect, test } from "@playwright/test";
 import {
   recordPhase4Completion,
   runPhase4Internal,
-} from "../../scripts/test-hosted-demo.mjs";
+} from "../../scripts/test-demo.mjs";
 import {
   confirmSandboxReset,
   createFeedback,
   createPasswordAccount,
+  phase4AccountEmail,
   searchForFeedback,
 } from "./phase4-helpers";
 
@@ -18,8 +19,8 @@ test("keeps reset, expiry, quota, cleanup, and stale work isolated", async ({
   const contextB = await browser.newContext();
   const pageA = await contextA.newPage();
   const pageB = await contextB.newPage();
-  const emailA = "phase4-lifecycle-a@example.test";
-  const emailB = "phase4-lifecycle-b@example.test";
+  const emailA = phase4AccountEmail("lifecycle-a", testInfo);
+  const emailB = phase4AccountEmail("lifecycle-b", testInfo);
   const titleA = "Lifecycle private alpha";
   const titleB = "Lifecycle private beta";
 
@@ -42,6 +43,7 @@ test("keeps reset, expiry, quota, cleanup, and stale work isolated", async ({
     await expect(
       pageA.getByRole("heading", { name: "No matching feedback" }),
     ).toBeVisible({ timeout: 90_000 });
+    await pageA.getByLabel("Search feedback").fill("");
     await expect(
       pageA.getByRole("link", {
         name: "Make invoice history easier to export",
@@ -73,6 +75,9 @@ test("keeps reset, expiry, quota, cleanup, and stale work isolated", async ({
 
     await runPhase4Internal("saturateWrites", { email: emailA });
     await pageA.goto("/sandbox");
+    await pageA
+      .getByLabel("Board")
+      .selectOption({ label: "Product feedback" });
     await pageA.getByRole("button", { name: "Create feedback" }).click();
     await pageA.getByLabel("Feedback title").fill("Rate limited alpha");
     await pageA

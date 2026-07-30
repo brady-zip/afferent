@@ -1,12 +1,13 @@
 import { expect, test } from "@playwright/test";
 
-import { recordPhase4Completion } from "../../scripts/test-hosted-demo.mjs";
+import { recordPhase4Completion } from "../../scripts/test-demo.mjs";
 import {
   administerFeedback,
   createFeedback,
   createPasswordAccount,
   openFeedback,
   participateInFeedback,
+  phase4AccountEmail,
   searchForFeedback,
 } from "./phase4-helpers";
 
@@ -22,11 +23,13 @@ test("keeps colliding two-user reads, writes, search, counts, and reactivity iso
   const bodyB = "Account B private sentinel beta.";
   const commentA = "Account A private comment alpha.";
   const commentB = "Account B private comment beta.";
+  const emailA = phase4AccountEmail("isolation-a", testInfo);
+  const emailB = phase4AccountEmail("isolation-b", testInfo);
 
   try {
     await Promise.all([
-      createPasswordAccount(pageA, "phase4-isolation-a@example.test"),
-      createPasswordAccount(pageB, "phase4-isolation-b@example.test"),
+      createPasswordAccount(pageA, emailA),
+      createPasswordAccount(pageB, emailB),
     ]);
     const [hrefA, hrefB] = await Promise.all([
       createFeedback(pageA, title, bodyA),

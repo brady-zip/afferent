@@ -9,7 +9,7 @@ const demoPackageRoot = process.env.AFFERENT_DEMO_PACKAGE_ROOT;
 
 if (requireDemoProvenance && (!demoUiRoot || !demoPackageRoot)) {
   throw new Error(
-    "candidate UI and package roots are required for hosted demo tests",
+    "candidate UI and package roots are required for local demo tests",
   );
 }
 

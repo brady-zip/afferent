@@ -1,7 +1,24 @@
-import { expect, type Page } from "@playwright/test";
+import { createHash } from "node:crypto";
+
+import { expect, type Page, type TestInfo } from "@playwright/test";
 
 export const PHASE4_TIMEOUT = 90_000;
 export const PHASE4_PASSWORD = "Phase4-password-2026!";
+
+export function phase4AccountEmail(label: string, testInfo: TestInfo) {
+  const runIdentity = [
+    process.env.PHASE4_TARGET_ID,
+    testInfo.project.name,
+    testInfo.repeatEachIndex,
+    testInfo.retry,
+    label,
+  ].join(":");
+  const suffix = createHash("sha256")
+    .update(runIdentity)
+    .digest("hex")
+    .slice(0, 12);
+  return `phase4-${label}-${suffix}@example.test`;
+}
 
 export async function createPasswordAccount(page: Page, email: string) {
   await page.goto("/sandbox");
@@ -24,11 +41,13 @@ export async function createPasswordAccount(page: Page, email: string) {
 
 export async function createFeedback(page: Page, title: string, body: string) {
   await page.goto("/sandbox");
+  await page.getByLabel("Board").selectOption({ label: "Product feedback" });
   await page.getByRole("button", { name: "Create feedback" }).click();
   await page.getByLabel("Feedback title").fill(title);
   await page.getByLabel("Feedback details").fill(body);
   await page.getByRole("button", { name: "Post feedback" }).click();
   const link = page
+    .getByRole("region", { name: "Feedback results" })
     .getByRole("list", { name: "Feedback" })
     .getByRole("link", { name: title, exact: true });
   await expect(link).toBeVisible({ timeout: PHASE4_TIMEOUT });
@@ -37,6 +56,7 @@ export async function createFeedback(page: Page, title: string, body: string) {
 
 export async function openFeedback(page: Page, title: string) {
   const link = page
+    .getByRole("region", { name: "Feedback results" })
     .getByRole("list", { name: "Feedback" })
     .getByRole("link", { name: title, exact: true });
   await expect(link).toBeVisible({ timeout: PHASE4_TIMEOUT });
@@ -58,7 +78,10 @@ export async function participateInFeedback(
   await expect(
     article.getByRole("button", { name: "Remove feedback vote" }),
   ).toBeVisible();
-  await article.getByRole("button", { name: "Subscribe to updates" }).click();
+  const subscribe = article.getByRole("button", {
+    name: "Subscribe to updates",
+  });
+  if (await subscribe.isVisible()) await subscribe.click();
   await expect(
     article.getByRole("button", { name: "Unsubscribe from updates" }),
   ).toBeVisible();

@@ -23,7 +23,7 @@ import {
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const candidate = join(root, DEMO_CANDIDATE_DIR);
 
-describe("hosted demo release artifacts", () => {
+describe("local demo release artifacts", () => {
   it(
     "prepares one clean consumer from the exact packed package and registry payload",
     { timeout: 300_000 },

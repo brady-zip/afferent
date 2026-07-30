@@ -1,11 +1,12 @@
 import { expect, test } from "@playwright/test";
 
-import { recordPhase4Completion } from "../../scripts/test-hosted-demo.mjs";
+import { recordPhase4Completion } from "../../scripts/test-demo.mjs";
 import {
   administerFeedback,
   createFeedback,
   createPasswordAccount,
   participateInFeedback,
+  phase4AccountEmail,
   searchForFeedback,
 } from "./phase4-helpers";
 
@@ -28,7 +29,7 @@ test("completes the immutable showcase and private admin evaluator journey", asy
 
   await page.getByRole("button", { name: "Create feedback" }).click();
   await expect(
-    page.getByRole("heading", { name: "Sign in to continue" }),
+    page.getByRole("heading", { name: "This feature isn't configured" }),
   ).toBeVisible();
   await expect(page.getByRole("button", { name: "Post feedback" })).toHaveCount(
     0,
@@ -42,7 +43,7 @@ test("completes the immutable showcase and private admin evaluator journey", asy
     })
     .click();
   await expect(
-    page.getByRole("heading", {
+    page.locator("article[data-post-id]").getByRole("heading", {
       level: 2,
       name: "Make invoice history easier to export",
     }),
@@ -51,18 +52,22 @@ test("completes the immutable showcase and private admin evaluator journey", asy
     page.getByRole("button", { name: "Vote for feedback" }),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("heading", { name: "Sign in to continue" }),
+    page.getByRole("heading", { name: "This feature isn't configured" }),
   ).toBeVisible();
 
   await page.goto("/roadmap");
   await expect(
     page.getByRole("heading", { level: 1, name: "Roadmap" }),
   ).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Planned" })).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "In Progress" }),
+    page.getByRole("heading", { name: "Planned", exact: true }),
   ).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Complete" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "In Progress", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Complete", exact: true }),
+  ).toBeVisible();
 
   await page.goto("/changelog");
   await expect(
@@ -75,9 +80,12 @@ test("completes the immutable showcase and private admin evaluator journey", asy
     })
     .click();
   await expect(
-    page.getByRole("region", { name: "Linked feedback" }).getByRole("link", {
-      name: "Make invoice history easier to export",
-    }),
+    page
+      .getByRole("region", { name: "Changelog entry detail" })
+      .getByRole("region", { name: "Linked feedback" })
+      .getByRole("link", {
+        name: "Make invoice history easier to export",
+      }),
   ).toBeVisible();
 
   const title = "Evaluator-controlled release notes";
@@ -85,7 +93,7 @@ test("completes the immutable showcase and private admin evaluator journey", asy
   const moderatedBody =
     "Moderated evaluator body proves trusted host administration.";
   const changelogTitle = "Evaluator journey shipped";
-  await createPasswordAccount(page, "phase4-evaluator@example.test");
+  await createPasswordAccount(page, phase4AccountEmail("evaluator", testInfo));
   await createFeedback(page, title, body);
   await participateInFeedback(page, title, "Evaluator journey comment");
 
@@ -109,10 +117,13 @@ test("completes the immutable showcase and private admin evaluator journey", asy
   await page.goto("/sandbox/changelog");
   await page.getByRole("link", { name: changelogTitle, exact: true }).click();
   await expect(
-    page.getByRole("region", { name: "Linked feedback" }).getByRole("link", {
-      name: title,
-      exact: true,
-    }),
+    page
+      .getByRole("region", { name: "Changelog entry detail" })
+      .getByRole("region", { name: "Linked feedback" })
+      .getByRole("link", {
+        name: title,
+        exact: true,
+      }),
   ).toBeVisible();
   await expect(page.getByText(moderatedBody, { exact: true })).toHaveCount(0);
 

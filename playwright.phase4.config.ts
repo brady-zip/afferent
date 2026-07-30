@@ -3,19 +3,16 @@ import { defineConfig, devices } from "@playwright/test";
 const baseURL = process.env.PHASE4_BASE_URL;
 if (!baseURL) {
   throw new Error(
-    "PHASE4_BASE_URL is required; run through scripts/test-hosted-demo.mjs",
+    "PHASE4_BASE_URL is required; run through scripts/test-demo.mjs",
   );
 }
 
-const remote = process.env.PHASE4_REMOTE === "1";
-const localServer = remote
-  ? undefined
-  : {
-      command: "node scripts/serve-hosted-demo.mjs --from-env",
-      url: new URL("/__phase4/identity", baseURL).href,
-      reuseExistingServer: false,
-      timeout: 60_000,
-    };
+const localServer = {
+  command: "node scripts/serve-demo.mjs --from-env",
+  url: new URL("/__phase4/identity", baseURL).href,
+  reuseExistingServer: false,
+  timeout: 60_000,
+};
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -43,21 +40,21 @@ export default defineConfig({
     {
       name: "chromium",
       testMatch: [
-        "hosted-demo.spec.ts",
+        "demo.spec.ts",
         "sandbox-isolation.spec.ts",
         "sandbox-lifecycle.spec.ts",
-        "hosted-accessibility.spec.ts",
+        "demo-accessibility.spec.ts",
       ],
       use: { ...devices["Desktop Chrome"] },
     },
     {
       name: "tablet",
-      testMatch: "hosted-accessibility.spec.ts",
+      testMatch: "demo-accessibility.spec.ts",
       use: { ...devices["iPad (gen 7)"] },
     },
     {
       name: "mobile",
-      testMatch: "hosted-accessibility.spec.ts",
+      testMatch: "demo-accessibility.spec.ts",
       use: { ...devices["iPhone 13"] },
     },
   ],

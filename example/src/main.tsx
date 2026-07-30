@@ -22,7 +22,7 @@ const deploymentUrl = import.meta.env.VITE_CONVEX_URL;
 const sourceCommit = import.meta.env.VITE_AFFERENT_SOURCE_COMMIT;
 
 if (!deploymentUrl) {
-  throw new Error("VITE_CONVEX_URL is required to start the hosted example");
+  throw new Error("VITE_CONVEX_URL is required to start the local demo");
 }
 if (!/^[0-9a-f]{40}$/i.test(sourceCommit ?? "")) {
   throw new Error(
