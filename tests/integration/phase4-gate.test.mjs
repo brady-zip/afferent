@@ -39,6 +39,9 @@ describe("Phase 4 real-browser release gate", () => {
     expect(manifest.scripts["dev:demo"]).toBe("node scripts/dev-demo.mjs");
     expect(manifest.scripts["test:e2e:phase4"]).toBe("node scripts/test-demo.mjs");
     expect(manifest.scripts["test:e2e:phase4:remote"]).toBeUndefined();
+    expect(manifest.scripts["typecheck:demo"]).toBe(
+      "node scripts/prepare-demo-consumer.mjs --gate",
+    );
     expect(manifest.scripts["verify:phase4"]).toBe(
       "npm run test:release:package && npm run test:demo:maintenance && npm run verify:demo:artifacts && npm run test:e2e:phase4",
     );

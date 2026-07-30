@@ -98,7 +98,7 @@
     "test:scope": "vitest run --config vitest.scope.config.ts tests/integration/scope-matrix.test.ts",
     "test:static": "vitest run tests/static",
     "typecheck": "tsc --noEmit --project tsconfig.json",
-    "typecheck:demo": "tsc --noEmit --project example/tsconfig.json",
+    "typecheck:demo": "node scripts/prepare-demo-consumer.mjs --gate",
     "ui:check": "npm run ui:generate && git diff --exit-code -- registry examples/ui/afferent",
     "ui:generate": "node scripts/generate-ui-artifacts.mjs",
     "lint": "oxlint",
