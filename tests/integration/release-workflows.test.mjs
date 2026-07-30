@@ -4,8 +4,11 @@ import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 
 import {
+  validateArtifactActionCompatibility,
   validateCandidateRecord,
   validateCiWorkflow,
+  validateExternalConfiguration,
+  validateReleaseWorkflow,
 } from "../../scripts/verify-release-candidate.mjs";
 
 const repositoryRoot = new URL("../..", import.meta.url).pathname;
@@ -100,5 +103,96 @@ describe("release workflow contracts", () => {
     expect(packageManifest.scripts["verify:release-candidate"]).toBe(
       "node scripts/verify-release-candidate.mjs",
     );
+  });
+
+  test("release publication is manual, protected, OIDC-only, and artifact preserving", async () => {
+    const [ciSource, releaseSource] = await Promise.all([
+      readFile(join(repositoryRoot, ".github/workflows/ci.yml"), "utf8"),
+      readFile(join(repositoryRoot, ".github/workflows/release.yml"), "utf8"),
+    ]);
+
+    expect(() => validateReleaseWorkflow(releaseSource)).not.toThrow();
+    expect(() =>
+      validateArtifactActionCompatibility(ciSource, releaseSource),
+    ).not.toThrow();
+    expect(releaseSource).toContain(
+      'npm publish "$RUNNER_TEMP/release-candidate/package/afferent-0.1.0.tgz" --access public --provenance',
+    );
+    expect(releaseSource).toContain("npm audit signatures");
+    expect(releaseSource).not.toMatch(
+      /NODE_AUTH_TOKEN|NPM_TOKEN|convex deploy|vercel|test:e2e:phase4:remote/iu,
+    );
+  });
+
+  test("Changesets can only open a version pull request", async () => {
+    const source = await readFile(
+      join(repositoryRoot, ".github/workflows/release.yml"),
+      "utf8",
+    );
+
+    expect(source).toContain(
+      "changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d",
+    );
+    expect(() =>
+      validateReleaseWorkflow(
+        source.replace(
+          "version: npm run version:packages",
+          "publish: npm publish\n          version: npm run version:packages",
+        ),
+      ),
+    ).toThrow(/Changesets.*publish/iu);
+  });
+
+  test("release validation rejects missing OIDC and reordered static publication", async () => {
+    const source = await readFile(
+      join(repositoryRoot, ".github/workflows/release.yml"),
+      "utf8",
+    );
+
+    expect(() =>
+      validateReleaseWorkflow(source.replace("id-token: write", "id-token: none")),
+    ).toThrow(/OIDC|id-token/iu);
+    expect(() =>
+      validateReleaseWorkflow(
+        source.replace(
+          "needs: verify-public-npm",
+          "needs: release-readiness",
+        ),
+      ),
+    ).toThrow(/dependency|public npm|publication/iu);
+  });
+
+  test("external release configuration fails closed outside the protected workflow", () => {
+    expect(() => validateExternalConfiguration({})).toThrow(
+      /external release configuration/iu,
+    );
+    expect(() =>
+      validateExternalConfiguration({
+        githubActions: true,
+        repository: "bradywatkinson/afferent",
+        workflowRef:
+          "bradywatkinson/afferent/.github/workflows/release.yml@refs/heads/main",
+        runnerEnvironment: "github-hosted",
+        releaseOwner: "bradywatkinson/afferent",
+        trustedPublisher:
+          "bradywatkinson/afferent:release.yml:npm-production:allow-publish",
+        staticPublication: "github-pages",
+        approvedTag: "v0.1.0",
+      }),
+    ).not.toThrow();
+  });
+
+  test("release runbook records first-package bootstrap and action compatibility", async () => {
+    const source = await readFile(
+      join(repositoryRoot, "docs/operations/releases.md"),
+      "utf8",
+    );
+
+    expect(source).toMatch(/0\.0\.0-bootstrap\.0/iu);
+    expect(source).toMatch(/--tag bootstrap/iu);
+    expect(source).toMatch(/npm trust github[\s\S]*--allow-publish/iu);
+    expect(source).toMatch(/upload-artifact@v7[\s\S]*download-artifact@v8/iu);
+    expect(source).toMatch(/never.*successful.*v1/iu);
+    expect(source).not.toMatch(/NPM_TOKEN|NODE_AUTH_TOKEN/iu);
   });
 });
