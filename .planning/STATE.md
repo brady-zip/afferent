@@ -3,18 +3,18 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_phase: 04
-current_phase_name: hosted-production-release
+current_phase_name: Local Production Release
 status: executing
-stopped_at: Plan 04-07 complete; ready to execute 04-08 release automation
-last_updated: "2026-07-30T21:11:12.000Z"
+stopped_at: Completed 04-08-PLAN.md; ready for 04-09 human publication checkpoint
+last_updated: "2026-07-30T22:10:26.295Z"
 last_activity: 2026-07-30
-last_activity_desc: Published executable adopter documentation and the packed-artifact documentation gate
+last_activity_desc: Built synchronized release candidates and protected npm OIDC plus static publication workflows
 progress:
   total_phases: 7
   completed_phases: 6
   total_plans: 51
-  completed_plans: 49
-  percent: 96
+  completed_plans: 50
+  percent: 98
 ---
 
 # Project State
@@ -29,19 +29,19 @@ See: .planning/PROJECT.md (updated 2026-07-24)
 ## Current Position
 
 Phase: 04 (Local Production Release) — EXECUTING
-Plan: 8 of 9
-Status: Ready to execute 04-08 release automation
-Last activity: 2026-07-30 — Published executable adopter documentation and the packed-artifact documentation gate
+Plan: 9 of 9
+Status: Ready for 04-09 human publication checkpoint
+Last activity: 2026-07-30 — Built synchronized release candidates and protected npm OIDC plus static publication workflows
 
-Progress: [██████████] 96%
+Progress: [██████████] 98%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 49
+- Total plans completed: 50
 - Average duration: 73 min
-- Total execution time: 3588 min
+- Total execution time: 3641 min
 
 **By Phase:**
 
@@ -52,12 +52,12 @@ Progress: [██████████] 96%
 | Phase 02.1 | 1     | 68 min   | 68 min   |
 | Phase 02.3 | 2     | 33 min   | 17 min   |
 | Phase 03   | 12    | 1401 min | 117 min  |
-| Phase 04   | 7     | 945 min  | 135 min  |
+| Phase 04   | 8     | 998 min  | 125 min  |
 
 **Recent Trend:**
 
-- Last 5 plans: 697 min, 68 min, 37 min, 81 min, 53 min
-- Trend: Phase 4 package, lifecycle, installed consumer, local real-browser, and executable documentation gates are complete
+- Last 5 plans: 68 min, 37 min, 81 min, 53 min, 53 min
+- Trend: Phase 4 package, lifecycle, local browser, documentation, and protected release-automation gates are complete
 
 _Updated after each plan completion_
 
@@ -114,6 +114,7 @@ _Updated after each plan completion_
 | Phase 04 P05   | 37 min   | 3 tasks | 20 files |
 | Phase 04 P06   | 81 min   | 3 tasks | 22 files |
 | Phase 04 P07   | 53 min   | 3 tasks | 19 files |
+| Phase 04 P08   | 53 min   | 3 tasks | 24 files |
 
 ## Accumulated Context
 
@@ -244,6 +245,10 @@ Recent decisions affecting current work:
 - [Phase 04]: Pin VitePress 1.6.4 and keep the adopter documentation theme-neutral. — An exact stable version keeps local, CI, and packed-artifact documentation builds deterministic.
 - [Phase 04]: Require explicit validation metadata on every code fence and compile provider examples from the exact packed artifact. — Security-sensitive wrapper guidance must be executable release evidence rather than unverified prose.
 - [Phase 04]: Permit only AFFERENT_RELEASE_DOCS_URL, AFFERENT_RELEASE_NPM_URL, AFFERENT_RELEASE_REGISTRY_URL, and AFFERENT_RELEASE_REPOSITORY_URL until Plans 04-08 and 04-09 provide verified publication facts. — The docs gate rejects undeclared release markers, remote execution, and cloud identifiers.
+- [Phase 04]: Derive package, tag, registry, docs, UI, and evidence identity from one canonical 0.1.0 release manifest.
+- [Phase 04]: Keep Changesets version-only and make the protected npm-production OIDC job the sole npm writer.
+- [Phase 04]: Accept cross-run candidates only from the successful ci.yml push on main for the exact source commit.
+- [Phase 04]: Publish matching registry and docs through an isolated GitHub Pages environment only after public npm bytes and provenance verify.
 
 ### Pending Todos
 
@@ -269,6 +274,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-30T21:11:12.000Z
-Stopped at: Plan 04-07 complete; ready to execute 04-08 release automation
+Last session: 2026-07-30T22:10:12.157Z
+Stopped at: Completed 04-08-PLAN.md; ready for 04-09 human publication checkpoint
 Resume file: None

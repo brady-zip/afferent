@@ -317,7 +317,7 @@ Plans:
 4. Browser tests run the feedback, roadmap, changelog, notification, and admin workflows against real local Convex using the exact artifacts consumers install, including keyboard, axe, responsive, and lifecycle gates.
 5. Documentation covers local-demo operation plus adopter installation through upgrades for all supported auth and UI paths, and a validated npm release publishes exports, declarations, provenance, and synchronized package, registry, and documentation versions.
 
-**Plans:** 7/9 plans executed
+**Plans:** 8/9 plans executed
 
 - [x] 04-01-PLAN.md
 - [x] 04-02-PLAN.md
@@ -326,7 +326,7 @@ Plans:
 - [x] 04-05-PLAN.md
 - [x] 04-06-PLAN.md
 - [x] 04-07-PLAN.md
-- [ ] 04-08-PLAN.md
+- [x] 04-08-PLAN.md
 - [ ] 04-09-PLAN.md
 
 **Wave 1**
@@ -359,7 +359,7 @@ Plans:
 
 **Wave 8** _(blocked on Wave 7 completion)_
 
-- [ ] `04-08-PLAN.md` — Synchronize Changesets/versioned artifacts and build drift-proof CI plus npm OIDC/provenance release automation without demo deployment infrastructure.
+- [x] `04-08-PLAN.md` — Synchronize Changesets/versioned artifacts and build drift-proof CI plus npm OIDC/provenance release automation without demo deployment infrastructure.
 
 **Wave 9** _(human-present package release; blocked on Wave 8 completion)_
 
@@ -380,7 +380,7 @@ Phases execute sequentially: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 3 -> 4
 | 2.2 Notification Navigation Target Contract   | 2/2            | Complete    | 2026-07-21 |
 | 2.3 Admin Read and Projection Completion      | 2/2            | Complete    | 2026-07-21 |
 | 3. Source-Owned Product Interface             | 12/12          | Complete    | 2026-07-22 |
-| 4. Local Production Release                   | 7/9            | In Progress |            |
+| 4. Local Production Release                   | 8/9            | In Progress |             |
 
 ---
 
