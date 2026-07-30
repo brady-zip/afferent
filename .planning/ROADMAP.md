@@ -17,7 +17,7 @@ Afferent reaches its first public release through four coarse vertical slices. T
 - [x] **Phase 2.2: Notification Navigation Target Contract** - Project versioned, public, accessible notification destinations without exposing polymorphic internal identifiers. (INSERTED) (completed 2026-07-21)
 - [x] **Phase 2.3: Admin Read and Projection Completion** - Complete server-authorized admin reads and presentation-ready moderation, changelog, and activity projections. (INSERTED) (completed 2026-07-21)
 - [x] **Phase 3: Source-Owned Product Interface** - Source-owned public and admin interfaces, deterministic distribution, and exhaustive accessibility/recovery evidence are complete. (completed 2026-07-22)
-- [ ] **Phase 4: Hosted Production Release** - The published package, registry, documentation, and isolated public demo work together against real Convex.
+- [ ] **Phase 4: Local Production Release** - The published package, registry, documentation, and clone-and-run local demo work together against real anonymous Convex.
 
 ## Phase Details
 
@@ -303,19 +303,19 @@ Plans:
 - Canonical `ui/afferent/**` source alone emits stable namespaced registry JSON and byte-equivalent `examples/ui/afferent/**`; generated paths are never hand-edited and every clean-consumer proof installs the packed tarball before local shadcn items.
 - All Phase 3 package dependencies are committed once from the TypeScript 6 baseline; the user's TypeScript 7 manifest/lock experiment is restored unstaged and package files are untouched by later plans.
 
-### Phase 4: Hosted Production Release
+### Phase 4: Local Production Release
 
-**Goal:** Adopters can evaluate and install the same production artifacts demonstrated by a safe, publicly hosted Afferent application.
+**Goal:** Adopters can install the production artifacts and evaluate the complete integration by cloning the repository and launching one credential-free local Afferent application against a real anonymous Convex development backend.
 **Mode:** mvp
 **Depends on:** Phase 3
-**Requirements:** COMP-01, DEMO-01, DEMO-02, DEMO-03, DEMO-04, DEMO-05, DEMO-06, DEMO-07, QUAL-05, QUAL-06, QUAL-09, QUAL-11
+**Requirements:** COMP-01, DEMO-02, DEMO-03, DEMO-04, DEMO-05, DEMO-06, DEMO-07, DEMO-08, QUAL-05, QUAL-06, QUAL-09, QUAL-11
 **Success Criteria** (what must be TRUE):
 
-1. A visitor can open a public Vite and Convex Auth application that consumes the published integration path and explore an immutable showcase with representative feedback, roadmap, and changelog data.
-2. Each authenticated visitor can use and deterministically reset a private admin sandbox backed by a separate component instance whose trusted host derives scope without accepting it from browser arguments.
-3. Sandbox quotas, rate limits, expiry, and cleanup bound public-demo growth, and adversarial two-user tests prove that reads, writes, search, counts, seeds, resets, and cleanup never cross visitor scopes.
-4. Browser tests run the public feedback, roadmap, changelog, notification, and admin workflows against real Convex using the artifacts that consumers install.
-5. Documentation covers installation through upgrades for all supported auth and UI paths, and a validated npm release publishes exports, declarations, provenance, and synchronized package, registry, documentation, and demo versions.
+1. From a clean clone, one documented command prepares the packed-package and generated-registry example, generates ephemeral local auth material, starts a real anonymous Convex backend plus Vite, seeds representative content, and requires no Convex account or deploy key.
+2. The immutable showcase is browsable while signed out; each locally authenticated user can complete and deterministically reset a private admin sandbox backed by a separate component instance whose trusted host derives scope without accepting it from browser arguments.
+3. Sandbox quotas, rate limits, expiry, and cleanup remain complete and bounded, and adversarial two-user tests prove that reads, writes, search, counts, seeds, resets, and cleanup never cross user scopes.
+4. Browser tests run the feedback, roadmap, changelog, notification, and admin workflows against real local Convex using the exact artifacts consumers install, including keyboard, axe, responsive, and lifecycle gates.
+5. Documentation covers local-demo operation plus adopter installation through upgrades for all supported auth and UI paths, and a validated npm release publishes exports, declarations, provenance, and synchronized package, registry, and documentation versions.
 
 **Plans:** 5/9 plans executed
 
@@ -347,23 +347,23 @@ Plans:
 
 **Wave 5** _(blocked on Wave 4 completion)_
 
-- [ ] `04-05-PLAN.md` — Assemble the canonical responsive hosted UI from the exact packed package and generated registry artifacts.
+- [x] `04-05-PLAN.md` — Assemble the canonical responsive example UI from the exact packed package and generated registry artifacts.
 
 **Wave 6** _(blocked on Wave 5 completion)_
 
-- [ ] `04-06-PLAN.md` — Prove full public/admin, two-user scope isolation, lifecycle, responsive, keyboard, and axe behavior against real Convex.
+- [ ] `04-06-PLAN.md` — Ship the one-command anonymous local Convex demo and prove full showcase/admin, two-user scope isolation, lifecycle, responsive, keyboard, and axe behavior against its real backend.
 
 **Wave 7** _(blocked on Wave 6 completion)_
 
-- [ ] `04-07-PLAN.md` — Publish executable VitePress and README guidance for install, all auth providers, headless/registry UI, testing, deployment, and upgrades.
+- [ ] `04-07-PLAN.md` — Publish executable VitePress and README guidance for local demo operation, install, all auth providers, headless/registry UI, testing, host deployment, and upgrades.
 
 **Wave 8** _(blocked on Wave 7 completion)_
 
-- [ ] `04-08-PLAN.md` — Synchronize Changesets/versioned artifacts and build drift-proof CI, isolated previews, and npm OIDC/provenance release automation.
+- [ ] `04-08-PLAN.md` — Synchronize Changesets/versioned artifacts and build drift-proof CI plus npm OIDC/provenance release automation without demo deployment infrastructure.
 
-**Wave 9** _(human-present external release; blocked on Wave 8 completion)_
+**Wave 9** _(human-present package release; blocked on Wave 8 completion)_
 
-- [ ] `04-09-PLAN.md` — Provision exact external accounts, publish npm then registry/docs then production app, and close public remote smoke and release evidence.
+- [ ] `04-09-PLAN.md` — Confirm GitHub/npm ownership, publish and verify npm plus registry/docs, and close tag/provenance/release evidence without deploying the demo.
 
 **UI hint**: yes
 
@@ -380,7 +380,7 @@ Phases execute sequentially: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 3 -> 4
 | 2.2 Notification Navigation Target Contract   | 2/2            | Complete    | 2026-07-21 |
 | 2.3 Admin Read and Projection Completion      | 2/2            | Complete    | 2026-07-21 |
 | 3. Source-Owned Product Interface             | 12/12          | Complete    | 2026-07-22 |
-| 4. Hosted Production Release                  | 5/9            | In Progress |            |
+| 4. Local Production Release                   | 5/9            | In Progress |            |
 
 ---
 

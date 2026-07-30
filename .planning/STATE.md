@@ -5,10 +5,10 @@ milestone_name: milestone
 current_phase: 04
 current_phase_name: hosted-production-release
 status: executing
-stopped_at: Completed 04-05-PLAN.md
-last_updated: "2026-07-27T22:36:40.463Z"
-last_activity: 2026-07-27
-last_activity_desc: Phase 04 execution started
+stopped_at: Scope pivot approved while reconciling interrupted 04-06 work
+last_updated: "2026-07-30"
+last_activity: 2026-07-30
+last_activity_desc: Phase 04 pivoted from a hosted demo to a clone-and-run local anonymous Convex demo
 progress:
   total_phases: 7
   completed_phases: 6
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-24)
 
 **Core value:** SaaS teams can add deeply integrated product feedback to an existing Convex application while retaining native ownership of their data, identity, permissions, and user experience.
-**Current focus:** Phase 04 — hosted-production-release
+**Current focus:** Phase 04 — Local Production Release (historical directory slug: `hosted-production-release`)
 
 ## Current Position
 
-Phase: 04 (hosted-production-release) — EXECUTING
+Phase: 04 (Local Production Release) — EXECUTING
 Plan: 6 of 9
-Status: Ready to execute
-Last activity: 2026-07-27 — Phase 04 execution started
+Status: Replanning and reconciling 04-06 after approved demo scope pivot
+Last activity: 2026-07-30 — Replaced the hosted-demo deliverable with a clone-and-run local anonymous Convex experience
 
 Progress: [█████████░] 92%
 

@@ -1,32 +1,40 @@
-# Phase 4: Hosted Production Release - Context
+# Phase 4: Local Production Release - Context
 
 **Gathered:** 2026-07-23
-**Status:** Ready for planning
+**Scope updated:** 2026-07-30
+**Status:** Replanned for local-demo execution
+
+> The user-approved scope pivot is authoritative over the original hosted-release
+> research. See `04-SCOPE-PIVOT.md`. The historical directory slug remains unchanged so
+> completed plan, summary, and commit references stay stable.
 
 <domain>
 ## Phase Boundary
 
-Ship the first public Afferent release as one coherent, installable proof: a
-production Vite + Convex Auth application, an immutable public showcase, an
-authenticated private admin sandbox, complete installation and operations
-documentation, real-Convex browser verification, and synchronized npm, shadcn
-registry, documentation, and deployment artifacts.
+Ship the first public Afferent package as one coherent, installable proof: a
+clone-and-run Vite + Convex Auth application on an anonymous local Convex
+development backend, an immutable signed-out showcase, authenticated private
+admin sandboxes, complete installation and operations documentation, local
+real-Convex browser verification, and synchronized npm, shadcn registry, and
+documentation artifacts.
 
 This phase hardens and publishes the component, headless bindings, and canonical
 source-owned UI completed in Phases 1–3. It does not add a second product model,
-general multi-tenancy, new feedback-domain features, or a hosted Afferent SaaS.
+general multi-tenancy, new feedback-domain features, a hosted demo, or an
+Afferent SaaS.
 
 </domain>
 
 <decisions>
 ## Implementation Decisions
 
-### Hosted evaluation experience
+### Local evaluation experience
 
-- **D-01:** The production example is a Vite React SPA hosted on Vercel with a
-  Convex Cloud production deployment, using the official `convex deploy --cmd`
-  build/deploy shape. Preview deployments use isolated Convex preview
-  deployments; production data is never reused in previews.
+- **D-01 (superseded 2026-07-30):** The example is a Vite React SPA launched by
+  one repository development command against a real anonymous local Convex
+  backend. It requires no Convex login, project, deploy key, Vercel project, or
+  hosted URL. Dependency installation may require network access; fully offline
+  operation is not promised.
 - **D-02:** The default, signed-out route is the immutable public showcase.
   Visitors can browse representative boards, post detail and discussion,
   roadmap statuses, and published changelog entries without authenticating.
@@ -41,7 +49,7 @@ general multi-tenancy, new feedback-domain features, or a hosted Afferent SaaS.
   navigation, sign-in state, and explanatory copy. The product screens
   themselves must use the canonical Phase 3 UI through public
   `afferent/react.js` bindings and the registry-generated/copied source; the
-  hosted example must not become a third hand-maintained UI implementation.
+  local example must not become a third hand-maintained UI implementation.
 - **D-05:** Showcase and sandbox seeds are deterministic and representative,
   including multiple boards, configurable statuses, posts with votes and
   comments, roadmap-visible work, notifications/activity, and published
@@ -105,16 +113,18 @@ general multi-tenancy, new feedback-domain features, or a hosted Afferent SaaS.
 
 ### Artifact and browser proof
 
-- **D-15:** Release proof runs against the exact consumer artifacts, not
-  repository source aliases: build and pack `afferent`, install the tarball into
-  a clean Vite/Convex consumer, install the generated UI from the public registry
-  shape, run Convex codegen/typecheck/build, and deploy that consumer candidate.
-  The tagged production deployment must resolve the same public exports and
-  registry files as the published version.
-- **D-16:** A real Convex preview/production backend is a release gate for
-  component search and pagination, scheduled cleanup, seed/reset, authenticated
-  wrappers, and browser workflows. `convex-test` remains a fast lower layer but
-  cannot satisfy the hosted-production requirement.
+- **D-15 (updated 2026-07-30):** Release proof runs against the exact consumer
+  artifacts, not repository source aliases: build and pack `afferent`, install
+  the tarball into a clean Vite/Convex consumer, install the generated UI from
+  the public registry shape, run Convex codegen/typecheck/build, and launch that
+  consumer candidate locally. The user-facing demo command and acceptance gate
+  must resolve the same public exports and registry files as the release
+  candidate.
+- **D-16 (updated 2026-07-30):** A real anonymous local Convex backend is a
+  release gate for component search and pagination, scheduled cleanup,
+  seed/reset, authenticated wrappers, and browser workflows. `convex-test`
+  remains a fast lower layer but cannot satisfy the local-demo acceptance
+  requirement. Remote preview/production mode is removed.
 - **D-17:** Playwright drives one complete private-sandbox journey:
   sign in, browse seeded feedback, submit, vote/comment, perform admin triage and
   moderation, update roadmap status, publish a linked changelog entry, observe
@@ -127,9 +137,9 @@ general multi-tenancy, new feedback-domain features, or a hosted Afferent SaaS.
   No record, ID, count, search hit, notification, scheduled continuation, or
   reset effect may cross users.
 - **D-19:** Installed-artifact accessibility remains a release gate: keyboard
-  completion of public and admin journeys, focus restoration, status
+  completion of showcase and admin journeys, focus restoration, status
   announcements, 200% zoom/reflow, contrast/forced-color checks, and automated
-  axe checks run against the actual hosted/registry-installed UI. Phase 3's
+  axe checks run against the actual local registry-installed UI. Phase 3's
   explicit human aesthetic review remains human judgment rather than being
   falsely automated.
 
@@ -139,8 +149,9 @@ general multi-tenancy, new feedback-domain features, or a hosted Afferent SaaS.
   root README serving as a concise installation and project entry point. The
   published docs cover installation, component mounting, access policy,
   generated host wrappers, headless React, shadcn registry installation,
-  customization, testing, deployment, troubleshooting, and upgrades.
-- **D-21:** Convex Auth is the runnable hosted reference. Convex Auth, Clerk, and
+  customization, testing, host-application deployment, troubleshooting, and
+  upgrades. A separate local-demo guide owns anonymous backend bootstrap.
+- **D-21:** Convex Auth is the runnable local reference. Convex Auth, Clerk, and
   Convex Better Auth each receive a provider-specific guide and an executable
   fixture/conformance path that derives a provider-neutral actor in host code
   and authorizes admin separately. No guide may imply that a browser flag,
@@ -166,39 +177,42 @@ general multi-tenancy, new feedback-domain features, or a hosted Afferent SaaS.
   release workflow with npm trusted publishing/OIDC, `id-token: write`,
   `--access public`, and provenance. Long-lived `NPM_TOKEN` publication is not
   the production path.
-- **D-26:** Publication is tag/commit coherent. The npm package, generated
-  registry catalog/items, docs, hosted demo, source examples, release notes, and
-  compatibility metadata all identify the same package version and source
-  commit. CI fails on generated drift or version disagreement.
-- **D-27:** Release order is verify candidate → publish npm with provenance →
-  publish the static registry/docs → deploy or promote the hosted demo → run
-  public URL smoke tests. A failed downstream step leaves an explicit failed
-  release state and supports idempotent rerun; it must not quietly present mixed
+- **D-26 (updated 2026-07-30):** Publication is tag/commit coherent. The npm
+  package, generated registry catalog/items, docs, source examples, release
+  notes, and compatibility metadata all identify the same package version and
+  source commit. The local demo is compatibility-tested from that source but is
+  not a separately deployed or badged version surface. CI fails on generated
+  drift or version disagreement.
+- **D-27 (updated 2026-07-30):** Release order is verify candidate → publish npm
+  with provenance → publish the static registry/docs → verify the public
+  package, registry, docs, tag, and provenance. No demo deployment or public-URL
+  smoke step exists. A failed downstream step leaves an explicit failed release
+  state and supports idempotent rerun; it must not quietly present mixed
   versions as a successful release.
 - **D-28:** Before publication, add and validate canonical public repository,
   homepage, issue tracker, license, funding/author if applicable, and source
   provenance metadata. Configure the exact public GitHub repository/workflow as
-  npm's trusted publisher and the exact production domains as deployment
+  npm's trusted publisher and the exact static registry/docs publication
   settings. Account ownership and secret values remain operator configuration,
   not repository defaults.
 - **D-29:** Fast-moving versions and platform APIs from the July 2026 research
   are compatibility snapshots. Planning/release work must revalidate Convex,
-  Convex Auth, Clerk, Better Auth, shadcn, Vercel/Convex deployment, Node/npm,
-  and trusted-publishing requirements, then pin one tested matrix rather than
-  upgrading opportunistically.
+  Convex Auth, Clerk, Better Auth, shadcn, local anonymous Convex development,
+  adopter Convex deployment, Node/npm, and trusted-publishing requirements,
+  then pin one tested matrix rather than upgrading opportunistically.
 - **D-30:** Treat `afferent/test` as an intentional testing-only public export,
   not an accidental raw-source escape hatch. Phase 4 must choose and document a
   Convex-compatible packaged form, supply usable declarations, and prove the
   export from the packed artifact; if the Convex test registration mechanism
   requires source modules, that exception must be explicit and validated rather
   than leaving `"./test": "./src/test.ts"` as an unexamined release gap.
-- **D-31:** Live Convex projects, Vercel ownership/domains, GitHub release
-  permissions, and npm trusted-publisher configuration are operator-provisioned
-  external prerequisites. Repository work must provide deterministic local and
-  preview gates, exact setup documentation, and fail-closed human-present
-  release checkpoints. Agents must not fabricate credentials, claim a public
-  deployment without its URL, or mark publication/provenance complete from an
-  offline package simulation.
+- **D-31 (updated 2026-07-30):** GitHub release/static-site permissions and npm
+  trusted-publisher configuration are operator-provisioned external
+  prerequisites. Repository work must provide deterministic local gates, exact
+  setup documentation, and fail-closed human-present package-release
+  checkpoints. The demo itself has no live Convex/Vercel prerequisite. Agents
+  must not fabricate credentials or mark publication/provenance complete from
+  an offline package simulation.
 
 ### the agent's Discretion
 
@@ -208,8 +222,8 @@ general multi-tenancy, new feedback-domain features, or a hosted Afferent SaaS.
   realistic, bounded content contract above.
 - Exact internal filenames, CI job decomposition/caching, and docs navigation.
 - Exact centralized quota thresholds and cleanup operational tuning under D-14.
-- Whether docs share the Vercel project/domain with the demo or use a dedicated
-  Vercel site, provided version coherence and public links are automatic.
+- Exact static registry/docs publication mechanism, provided version coherence
+  and public links are automatic and it does not deploy the demo.
 
 </decisions>
 
@@ -222,17 +236,22 @@ general multi-tenancy, new feedback-domain features, or a hosted Afferent SaaS.
 ### Product and release requirements
 
 - `.planning/PROJECT.md` — Product boundary, current Phase 1–3 completion state,
-  hosted-example direction, and non-negotiable security/distribution decisions.
-- `.planning/REQUIREMENTS.md` — Locked COMP-01, DEMO-01 through DEMO-07,
-  QUAL-05, QUAL-06, QUAL-09, and QUAL-11 acceptance requirements.
+  local-example direction, and non-negotiable security/distribution decisions.
+- `.planning/REQUIREMENTS.md` — Locked COMP-01, DEMO-02 through DEMO-08,
+  QUAL-05, QUAL-06, QUAL-09, and QUAL-11 acceptance requirements; DEMO-01 is
+  historical and superseded.
+- `.planning/phases/04-hosted-production-release/04-SCOPE-PIVOT.md` — The
+  authoritative hosted-to-local change, terminology, preserved gates, and
+  remaining-plan impact.
 - `.planning/ROADMAP.md` — Phase 4 goal, success criteria, dependency order, and
   requirement traceability.
 - `.planning/research/SUMMARY.md` — Phase 4 release synthesis and the
   two-static-instance sandbox architecture.
-- `.planning/research/STACK.md` — Recommended Vite/Vercel/Convex, VitePress,
-  browser-test, package-validation, Changesets, and trusted-publishing stack.
+- `.planning/research/STACK.md` — Historical hosting research plus still-current
+  Vite/Convex, VitePress, browser-test, package-validation, Changesets, and
+  trusted-publishing inputs; `04-SCOPE-PIVOT.md` supersedes Vercel/demo hosting.
 - `.planning/research/ARCHITECTURE.md` — Demo scope flow, test layers, publishing
-  graph, and package/registry/deployment ordering.
+  graph, and package/registry ordering, subject to the local-demo pivot.
 - `.planning/research/PITFALLS.md` — Cross-scope, cleanup, artifact-install,
   upgrade, accessibility, and release failure modes.
 
@@ -256,7 +275,7 @@ general multi-tenancy, new feedback-domain features, or a hosted Afferent SaaS.
   package files, and Phase 1–3 release gates.
 - `src/client/index.ts` — Normal one-product fixed-scope client.
 - `src/client/server.ts` — Explicit server-only scoped client and scope helper
-  export used only by the hosted sandbox.
+  export used only by the local demo sandbox.
 - `src/client/scope.ts` — Domain-separated SHA-256 scope derivation.
 - `src/client/internal.ts` — Scope-first host resolution and narrow read,
   participation, admin, and delivery calls.
@@ -265,7 +284,7 @@ general multi-tenancy, new feedback-domain features, or a hosted Afferent SaaS.
 - `src/component/model/rateLimits.ts` — Existing actor/scope participation limits
   and limiter-key construction.
 - `tests/integration/scope-matrix.test.ts` — Current fixed/scoped isolation
-  baseline to extend into the full deployed two-user matrix.
+  baseline to extend into the full local real-Convex two-user matrix.
 - `fixtures/auth-convex-auth/convex/afferent.ts` — Existing Convex Auth identity
   and independent admin-authority wrapper pattern.
 
@@ -307,7 +326,7 @@ general multi-tenancy, new feedback-domain features, or a hosted Afferent SaaS.
   repository-relative imports and prove installation/type/build behavior. They
   are the base for the tagged artifact pipeline.
 - The canonical Phase 3 screens already cover public boards, roadmap, changelog,
-  notifications, and admin workflows. The hosted app supplies real bindings,
+  notifications, and admin workflows. The local app supplies real bindings,
   routes, auth, and shell rather than rewriting them.
 
 ### Established Patterns
@@ -328,9 +347,9 @@ general multi-tenancy, new feedback-domain features, or a hosted Afferent SaaS.
 
 ### Integration Points
 
-- Add the hosted Vite/Convex Auth application beside the existing clean
-  fixtures while keeping one root package/lockfile and public package exports.
-- Install both showcase and sandbox component instances in the hosted app's
+- Add the local Vite/Convex Auth application beside the existing clean fixtures
+  while keeping one root package/lockfile and public package exports.
+- Install both showcase and sandbox component instances in the local app's
   `convex.config.ts`, then mount separate host wrapper modules with different
   authority policies.
 - Keep host-owned sandbox lifecycle metadata and generation selection outside
@@ -340,9 +359,9 @@ general multi-tenancy, new feedback-domain features, or a hosted Afferent SaaS.
   usage accounting, exhaustive cleanup, or rate-limiter shard cleanup cannot be
   safely performed by host orchestration. Do not mount those operations in
   normal consumer browser APIs.
-- Extend the root scripts with Phase 4 candidate, deployed E2E, docs, package,
-  registry, version-sync, and release gates; CI/release workflows should call
-  those scripts rather than duplicate logic in YAML.
+- Extend the root scripts with one-command local demo, local real-Convex E2E,
+  docs, package, registry, version-sync, and release gates; CI/release workflows
+  should call those scripts rather than duplicate logic in YAML.
 
 </code_context>
 
@@ -350,14 +369,14 @@ general multi-tenancy, new feedback-domain features, or a hosted Afferent SaaS.
 ## Specific Ideas
 
 - The evaluator journey should be understandable without documentation:
-  “Browse the real public product” first, then “Sign in to try your own private
+  “Browse the immutable showcase” first, then “Sign in to try your own private
   admin sandbox.”
 - Reset copy should name what is lost, state that only the current visitor's
   sandbox is affected, explain the deterministic restore, and show a durable
   in-progress/result state. It must not display the internal scope identifier.
-- A small release/version badge in the demo and docs should link to the matching
-  npm package and source tag, making artifact coherence visible rather than only
-  a CI assertion.
+- Package, registry, docs, and source-tag version coherence remains explicit in
+  release metadata. The local demo does not carry a separately deployed release
+  badge.
 
 </specifics>
 
@@ -377,4 +396,4 @@ general multi-tenancy, new feedback-domain features, or a hosted Afferent SaaS.
 ---
 
 _Phase: 04-hosted-production-release_
-_Context gathered: 2026-07-23_
+_Context gathered: 2026-07-23; local-demo scope superseded hosting decisions on 2026-07-30_

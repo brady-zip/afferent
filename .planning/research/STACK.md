@@ -4,6 +4,12 @@
 **Researched:** 2026-07-14
 **Confidence:** MEDIUM
 
+> **Scope supersession (2026-07-30):** Vercel, Convex Cloud demo deployment, preview,
+> and remote-smoke recommendations are no longer v1 deliverables. The example runs
+> locally on a credential-free anonymous Convex development backend. Other stack and
+> release recommendations remain research inputs. See
+> `.planning/phases/04-hosted-production-release/04-SCOPE-PIVOT.md`.
+
 The recommendations below are a compatibility snapshot, not a command to upgrade blindly to every future `latest`. Versions were checked against official documentation, official repositories, and npm package metadata on the research date. Confidence is MEDIUM because Convex Components are evolving, Convex Auth remains beta, and several frontend tools move quickly.
 
 ## Recommended Stack

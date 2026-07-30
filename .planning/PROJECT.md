@@ -2,7 +2,7 @@
 
 ## What This Is
 
-Afferent is an open-source Convex component that gives SaaS teams the core product-feedback workflow of Canny without moving feedback data, identity, or permissions into a separate SaaS. It ships a reusable Convex backend, headless React integration, copyable user-facing and admin interfaces, and a publicly hosted working example.
+Afferent is an open-source Convex component that gives SaaS teams the core product-feedback workflow of Canny without moving feedback data, identity, or permissions into a separate SaaS. It ships a reusable Convex backend, headless React integration, copyable user-facing and admin interfaces, and a clone-and-run local working example.
 
 The first release covers public feedback boards, authenticated participation, administrative feedback management, a status-driven public roadmap, and manually published changelog entries linked to feedback. One Afferent installation represents one product and can contain multiple feedback boards managed by one host application.
 
@@ -19,7 +19,7 @@ SaaS teams can add deeply integrated product feedback to an existing Convex appl
 
 ## Current State
 
-Phases 1 through 3 are complete and verified. The packed Convex component supports provider-neutral trusted-host integration for Convex Auth, Clerk, and Better Auth; secure multi-board feedback; ranked and searchable discovery; participation and moderation; a status-driven roadmap; manually published linked changelog entries; in-app notifications and a host delivery outbox; and the complete framework-light headless React contract. The accessible, responsive public and admin interfaces now ship from one canonical source through mirrored examples and a deterministic shadcn registry. Phase 4 is preparing the published package, documentation, and isolated hosted demo as one production release.
+Phases 1 through 3 are complete and verified. The packed Convex component supports provider-neutral trusted-host integration for Convex Auth, Clerk, and Better Auth; secure multi-board feedback; ranked and searchable discovery; participation and moderation; a status-driven roadmap; manually published linked changelog entries; in-app notifications and a host delivery outbox; and the complete framework-light headless React contract. The accessible, responsive public and admin interfaces now ship from one canonical source through mirrored examples and a deterministic shadcn registry. Phase 4 is preparing the published package, documentation, and a feature-full local demo that starts an anonymous Convex development backend without account credentials.
 
 ## Requirements
 
@@ -38,9 +38,9 @@ Phases 1 through 3 are complete and verified. The packed Convex component suppor
 
 ### Active
 
-- [ ] A publicly accessible Vite application demonstrates the complete integration using Convex Auth.
-- [ ] Each signed-in demo visitor receives a private, seeded admin sandbox that they can modify and reset without affecting other visitors.
-- [ ] The first public release includes typed APIs, automated tests, integration documentation, UI installation documentation, npm distribution, shadcn registry distribution, and a deployed working example.
+- [ ] A developer can clone the repository and start the complete Vite and Convex Auth example with one documented command and no Convex account, deploy key, or committed auth material.
+- [ ] Each locally signed-in demo user receives a private, seeded admin sandbox that they can modify and reset without affecting other local users.
+- [ ] The first public release includes typed APIs, automated tests, integration documentation, UI installation documentation, npm distribution, shadcn registry distribution, and the feature-full local working example.
 
 ### Out of Scope
 
@@ -49,7 +49,7 @@ Phases 1 through 3 are complete and verified. The packed Convex component suppor
 - A packaged, opaque design system — consumers should own copied UI source or build on the headless React layer.
 - Independent roadmap records — the v1 roadmap is derived from feedback posts and their workflow statuses.
 - Automatically generated changelog entries — v1 entries are written and published intentionally by administrators.
-- A shared or anonymous public admin sandbox — the demo isolates mutable data per signed-in visitor.
+- A shared or unauthenticated admin sandbox — mutable demo data remains isolated per locally signed-in user. The anonymous Convex development backend is credential-free infrastructure, not anonymous application authority.
 
 AI duplicate detection, sentiment analysis, named third-party integrations, imports, and analytics remain later capabilities rather than v1 requirements.
 
@@ -63,7 +63,7 @@ The component should provide a provider-neutral identity contract rather than pr
 
 The React deliverable has two layers: headless behavior for teams that want full control, and polished shadcn-based source that teams copy into their applications. The source-owned UI must cover both the customer-facing board/roadmap/changelog experience and administrative workflows.
 
-The repository itself is also the product showcase. Its Vite example must be publicly deployed, usable without privileged credentials for public browsing, and safe for hands-on admin evaluation through isolated per-user sandboxes.
+The repository itself is also the product showcase. Its Vite example must start locally with one documented command against an anonymous Convex development backend, remain browsable while signed out, and support hands-on admin evaluation only after local Convex Auth sign-in through isolated per-user sandboxes. Requiring evaluators to clone the repository and install the toolchain is an accepted v1 tradeoff; there is no canonical hosted demo URL.
 
 ## Constraints
 
@@ -72,10 +72,11 @@ The repository itself is also the product showcase. Its Vite example must be pub
 - **Authorization**: The host application decides who is an admin — component APIs must preserve this boundary and must not silently create a parallel source of truth.
 - **Tenancy**: One installation represents one product — multi-product organizations are deferred.
 - **Access policy**: Visibility and authentication requirements are configured installation-wide — per-board overrides are not required in v1.
-- **Frontend**: Consumer-facing libraries target React, while the hosted example uses Vite — core UI behavior should remain framework-light.
+- **Frontend**: Consumer-facing libraries target React, while the local example uses Vite — core UI behavior should remain framework-light.
 - **Customization**: UI source must be consumer-owned and restylable — headless APIs, a shadcn registry, and mirrored repository examples are required.
-- **Demo safety**: Public admin experimentation must be isolated per authenticated visitor and resettable — visitors cannot mutate shared canonical showcase data.
-- **Quality**: v1 is a production-ready public release rather than a prototype — typed boundaries, tests, documentation, packaging, and deployment are release requirements.
+- **Demo safety**: Local admin experimentation must be isolated per authenticated user and resettable — users cannot mutate shared canonical showcase data. Anonymous Convex mode removes account credentials, not application authentication or authorization.
+- **Local bootstrap**: The demo generates JWT/JWKS material ephemerally, never commits credentials or generated `.env.local`, reports actionable prerequisite/bootstrap failures, and tears down only processes it owns.
+- **Quality**: v1 is a production-ready public package rather than a prototype — typed boundaries, tests, documentation, packaging, local real-Convex verification, and adopter deployment guidance are release requirements.
 - **License**: Repository code and public packages use Apache-2.0.
 
 ## Key Decisions
@@ -90,8 +91,9 @@ The repository itself is also the product showcase. Its Vite example must be pub
 | Keep identity and admin authorization in the host app | Convex component isolation prevents direct `ctx.auth` access and provider-neutral wrappers support all target auth systems | — Pending |
 | Ship headless React plus copyable shadcn source | Gives consumers a fast polished start while preserving full styling and ownership | ✓ Validated in Phase 3 |
 | Publish UI through both a shadcn registry and repository examples | Supports convenient installation and transparent reference implementations | ✓ Validated in Phase 3 |
-| Use a Vite React app for the hosted example | Demonstrates a simple client-side integration without tying the component to a full-stack React framework | — Pending |
-| Use Convex Auth in the hosted example | Keeps the canonical demo within the Convex ecosystem while other auth providers remain documented and tested integrations | — Pending |
+| Keep the Vite React example local rather than publicly hosted | Delivers a credential-free clone-and-run evaluator path without operating a public demo service; the accepted tradeoff is that evaluators install the repository toolchain | Locked 2026-07-30 |
+| Use a Vite React app for the local example | Demonstrates a simple client-side integration without tying the component to a full-stack React framework | — Pending |
+| Use Convex Auth in the local example | Keeps the canonical demo within the Convex ecosystem while other auth providers remain documented and tested integrations | — Pending |
 | Provide private per-user demo sandboxes | Enables safe hands-on admin evaluation without shared-state vandalism or browser-session cleanup complexity | — Pending |
 | Publish under Apache-2.0 | Permits broad commercial use while providing an explicit patent grant | — Pending |
 | Keep roadmap grouping server-derived | The fixed Planned, In Progress, and Complete projection must stay consistent across consumers | ✓ Validated in Phase 2 |
@@ -117,4 +119,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-24 after Phase 3 completion*
+*Last updated: 2026-07-30 after the Phase 4 local-demo scope pivot*

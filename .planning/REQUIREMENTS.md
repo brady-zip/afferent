@@ -99,15 +99,16 @@ Requirements for the first production-ready public release. Roadmap creation wil
 - [x] **UI-07**: Registry artifacts and repository examples are generated or checked against one canonical UI source to prevent incompatible copies.
 - [x] **UI-08**: Post-bearing headless reads expose server-derived current-viewer vote membership and author edit/withdraw capabilities without accepting browser identity or authority facts.
 
-### Hosted Example
+### Local Example
 
-- [x] **DEMO-01**: A visitor can open a publicly deployed Vite example that uses Convex Auth and the published Afferent integration path.
+- [x] **DEMO-01**: A visitor can open a publicly deployed Vite example that uses Convex Auth and the published Afferent integration path. — Superseded on 2026-07-30 by DEMO-08; public demo hosting is no longer a v1 deliverable.
 - [x] **DEMO-02**: A visitor can explore an immutable showcase populated with representative boards, feedback, roadmap items, and changelog entries.
 - [x] **DEMO-03**: Each authenticated demo visitor receives a private admin sandbox isolated from every other visitor.
 - [ ] **DEMO-04**: The demo uses separate statically installed showcase and sandbox component instances so sandbox scoping does not change the normal one-product installation contract.
 - [ ] **DEMO-05**: The trusted demo host derives sandbox scope from the authenticated visitor and never accepts sandbox scope from browser arguments.
 - [x] **DEMO-06**: An authenticated demo visitor can seed or reset their sandbox to a deterministic starting state.
-- [x] **DEMO-07**: Sandbox quotas, rate limits, expiration, and cleanup prevent unbounded public-demo storage growth.
+- [x] **DEMO-07**: Sandbox quotas, rate limits, expiration, and cleanup keep the complete local lifecycle bounded, deterministic, and demonstrable.
+- [ ] **DEMO-08**: A developer can clone the repository and launch the feature-full Vite example plus a real anonymous Convex development backend with one documented command, no Convex login or deploy key, and no committed authentication material.
 
 ### Release Quality
 
@@ -122,9 +123,9 @@ Requirements for the first production-ready public release. Roadmap creation wil
 
   Plan 03-12 closes the `41e6b94` re-audit findings with a source-grounded anti-skip oracle, exhaustive mounted default/custom recovery matrices, twelve packed installed scenarios, and byte-identical evidence across consecutive runs.
 
-- [ ] **QUAL-09**: Documentation covers installation, component mounting, all three auth integrations, access policy, headless React usage, shadcn installation, customization, testing, deployment, and upgrades.
+- [ ] **QUAL-09**: Documentation covers installation, component mounting, all three auth integrations, access policy, headless React usage, shadcn installation, customization, testing, host-application deployment, and upgrades. Demo documentation covers local anonymous development rather than a hosted Afferent deployment.
 - [x] **QUAL-10**: The repository and published package include the Apache-2.0 license.
-- [ ] **QUAL-11**: A validated npm release publishes explicit package exports, declarations, provenance, and synchronized package, registry, documentation, and demo versions.
+- [ ] **QUAL-11**: A validated npm release publishes explicit package exports, declarations, provenance, and synchronized package, registry, and documentation versions.
 
 ## v2 Requirements
 
@@ -175,7 +176,7 @@ Explicit exclusions for the first product direction, documented to prevent scope
 | Automatic changelog publication                           | Administrators retain editorial control over public announcements.                                          |
 | Deep comment threading and social reactions               | Flat comments with reply references keep discussion and moderation focused on feedback.                     |
 | Opaque packaged design system                             | Headless APIs and copy-owned shadcn source preserve consumer styling and ownership.                         |
-| Shared mutable public demo workspace                      | Private per-user sandboxes prevent vandalism and cross-visitor interference.                                |
+| Shared mutable demo workspace                             | Private locally authenticated sandboxes prevent cross-user interference and preserve the authority model.   |
 
 ## Traceability
 
@@ -248,13 +249,14 @@ Every v1 requirement maps to exactly one roadmap phase.
 | UI-06       | Phase 3   | Complete |
 | UI-07       | Phase 3   | Complete |
 | UI-08       | Phase 2.1 | Complete |
-| DEMO-01     | Phase 4   | Complete |
+| DEMO-01     | Phase 4   | Superseded |
 | DEMO-02     | Phase 4   | Complete |
 | DEMO-03     | Phase 4   | Complete |
 | DEMO-04     | Phase 4   | Pending  |
 | DEMO-05     | Phase 4   | Pending  |
 | DEMO-06     | Phase 4   | Complete |
 | DEMO-07     | Phase 4   | Complete |
+| DEMO-08     | Phase 4   | Pending  |
 | QUAL-01     | Phase 2   | Complete |
 | QUAL-02     | Phase 1   | Complete |
 | QUAL-03     | Phase 1   | Complete |
@@ -269,8 +271,8 @@ Every v1 requirement maps to exactly one roadmap phase.
 
 **Coverage:**
 
-- v1 requirements: 83 total
-- Mapped to phases: 83
+- v1 requirements: 84 total
+- Mapped to phases: 84
 - Unmapped: 0 ✓
 
 ---

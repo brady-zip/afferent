@@ -5,6 +5,14 @@
 **Researched:** 2026-07-14
 **Confidence:** MEDIUM
 
+> **Scope supersession (2026-07-30):** Hosting recommendations in this research are
+> historical. The v1 demo is now a clone-and-run local Vite application on a real
+> anonymous Convex development backend, with no public demo URL, Convex Cloud demo
+> deployment, Vercel project, preview, or remote smoke. Package, registry, docs,
+> security, lifecycle, real-Convex, two-user, and accessibility findings remain
+> applicable. See
+> `.planning/phases/04-hosted-production-release/04-SCOPE-PIVOT.md`.
+
 ## Executive Summary
 
 Afferent should be built as a provider-neutral feedback domain behind a strict Convex component boundary, not as a small hosted Canny clone. The reusable package should own boards, posts, votes, comments, configurable statuses, moderation state, roadmap projections, changelog entries, and their invariants. The consuming Convex app remains the security boundary: it resolves identity and admin authorization from Convex Auth, Clerk, or Better Auth in host-owned wrappers, then passes only verified, minimal actor facts into narrow component operations. A single root package with explicit subpath exports, a framework-light headless React layer, and canonical shadcn registry source best preserves native ownership and consumer customization.

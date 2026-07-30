@@ -4,6 +4,11 @@
 **Researched:** 2026-07-14
 **Confidence:** MEDIUM
 
+> **Scope supersession (2026-07-30):** References to a public or hosted demo now
+> describe the same feature-full two-instance experience running locally on an
+> anonymous Convex development backend. See
+> `.planning/phases/04-hosted-production-release/04-SCOPE-PIVOT.md`.
+
 ## Executive Recommendation
 
 A credible Afferent v1 should be a complete feedback loop, not a miniature product-management suite. It must let a user discover existing feedback, submit or vote without creating fragmentation, discuss it, see a trustworthy status, and later discover the shipped result. It must let an administrator search, organize, merge, moderate, and change status without losing attribution or history.

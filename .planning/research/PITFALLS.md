@@ -4,6 +4,11 @@
 **Researched:** 2026-07-14
 **Confidence:** MEDIUM — findings are grounded in current official Convex, Convex Auth, Clerk, Better Auth, shadcn, and W3C documentation; the research seam classifies verified web-search retrieval as MEDIUM
 
+> **Scope supersession (2026-07-30):** Public-service hosting risks are retired,
+> but every scope, auth, seed/reset, quota, cleanup, artifact, and accessibility
+> pitfall still applies to the feature-full local demo and acceptance gate. See
+> `.planning/phases/04-hosted-production-release/04-SCOPE-PIVOT.md`.
+
 ## Critical Pitfalls
 
 ### Pitfall 1: Treating identity or authorization as client-supplied component data

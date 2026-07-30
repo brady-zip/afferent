@@ -4,6 +4,12 @@
 **Researched:** 2026-07-14
 **Confidence:** MEDIUM-HIGH
 
+> **Scope supersession (2026-07-30):** The two-instance demo architecture remains
+> authoritative, but its runtime is now a clone-and-run anonymous local Convex
+> development backend. Public demo hosting, Vercel/Convex Cloud deployment, preview,
+> and remote-smoke architecture is retired. See
+> `.planning/phases/04-hosted-production-release/04-SCOPE-PIVOT.md`.
+
 ## Standard Architecture
 
 ### System Overview

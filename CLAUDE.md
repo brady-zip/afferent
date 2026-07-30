@@ -3,8 +3,8 @@
 **Afferent** is an open-source **Convex component** that gives SaaS teams the core
 product-feedback workflow of Canny **without** moving feedback data, identity, or
 permissions into a separate SaaS. It ships a reusable Convex backend, a headless React
-integration, copyable user-facing and admin interfaces (shadcn source), and a publicly
-hosted working example.
+integration, copyable user-facing and admin interfaces (shadcn source), and a
+clone-and-run local working example.
 
 The first release covers public feedback boards, authenticated participation,
 administrative feedback management, a status-driven public roadmap, and manually published
@@ -28,9 +28,12 @@ and can contain multiple boards. All repository code and published packages are 
 - **UI layers** — a framework-light headless React layer (hooks + providers over
   host-generated function references) and copy-owned shadcn source distributed through both
   a static registry and mirrored repository examples.
-- **Demo sandbox** — the hosted example installs two static component instances: an
-  immutable showcase and a sandbox whose trusted host wrapper derives a server-only scope
-  from the authenticated visitor.
+- **Demo sandbox** — the local example runs against a credential-free anonymous Convex
+  development backend and installs two static component instances: an immutable showcase
+  and a sandbox whose trusted host wrapper derives a server-only scope from the
+  authenticated visitor. "Anonymous deployment" means no Convex account or deploy key is
+  required; sandbox participation and administration still require local Convex Auth
+  sign-in.
 
 ## Non-negotiables
 
@@ -43,6 +46,8 @@ and can contain multiple boards. All repository code and published packages are 
 - One installation models one product; multi-product tenancy must not leak into the
   reusable contract. The demo scope is server-only, fixed to one constant in normal
   installs, and every sandbox table/index/search/seed/reset is scope-complete.
+- Never commit demo JWT material, JWKS, deploy keys, or generated `.env.local` files. The
+  local demo creates authentication material ephemerally for its owned anonymous backend.
 - Packages must install from a packed tarball into clean Vite/Convex fixtures — never rely
   on repository-relative imports.
 - Bounded indexed queries, idempotent one-vote-per-actor semantics, and accessible
@@ -58,8 +63,10 @@ and can contain multiple boards. All repository code and published packages are 
 - Tooling — `package.json` (Husky `prepare` + inline commitlint config) and `.husky/`
   (a `commit-msg` hook enforcing Conventional Commits).
 
-The repo currently holds only lightweight Node package + commit tooling and planning docs
-— no product implementation. See `.planning/research/SUMMARY.md` for the four-phase roadmap.
+The repository now contains the component, headless bindings, canonical UI, generated
+registry, auth fixtures, and local example. Treat `.planning/PROJECT.md`,
+`.planning/REQUIREMENTS.md`, and `.planning/ROADMAP.md` as the current product and
+milestone authority.
 
 ## Conventions
 
