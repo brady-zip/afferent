@@ -22,6 +22,7 @@ import {
   loadReleaseIdentity,
   validateReleaseManifest,
 } from "./generate-release-manifest.mjs";
+import { validateRuntimeFloor } from "./verify-package-release.mjs";
 
 const repositoryRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const sha256Pattern = /^[a-f0-9]{64}$/u;
@@ -33,6 +34,12 @@ const canonicalCiActions = new Set([
   "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
   "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
   "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c",
+]);
+const canonicalReleaseActions = new Set([
+  ...canonicalCiActions,
+  "actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9",
+  "actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128",
+  "changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d",
 ]);
 const forbiddenWorkflowPattern =
   /NODE_AUTH_TOKEN|NPM_TOKEN|CONVEX_DEPLOY_KEY|CONVEX_DEPLOYMENT|VERCEL_(?:ORG|PROJECT)_ID|(?:^|\s)vercel(?:\s|$)|convex\s+deploy|remote[\s_-]*playwright|test:e2e:phase4:remote|--remote|VITE_CONVEX_URL/imu;
@@ -270,6 +277,272 @@ export function validateCiWorkflow(source) {
     throw new Error("CI candidate artifact continuity or retention is invalid");
   }
   return workflow;
+}
+
+function environmentName(job) {
+  return typeof job?.environment === "string"
+    ? job.environment
+    : job?.environment?.name;
+}
+
+function hasDispatchGuard(job) {
+  const condition = String(job?.if ?? "");
+  return (
+    condition.includes("github.event_name == 'workflow_dispatch'") &&
+    condition.includes("inputs.allow_publish == true")
+  );
+}
+
+function actionStep(job, action) {
+  return (job?.steps ?? []).find((step) => step.uses?.startsWith(`${action}@`));
+}
+
+export function validateReleaseWorkflow(source) {
+  assertNoForbiddenWorkflowSurface(source);
+  const workflow = parseWorkflow(source, "release.yml");
+  if (
+    workflow.permissions?.contents !== "read" ||
+    Object.keys(workflow.permissions).length !== 1
+  ) {
+    throw new Error(
+      "release workflow top-level permissions must be contents: read",
+    );
+  }
+  if (
+    workflow.on?.pull_request ||
+    !workflow.on?.push?.branches?.includes("main") ||
+    workflow.on?.workflow_dispatch?.inputs?.allow_publish?.default !== false
+  ) {
+    throw new Error(
+      "release workflow must separate main versioning from manual publication",
+    );
+  }
+  if (
+    workflow.concurrency?.["cancel-in-progress"] !== false ||
+    typeof workflow.concurrency?.group !== "string"
+  ) {
+    throw new Error("release workflow must serialize without canceling");
+  }
+  validatePinnedActions(workflow, canonicalReleaseActions);
+
+  const version = workflow.jobs["version-pr"];
+  const readiness = workflow.jobs["release-readiness"];
+  const publish = workflow.jobs["publish-npm"];
+  const verifyPublic = workflow.jobs["verify-public-npm"];
+  const prepareStatic = workflow.jobs["prepare-static"];
+  const publishStatic = workflow.jobs["publish-static"];
+  if (
+    !version ||
+    !readiness ||
+    !publish ||
+    !verifyPublic ||
+    !prepareStatic ||
+    !publishStatic
+  ) {
+    throw new Error("release workflow is missing a dependency-ordered job");
+  }
+  for (const [name, job] of Object.entries({
+    "version-pr": version,
+    "release-readiness": readiness,
+    "publish-npm": publish,
+    "verify-public-npm": verifyPublic,
+    "prepare-static": prepareStatic,
+    "publish-static": publishStatic,
+  })) {
+    if (
+      job["runs-on"] !== "ubuntu-latest" ||
+      !Number.isSafeInteger(job["timeout-minutes"]) ||
+      job["timeout-minutes"] > 45
+    ) {
+      throw new Error(`${name} must use a bounded cloud-hosted runner`);
+    }
+  }
+
+  const changesets = actionStep(version, "changesets/action");
+  if (
+    !String(version.if).includes("github.event_name == 'push'") ||
+    changesets?.with?.version !== "npm run version:packages" ||
+    changesets.with.publish !== undefined ||
+    changesets.with.createGithubReleases !== false
+  ) {
+    throw new Error(
+      "Changesets must remain version-PR-only and cannot publish",
+    );
+  }
+  if (
+    version.permissions?.contents !== "write" ||
+    version.permissions?.["pull-requests"] !== "write" ||
+    version.permissions?.["id-token"] !== undefined
+  ) {
+    throw new Error("version PR permissions are invalid");
+  }
+
+  for (const job of [
+    readiness,
+    publish,
+    verifyPublic,
+    prepareStatic,
+    publishStatic,
+  ]) {
+    if (!hasDispatchGuard(job)) {
+      throw new Error(
+        "publication jobs require the manual allow-publish guard",
+      );
+    }
+  }
+  if (!dependencyList(publish).includes("release-readiness")) {
+    throw new Error("npm publication must depend on release readiness");
+  }
+  if (!dependencyList(verifyPublic).includes("publish-npm")) {
+    throw new Error("public npm verification must depend on npm publication");
+  }
+  if (!dependencyList(prepareStatic).includes("verify-public-npm")) {
+    throw new Error(
+      "static publication preparation must depend on public npm verification",
+    );
+  }
+  if (
+    !dependencyList(publishStatic).includes("verify-public-npm") ||
+    !dependencyList(publishStatic).includes("prepare-static")
+  ) {
+    throw new Error(
+      "static publication dependency must include verified public npm",
+    );
+  }
+
+  if (
+    environmentName(publish) !== "npm-production" ||
+    publish.permissions?.contents !== "read" ||
+    publish.permissions?.["id-token"] !== "write"
+  ) {
+    throw new Error(
+      "npm publication requires the protected environment and OIDC id-token",
+    );
+  }
+  if (
+    environmentName(publishStatic) !== "github-pages" ||
+    publishStatic.permissions?.pages !== "write" ||
+    publishStatic.permissions?.["id-token"] !== "write"
+  ) {
+    throw new Error(
+      "static publication permissions or environment are invalid",
+    );
+  }
+  const publishCommands = commandFor(publish);
+  const exactPublish =
+    'npm publish "$RUNNER_TEMP/release-candidate/package/afferent-0.1.0.tgz" --access public --provenance';
+  if (
+    !publishCommands.includes(exactPublish) ||
+    /npm\s+(?:run\s+)?(?:build|pack)|changeset\s+publish/iu.test(
+      publishCommands,
+    )
+  ) {
+    throw new Error(
+      "npm publication must consume the tested tarball without rebuilding",
+    );
+  }
+  if (
+    !commandFor(readiness).includes(
+      "npm run verify:release-candidate -- --external-config",
+    ) ||
+    !commandFor(readiness).includes(
+      "npm run verify:release-candidate -- --release-preflight",
+    ) ||
+    !commandFor(publish).includes(
+      "npm run verify:release-candidate -- --publish-preflight",
+    ) ||
+    !commandFor(verifyPublic).includes(
+      "npm run verify:release-candidate -- --published-version 0.1.0",
+    ) ||
+    !commandFor(verifyPublic).includes("npm audit signatures")
+  ) {
+    throw new Error("release verification commands are incomplete");
+  }
+  if (
+    !actionStep(prepareStatic, "actions/upload-pages-artifact") ||
+    !actionStep(publishStatic, "actions/deploy-pages")
+  ) {
+    throw new Error("registry and documentation publication is incomplete");
+  }
+  return workflow;
+}
+
+export function validateArtifactActionCompatibility(ciSource, releaseSource) {
+  const ci = validateCiWorkflow(ciSource);
+  const release = validateReleaseWorkflow(releaseSource);
+  const githubShaExpression = "$" + "{{ github.sha }}";
+  const sourceCommitExpression = "$" + "{{ inputs.source_commit }}";
+  const ciUpload = actionStep(
+    ci.jobs["local-acceptance"],
+    "actions/upload-artifact",
+  );
+  const crossRunDownload = actionStep(
+    release.jobs["release-readiness"],
+    "actions/download-artifact",
+  );
+  if (
+    ciUpload?.uses !==
+      "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a" ||
+    crossRunDownload?.uses !==
+      "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c" ||
+    ciUpload.with.name !==
+      `afferent-verified-release-candidate-${githubShaExpression}` ||
+    crossRunDownload.with.name !==
+      `afferent-verified-release-candidate-${sourceCommitExpression}` ||
+    crossRunDownload.with.repository !== canonicalRepository ||
+    !crossRunDownload.with["run-id"]
+  ) {
+    throw new Error(
+      "upload-artifact v7 to download-artifact v8 continuity is invalid",
+    );
+  }
+  const releaseUpload = actionStep(
+    release.jobs["release-readiness"],
+    "actions/upload-artifact",
+  );
+  for (const jobName of [
+    "publish-npm",
+    "verify-public-npm",
+    "prepare-static",
+  ]) {
+    const download = actionStep(
+      release.jobs[jobName],
+      "actions/download-artifact",
+    );
+    if (
+      releaseUpload?.with?.name !== download?.with?.name ||
+      releaseUpload?.with?.path !== download?.with?.path ||
+      !download.with.name.includes("inputs.source_commit")
+    ) {
+      throw new Error(
+        `release artifact checksum continuity failed in ${jobName}`,
+      );
+    }
+  }
+  return { upload: ciUpload.uses, download: crossRunDownload.uses };
+}
+
+export function validateExternalConfiguration(configuration) {
+  const expected = {
+    githubActions: true,
+    repository: canonicalRepository,
+    workflowRef:
+      "bradywatkinson/afferent/.github/workflows/release.yml@refs/heads/main",
+    runnerEnvironment: "github-hosted",
+    releaseOwner: canonicalRepository,
+    trustedPublisher:
+      "bradywatkinson/afferent:release.yml:npm-production:allow-publish",
+    staticPublication: "github-pages",
+    approvedTag: "v0.1.0",
+  };
+  for (const [key, value] of Object.entries(expected)) {
+    if (configuration?.[key] !== value) {
+      throw new Error(
+        `external release configuration is incomplete: ${key} must be ${value}`,
+      );
+    }
+  }
+  return configuration;
 }
 
 function candidateArtifactMap(record) {
@@ -638,12 +911,198 @@ export async function validateCandidateDirectory(
   return record;
 }
 
-export async function validateRepositoryWorkflows() {
-  const ciSource = await readFile(
-    join(repositoryRoot, ".github/workflows/ci.yml"),
-    "utf8",
+function externalConfigurationFromEnvironment() {
+  return {
+    githubActions: process.env.GITHUB_ACTIONS === "true",
+    repository: process.env.GITHUB_REPOSITORY,
+    workflowRef: process.env.GITHUB_WORKFLOW_REF,
+    runnerEnvironment: process.env.RUNNER_ENVIRONMENT,
+    releaseOwner: process.env.AFFERENT_RELEASE_OWNER,
+    trustedPublisher: process.env.AFFERENT_NPM_TRUSTED_PUBLISHER,
+    staticPublication: process.env.AFFERENT_STATIC_PUBLICATION,
+    approvedTag: process.env.AFFERENT_RELEASE_APPROVED_TAG,
+  };
+}
+
+async function npmVersion() {
+  const result = await run("npm", ["--version"], { capture: true });
+  return result.stdout.trim();
+}
+
+export async function validateReleasePreflight(candidateDirectory) {
+  validateExternalConfiguration(externalConfigurationFromEnvironment());
+  if (process.env.AFFERENT_ALLOW_PUBLISH !== "true") {
+    throw new Error("manual publication approval is missing");
+  }
+  const sourceCommit = process.env.AFFERENT_SOURCE_COMMIT ?? "";
+  const sourceTag = process.env.AFFERENT_SOURCE_TAG ?? "";
+  if (
+    !commitPattern.test(sourceCommit) ||
+    !/^v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u.test(sourceTag)
+  ) {
+    throw new Error("release source commit or tag is invalid");
+  }
+  const record = await validateCandidateDirectory(candidateDirectory, {
+    requireFinal: true,
+  });
+  if (
+    record.source.commit !== sourceCommit ||
+    record.source.tag !== sourceTag ||
+    record.source.repository !== canonicalRepository
+  ) {
+    throw new Error("release source does not match the verified candidate");
+  }
+  const [headResult, tagResult, statusResult] = await Promise.all([
+    run("git", ["rev-parse", "HEAD"], { capture: true }),
+    run("git", ["rev-parse", `refs/tags/${sourceTag}`], { capture: true }),
+    run("git", ["status", "--porcelain", "--untracked-files=no"], {
+      capture: true,
+    }),
+  ]);
+  if (
+    headResult.stdout.trim() !== sourceCommit ||
+    tagResult.stdout.trim() !== sourceCommit ||
+    statusResult.stdout.trim() !== ""
+  ) {
+    throw new Error("release tag, commit, or clean checkout gate failed");
+  }
+  validateRuntimeFloor({
+    node: process.versions.node,
+    npm: await npmVersion(),
+  });
+  return record;
+}
+
+export async function validatePublishPreflight(candidateDirectory) {
+  const record = await validateReleasePreflight(candidateDirectory);
+  if (
+    process.env.AFFERENT_RELEASE_ENVIRONMENT !== "npm-production" ||
+    !process.env.ACTIONS_ID_TOKEN_REQUEST_URL
+  ) {
+    throw new Error(
+      "protected npm publication environment or OIDC request URL is missing",
+    );
+  }
+  return record;
+}
+
+function repositoryFromMetadata(repository) {
+  const url = typeof repository === "string" ? repository : repository?.url;
+  const match = url?.match(
+    /github\.com[/:](?<name>[^/]+\/[^/#]+?)(?:\.git)?$/u,
   );
-  return { ci: validateCiWorkflow(ciSource) };
+  return match?.groups?.name;
+}
+
+export async function verifyPublishedNpm(candidateDirectory, version) {
+  const record = await validateCandidateDirectory(candidateDirectory, {
+    requireFinal: true,
+  });
+  if (version !== record.package.version || version !== "0.1.0") {
+    throw new Error("published npm version does not match the candidate");
+  }
+  const metadataResult = await run(
+    "npm",
+    [
+      "view",
+      `afferent@${version}`,
+      "name",
+      "version",
+      "repository",
+      "license",
+      "--json",
+    ],
+    { capture: true },
+  );
+  const metadata = JSON.parse(metadataResult.stdout);
+  if (
+    metadata.name !== record.package.name ||
+    metadata.version !== version ||
+    metadata.license !== "Apache-2.0" ||
+    repositoryFromMetadata(metadata.repository) !== canonicalRepository
+  ) {
+    throw new Error("public npm metadata does not match the release candidate");
+  }
+
+  const temporaryRoot = await mkdtemp(
+    join(tmpdir(), "afferent-published-package-"),
+  );
+  try {
+    const packedResult = await run(
+      "npm",
+      [
+        "pack",
+        `afferent@${version}`,
+        "--ignore-scripts",
+        "--json",
+        "--pack-destination",
+        temporaryRoot,
+      ],
+      { capture: true },
+    );
+    const start = packedResult.stdout.indexOf("[");
+    if (start === -1) {
+      throw new Error("npm pack did not return published artifact metadata");
+    }
+    const [packed] = JSON.parse(packedResult.stdout.slice(start));
+    const publicTarball = join(temporaryRoot, packed.filename);
+    if ((await sha256File(publicTarball)) !== record.package.sha256) {
+      throw new Error(
+        "published npm tarball checksum does not match the tested artifact",
+      );
+    }
+  } finally {
+    await rm(temporaryRoot, { force: true, recursive: true });
+  }
+  return record;
+}
+
+export async function preparePagesSite(candidateDirectory, outputDirectory) {
+  const record = await validateCandidateDirectory(candidateDirectory, {
+    requireFinal: true,
+  });
+  const outputRoot = resolve(outputDirectory);
+  if (
+    outputRoot === resolve("/") ||
+    outputRoot === resolve(tmpdir()) ||
+    !basename(outputRoot).includes("pages-site")
+  ) {
+    throw new Error("Pages output must be a dedicated pages-site directory");
+  }
+  await rm(outputRoot, { force: true, recursive: true });
+  await mkdir(outputRoot, { recursive: true });
+  await Promise.all([
+    copyPayload(join(candidateDirectory, "docs"), outputRoot),
+    copyPayload(join(candidateDirectory, "registry/r"), join(outputRoot, "r")),
+    copyPayload(
+      join(candidateDirectory, "registry/registry.json"),
+      join(outputRoot, "registry.json"),
+    ),
+    copyPayload(
+      join(candidateDirectory, "release-manifest.json"),
+      join(outputRoot, "release-manifest.json"),
+    ),
+  ]);
+  await writeFile(
+    join(outputRoot, "release.json"),
+    json({
+      schemaVersion: 1,
+      package: record.package,
+      source: record.source,
+    }),
+  );
+  return { outputRoot, record };
+}
+
+export async function validateRepositoryWorkflows() {
+  const [ciSource, releaseSource] = await Promise.all([
+    readFile(join(repositoryRoot, ".github/workflows/ci.yml"), "utf8"),
+    readFile(join(repositoryRoot, ".github/workflows/release.yml"), "utf8"),
+  ]);
+  const ci = validateCiWorkflow(ciSource);
+  const release = validateReleaseWorkflow(releaseSource);
+  validateArtifactActionCompatibility(ciSource, releaseSource);
+  return { ci, release };
 }
 
 function option(name) {
@@ -655,7 +1114,81 @@ async function main() {
   if (process.argv.includes("--workflow")) {
     await validateRepositoryWorkflows();
     process.stdout.write(
-      `${JSON.stringify({ status: "verified", workflow: "ci.yml" })}\n`,
+      `${JSON.stringify({
+        status: "verified",
+        workflows: ["ci.yml", "release.yml"],
+      })}\n`,
+    );
+    return;
+  }
+  if (process.argv.includes("--external-config")) {
+    validateExternalConfiguration(externalConfigurationFromEnvironment());
+    process.stdout.write(
+      `${JSON.stringify({
+        status: "verified",
+        externalConfiguration: "confirmed",
+      })}\n`,
+    );
+    return;
+  }
+  if (process.argv.includes("--publish-preflight")) {
+    const candidate = option("--candidate-dir");
+    if (!candidate) {
+      throw new Error("--publish-preflight requires --candidate-dir");
+    }
+    const record = await validatePublishPreflight(candidate);
+    process.stdout.write(
+      `${JSON.stringify({
+        status: "verified",
+        package: record.package,
+        source: record.source,
+      })}\n`,
+    );
+    return;
+  }
+  if (process.argv.includes("--release-preflight")) {
+    const candidate = option("--candidate-dir");
+    if (!candidate) {
+      throw new Error("--release-preflight requires --candidate-dir");
+    }
+    const record = await validateReleasePreflight(candidate);
+    process.stdout.write(
+      `${JSON.stringify({
+        status: "verified",
+        package: record.package,
+        source: record.source,
+      })}\n`,
+    );
+    return;
+  }
+  const publishedVersion = option("--published-version");
+  if (publishedVersion) {
+    const candidate = option("--candidate-dir");
+    if (!candidate) {
+      throw new Error("--published-version requires --candidate-dir");
+    }
+    const record = await verifyPublishedNpm(candidate, publishedVersion);
+    process.stdout.write(
+      `${JSON.stringify({
+        status: "verified",
+        published: record.package,
+      })}\n`,
+    );
+    return;
+  }
+  if (process.argv.includes("--prepare-pages")) {
+    const candidate = option("--candidate-dir");
+    const output = option("--output");
+    if (!candidate || !output) {
+      throw new Error("--prepare-pages requires --candidate-dir and --output");
+    }
+    const result = await preparePagesSite(candidate, output);
+    process.stdout.write(
+      `${JSON.stringify({
+        status: "prepared",
+        output: result.outputRoot,
+        package: result.record.package,
+      })}\n`,
     );
     return;
   }

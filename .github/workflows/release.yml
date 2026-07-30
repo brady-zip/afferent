@@ -1,0 +1,273 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      ci_run_id:
+        description: Successful CI run containing the verified candidate
+        required: true
+        type: string
+      source_commit:
+        description: Exact 40-character commit tested by CI
+        required: true
+        type: string
+      source_tag:
+        description: Exact protected tag for this package version
+        required: true
+        type: string
+      allow_publish:
+        description: Publish only after the Plan 04-09 human checkpoint
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  version-pr:
+    name: Create or update the version pull request
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Check out the main branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - name: Install the pinned npm release client
+        run: |
+          npm install --global npm@11.15.0
+          node --version
+          npm --version
+      - name: Install from the lockfile
+        run: npm ci
+      - name: Create a version pull request
+        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
+        with:
+          version: npm run version:packages
+          title: Version Packages
+          commit: "chore: version packages"
+          createGithubReleases: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  release-readiness:
+    name: Verify the human-approved immutable candidate
+    if: github.event_name == 'workflow_dispatch' && inputs.allow_publish == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Check out the exact candidate commit and tags
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.source_commit }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - name: Install the pinned npm release client
+        run: |
+          npm install --global npm@11.15.0
+          node --version
+          npm --version
+      - name: Install from the lockfile
+        run: npm ci
+      - name: Verify human-owned release configuration
+        run: npm run verify:release-candidate -- --external-config
+        env:
+          AFFERENT_RELEASE_APPROVED_TAG: ${{ vars.AFFERENT_RELEASE_APPROVED_TAG }}
+          AFFERENT_RELEASE_OWNER: ${{ vars.AFFERENT_RELEASE_OWNER }}
+          AFFERENT_NPM_TRUSTED_PUBLISHER: ${{ vars.AFFERENT_NPM_TRUSTED_PUBLISHER }}
+          AFFERENT_STATIC_PUBLICATION: ${{ vars.AFFERENT_STATIC_PUBLICATION }}
+      - name: Download the CI-verified candidate
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: afferent-verified-release-candidate-${{ inputs.source_commit }}
+          path: ${{ runner.temp }}/release-candidate
+          github-token: ${{ github.token }}
+          repository: bradywatkinson/afferent
+          run-id: ${{ inputs.ci_run_id }}
+      - name: Verify candidate, commit, and protected tag
+        run: npm run verify:release-candidate -- --release-preflight --candidate-dir "$RUNNER_TEMP/release-candidate"
+        env:
+          AFFERENT_ALLOW_PUBLISH: "true"
+          AFFERENT_RELEASE_APPROVED_TAG: ${{ vars.AFFERENT_RELEASE_APPROVED_TAG }}
+          AFFERENT_RELEASE_OWNER: ${{ vars.AFFERENT_RELEASE_OWNER }}
+          AFFERENT_NPM_TRUSTED_PUBLISHER: ${{ vars.AFFERENT_NPM_TRUSTED_PUBLISHER }}
+          AFFERENT_SOURCE_COMMIT: ${{ inputs.source_commit }}
+          AFFERENT_SOURCE_TAG: ${{ inputs.source_tag }}
+          AFFERENT_STATIC_PUBLICATION: ${{ vars.AFFERENT_STATIC_PUBLICATION }}
+      - name: Preserve the verified candidate inside this release run
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: afferent-release-candidate-${{ inputs.source_commit }}
+          path: ${{ runner.temp }}/release-candidate
+          if-no-files-found: error
+          retention-days: 7
+
+  publish-npm:
+    name: Publish the tested tarball with npm trusted publishing
+    needs: release-readiness
+    if: github.event_name == 'workflow_dispatch' && inputs.allow_publish == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: npm-production
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    steps:
+      - name: Check out the exact tagged commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.source_commit }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up Node for npm trusted publishing
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - name: Install and assert the pinned npm client
+        run: |
+          npm install --global npm@11.15.0
+          node --version
+          npm --version
+      - name: Install verifier dependencies without rebuilding
+        run: npm ci
+      - name: Download the preserved candidate
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: afferent-release-candidate-${{ inputs.source_commit }}
+          path: ${{ runner.temp }}/release-candidate
+      - name: Recheck OIDC, tag, commit, and candidate checksums
+        run: npm run verify:release-candidate -- --publish-preflight --candidate-dir "$RUNNER_TEMP/release-candidate"
+        env:
+          AFFERENT_ALLOW_PUBLISH: "true"
+          AFFERENT_RELEASE_APPROVED_TAG: ${{ vars.AFFERENT_RELEASE_APPROVED_TAG }}
+          AFFERENT_RELEASE_ENVIRONMENT: npm-production
+          AFFERENT_RELEASE_OWNER: ${{ vars.AFFERENT_RELEASE_OWNER }}
+          AFFERENT_NPM_TRUSTED_PUBLISHER: ${{ vars.AFFERENT_NPM_TRUSTED_PUBLISHER }}
+          AFFERENT_SOURCE_COMMIT: ${{ inputs.source_commit }}
+          AFFERENT_SOURCE_TAG: ${{ inputs.source_tag }}
+          AFFERENT_STATIC_PUBLICATION: ${{ vars.AFFERENT_STATIC_PUBLICATION }}
+      - name: Publish the exact tested tarball
+        run: npm publish "$RUNNER_TEMP/release-candidate/package/afferent-0.1.0.tgz" --access public --provenance
+
+  verify-public-npm:
+    name: Verify public tarball checksum and provenance
+    needs: publish-npm
+    if: github.event_name == 'workflow_dispatch' && inputs.allow_publish == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Check out the exact release verifier
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.source_commit }}
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - name: Install the pinned npm release client
+        run: |
+          npm install --global npm@11.15.0
+          node --version
+          npm --version
+      - name: Install verifier dependencies
+        run: npm ci
+      - name: Download the published candidate evidence
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: afferent-release-candidate-${{ inputs.source_commit }}
+          path: ${{ runner.temp }}/release-candidate
+      - name: Compare public npm bytes with the tested tarball
+        run: npm run verify:release-candidate -- --published-version 0.1.0 --candidate-dir "$RUNNER_TEMP/release-candidate"
+      - name: Verify npm registry signatures and provenance attestations
+        run: |
+          mkdir "$RUNNER_TEMP/public-audit"
+          cd "$RUNNER_TEMP/public-audit"
+          npm init --yes
+          npm install --ignore-scripts --save-exact afferent@0.1.0
+          npm audit signatures
+
+  prepare-static:
+    name: Assemble matching registry and documentation
+    needs: verify-public-npm
+    if: github.event_name == 'workflow_dispatch' && inputs.allow_publish == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Check out the exact release verifier
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.source_commit }}
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+      - name: Install verifier dependencies
+        run: npm ci
+      - name: Download the published candidate evidence
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: afferent-release-candidate-${{ inputs.source_commit }}
+          path: ${{ runner.temp }}/release-candidate
+      - name: Assemble the checksum-matched Pages site
+        run: npm run verify:release-candidate -- --prepare-pages --candidate-dir "$RUNNER_TEMP/release-candidate" --output "$RUNNER_TEMP/pages-site"
+      - name: Upload the registry and documentation Pages artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: ${{ runner.temp }}/pages-site
+
+  publish-static:
+    name: Publish registry and documentation
+    needs:
+      - verify-public-npm
+      - prepare-static
+    if: github.event_name == 'workflow_dispatch' && inputs.allow_publish == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: read
+      id-token: write
+      pages: write
+    steps:
+      - name: Publish the verified static artifact
+        id: deployment
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0
