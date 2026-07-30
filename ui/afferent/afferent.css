@@ -150,6 +150,8 @@
   border-radius: var(--radius);
   display: grid;
   gap: 8px;
+  min-width: 0;
+  overflow-wrap: anywhere;
   padding: 16px;
 }
 

@@ -1,6 +1,12 @@
 "use client";
 
-import { useRef, useState, type ReactNode, type RefObject } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import { Link, NavLink } from "react-router";
 
 import type { HostedAuthState, SandboxLifecycleDto } from "../../bindings.js";
@@ -29,6 +35,7 @@ export function AppShell({
 }>) {
   const [resetOpen, setResetOpen] = useState(false);
   const resetTriggerRef = useRef<HTMLButtonElement>(null);
+  const resetRequested = useRef(false);
   const resetBusy = lifecycle.state === "resetting";
   const readySandbox =
     environment === "sandbox" &&
@@ -61,10 +68,21 @@ export function AppShell({
     );
   }
 
+  useEffect(() => {
+    if (resetBusy || !resetRequested.current) return;
+    resetRequested.current = false;
+    requestAnimationFrame(() => resetTriggerRef.current?.focus());
+  }, [resetBusy]);
+
+  async function resetAndRestoreFocus() {
+    resetRequested.current = true;
+    await onReset();
+  }
+
   return (
     <div className="host-app">
       <a className="host-skip-link" href="#host-main">
-        Skip to content
+        Skip to main content
       </a>
       <header className="host-header">
         <div className="host-header__inner">
@@ -134,7 +152,7 @@ export function AppShell({
         open={resetOpen}
         busy={resetBusy}
         onOpenChange={setResetOpen}
-        onConfirm={onReset}
+        onConfirm={resetAndRestoreFocus}
         restoreFocusRef={resetTriggerRef}
       />
     </div>

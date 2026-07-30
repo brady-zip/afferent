@@ -18,18 +18,29 @@ const ERROR_CODES = new Set<AfferentErrorDto["code"]>([
   "UNKNOWN",
 ]);
 
-function errorPayload(error: unknown): Record<string, unknown> {
-  if (typeof error !== "object" || error === null) return {};
+function errorPayload(error: unknown): {
+  value: Record<string, unknown>;
+  structured: boolean;
+} {
+  if (typeof error !== "object" || error === null) {
+    return { value: {}, structured: false };
+  }
   const candidate = error as Record<string, unknown>;
   if (typeof candidate.data === "object" && candidate.data !== null) {
-    return candidate.data as Record<string, unknown>;
+    return {
+      value: candidate.data as Record<string, unknown>,
+      structured: true,
+    };
   }
-  return candidate;
+  return { value: candidate, structured: false };
 }
 
 export function mapAfferentError(error: unknown): AfferentError {
-  const value = errorPayload(error);
-  if (value.code === "RATE_LIMITED") {
+  const { value, structured } = errorPayload(error);
+  if (
+    value.code === "RATE_LIMITED" ||
+    (typeof value.code === "string" && value.code.endsWith("_RATE_LIMITED"))
+  ) {
     const retryAfterMs = Math.max(0, Number(value.retryAfterMs ?? 0));
     return {
       contractVersion: 1,
@@ -53,7 +64,8 @@ export function mapAfferentError(error: unknown): AfferentError {
 
   let message = "Afferent request failed";
   if (typeof value.message === "string") message = value.message;
-  else if (error instanceof Error) message = error.message;
+  else if (typeof value.recovery === "string") message = value.recovery;
+  else if (!structured && error instanceof Error) message = error.message;
   const networkFailure =
     error instanceof TypeError || /fetch|network|offline/i.test(message);
   let code: Exclude<AfferentErrorDto["code"], "RATE_LIMITED"> = "UNKNOWN";

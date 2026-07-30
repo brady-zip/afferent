@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import type { BoardDto } from "afferent";
 import {
   AfferentProvider,
@@ -8,7 +8,11 @@ import {
   type AfferentBindings,
 } from "afferent/react.js";
 import { ConvexProvider, type ConvexReactClient } from "convex/react";
-import { Link as RouterLink, useLocation } from "react-router";
+import {
+  Link as RouterLink,
+  useLocation,
+  useNavigate,
+} from "react-router";
 
 import { AfferentUiProvider } from "@/components/afferent/core/afferent-ui-provider";
 import type { AfferentLinkProps } from "@/components/afferent/core/navigation";
@@ -61,6 +65,9 @@ export function App({
   sourceCommit: string;
 }>) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const previousPath = useRef(location.pathname);
+  const preserveFocusForReset = useRef(false);
   const environment: HostedEnvironment = location.pathname.startsWith(
     "/sandbox",
   )
@@ -69,6 +76,26 @@ export function App({
   const sandboxReady =
     auth.status === "signed_in" && lifecycle.state === "ready";
   const sandboxLifecycle = resolveSandboxLifecycle(auth, lifecycle);
+
+  useEffect(() => {
+    document.title = routeTitle(location.pathname, environment);
+    if (previousPath.current !== location.pathname) {
+      if (preserveFocusForReset.current) {
+        preserveFocusForReset.current = false;
+      } else {
+        requestAnimationFrame(() => {
+          document.querySelector<HTMLElement>("#host-main")?.focus();
+        });
+      }
+    }
+    previousPath.current = location.pathname;
+  }, [environment, location.pathname]);
+
+  async function resetSandboxAndReturn() {
+    await onResetSandbox();
+    preserveFocusForReset.current = true;
+    navigate("/sandbox");
+  }
   let product: ReactNode;
   if (environment === "showcase") {
     product = (
@@ -104,7 +131,7 @@ export function App({
       <SandboxLifecycle
         lifecycle={sandboxLifecycle}
         onEnsure={onEnsureSandbox}
-        onReset={onResetSandbox}
+        onReset={resetSandboxAndReturn}
         onSignIn={(credentials) => onSignIn(credentials)}
         onCreateAccount={onCreateAccount}
       />
@@ -119,11 +146,22 @@ export function App({
       version={version}
       sourceCommit={sourceCommit}
       onSignOut={onSignOut}
-      onReset={onResetSandbox}
+      onReset={resetSandboxAndReturn}
     >
       {product}
     </AppShell>
   );
+}
+
+function routeTitle(pathname: string, environment: HostedEnvironment) {
+  let route = "Feedback";
+  if (pathname.includes("/roadmap")) route = "Roadmap";
+  else if (pathname.includes("/changelog")) route = "Changelog";
+  else if (pathname.includes("/notifications")) route = "Notifications";
+  else if (pathname.includes("/admin")) route = "Administration";
+  else if (pathname.includes("/feedback/")) route = "Feedback detail";
+  const context = environment === "sandbox" ? "private sandbox" : "showcase";
+  return `${route} — Afferent ${context}`;
 }
 
 function resolveSandboxLifecycle(

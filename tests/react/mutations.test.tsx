@@ -39,6 +39,35 @@ describe("shared headless mutation contract", () => {
     });
   });
 
+  test("keeps structured host errors actionable without exposing transport details", () => {
+    const wrapped = new Error(
+      "[CONVEX M(sandbox:createPost)] [Request ID: secret] Server Error",
+    ) as Error & { data: Record<string, unknown> };
+    wrapped.data = {
+      contractVersion: 1,
+      code: "SANDBOX_WRITE_RATE_LIMITED",
+      retryAfterMs: 1500,
+      recovery: "Wait before making another sandbox change.",
+    };
+    expect(mapAfferentError(wrapped)).toMatchObject({
+      code: "RATE_LIMITED",
+      retryAfterMs: 1500,
+    });
+
+    wrapped.data = {
+      contractVersion: 1,
+      code: "SANDBOX_QUOTA_EXCEEDED",
+      recovery: "Delete content or reset the sandbox.",
+    };
+    expect(mapAfferentError(wrapped)).toMatchObject({
+      code: "UNKNOWN",
+      message: "Delete content or reset the sandbox.",
+    });
+    expect(mapAfferentError(wrapped)).not.toMatchObject({
+      message: expect.stringContaining("Request ID"),
+    });
+  });
+
   test("wraps raw success DTOs and preserves typed failure results", () => {
     const value = { contractVersion: 1, id: "post:1" };
     expect(normalizeAfferentResult(value)).toEqual({ ok: true, data: value });
