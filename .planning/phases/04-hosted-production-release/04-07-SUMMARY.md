@@ -53,10 +53,11 @@ key-files:
 key-decisions:
   - Pin the official stable VitePress 1.6.4 release and keep the documentation theme-neutral.
   - Require explicit validation metadata on every code fence and compile provider examples from the exact packed artifact.
-  - Permit only the four named AFFERENT_RELEASE tokens until Plans 04-08 and 04-09 resolve publication facts.
+  - Permit only AFFERENT_RELEASE_DOCS_URL, AFFERENT_RELEASE_NPM_URL, AFFERENT_RELEASE_REGISTRY_URL, and AFFERENT_RELEASE_REPOSITORY_URL until Plans 04-08 and 04-09 resolve publication facts.
 requirements-completed:
-  - COMP-01
   - QUAL-09
+requirements-progressed:
+  - COMP-01
 coverage:
   dimensions:
     - name: Local-first adopter entry path
@@ -69,10 +70,10 @@ coverage:
       evidence: Three provider guides, headless and registry guides, operations guides, and compiling provider fixtures
       status: complete
       human_verification: false
-    - name: Packed-artifact documentation release gate
-      requirement: COMP-01
-      evidence: npm run verify:docs and the full clean npm run verify:phase4 pipeline
-      status: complete
+    - name: Packed-artifact documentation candidate proof
+      requirement_progressed: COMP-01
+      evidence: npm run verify:docs and the full clean npm run verify:phase4 pipeline prove the candidate installation path, while published-package verification remains for Plan 04-09
+      status: candidate-proof-complete
       human_verification: false
 duration: 53 min
 completed: 2026-07-30
@@ -131,8 +132,8 @@ Each task followed a RED/GREEN TDD cycle:
 
 - Pinned VitePress 1.6.4 rather than floating the documentation generator, preserving deterministic local and CI builds.
 - Required every code fence to identify how it is validated; provider examples are extracted and typechecked rather than treated as prose.
-- Kept adopter commands local-first. The verifier permits account-owned deployment syntax as documentation but rejects remote execution, hosted-demo claims, and cloud identifiers before their release plans supply evidence.
-- Reserved exactly four `AFFERENT_RELEASE_*` tokens for publication facts that Plans 04-08 and 04-09 own.
+- Kept adopter commands local-first. The verifier permits account-owned deployment syntax as documentation but rejects undeclared release markers, remote execution, and cloud identifiers before their release plans supply evidence.
+- Reserved exactly `AFFERENT_RELEASE_DOCS_URL`, `AFFERENT_RELEASE_NPM_URL`, `AFFERENT_RELEASE_REGISTRY_URL`, and `AFFERENT_RELEASE_REPOSITORY_URL` for publication facts that Plans 04-08 and 04-09 own.
 
 ## Deviations from Plan
 
@@ -157,16 +158,16 @@ Each task followed a RED/GREEN TDD cycle:
 
 ## Known Stubs
 
-- `README.md` intentionally exposes the four release tokens `AFFERENT_RELEASE_PACKAGE_VERSION`, `AFFERENT_RELEASE_PACKAGE_URL`, `AFFERENT_RELEASE_SOURCE_COMMIT`, and `AFFERENT_RELEASE_DEMO_URL`. The documentation gate rejects any other unresolved release value, and Plans 04-08 and 04-09 own their verified replacement before publication.
+- `README.md` intentionally exposes the four release tokens `AFFERENT_RELEASE_DOCS_URL`, `AFFERENT_RELEASE_NPM_URL`, `AFFERENT_RELEASE_REGISTRY_URL`, and `AFFERENT_RELEASE_REPOSITORY_URL`. They represent the documentation, npm package, shadcn registry, and source repository publication URLs; the documentation gate rejects every other unresolved release value, and Plans 04-08 and 04-09 own their verified replacement.
 
 ## User Setup Required
 
-None for this plan. Package publication, hosted release facts, and the release-token replacement remain explicitly owned by the later human-present release plans.
+None for this plan. Package publication and release-token replacement remain explicitly owned by the later human-present release plans.
 
 ## Next Phase Readiness
 
 - Plan 04-08 can build release-candidate evidence on top of the deterministic packed-artifact documentation gate.
-- Plan 04-09 can replace the four explicit release tokens only after package and hosted-demo facts exist.
+- Plan 04-09 can replace the four explicit release tokens only after verified package, documentation, registry, and repository publication facts exist.
 - The user's unrelated TypeScript 7 working-tree experiment remains untouched and unstaged.
 
 ## Self-Check: PASSED

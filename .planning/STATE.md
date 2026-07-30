@@ -3,18 +3,18 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_phase: 04
-current_phase_name: Local Production Release
+current_phase_name: hosted-production-release
 status: executing
-stopped_at: Completed 04-07-PLAN.md
-last_updated: "2026-07-30T21:00:51.169Z"
+stopped_at: Plan 04-07 complete; ready to execute 04-08 release automation
+last_updated: "2026-07-30T21:11:12.000Z"
 last_activity: 2026-07-30
-last_activity_desc: Completed the clone-and-run local anonymous Convex demo and full real-browser gate
+last_activity_desc: Published executable adopter documentation and the packed-artifact documentation gate
 progress:
   total_phases: 7
   completed_phases: 6
   total_plans: 51
   completed_plans: 49
-  percent: 86
+  percent: 96
 ---
 
 # Project State
@@ -30,18 +30,18 @@ See: .planning/PROJECT.md (updated 2026-07-24)
 
 Phase: 04 (Local Production Release) — EXECUTING
 Plan: 8 of 9
-Status: Ready to execute 04-07 adopter documentation
-Last activity: 2026-07-30 — Completed the clone-and-run local anonymous Convex demo and full real-browser gate
+Status: Ready to execute 04-08 release automation
+Last activity: 2026-07-30 — Published executable adopter documentation and the packed-artifact documentation gate
 
-Progress: [█████████░] 94%
+Progress: [██████████] 96%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 48
-- Average duration: 74 min
-- Total execution time: 3535 min
+- Total plans completed: 49
+- Average duration: 73 min
+- Total execution time: 3588 min
 
 **By Phase:**
 
@@ -52,12 +52,12 @@ Progress: [█████████░] 94%
 | Phase 02.1 | 1     | 68 min   | 68 min   |
 | Phase 02.3 | 2     | 33 min   | 17 min   |
 | Phase 03   | 12    | 1401 min | 117 min  |
-| Phase 04   | 6     | 892 min  | 149 min  |
+| Phase 04   | 7     | 945 min  | 135 min  |
 
 **Recent Trend:**
 
-- Last 5 plans: 3 min, 697 min, 68 min, 37 min, 81 min
-- Trend: Phase 4 package, lifecycle, installed consumer, and local real-browser gates are complete
+- Last 5 plans: 697 min, 68 min, 37 min, 81 min, 53 min
+- Trend: Phase 4 package, lifecycle, installed consumer, local real-browser, and executable documentation gates are complete
 
 _Updated after each plan completion_
 
@@ -113,7 +113,7 @@ _Updated after each plan completion_
 | Phase 04 P04   | 68 min   | 3 tasks | 16 files |
 | Phase 04 P05   | 37 min   | 3 tasks | 20 files |
 | Phase 04 P06   | 81 min   | 3 tasks | 22 files |
-| Phase 04-hosted-production-release P07 | 53 min | 3 tasks | 19 files |
+| Phase 04 P07   | 53 min   | 3 tasks | 19 files |
 
 ## Accumulated Context
 
@@ -243,7 +243,7 @@ Recent decisions affecting current work:
 - [Phase 04]: Pin react-router 8.3.0 exactly and synthesize packed metadata from committed package state so unrelated experiments cannot enter release artifacts.
 - [Phase 04]: Pin VitePress 1.6.4 and keep the adopter documentation theme-neutral. — An exact stable version keeps local, CI, and packed-artifact documentation builds deterministic.
 - [Phase 04]: Require explicit validation metadata on every code fence and compile provider examples from the exact packed artifact. — Security-sensitive wrapper guidance must be executable release evidence rather than unverified prose.
-- [Phase 04]: Permit only four named AFFERENT_RELEASE tokens until Plans 04-08 and 04-09 provide verified publication facts. — The docs gate rejects premature hosted-demo, cloud deployment, or package publication claims.
+- [Phase 04]: Permit only AFFERENT_RELEASE_DOCS_URL, AFFERENT_RELEASE_NPM_URL, AFFERENT_RELEASE_REGISTRY_URL, and AFFERENT_RELEASE_REPOSITORY_URL until Plans 04-08 and 04-09 provide verified publication facts. — The docs gate rejects undeclared release markers, remote execution, and cloud identifiers.
 
 ### Pending Todos
 
@@ -269,6 +269,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-30T21:00:51.163Z
-Stopped at: Completed 04-07-PLAN.md
+Last session: 2026-07-30T21:11:12.000Z
+Stopped at: Plan 04-07 complete; ready to execute 04-08 release automation
 Resume file: None

@@ -355,7 +355,7 @@ Plans:
 
 **Wave 7** _(blocked on Wave 6 completion)_
 
-- [ ] `04-07-PLAN.md` — Publish executable VitePress and README guidance for local demo operation, install, all auth providers, headless/registry UI, testing, host deployment, and upgrades.
+- [x] `04-07-PLAN.md` — Publish executable VitePress and README guidance for local demo operation, install, all auth providers, headless/registry UI, testing, host deployment, and upgrades.
 
 **Wave 8** _(blocked on Wave 7 completion)_
 
@@ -380,7 +380,7 @@ Phases execute sequentially: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 3 -> 4
 | 2.2 Notification Navigation Target Contract   | 2/2            | Complete    | 2026-07-21 |
 | 2.3 Admin Read and Projection Completion      | 2/2            | Complete    | 2026-07-21 |
 | 3. Source-Owned Product Interface             | 12/12          | Complete    | 2026-07-22 |
-| 4. Local Production Release                   | 7/9 | In Progress|  |
+| 4. Local Production Release                   | 7/9            | In Progress |            |
 
 ---
 

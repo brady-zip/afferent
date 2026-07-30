@@ -80,7 +80,7 @@ Requirements for the first production-ready public release. Roadmap creation wil
 
 ### Component and Auth Integration
 
-- [x] **COMP-01**: A developer can install Afferent from a published npm package as a reusable Convex component.
+- [ ] **COMP-01**: A developer can install Afferent from a published npm package as a reusable Convex component.
 - [x] **COMP-02**: A developer can mount typed public-read, authenticated-participation, and authorized-admin wrapper APIs in the host Convex application.
 - [x] **COMP-03**: Public component contracts use stable provider-neutral DTOs and opaque string identifiers rather than exposing component-internal documents or provider records.
 - [x] **COMP-04**: A developer can integrate Afferent with Convex Auth using a documented adapter or recipe verified by an integration fixture.
@@ -234,7 +234,7 @@ Every v1 requirement maps to exactly one roadmap phase.
 | NOTF-06     | Phase 2   | Complete |
 | NOTF-07     | Phase 2   | Complete |
 | NOTF-08     | Phase 2.2 | Complete |
-| COMP-01     | Phase 4   | Complete |
+| COMP-01     | Phase 4   | Pending  |
 | COMP-02     | Phase 1   | Complete |
 | COMP-03     | Phase 1   | Complete |
 | COMP-04     | Phase 1   | Complete |
