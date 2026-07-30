@@ -124,3 +124,88 @@ test("provider, UI, and operations guides preserve the release contract", async 
   assert.match(upgrades, /migration/i);
   assert.match(upgrades, /rollback/i);
 });
+
+test("the documentation verifier rejects authority, link, and deployment drift", async () => {
+  const {
+    assertNoRemoteDemoClaims,
+    assertSafeTypeScriptSnippet,
+    validateInternalLinks,
+    validateRegistryExamples,
+  } = await import("../../scripts/test-docs.mjs");
+
+  assert.doesNotThrow(() =>
+    assertSafeTypeScriptSnippet(
+      "const userId = await getAuthUserId(ctx);",
+      "safe.md",
+    ),
+  );
+  assert.throws(
+    () =>
+      assertSafeTypeScriptSnippet(
+        "export const unsafe = mutation({ handler: (ctx, args) => args.userId });",
+        "unsafe.md",
+      ),
+    /browser authority.*userId/i,
+  );
+  assert.throws(
+    () =>
+      assertSafeTypeScriptSnippet(
+        "type Args = { scopeId: string; isAdmin: boolean };",
+        "unsafe.md",
+      ),
+    /browser authority.*scopeId|scopeId.*browser authority/i,
+  );
+
+  assert.doesNotThrow(() =>
+    assertNoRemoteDemoClaims(
+      "Afferent does not operate a hosted demo deployment.",
+      "deployment.md",
+    ),
+  );
+  assert.throws(
+    () =>
+      assertNoRemoteDemoClaims(
+        "Try the demo at https://afferent-demo.example.vercel.app.",
+        "deployment.md",
+      ),
+    /remote demo|hosted demo/i,
+  );
+  assert.throws(
+    () =>
+      assertNoRemoteDemoClaims(
+        "VITE_CONVEX_URL=https://afferent-demo.convex.cloud",
+        "deployment.md",
+      ),
+    /remote demo|hosted demo/i,
+  );
+
+  const documents = new Map([
+    ["docs/index.md", "[Install](./guide/install.md)"],
+    ["docs/guide/install.md", "# Install"],
+  ]);
+  assert.doesNotThrow(() => validateInternalLinks(documents));
+  assert.throws(
+    () =>
+      validateInternalLinks(
+        new Map([["docs/index.md", "[Missing](./guide/missing.md)"]]),
+      ),
+    /dead internal link/i,
+  );
+
+  assert.doesNotThrow(() =>
+    validateRegistryExamples(
+      "Install `afferent-board` from `registry/r/afferent-board.json`.",
+      new Set(["afferent-board"]),
+      "registry.md",
+    ),
+  );
+  assert.throws(
+    () =>
+      validateRegistryExamples(
+        "Install `afferent-invented`.",
+        new Set(["afferent-board"]),
+        "registry.md",
+      ),
+    /unknown registry item/i,
+  );
+});
