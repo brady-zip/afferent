@@ -5,16 +5,16 @@ milestone_name: milestone
 current_phase: 04
 current_phase_name: hosted-production-release
 status: executing
-stopped_at: Scope pivot approved while reconciling interrupted 04-06 work
+stopped_at: Plan 04-06 complete; ready to execute 04-07 documentation
 last_updated: "2026-07-30"
 last_activity: 2026-07-30
-last_activity_desc: Phase 04 pivoted from a hosted demo to a clone-and-run local anonymous Convex demo
+last_activity_desc: Phase 04 Plan 06 completed the local anonymous Convex demo and real-browser gate
 progress:
   total_phases: 7
   completed_phases: 6
   total_plans: 51
-  completed_plans: 47
-  percent: 86
+  completed_plans: 48
+  percent: 94
 ---
 
 # Project State
@@ -29,19 +29,19 @@ See: .planning/PROJECT.md (updated 2026-07-24)
 ## Current Position
 
 Phase: 04 (Local Production Release) — EXECUTING
-Plan: 6 of 9
-Status: Replanning and reconciling 04-06 after approved demo scope pivot
-Last activity: 2026-07-30 — Replaced the hosted-demo deliverable with a clone-and-run local anonymous Convex experience
+Plan: 7 of 9
+Status: Ready to execute 04-07 adopter documentation
+Last activity: 2026-07-30 — Completed the clone-and-run local anonymous Convex demo and full real-browser gate
 
-Progress: [█████████░] 92%
+Progress: [█████████░] 94%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 46
+- Total plans completed: 48
 - Average duration: 74 min
-- Total execution time: 3417 min
+- Total execution time: 3535 min
 
 **By Phase:**
 
@@ -52,12 +52,12 @@ Progress: [█████████░] 92%
 | Phase 02.1 | 1     | 68 min   | 68 min   |
 | Phase 02.3 | 2     | 33 min   | 17 min   |
 | Phase 03   | 12    | 1401 min | 117 min  |
-| Phase 04   | 4     | 780 min  | 195 min  |
+| Phase 04   | 6     | 892 min  | 149 min  |
 
 **Recent Trend:**
 
-- Last 5 plans: 22 min, 12 min, 3 min, 697 min, 68 min
-- Trend: Phase 4 package, host boundary, lifecycle, and maintenance foundations are complete
+- Last 5 plans: 3 min, 697 min, 68 min, 37 min, 81 min
+- Trend: Phase 4 package, lifecycle, installed consumer, and local real-browser gates are complete
 
 _Updated after each plan completion_
 
@@ -112,6 +112,7 @@ _Updated after each plan completion_
 | Phase 04 P03   | 697 min  | 3 tasks | 10 files |
 | Phase 04 P04   | 68 min   | 3 tasks | 16 files |
 | Phase 04 P05   | 37 min   | 3 tasks | 20 files |
+| Phase 04 P06   | 81 min   | 3 tasks | 22 files |
 
 ## Accumulated Context
 
@@ -128,7 +129,7 @@ Recent decisions affecting current work:
 - [Phase 3]: Treat explicit keyboard, focus, announcement, contrast, zoom, and reflow evidence as a release artifact.
 - [Phase 3]: Install the packed package before all generated registry items and require the mounted clean consumer to typecheck and build.
 - [Phase 3]: Serialize same-worktree UI artifact generation with a temporary lock so parallel verification cannot race shared output replacement.
-- [Phase 4]: Keep normal installs single-product while the public demo uses separate showcase and server-scoped sandbox component instances.
+- [Phase 4]: Keep normal installs single-product while the local example uses separate showcase and server-scoped sandbox component instances.
 - [Phase 01]: Approved the exact 17-entry npm matrix before installation; provider packages remain fixture-only. — The 2026-07-15 registry and official-source audit found no SLOP or install lifecycle scripts.
 - [Phase 01]: Use @auth/core 0.41.2 with @convex-dev/auth 0.0.94 despite the stale latest dist-tag. — The selected version is legitimate and satisfies the auth package peer range.
 - [Phase 01]: Generate committed ComponentApi bindings through a disposable anonymous Convex deployment. — The current CLI requires deployment configuration before component codegen.

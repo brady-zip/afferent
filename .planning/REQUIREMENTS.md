@@ -104,11 +104,11 @@ Requirements for the first production-ready public release. Roadmap creation wil
 - [x] **DEMO-01**: A visitor can open a publicly deployed Vite example that uses Convex Auth and the published Afferent integration path. — Superseded on 2026-07-30 by DEMO-08; public demo hosting is no longer a v1 deliverable.
 - [x] **DEMO-02**: A visitor can explore an immutable showcase populated with representative boards, feedback, roadmap items, and changelog entries.
 - [x] **DEMO-03**: Each authenticated demo visitor receives a private admin sandbox isolated from every other visitor.
-- [ ] **DEMO-04**: The demo uses separate statically installed showcase and sandbox component instances so sandbox scoping does not change the normal one-product installation contract.
-- [ ] **DEMO-05**: The trusted demo host derives sandbox scope from the authenticated visitor and never accepts sandbox scope from browser arguments.
+- [x] **DEMO-04**: The demo uses separate statically installed showcase and sandbox component instances so sandbox scoping does not change the normal one-product installation contract.
+- [x] **DEMO-05**: The trusted demo host derives sandbox scope from the authenticated visitor and never accepts sandbox scope from browser arguments.
 - [x] **DEMO-06**: An authenticated demo visitor can seed or reset their sandbox to a deterministic starting state.
 - [x] **DEMO-07**: Sandbox quotas, rate limits, expiration, and cleanup keep the complete local lifecycle bounded, deterministic, and demonstrable.
-- [ ] **DEMO-08**: A developer can clone the repository and launch the feature-full Vite example plus a real anonymous Convex development backend with one documented command, no Convex login or deploy key, and no committed authentication material.
+- [x] **DEMO-08**: A developer can clone the repository and launch the feature-full Vite example plus a real anonymous Convex development backend with one documented command, no Convex login or deploy key, and no committed authentication material.
 
 ### Release Quality
 
@@ -116,8 +116,8 @@ Requirements for the first production-ready public release. Roadmap creation wil
 - [x] **QUAL-02**: Auth-conformance tests verify equivalent identity and authorization behavior for Convex Auth, Clerk, and Better Auth fixtures.
 - [x] **QUAL-03**: A clean consumer fixture can install the packed npm artifact, run Convex code generation, typecheck, and build without source-relative workspace imports.
 - [x] **QUAL-04**: A clean consumer fixture can install registry components and build them against the supported package version range.
-- [ ] **QUAL-05**: Browser tests verify the public feedback, roadmap, changelog, notification, and admin workflows against a real Convex deployment.
-- [ ] **QUAL-06**: Adversarial two-user tests verify that sandbox reads, writes, search, counts, seeds, resets, and cleanup never cross visitor scopes.
+- [x] **QUAL-05**: Browser tests verify the public feedback, roadmap, changelog, notification, and admin workflows against a real Convex deployment.
+- [x] **QUAL-06**: Adversarial two-user tests verify that sandbox reads, writes, search, counts, seeds, resets, and cleanup never cross visitor scopes.
 - [x] **QUAL-07**: Supplied public and admin interfaces meet documented WCAG 2.2 AA-oriented keyboard, focus, announcement, contrast, zoom, and reflow checks.
 - [x] **QUAL-08**: Supplied public and admin interfaces support phone, tablet, and desktop layouts.
 
@@ -252,17 +252,17 @@ Every v1 requirement maps to exactly one roadmap phase.
 | DEMO-01     | Phase 4   | Superseded |
 | DEMO-02     | Phase 4   | Complete |
 | DEMO-03     | Phase 4   | Complete |
-| DEMO-04     | Phase 4   | Pending  |
-| DEMO-05     | Phase 4   | Pending  |
+| DEMO-04     | Phase 4   | Complete |
+| DEMO-05     | Phase 4   | Complete |
 | DEMO-06     | Phase 4   | Complete |
 | DEMO-07     | Phase 4   | Complete |
-| DEMO-08     | Phase 4   | Pending  |
+| DEMO-08     | Phase 4   | Complete |
 | QUAL-01     | Phase 2   | Complete |
 | QUAL-02     | Phase 1   | Complete |
 | QUAL-03     | Phase 1   | Complete |
 | QUAL-04     | Phase 3   | Complete |
-| QUAL-05     | Phase 4   | Pending  |
-| QUAL-06     | Phase 4   | Pending  |
+| QUAL-05     | Phase 4   | Complete |
+| QUAL-06     | Phase 4   | Complete |
 | QUAL-07     | Phase 3   | Complete |
 | QUAL-08     | Phase 3   | Complete |
 | QUAL-09     | Phase 4   | Pending  |

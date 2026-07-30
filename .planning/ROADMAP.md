@@ -317,14 +317,14 @@ Plans:
 4. Browser tests run the feedback, roadmap, changelog, notification, and admin workflows against real local Convex using the exact artifacts consumers install, including keyboard, axe, responsive, and lifecycle gates.
 5. Documentation covers local-demo operation plus adopter installation through upgrades for all supported auth and UI paths, and a validated npm release publishes exports, declarations, provenance, and synchronized package, registry, and documentation versions.
 
-**Plans:** 5/9 plans executed
+**Plans:** 6/9 plans executed
 
 - [x] 04-01-PLAN.md
 - [x] 04-02-PLAN.md
 - [x] 04-03-PLAN.md
 - [x] 04-04-PLAN.md
 - [x] 04-05-PLAN.md
-- [ ] 04-06-PLAN.md
+- [x] 04-06-PLAN.md
 - [ ] 04-07-PLAN.md
 - [ ] 04-08-PLAN.md
 - [ ] 04-09-PLAN.md
@@ -351,7 +351,7 @@ Plans:
 
 **Wave 6** _(blocked on Wave 5 completion)_
 
-- [ ] `04-06-PLAN.md` — Ship the one-command anonymous local Convex demo and prove full showcase/admin, two-user scope isolation, lifecycle, responsive, keyboard, and axe behavior against its real backend.
+- [x] `04-06-PLAN.md` — Ship the one-command anonymous local Convex demo and prove full showcase/admin, two-user scope isolation, lifecycle, responsive, keyboard, and axe behavior against its real backend.
 
 **Wave 7** _(blocked on Wave 6 completion)_
 
