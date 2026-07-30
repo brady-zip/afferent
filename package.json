@@ -110,7 +110,8 @@
     "verify:version-sync": "node scripts/verify-version-sync.mjs",
     "version:packages": "changeset version && npm install --package-lock-only --ignore-scripts",
     "lint": "oxlint",
-    "prepare": "husky"
+    "prepare": "husky",
+    "verify:release-candidate": "node scripts/verify-release-candidate.mjs"
   },
   "dependencies": {
     "@convex-dev/rate-limiter": "0.3.2",
@@ -158,7 +159,8 @@
     "typescript": "6.0.3",
     "vite": "8.1.4",
     "vitepress": "1.6.4",
-    "vitest": "4.1.10"
+    "vitest": "4.1.10",
+    "yaml": "2.9.0"
   },
   "commitlint": {
     "extends": [
