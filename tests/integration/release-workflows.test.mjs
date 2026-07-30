@@ -6,6 +6,7 @@ import { describe, expect, test } from "vitest";
 import {
   validateArtifactActionCompatibility,
   validateCandidateRecord,
+  validateCiRunMetadata,
   validateCiWorkflow,
   validateExternalConfiguration,
   validateReleaseWorkflow,
@@ -40,6 +41,22 @@ const candidateRecord = {
   evidence: {
     checksums: "checksums.sha256",
     phase4: "evidence/phase4.json",
+  },
+};
+
+const ciRunMetadata = {
+  id: 123456789,
+  path: ".github/workflows/ci.yml",
+  event: "push",
+  status: "completed",
+  conclusion: "success",
+  head_branch: "main",
+  head_sha: "b".repeat(40),
+  repository: {
+    full_name: "bradywatkinson/afferent",
+  },
+  head_repository: {
+    full_name: "bradywatkinson/afferent",
   },
 };
 
@@ -119,9 +136,58 @@ describe("release workflow contracts", () => {
       'npm publish "$RUNNER_TEMP/release-candidate/package/afferent-0.1.0.tgz" --access public --provenance',
     );
     expect(releaseSource).toContain("npm audit signatures");
+    expect(releaseSource).toContain(
+      'gh api --method GET "repos/$GITHUB_REPOSITORY/actions/runs/$AFFERENT_CI_RUN_ID"',
+    );
+    expect(releaseSource).not.toContain("registry-url:");
     expect(releaseSource).not.toMatch(
       /NODE_AUTH_TOKEN|NPM_TOKEN|convex deploy|vercel|test:e2e:phase4:remote/iu,
     );
+  });
+
+  test("selected CI run metadata is bound to the successful main push candidate", () => {
+    expect(() =>
+      validateCiRunMetadata(ciRunMetadata, {
+        runId: "123456789",
+        sourceCommit: "b".repeat(40),
+      }),
+    ).not.toThrow();
+
+    for (const metadata of [
+      { ...ciRunMetadata, id: 987654321 },
+      { ...ciRunMetadata, path: ".github/workflows/release.yml" },
+      { ...ciRunMetadata, event: "workflow_dispatch" },
+      { ...ciRunMetadata, conclusion: "failure" },
+      { ...ciRunMetadata, head_branch: "feature/spoof" },
+      { ...ciRunMetadata, head_sha: "c".repeat(40) },
+      {
+        ...ciRunMetadata,
+        head_repository: { full_name: "attacker/afferent" },
+      },
+    ]) {
+      expect(() =>
+        validateCiRunMetadata(metadata, {
+          runId: "123456789",
+          sourceCommit: "b".repeat(40),
+        }),
+      ).toThrow(/CI run metadata|candidate provenance/iu);
+    }
+  });
+
+  test("release validation rejects a missing CI run identity gate", async () => {
+    const source = await readFile(
+      join(repositoryRoot, ".github/workflows/release.yml"),
+      "utf8",
+    );
+
+    expect(() =>
+      validateReleaseWorkflow(
+        source.replace(
+          'gh api --method GET "repos/$GITHUB_REPOSITORY/actions/runs/$AFFERENT_CI_RUN_ID"',
+          "echo skipped-run-identity-check",
+        ),
+      ),
+    ).toThrow(/CI run identity|candidate provenance/iu);
   });
 
   test("Changesets can only open a version pull request", async () => {
