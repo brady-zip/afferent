@@ -4,11 +4,13 @@ import { dirname, join, resolve } from "node:path";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 
-import { loadReleaseIdentity } from "./generate-release-manifest.mjs";
+import {
+  loadReleaseIdentity,
+  repositoryFromMetadata,
+} from "./generate-release-manifest.mjs";
 
 const execFileAsync = promisify(execFile);
 const repositoryRoot = dirname(dirname(fileURLToPath(import.meta.url)));
-const exactRepositoryUrl = "git+https://github.com/bradywatkinson/afferent.git";
 const exactPackageFiles = ["dist", "LICENSE"];
 const semverPattern = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u;
 
@@ -20,6 +22,7 @@ function exportedTargets(exports) {
 }
 
 export function validatePackageSurface(manifest) {
+  const repository = repositoryFromMetadata(manifest.repository);
   if (
     manifest.name !== "afferent" ||
     manifest.version !== "0.1.0" ||
@@ -30,9 +33,18 @@ export function validatePackageSurface(manifest) {
   if (
     manifest.license !== "Apache-2.0" ||
     manifest.repository?.type !== "git" ||
-    manifest.repository?.url !== exactRepositoryUrl
+    !repository
   ) {
     throw new Error("public package license or repository identity drifted");
+  }
+  const repositoryUrl = `https://github.com/${repository}`;
+  if (
+    manifest.homepage !== `${repositoryUrl}#readme` ||
+    manifest.bugs?.url !== `${repositoryUrl}/issues`
+  ) {
+    throw new Error(
+      "package homepage or issue tracker does not match repository",
+    );
   }
   if (
     manifest.publishConfig?.access !== "public" ||

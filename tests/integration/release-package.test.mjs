@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import {
@@ -7,6 +8,10 @@ import {
   validateRuntimeFloor,
 } from "../../scripts/verify-package-release.mjs";
 
+const declaredPackageManifest = JSON.parse(
+  await readFile(new URL("../../package.json", import.meta.url), "utf8"),
+);
+
 const manifest = {
   name: "afferent",
   version: "0.1.0",
@@ -14,12 +19,9 @@ const manifest = {
   license: "Apache-2.0",
   type: "module",
   files: ["dist", "LICENSE"],
-  repository: {
-    type: "git",
-    url: "git+https://github.com/bradywatkinson/afferent.git",
-  },
-  homepage: "https://github.com/bradywatkinson/afferent#readme",
-  bugs: { url: "https://github.com/bradywatkinson/afferent/issues" },
+  repository: structuredClone(declaredPackageManifest.repository),
+  homepage: declaredPackageManifest.homepage,
+  bugs: structuredClone(declaredPackageManifest.bugs),
   engines: { node: ">=22.14.0", npm: ">=11.5.1" },
   publishConfig: { access: "public", provenance: true },
   exports: {
@@ -138,7 +140,7 @@ test("npm name preflight accepts only availability or the canonical release", ()
       status: "published",
       name: "afferent",
       version: "0.1.0",
-      repository: "git+https://github.com/bradywatkinson/afferent.git",
+      repository: declaredPackageManifest.repository,
     }),
   );
   assert.throws(

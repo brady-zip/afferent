@@ -9,9 +9,12 @@ itself.
 The demo is not deployed. Release configuration never needs a Convex Cloud
 project, a Convex deploy key, a Vercel project, or a remote browser target.
 
-## Release identities
+## Pending-confirmation release identities
 
-The first public release is fixed to these identities:
+Plan 04-08 prepared these fail-closed defaults. Plan 04-09 requires a human to
+confirm them or deliberately revise the policy, metadata, workflow, tests, and
+documentation together before any external write. The machine-readable defaults
+live in `scripts/release-policy.mjs`:
 
 | Surface            | Exact identity                           |
 | ------------------ | ---------------------------------------- |
@@ -24,7 +27,7 @@ The first public release is fixed to these identities:
 | Node               | `.node-version` (`22.22.2`)              |
 | npm                | `11.15.0`                                |
 
-The npm trusted publisher must select GitHub Actions, repository
+The planned npm trusted publisher selects GitHub Actions, repository
 `bradywatkinson/afferent`, workflow filename `release.yml`, environment
 `npm-production`, and the explicit `npm publish` permission. Staged publishing
 is not enabled.
@@ -41,6 +44,23 @@ AFFERENT_STATIC_PUBLICATION=github-pages
 Protect `npm-production` with required reviewers. Configure Pages to use GitHub
 Actions and retain the standard protected `github-pages` environment. Protect
 the `v*` tag pattern so the tag cannot silently move to a different commit.
+
+`package.json#repository` is the single declared repository identity. The
+release verifier requires that declaration, the effective
+`git remote get-url origin` destination (including any Git `insteadOf`
+rewrite), `GITHUB_REPOSITORY`, the workflow ref, release variables, candidate,
+CI run, and public npm metadata all agree. A missing or non-GitHub `origin`, or
+any owner/repository mismatch, fails closed before publication.
+
+## Public source and private h5i refs
+
+An ordinary branch or tag push does not include `refs/h5i/*`. Keep those refs
+out of the public repository by default: `refs/h5i/msg` and `refs/h5i/notes`
+can contain internal agent messages and verbatim human prompts, while context,
+objects, and snapshot refs can contain working traces. Do not run
+`h5i share push` against the public remote unless a human separately inspects
+and explicitly authorizes publishing that material. Source publication and h5i
+trace publication are independent disclosure decisions.
 
 ## Version pull requests cannot publish
 
@@ -84,9 +104,11 @@ npm publish "$RUNNER_TEMP/release-candidate/package/afferent-0.1.0.tgz" --access
 
 ## First-package trusted-publisher bootstrap
 
-npm trusted-publisher registration requires the package to exist first. The
-last read-only name check during Plan 04-08 returned `E404`; Plan 04-09 must
-recheck immediately because name availability can change.
+npm trusted-publisher registration requires the package to exist first. npm's
+[staged-publishing prerequisites](https://docs.npmjs.com/staged-publishing/)
+also require an existing package, so staging cannot create the initial name.
+The last read-only name check during Plan 04-08 returned `E404`; Plan 04-09
+must recheck immediately because name availability can change.
 
 Use this human-present order:
 

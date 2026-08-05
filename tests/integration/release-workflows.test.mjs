@@ -3,6 +3,8 @@ import { join } from "node:path";
 
 import { describe, expect, test } from "vitest";
 
+import { repositoryFromMetadata } from "../../scripts/generate-release-manifest.mjs";
+import { plannedReleasePolicy } from "../../scripts/release-policy.mjs";
 import {
   validateArtifactActionCompatibility,
   validateCandidateRecord,
@@ -13,6 +15,10 @@ import {
 } from "../../scripts/verify-release-candidate.mjs";
 
 const repositoryRoot = new URL("../..", import.meta.url).pathname;
+const packageManifest = JSON.parse(
+  await readFile(join(repositoryRoot, "package.json"), "utf8"),
+);
+const declaredRepository = repositoryFromMetadata(packageManifest.repository);
 
 const sha = "a".repeat(64);
 const candidateRecord = {
@@ -53,10 +59,10 @@ const ciRunMetadata = {
   head_branch: "main",
   head_sha: "b".repeat(40),
   repository: {
-    full_name: "bradywatkinson/afferent",
+    full_name: declaredRepository,
   },
   head_repository: {
-    full_name: "bradywatkinson/afferent",
+    full_name: declaredRepository,
   },
 };
 
@@ -125,7 +131,14 @@ describe("release workflow contracts", () => {
   test("release publication is manual, protected, OIDC-only, and artifact preserving", async () => {
     const [ciSource, releaseSource] = await Promise.all([
       readFile(join(repositoryRoot, ".github/workflows/ci.yml"), "utf8"),
-      readFile(join(repositoryRoot, ".github/workflows/release.yml"), "utf8"),
+      readFile(
+        join(
+          repositoryRoot,
+          ".github/workflows",
+          plannedReleasePolicy.workflow,
+        ),
+        "utf8",
+      ),
     ]);
 
     expect(() => validateReleaseWorkflow(releaseSource)).not.toThrow();
@@ -155,7 +168,10 @@ describe("release workflow contracts", () => {
 
     for (const metadata of [
       { ...ciRunMetadata, id: 987_654_321 },
-      { ...ciRunMetadata, path: ".github/workflows/release.yml" },
+      {
+        ...ciRunMetadata,
+        path: `.github/workflows/${plannedReleasePolicy.workflow}`,
+      },
       { ...ciRunMetadata, event: "workflow_dispatch" },
       { ...ciRunMetadata, conclusion: "failure" },
       { ...ciRunMetadata, head_branch: "feature/spoof" },
@@ -176,7 +192,7 @@ describe("release workflow contracts", () => {
 
   test("release validation rejects a missing CI run identity gate", async () => {
     const source = await readFile(
-      join(repositoryRoot, ".github/workflows/release.yml"),
+      join(repositoryRoot, ".github/workflows", plannedReleasePolicy.workflow),
       "utf8",
     );
 
@@ -192,7 +208,7 @@ describe("release workflow contracts", () => {
 
   test("Changesets can only open a version pull request", async () => {
     const source = await readFile(
-      join(repositoryRoot, ".github/workflows/release.yml"),
+      join(repositoryRoot, ".github/workflows", plannedReleasePolicy.workflow),
       "utf8",
     );
 
@@ -211,7 +227,7 @@ describe("release workflow contracts", () => {
 
   test("release validation rejects missing OIDC and reordered static publication", async () => {
     const source = await readFile(
-      join(repositoryRoot, ".github/workflows/release.yml"),
+      join(repositoryRoot, ".github/workflows", plannedReleasePolicy.workflow),
       "utf8",
     );
 
@@ -234,17 +250,44 @@ describe("release workflow contracts", () => {
     expect(() =>
       validateExternalConfiguration({
         githubActions: true,
-        repository: "bradywatkinson/afferent",
-        workflowRef:
-          "bradywatkinson/afferent/.github/workflows/release.yml@refs/heads/main",
+        repository: declaredRepository,
+        originRepository: declaredRepository,
+        workflowRef: `${declaredRepository}/.github/workflows/${plannedReleasePolicy.workflow}@refs/heads/${plannedReleasePolicy.branch}`,
         runnerEnvironment: "github-hosted",
-        releaseOwner: "bradywatkinson/afferent",
-        trustedPublisher:
-          "bradywatkinson/afferent:release.yml:npm-production:allow-publish",
-        staticPublication: "github-pages",
-        approvedTag: "v0.1.0",
+        releaseOwner: declaredRepository,
+        trustedPublisher: `${declaredRepository}:${plannedReleasePolicy.workflow}:${plannedReleasePolicy.npmEnvironment}:${plannedReleasePolicy.trustedPublisherPermission}`,
+        staticPublication: plannedReleasePolicy.staticPublication,
+        approvedTag: `v${packageManifest.version}`,
       }),
     ).not.toThrow();
+
+    expect(() =>
+      validateExternalConfiguration({
+        githubActions: true,
+        repository: declaredRepository,
+        originRepository: "unrelated-owner/afferent",
+        workflowRef: `${declaredRepository}/.github/workflows/${plannedReleasePolicy.workflow}@refs/heads/${plannedReleasePolicy.branch}`,
+        runnerEnvironment: "github-hosted",
+        releaseOwner: declaredRepository,
+        trustedPublisher: `${declaredRepository}:${plannedReleasePolicy.workflow}:${plannedReleasePolicy.npmEnvironment}:${plannedReleasePolicy.trustedPublisherPermission}`,
+        staticPublication: plannedReleasePolicy.staticPublication,
+        approvedTag: `v${packageManifest.version}`,
+      }),
+    ).toThrow(/originRepository/iu);
+  });
+
+  test("repository metadata normalizes supported GitHub remote forms", () => {
+    for (const remote of [
+      "git@github.com:Owner/Repository.git",
+      "https://github.com/Owner/Repository",
+      "https://github.com/Owner/Repository.git",
+      "https://github.com/Owner/Repository/",
+    ]) {
+      expect(repositoryFromMetadata(remote)).toBe("owner/repository");
+    }
+    expect(repositoryFromMetadata("https://example.com/owner/repository")).toBe(
+      undefined,
+    );
   });
 
   test("release runbook records first-package bootstrap and action compatibility", async () => {
@@ -255,9 +298,16 @@ describe("release workflow contracts", () => {
 
     expect(source).toMatch(/0\.0\.0-bootstrap\.0/iu);
     expect(source).toMatch(/--tag bootstrap/iu);
-    expect(source).toMatch(/npm trust github[\s\S]*--allow-publish/iu);
+    expect(source).toContain(
+      `--${plannedReleasePolicy.trustedPublisherPermission}`,
+    );
     expect(source).toMatch(/upload-artifact@v7[\s\S]*download-artifact@v8/iu);
     expect(source).toMatch(/never.*successful.*v1/iu);
+    expect(source).toMatch(/h5i share push[\s\S]*explicitly authorizes/iu);
+    expect(source).toMatch(/staging cannot create the initial name/iu);
+    expect(source).toMatch(
+      /pending-confirmation[\s\S]*scripts\/release-policy\.mjs/iu,
+    );
     expect(source).not.toMatch(/NPM_TOKEN|NODE_AUTH_TOKEN/iu);
   });
 });

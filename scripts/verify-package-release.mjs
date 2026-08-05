@@ -4,11 +4,25 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { repositoryFromMetadata } from "./generate-release-manifest.mjs";
+
 const repositoryRoot = dirname(dirname(fileURLToPath(import.meta.url)));
+const declaredPackageManifest = JSON.parse(
+  await readFile(join(repositoryRoot, "package.json"), "utf8"),
+);
+const declaredRepository = repositoryFromMetadata(
+  declaredPackageManifest.repository,
+);
+if (!declaredRepository) {
+  throw new Error(
+    "package.json repository must identify a github.com owner/repository",
+  );
+}
 const requiredIdentity = Object.freeze({
   name: "afferent",
   version: "0.1.0",
   license: "Apache-2.0",
+  repository: declaredRepository,
 });
 const runtimeFloor = Object.freeze({ node: "22.14.0", npm: "11.5.1" });
 
@@ -59,15 +73,12 @@ export function validateRuntimeFloor(runtime) {
 
 export function validateNpmNameResult(result) {
   if (result.status === "available-at-check-time") return result;
-  const repository =
-    typeof result.repository === "string"
-      ? result.repository
-      : result.repository?.url;
+  const repository = repositoryFromMetadata(result.repository);
   if (
     result.status !== "published" ||
     result.name !== requiredIdentity.name ||
     result.version !== requiredIdentity.version ||
-    !repository?.includes("github.com/bradywatkinson/afferent")
+    repository !== requiredIdentity.repository
   ) {
     throw new Error(
       "npm package ownership or version drift detected for afferent; do not rename or publish",
@@ -97,13 +108,14 @@ export function validatePackageCandidate({ manifest, packedFiles, registry }) {
       throw new Error(`package metadata is missing ${field}`);
   }
   for (const [field, expected] of Object.entries(requiredIdentity)) {
+    if (field === "repository") continue;
     if (manifest[field] !== expected) {
       throw new Error(`package ${field} must be ${expected}`);
     }
   }
   if (
     manifest.repository.type !== "git" ||
-    !manifest.repository.url.includes("github.com/bradywatkinson/afferent")
+    repositoryFromMetadata(manifest.repository) !== requiredIdentity.repository
   ) {
     throw new Error(
       "package repository must identify the canonical repository",
@@ -111,6 +123,15 @@ export function validatePackageCandidate({ manifest, packedFiles, registry }) {
   }
   if (!manifest.homepage || !manifest.bugs?.url) {
     throw new Error("package homepage and bugs metadata are required");
+  }
+  const repositoryUrl = `https://github.com/${requiredIdentity.repository}`;
+  if (
+    manifest.homepage !== `${repositoryUrl}#readme` ||
+    manifest.bugs.url !== `${repositoryUrl}/issues`
+  ) {
+    throw new Error(
+      "package homepage or issue tracker does not match repository",
+    );
   }
   if (
     manifest.engines.node !== `>=${runtimeFloor.node}` ||
@@ -138,7 +159,7 @@ export function validatePackageCandidate({ manifest, packedFiles, registry }) {
     );
   }
   for (const target of exportTargets(manifest.exports)) {
-    if (/\.ts$/.test(target) && !/\.d\.ts$/.test(target)) {
+    if (target.endsWith(".ts") && !target.endsWith(".d.ts")) {
       throw new Error(`raw TypeScript export is forbidden: ${target}`);
     }
     const packedPath = target.replace(/^\.\//, "");
@@ -159,7 +180,8 @@ export function validatePackageCandidate({ manifest, packedFiles, registry }) {
 }
 
 async function npmVersion() {
-  return (await run("npm", ["--version"])).stdout.trim();
+  const result = await run("npm", ["--version"]);
+  return result.stdout.trim();
 }
 
 async function npmNamePreflight() {

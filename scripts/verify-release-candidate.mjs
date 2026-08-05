@@ -20,15 +20,27 @@ import { parse as parseYaml } from "yaml";
 import {
   createReleaseManifest,
   loadReleaseIdentity,
+  normalizeRepositoryName,
+  repositoryFromMetadata,
   validateReleaseManifest,
 } from "./generate-release-manifest.mjs";
+import { plannedReleasePolicy } from "./release-policy.mjs";
 import { validateRuntimeFloor } from "./verify-package-release.mjs";
 
 const repositoryRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const sha256Pattern = /^[a-f0-9]{64}$/u;
 const commitPattern = /^[a-f0-9]{40}$/u;
 const actionPinPattern = /^[^@\s]+@[a-f0-9]{40}$/u;
-const canonicalRepository = "bradywatkinson/afferent";
+const declaredIdentity = await loadReleaseIdentity(repositoryRoot);
+const declaredRepository = declaredIdentity.repository;
+const plannedNpmCommand =
+  {
+    "allow-publish": "npm publish",
+    "allow-stage-publish": "npm stage publish",
+  }[plannedReleasePolicy.trustedPublisherPermission] ?? "";
+if (!plannedNpmCommand) {
+  throw new Error("planned trusted-publisher permission is unsupported");
+}
 const canonicalCiActions = new Set([
   "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
   "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
@@ -299,7 +311,7 @@ function actionStep(job, action) {
 
 export function validateReleaseWorkflow(source) {
   assertNoForbiddenWorkflowSurface(source);
-  const workflow = parseWorkflow(source, "release.yml");
+  const workflow = parseWorkflow(source, plannedReleasePolicy.workflow);
   const githubTokenExpression = "$" + "{{ github.token }}";
   const ciRunIdExpression = "$" + "{{ inputs.ci_run_id }}";
   const sourceCommitExpression = "$" + "{{ inputs.source_commit }}";
@@ -313,7 +325,7 @@ export function validateReleaseWorkflow(source) {
   }
   if (
     workflow.on?.pull_request ||
-    !workflow.on?.push?.branches?.includes("main") ||
+    !workflow.on?.push?.branches?.includes(plannedReleasePolicy.branch) ||
     workflow.on?.workflow_dispatch?.inputs?.allow_publish?.default !== false
   ) {
     throw new Error(
@@ -414,7 +426,7 @@ export function validateReleaseWorkflow(source) {
   }
 
   if (
-    environmentName(publish) !== "npm-production" ||
+    environmentName(publish) !== plannedReleasePolicy.npmEnvironment ||
     publish.permissions?.contents !== "read" ||
     publish.permissions?.["id-token"] !== "write"
   ) {
@@ -423,7 +435,7 @@ export function validateReleaseWorkflow(source) {
     );
   }
   if (
-    environmentName(publishStatic) !== "github-pages" ||
+    environmentName(publishStatic) !== plannedReleasePolicy.staticEnvironment ||
     publishStatic.permissions?.pages !== "write" ||
     publishStatic.permissions?.["id-token"] !== "write"
   ) {
@@ -474,8 +486,7 @@ export function validateReleaseWorkflow(source) {
     );
   }
   const publishCommands = commandFor(publish);
-  const exactPublish =
-    'npm publish "$RUNNER_TEMP/release-candidate/package/afferent-0.1.0.tgz" --access public --provenance';
+  const exactPublish = `${plannedNpmCommand} "$RUNNER_TEMP/release-candidate/package/afferent-${declaredIdentity.version}.tgz" --access public --provenance`;
   if (
     !publishCommands.includes(exactPublish) ||
     /npm\s+(?:run\s+)?(?:build|pack)|changeset\s+publish/iu.test(
@@ -497,7 +508,7 @@ export function validateReleaseWorkflow(source) {
       "npm run verify:release-candidate -- --publish-preflight",
     ) ||
     !commandFor(verifyPublic).includes(
-      "npm run verify:release-candidate -- --published-version 0.1.0",
+      `npm run verify:release-candidate -- --published-version ${declaredIdentity.version}`,
     ) ||
     !commandFor(verifyPublic).includes("npm audit signatures")
   ) {
@@ -534,7 +545,8 @@ export function validateArtifactActionCompatibility(ciSource, releaseSource) {
       `afferent-verified-release-candidate-${githubShaExpression}` ||
     crossRunDownload.with.name !==
       `afferent-verified-release-candidate-${sourceCommitExpression}` ||
-    crossRunDownload.with.repository !== canonicalRepository ||
+    normalizeRepositoryName(crossRunDownload.with.repository) !==
+      declaredRepository ||
     !crossRunDownload.with["run-id"]
   ) {
     throw new Error(
@@ -570,18 +582,22 @@ export function validateArtifactActionCompatibility(ciSource, releaseSource) {
 export function validateExternalConfiguration(configuration) {
   const expected = {
     githubActions: true,
-    repository: canonicalRepository,
-    workflowRef:
-      "bradywatkinson/afferent/.github/workflows/release.yml@refs/heads/main",
+    repository: declaredRepository,
+    originRepository: declaredRepository,
+    workflowRef: `${declaredRepository}/.github/workflows/${declaredIdentity.releaseWorkflow}@refs/heads/${plannedReleasePolicy.branch}`,
     runnerEnvironment: "github-hosted",
-    releaseOwner: canonicalRepository,
-    trustedPublisher:
-      "bradywatkinson/afferent:release.yml:npm-production:allow-publish",
-    staticPublication: "github-pages",
-    approvedTag: "v0.1.0",
+    releaseOwner: declaredRepository,
+    trustedPublisher: `${declaredRepository}:${declaredIdentity.releaseWorkflow}:${plannedReleasePolicy.npmEnvironment}:${plannedReleasePolicy.trustedPublisherPermission}`,
+    staticPublication: plannedReleasePolicy.staticPublication,
+    approvedTag: declaredIdentity.sourceTag,
   };
   for (const [key, value] of Object.entries(expected)) {
-    if (configuration?.[key] !== value) {
+    const actual = ["originRepository", "releaseOwner", "repository"].includes(
+      key,
+    )
+      ? normalizeRepositoryName(configuration?.[key])
+      : configuration?.[key];
+    if (actual !== value) {
       throw new Error(
         `external release configuration is incomplete: ${key} must be ${value}`,
       );
@@ -604,8 +620,10 @@ export function validateCiRunMetadata(metadata, expected) {
     metadata?.conclusion !== "success" ||
     metadata?.head_branch !== "main" ||
     metadata?.head_sha !== sourceCommit ||
-    metadata?.repository?.full_name !== canonicalRepository ||
-    metadata?.head_repository?.full_name !== canonicalRepository
+    normalizeRepositoryName(metadata?.repository?.full_name) !==
+      declaredRepository ||
+    normalizeRepositoryName(metadata?.head_repository?.full_name) !==
+      declaredRepository
   ) {
     throw new Error(
       "CI run metadata does not bind the successful main push to candidate provenance",
@@ -787,7 +805,7 @@ async function releaseCandidateRecord(candidateRoot, phase4) {
     artifactName: `afferent-release-candidate-${identity.version}`,
     source: {
       commit,
-      repository: canonicalRepository,
+      repository: declaredRepository,
       tag: identity.sourceTag,
     },
     package: {
@@ -950,6 +968,7 @@ export async function validateCandidateDirectory(
     JSON.parse(
       await readFile(join(candidateRoot, "release-manifest.json"), "utf8"),
     ),
+    declaredIdentity,
   );
   if (
     manifest.package.sha256 !== record.package.sha256 ||
@@ -980,10 +999,33 @@ export async function validateCandidateDirectory(
   return record;
 }
 
-function externalConfigurationFromEnvironment() {
+async function originRepository() {
+  let result;
+  try {
+    // Resolve insteadOf rewrites deliberately.
+    // The effective push destination must agree with the release declaration.
+    result = await run("git", ["remote", "get-url", "origin"], {
+      capture: true,
+    });
+  } catch {
+    throw new Error(
+      "external release configuration is incomplete: no usable git remote named origin is configured",
+    );
+  }
+  const repository = repositoryFromMetadata(result.stdout);
+  if (!repository) {
+    throw new Error(
+      "external release configuration is incomplete: git remote named origin must resolve to github.com/<owner>/<repository>",
+    );
+  }
+  return repository;
+}
+
+async function externalConfigurationFromEnvironment() {
   return {
     githubActions: process.env.GITHUB_ACTIONS === "true",
     repository: process.env.GITHUB_REPOSITORY,
+    originRepository: await originRepository(),
     workflowRef: process.env.GITHUB_WORKFLOW_REF,
     runnerEnvironment: process.env.RUNNER_ENVIRONMENT,
     releaseOwner: process.env.AFFERENT_RELEASE_OWNER,
@@ -999,7 +1041,7 @@ async function npmVersion() {
 }
 
 export async function validateReleasePreflight(candidateDirectory) {
-  validateExternalConfiguration(externalConfigurationFromEnvironment());
+  validateExternalConfiguration(await externalConfigurationFromEnvironment());
   if (process.env.AFFERENT_ALLOW_PUBLISH !== "true") {
     throw new Error("manual publication approval is missing");
   }
@@ -1017,7 +1059,7 @@ export async function validateReleasePreflight(candidateDirectory) {
   if (
     record.source.commit !== sourceCommit ||
     record.source.tag !== sourceTag ||
-    record.source.repository !== canonicalRepository
+    normalizeRepositoryName(record.source.repository) !== declaredRepository
   ) {
     throw new Error("release source does not match the verified candidate");
   }
@@ -1045,7 +1087,8 @@ export async function validateReleasePreflight(candidateDirectory) {
 export async function validatePublishPreflight(candidateDirectory) {
   const record = await validateReleasePreflight(candidateDirectory);
   if (
-    process.env.AFFERENT_RELEASE_ENVIRONMENT !== "npm-production" ||
+    process.env.AFFERENT_RELEASE_ENVIRONMENT !==
+      plannedReleasePolicy.npmEnvironment ||
     !process.env.ACTIONS_ID_TOKEN_REQUEST_URL
   ) {
     throw new Error(
@@ -1053,14 +1096,6 @@ export async function validatePublishPreflight(candidateDirectory) {
     );
   }
   return record;
-}
-
-function repositoryFromMetadata(repository) {
-  const url = typeof repository === "string" ? repository : repository?.url;
-  const match = url?.match(
-    /github\.com[/:](?<name>[^/]+\/[^/#]+?)(?:\.git)?$/u,
-  );
-  return match?.groups?.name;
 }
 
 export async function verifyPublishedNpm(candidateDirectory, version) {
@@ -1088,7 +1123,7 @@ export async function verifyPublishedNpm(candidateDirectory, version) {
     metadata.name !== record.package.name ||
     metadata.version !== version ||
     metadata.license !== "Apache-2.0" ||
-    repositoryFromMetadata(metadata.repository) !== canonicalRepository
+    repositoryFromMetadata(metadata.repository) !== declaredRepository
   ) {
     throw new Error("public npm metadata does not match the release candidate");
   }
@@ -1166,7 +1201,10 @@ export async function preparePagesSite(candidateDirectory, outputDirectory) {
 export async function validateRepositoryWorkflows() {
   const [ciSource, releaseSource] = await Promise.all([
     readFile(join(repositoryRoot, ".github/workflows/ci.yml"), "utf8"),
-    readFile(join(repositoryRoot, ".github/workflows/release.yml"), "utf8"),
+    readFile(
+      join(repositoryRoot, ".github/workflows", plannedReleasePolicy.workflow),
+      "utf8",
+    ),
   ]);
   const ci = validateCiWorkflow(ciSource);
   const release = validateReleaseWorkflow(releaseSource);
@@ -1185,13 +1223,13 @@ async function main() {
     process.stdout.write(
       `${JSON.stringify({
         status: "verified",
-        workflows: ["ci.yml", "release.yml"],
+        workflows: ["ci.yml", plannedReleasePolicy.workflow],
       })}\n`,
     );
     return;
   }
   if (process.argv.includes("--external-config")) {
-    validateExternalConfiguration(externalConfigurationFromEnvironment());
+    validateExternalConfiguration(await externalConfigurationFromEnvironment());
     process.stdout.write(
       `${JSON.stringify({
         status: "verified",

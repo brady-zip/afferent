@@ -9,12 +9,14 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   createReleaseManifest,
   loadReleaseIdentity,
+  repositoryFromMetadata,
   validateReleaseManifest,
 } from "../../scripts/generate-release-manifest.mjs";
 import {
   validatePackageSurface,
   validateVersionSurfaces,
 } from "../../scripts/verify-version-sync.mjs";
+import { plannedReleasePolicy } from "../../scripts/release-policy.mjs";
 
 const repositoryRoot = resolve(
   dirname(fileURLToPath(import.meta.url)),
@@ -42,8 +44,8 @@ describe("canonical release identity", () => {
       version: packageManifest.version,
       docsVersion: packageManifest.version,
       sourceTag: `v${packageManifest.version}`,
-      repository: "bradywatkinson/afferent",
-      releaseWorkflow: "release.yml",
+      repository: repositoryFromMetadata(packageManifest.repository),
+      releaseWorkflow: plannedReleasePolicy.workflow,
     });
     expect(identity.registryVersion).toBe(packageManifest.version);
   });
@@ -87,13 +89,29 @@ describe("canonical release identity", () => {
     });
     expect(first.registry.sha256).toMatch(/^[a-f0-9]{64}$/u);
     expect(first.evidence.manifestSha256).toMatch(/^[a-f0-9]{64}$/u);
-    expect(() => validateReleaseManifest(first)).not.toThrow();
+    const identity = await loadReleaseIdentity(repositoryRoot);
+    expect(() => validateReleaseManifest(first, identity)).not.toThrow();
     expect(() =>
-      validateReleaseManifest({
-        ...first,
-        registry: { ...first.registry, version: "9.9.9" },
-      }),
+      validateReleaseManifest(
+        {
+          ...first,
+          registry: { ...first.registry, version: "9.9.9" },
+        },
+        identity,
+      ),
     ).toThrow(/registry version/i);
+    expect(() =>
+      validateReleaseManifest(
+        {
+          ...first,
+          repository: {
+            ...first.repository,
+            name: "unrelated-owner/afferent",
+          },
+        },
+        identity,
+      ),
+    ).toThrow(/declared repository identity/i);
   });
 });
 

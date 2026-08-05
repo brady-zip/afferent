@@ -5,10 +5,10 @@ import { basename, dirname, join, relative, resolve } from "node:path";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 
+import { plannedReleasePolicy } from "./release-policy.mjs";
+
 const execFileAsync = promisify(execFile);
 const defaultRepositoryRoot = dirname(dirname(fileURLToPath(import.meta.url)));
-const canonicalRepository = "bradywatkinson/afferent";
-const releaseWorkflow = "release.yml";
 const sha256Pattern = /^[a-f0-9]{64}$/u;
 const commitPattern = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u;
 const semverPattern = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u;
@@ -67,11 +67,23 @@ async function digestFiles(repositoryRoot, paths) {
   return hash.digest("hex");
 }
 
-function repositoryName(url) {
-  const match = url.match(
-    /github\.com[/:](?<repository>[^/]+\/[^/#]+?)(?:\.git)?$/u,
+export function normalizeRepositoryName(repository) {
+  if (typeof repository !== "string") return undefined;
+  const normalized = repository.trim().toLowerCase();
+  return /^[^/:\s]+\/[^/#\s]+$/u.test(normalized) ? normalized : undefined;
+}
+
+export function repositoryFromMetadata(repository) {
+  const url = typeof repository === "string" ? repository : repository?.url;
+  const match = url
+    ?.trim()
+    .match(
+      /github\.com[/:](?<owner>[^/:\s]+)\/(?<repository>[^/#\s]+?)(?:\.git)?\/?$/iu,
+    );
+  if (!match?.groups) return undefined;
+  return normalizeRepositoryName(
+    `${match.groups.owner}/${match.groups.repository}`,
   );
-  return match?.groups?.repository ?? "";
 }
 
 export async function loadReleaseIdentity(
@@ -80,23 +92,23 @@ export async function loadReleaseIdentity(
   const packageManifest = JSON.parse(
     await readFile(join(repositoryRoot, "package.json"), "utf8"),
   );
-  const repository = repositoryName(packageManifest.repository?.url ?? "");
+  const repository = repositoryFromMetadata(packageManifest.repository);
   if (packageManifest.name !== "afferent") {
     throw new Error("release package name must remain afferent");
   }
   if (!semverPattern.test(packageManifest.version)) {
     throw new Error("release package version must be exact semver");
   }
-  if (repository !== canonicalRepository) {
+  if (!repository) {
     throw new Error(
-      `release repository must be ${canonicalRepository}, received ${repository || "<missing>"}`,
+      "release repository must identify a github.com owner/repository",
     );
   }
   return Object.freeze({
     docsVersion: packageManifest.version,
     packageName: packageManifest.name,
     registryVersion: packageManifest.version,
-    releaseWorkflow,
+    releaseWorkflow: plannedReleasePolicy.workflow,
     repository,
     sourceTag: `v${packageManifest.version}`,
     version: packageManifest.version,
@@ -117,7 +129,10 @@ export async function digestRegistry(repositoryRoot = defaultRepositoryRoot) {
   };
 }
 
-export function validateReleaseManifest(manifest) {
+export function validateReleaseManifest(manifest, expectedIdentity) {
+  if (!expectedIdentity?.repository || !expectedIdentity.releaseWorkflow) {
+    throw new Error("declared release identity is required");
+  }
   const version = manifest.package?.version;
   if (!semverPattern.test(version ?? "")) {
     throw new Error("release manifest package version is invalid");
@@ -147,11 +162,20 @@ export function validateReleaseManifest(manifest) {
   ) {
     throw new Error("release manifest source date policy is invalid");
   }
+  const repository = normalizeRepositoryName(manifest.repository?.name);
   if (
-    manifest.repository?.name !== canonicalRepository ||
-    manifest.repository?.workflow !== releaseWorkflow
+    !repository ||
+    manifest.repository?.workflow !== plannedReleasePolicy.workflow
   ) {
     throw new Error("release manifest repository identity is invalid");
+  }
+  if (
+    repository !== expectedIdentity.repository ||
+    manifest.repository.workflow !== expectedIdentity.releaseWorkflow
+  ) {
+    throw new Error(
+      "release manifest does not match declared repository identity",
+    );
   }
   const { evidence, ...body } = manifest;
   const expectedManifestDigest = sha256(json(body));
@@ -227,7 +251,7 @@ export async function createReleaseManifest({
       manifestSha256: sha256(json(body)),
     },
   };
-  return validateReleaseManifest(manifest);
+  return validateReleaseManifest(manifest, identity);
 }
 
 function option(name) {
