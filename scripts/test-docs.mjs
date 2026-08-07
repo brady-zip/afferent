@@ -512,19 +512,29 @@ async function validateGeneratedRegistry(catalog, generatedCatalog) {
   }
 }
 
-function validateRequirementCoverage(planSource, requirementsSource) {
+export function validateRequirementCoverage(planSource, requirementsSource) {
   const match = planSource.match(/^requirements:\s*\[(?<ids>[^\]]+)\]/mu);
   if (!match) throw new Error("documentation plan has no requirement IDs");
   const ids = match.groups.ids
     .split(",")
     .map((value) => value.trim())
     .filter(Boolean);
+  const retired = new Set(
+    [
+      ...requirementsSource.matchAll(
+        /\*\*Removed from v1:\*\*[^`\n]*`(?<id>[A-Z]+-\d+)`/gu,
+      ),
+    ].map((retirement) => retirement.groups.id),
+  );
   for (const id of ids) {
     if (!requirementsSource.includes(id)) {
       throw new Error(`documentation requirement does not exist: ${id}`);
     }
   }
-  return ids;
+  return {
+    active: ids.filter((id) => !retired.has(id)),
+    retired: ids.filter((id) => retired.has(id)),
+  };
 }
 
 async function validateLocalDemoCommand(manifest, documents) {
@@ -698,7 +708,7 @@ async function buildPackAndCompile({ documents, fences, manifest }) {
       tarball,
     });
     return {
-      artifact: `${manifest.name}@${manifest.version}`,
+      localArtifact: `${manifest.name}@${manifest.version}`,
       executableSnippets: executableFences.length,
       packCount: 1,
       packedFiles: packed.files.length,
@@ -755,7 +765,8 @@ export async function verifyDocumentation() {
     ...packed,
     codeFences: validation.fences.length,
     registryItems: registryItems.size,
-    requirements: validation.requirements,
+    requirements: validation.requirements.active,
+    retiredRequirements: validation.requirements.retired,
     unresolvedReleaseTokens: validation.releaseTokens,
   };
 }

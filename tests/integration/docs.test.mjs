@@ -136,6 +136,7 @@ test("the documentation verifier rejects authority, link, and deployment drift",
     assertNoRemoteDemoClaims,
     assertSafeTypeScriptSnippet,
     validateInternalLinks,
+    validateRequirementCoverage,
     validateRegistryExamples,
   } = await import("../../scripts/test-docs.mjs");
 
@@ -152,6 +153,13 @@ test("the documentation verifier rejects authority, link, and deployment drift",
         "unsafe.md",
       ),
     /npm publication claim/i,
+  );
+  assert.deepEqual(
+    validateRequirementCoverage(
+      "requirements: [COMP-01, QUAL-09]",
+      "**Removed from v1:** `COMP-01` was retired.\n- [x] **QUAL-09**: Docs.",
+    ),
+    { active: ["QUAL-09"], retired: ["COMP-01"] },
   );
 
   assert.doesNotThrow(() =>
