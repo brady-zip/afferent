@@ -5,6 +5,9 @@
 **Historical directory slug:** `04-hosted-production-release` is retained so completed
 plans, summaries, commits, and references remain stable.
 
+**Distribution update:** `04-DISTRIBUTION-PIVOT.md` supersedes the npm-specific
+statements in this document as of 2026-08-07.
+
 ## User decision
 
 The Afferent demo is not a hosted service or public deployment. Evaluators clone the
@@ -27,8 +30,8 @@ reintroduced by preview, Vercel, production Convex, remote-smoke, or hosted-demo
 
 ## Preserved deliverables and gates
 
-- The reusable component still publishes to npm with explicit exports, declarations,
-  OIDC trusted publishing, provenance, and exact tarball verification.
+- The reusable component remains locally packable with explicit exports,
+  declarations, and exact tarball verification; v1 does not publish it to npm.
 - The static shadcn registry and versioned documentation remain public release surfaces.
 - The demo still installs separate immutable-showcase and private-sandbox component
   instances and uses the exact packed package plus generated registry source.
@@ -74,7 +77,8 @@ reintroduced by preview, Vercel, production Convex, remote-smoke, or hosted-demo
 - `DEMO-07` retains quotas, expiry, and cleanup but no longer cites public-service growth.
 - `QUAL-09` distinguishes adopter host-application deployment guidance from local-demo
   operation.
-- `QUAL-11` no longer synchronizes a deployed demo version or badge.
+- `QUAL-11` synchronizes tagged source, registry, and docs while binding local
+  tarball evidence; it no longer requires npm or a deployed demo version/badge.
 
 ## Remaining plan impact
 
@@ -83,8 +87,8 @@ reintroduced by preview, Vercel, production Convex, remote-smoke, or hosted-demo
   proof.
 - **04-07:** Document the clone-and-run demo and its troubleshooting while keeping adopter
   installation, auth, UI, testing, host deployment, and upgrade guidance.
-- **04-08:** Keep release manifests, CI, drift checks, Changesets, npm OIDC, and provenance;
-  remove Convex/Vercel preview and demo deployment automation.
-- **04-09:** Keep the human GitHub/npm ownership checkpoint and publish/verify npm,
-  registry, docs, tag, and provenance; remove Convex/Vercel provisioning and demo
-  deployment/smoke.
+- **04-08:** Preserve release manifests, CI, drift checks, Changesets, and static
+  publication work as historical implementation; Plan 04-09 removes the npm path.
+- **04-09:** Keep the human GitHub ownership checkpoint and publish/verify only
+  the source tag, registry, and docs; remove npm plus Convex/Vercel provisioning
+  and demo deployment/smoke.

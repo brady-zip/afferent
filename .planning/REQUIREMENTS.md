@@ -80,7 +80,10 @@ Requirements for the first production-ready public release. Roadmap creation wil
 
 ### Component and Auth Integration
 
-- [ ] **COMP-01**: A developer can install Afferent from a published npm package as a reusable Convex component.
+**Removed from v1:** `COMP-01` required installation from a published npm
+package. The 2026-08-07 distribution pivot explicitly removed npm-registry
+publication from v1; this requirement is retired, not satisfied or reworded.
+
 - [x] **COMP-02**: A developer can mount typed public-read, authenticated-participation, and authorized-admin wrapper APIs in the host Convex application.
 - [x] **COMP-03**: Public component contracts use stable provider-neutral DTOs and opaque string identifiers rather than exposing component-internal documents or provider records.
 - [x] **COMP-04**: A developer can integrate Afferent with Convex Auth using a documented adapter or recipe verified by an integration fixture.
@@ -114,7 +117,7 @@ Requirements for the first production-ready public release. Roadmap creation wil
 
 - [x] **QUAL-01**: Automated component tests verify domain invariants, authorization boundaries, visibility rules, voting idempotency, merges, status projections, changelog publication, and notifications.
 - [x] **QUAL-02**: Auth-conformance tests verify equivalent identity and authorization behavior for Convex Auth, Clerk, and Better Auth fixtures.
-- [x] **QUAL-03**: A clean consumer fixture can install the packed npm artifact, run Convex code generation, typecheck, and build without source-relative workspace imports.
+- [x] **QUAL-03**: A clean consumer fixture can install the locally packed npm-format artifact, run Convex code generation, typecheck, and build without source-relative workspace imports.
 - [x] **QUAL-04**: A clean consumer fixture can install registry components and build them against the supported package version range.
 - [x] **QUAL-05**: Browser tests verify the public feedback, roadmap, changelog, notification, and admin workflows against a real Convex deployment.
 - [x] **QUAL-06**: Adversarial two-user tests verify that sandbox reads, writes, search, counts, seeds, resets, and cleanup never cross visitor scopes.
@@ -124,8 +127,8 @@ Requirements for the first production-ready public release. Roadmap creation wil
   Plan 03-12 closes the `41e6b94` re-audit findings with a source-grounded anti-skip oracle, exhaustive mounted default/custom recovery matrices, twelve packed installed scenarios, and byte-identical evidence across consecutive runs.
 
 - [x] **QUAL-09**: Documentation covers installation, component mounting, all three auth integrations, access policy, headless React usage, shadcn installation, customization, testing, host-application deployment, and upgrades. Demo documentation covers local anonymous development rather than a hosted Afferent deployment.
-- [x] **QUAL-10**: The repository and published package include the Apache-2.0 license.
-- [ ] **QUAL-11**: A validated npm release publishes explicit package exports, declarations, provenance, and synchronized package, registry, and documentation versions.
+- [x] **QUAL-10**: The repository and locally packed artifact include the Apache-2.0 license.
+- [ ] **QUAL-11**: A validated source release publishes one immutable tag plus synchronized registry and documentation versions, while checksum-bound local tarball evidence proves the explicit exports and declarations from that exact source.
 
 ## v2 Requirements
 
@@ -177,6 +180,7 @@ Explicit exclusions for the first product direction, documented to prevent scope
 | Deep comment threading and social reactions               | Flat comments with reply references keep discussion and moderation focused on feedback.                     |
 | Opaque packaged design system                             | Headless APIs and copy-owned shadcn source preserve consumer styling and ownership.                         |
 | Shared mutable demo workspace                             | Private locally authenticated sandboxes prevent cross-user interference and preserve the authority model.   |
+| npm-registry package publication                         | v1 publishes tagged source plus static registry/documentation and verifies an installable local tarball.    |
 
 ## Traceability
 
@@ -234,7 +238,7 @@ Every v1 requirement maps to exactly one roadmap phase.
 | NOTF-06     | Phase 2   | Complete |
 | NOTF-07     | Phase 2   | Complete |
 | NOTF-08     | Phase 2.2 | Complete |
-| COMP-01     | Phase 4   | Pending  |
+| COMP-01     | —         | Removed  |
 | COMP-02     | Phase 1   | Complete |
 | COMP-03     | Phase 1   | Complete |
 | COMP-04     | Phase 1   | Complete |
@@ -271,11 +275,11 @@ Every v1 requirement maps to exactly one roadmap phase.
 
 **Coverage:**
 
-- v1 requirements: 84 total
-- Mapped to phases: 84
+- v1 requirements: 83 active, 1 removed
+- Mapped to phases: 83
 - Unmapped: 0 ✓
 
 ---
 
 _Requirements defined: 2026-07-15_
-_Last updated: 2026-07-15 after roadmap creation_
+_Last updated: 2026-08-07 after the Phase 4 distribution pivot_

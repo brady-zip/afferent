@@ -13,19 +13,19 @@ SaaS teams can add deeply integrated product feedback to an existing Convex appl
 ## Business Context
 
 - **Customer**: SaaS product teams already building with Convex and React
-- **Revenue model**: Open-source Apache-2.0 package; no separate Afferent SaaS subscription is required for v1
+- **Revenue model**: Open-source Apache-2.0 source release; no separate Afferent SaaS subscription is required for v1
 - **Success metric**: A team can install Afferent into an existing Convex app, connect its existing auth provider, restyle the supplied UI, and run the complete feedback-to-roadmap-to-changelog workflow
 - **Strategy notes**: Native Convex ownership is the primary promise; complete restylability and avoiding another feedback SaaS subscription are supporting benefits
 
 ## Current State
 
-Phases 1 through 3 are complete and verified. The packed Convex component supports provider-neutral trusted-host integration for Convex Auth, Clerk, and Better Auth; secure multi-board feedback; ranked and searchable discovery; participation and moderation; a status-driven roadmap; manually published linked changelog entries; in-app notifications and a host delivery outbox; and the complete framework-light headless React contract. The accessible, responsive public and admin interfaces now ship from one canonical source through mirrored examples and a deterministic shadcn registry. Phase 4 is preparing the published package, documentation, and a feature-full local demo that starts an anonymous Convex development backend without account credentials.
+Phases 1 through 3 are complete and verified. The packed Convex component supports provider-neutral trusted-host integration for Convex Auth, Clerk, and Better Auth; secure multi-board feedback; ranked and searchable discovery; participation and moderation; a status-driven roadmap; manually published linked changelog entries; in-app notifications and a host delivery outbox; and the complete framework-light headless React contract. The accessible, responsive public and admin interfaces now ship from one canonical source through mirrored examples and a deterministic shadcn registry. Phase 4 is preparing the tagged source release, public registry/documentation, and a feature-full local demo that starts an anonymous Convex development backend without account credentials.
 
 ## Requirements
 
 ### Validated
 
-- [x] Developers can install Afferent as a reusable Convex component distributed through npm. — Validated in Phase 1: Secure Installable Feedback Board.
+- [x] Developers can build and install Afferent as a reusable packed Convex component from repository source. — Validated in Phase 1: Secure Installable Feedback Board.
 - [x] A host application can connect Afferent to Convex Auth, Clerk, or the Convex Better Auth component without coupling Afferent's internal data model to a specific provider. — Validated in Phase 1.
 - [x] The host application owns authentication and admin authorization, then passes stable identity and authorization context into Afferent through typed app-level APIs. — Validated in Phase 1.
 - [x] One Afferent installation supports one product with multiple public feedback boards. — Validated in Phase 1.
@@ -40,7 +40,7 @@ Phases 1 through 3 are complete and verified. The packed Convex component suppor
 
 - [ ] A developer can clone the repository and start the complete Vite and Convex Auth example with one documented command and no Convex account, deploy key, or committed auth material.
 - [ ] Each locally signed-in demo user receives a private, seeded admin sandbox that they can modify and reset without affecting other local users.
-- [ ] The first public release includes typed APIs, automated tests, integration documentation, UI installation documentation, npm distribution, shadcn registry distribution, and the feature-full local working example.
+- [ ] The first public release includes typed APIs, automated tests, integration documentation, source-build installation documentation, a tagged Apache-2.0 source release, shadcn registry distribution, and the feature-full local working example.
 
 ### Out of Scope
 
@@ -50,6 +50,7 @@ Phases 1 through 3 are complete and verified. The packed Convex component suppor
 - Independent roadmap records — the v1 roadmap is derived from feedback posts and their workflow statuses.
 - Automatically generated changelog entries — v1 entries are written and published intentionally by administrators.
 - A shared or unauthenticated admin sandbox — mutable demo data remains isolated per locally signed-in user. The anonymous Convex development backend is credential-free infrastructure, not anonymous application authority.
+- npm-registry distribution — v1 is distributed as tagged source plus static registry/documentation; the installable tarball is built and verified locally from that source.
 
 AI duplicate detection, sentiment analysis, named third-party integrations, imports, and analytics remain later capabilities rather than v1 requirements.
 
@@ -76,8 +77,8 @@ The repository itself is also the product showcase. Its Vite example must start 
 - **Customization**: UI source must be consumer-owned and restylable — headless APIs, a shadcn registry, and mirrored repository examples are required.
 - **Demo safety**: Local admin experimentation must be isolated per authenticated user and resettable — users cannot mutate shared canonical showcase data. Anonymous Convex mode removes account credentials, not application authentication or authorization.
 - **Local bootstrap**: The demo generates JWT/JWKS material ephemerally, never commits credentials or generated `.env.local`, reports actionable prerequisite/bootstrap failures, and tears down only processes it owns.
-- **Quality**: v1 is a production-ready public package rather than a prototype — typed boundaries, tests, documentation, packaging, local real-Convex verification, and adopter deployment guidance are release requirements.
-- **License**: Repository code and public packages use Apache-2.0.
+- **Quality**: v1 is a production-ready public source release rather than a prototype — typed boundaries, tests, documentation, local packaging, local real-Convex verification, and adopter deployment guidance are release requirements.
+- **License**: Repository code and locally packed artifacts use Apache-2.0.
 
 ## Key Decisions
 
@@ -92,6 +93,7 @@ The repository itself is also the product showcase. Its Vite example must start 
 | Ship headless React plus copyable shadcn source | Gives consumers a fast polished start while preserving full styling and ownership | ✓ Validated in Phase 3 |
 | Publish UI through both a shadcn registry and repository examples | Supports convenient installation and transparent reference implementations | ✓ Validated in Phase 3 |
 | Keep the Vite React example local rather than publicly hosted | Delivers a credential-free clone-and-run evaluator path without operating a public demo service; the accepted tradeoff is that evaluators install the repository toolchain | Locked 2026-07-30 |
+| Keep npm-registry publication out of v1 | Ships source, registry, and documentation without claiming or publishing an npm package; local tarball gates preserve installability | Locked 2026-08-07 |
 | Use a Vite React app for the local example | Demonstrates a simple client-side integration without tying the component to a full-stack React framework | — Pending |
 | Use Convex Auth in the local example | Keeps the canonical demo within the Convex ecosystem while other auth providers remain documented and tested integrations | — Pending |
 | Provide private per-user demo sandboxes | Enables safe hands-on admin evaluation without shared-state vandalism or browser-session cleanup complexity | — Pending |
@@ -119,4 +121,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-30 after the Phase 4 local-demo scope pivot*
+*Last updated: 2026-08-07 after the Phase 4 distribution pivot*

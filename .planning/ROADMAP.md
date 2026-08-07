@@ -17,7 +17,7 @@ Afferent reaches its first public release through four coarse vertical slices. T
 - [x] **Phase 2.2: Notification Navigation Target Contract** - Project versioned, public, accessible notification destinations without exposing polymorphic internal identifiers. (INSERTED) (completed 2026-07-21)
 - [x] **Phase 2.3: Admin Read and Projection Completion** - Complete server-authorized admin reads and presentation-ready moderation, changelog, and activity projections. (INSERTED) (completed 2026-07-21)
 - [x] **Phase 3: Source-Owned Product Interface** - Source-owned public and admin interfaces, deterministic distribution, and exhaustive accessibility/recovery evidence are complete. (completed 2026-07-22)
-- [ ] **Phase 4: Local Production Release** - The published package, registry, documentation, and clone-and-run local demo work together against real anonymous Convex.
+- [ ] **Phase 4: Local Production Release** - The tagged source, registry, documentation, locally packed component, and clone-and-run local demo work together against real anonymous Convex.
 
 ## Phase Details
 
@@ -305,17 +305,17 @@ Plans:
 
 ### Phase 4: Local Production Release
 
-**Goal:** Adopters can install the production artifacts and evaluate the complete integration by cloning the repository and launching one credential-free local Afferent application against a real anonymous Convex development backend.
+**Goal:** Adopters can build and install the production artifact from tagged source, use the public registry/documentation, and evaluate the complete integration by launching one credential-free local Afferent application against a real anonymous Convex development backend.
 **Mode:** mvp
 **Depends on:** Phase 3
-**Requirements:** COMP-01, DEMO-02, DEMO-03, DEMO-04, DEMO-05, DEMO-06, DEMO-07, DEMO-08, QUAL-05, QUAL-06, QUAL-09, QUAL-11
+**Requirements:** DEMO-02, DEMO-03, DEMO-04, DEMO-05, DEMO-06, DEMO-07, DEMO-08, QUAL-05, QUAL-06, QUAL-09, QUAL-11
 **Success Criteria** (what must be TRUE):
 
 1. From a clean clone, one documented command prepares the packed-package and generated-registry example, generates ephemeral local auth material, starts a real anonymous Convex backend plus Vite, seeds representative content, and requires no Convex account or deploy key.
 2. The immutable showcase is browsable while signed out; each locally authenticated user can complete and deterministically reset a private admin sandbox backed by a separate component instance whose trusted host derives scope without accepting it from browser arguments.
 3. Sandbox quotas, rate limits, expiry, and cleanup remain complete and bounded, and adversarial two-user tests prove that reads, writes, search, counts, seeds, resets, and cleanup never cross user scopes.
 4. Browser tests run the feedback, roadmap, changelog, notification, and admin workflows against real local Convex using the exact artifacts consumers install, including keyboard, axe, responsive, and lifecycle gates.
-5. Documentation covers local-demo operation plus adopter installation through upgrades for all supported auth and UI paths, and a validated npm release publishes exports, declarations, provenance, and synchronized package, registry, and documentation versions.
+5. Documentation covers local-demo operation plus source-build adopter installation through upgrades for all supported auth and UI paths, and a validated source release publishes one immutable tag with synchronized registry/docs while exact local tarball evidence proves exports and declarations.
 
 **Plans:** 8/9 plans executed
 
@@ -359,11 +359,11 @@ Plans:
 
 **Wave 8** _(blocked on Wave 7 completion)_
 
-- [x] `04-08-PLAN.md` — Synchronize Changesets/versioned artifacts and build drift-proof CI plus npm OIDC/provenance release automation without demo deployment infrastructure.
+- [x] `04-08-PLAN.md` — Synchronize Changesets/versioned artifacts and build drift-proof CI plus the initial release automation; its npm path is retired by the 2026-08-07 distribution pivot.
 
-**Wave 9** _(human-present package release; blocked on Wave 8 completion)_
+**Wave 9** _(human-present source/static release; blocked on Wave 8 completion)_
 
-- [ ] `04-09-PLAN.md` — Confirm GitHub/npm ownership, publish and verify npm plus registry/docs, and close tag/provenance/release evidence without deploying the demo.
+- [ ] `04-09-PLAN.md` — Remove npm publication from v1, confirm GitHub ownership, publish and verify the source tag plus registry/docs, and close exact release evidence without deploying the demo.
 
 **UI hint**: yes
 

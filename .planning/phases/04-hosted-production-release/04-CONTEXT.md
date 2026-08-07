@@ -11,12 +11,12 @@
 <domain>
 ## Phase Boundary
 
-Ship the first public Afferent package as one coherent, installable proof: a
+Ship the first public Afferent source release as one coherent, installable proof: a
 clone-and-run Vite + Convex Auth application on an anonymous local Convex
 development backend, an immutable signed-out showcase, authenticated private
 admin sandboxes, complete installation and operations documentation, local
-real-Convex browser verification, and synchronized npm, shadcn registry, and
-documentation artifacts.
+real-Convex browser verification, a locally packed component, and synchronized
+source tag, shadcn registry, and documentation artifacts.
 
 This phase hardens and publishes the component, headless bindings, and canonical
 source-owned UI completed in Phases 1–3. It does not add a second product model,
@@ -169,50 +169,45 @@ Afferent SaaS.
 
 ### Release and version synchronization
 
-- **D-24:** The initial public package remains the unscoped npm package
-  `afferent` at `0.1.0`; the name was still unregistered when checked during
-  discussion. Recheck ownership immediately before release, and do not silently
-  rename the package if availability changes.
-- **D-25:** Use a Changesets-managed version/changelog flow and a GitHub-hosted
-  release workflow with npm trusted publishing/OIDC, `id-token: write`,
-  `--access public`, and provenance. Long-lived `NPM_TOKEN` publication is not
-  the production path.
-- **D-26 (updated 2026-07-30):** Publication is tag/commit coherent. The npm
-  package, generated registry catalog/items, docs, source examples, release
-  notes, and compatibility metadata all identify the same package version and
+- **D-24 (updated 2026-08-07):** npm-registry publication is removed from v1.
+  Do not claim the unscoped `afferent` name, bootstrap a placeholder, register a
+  trusted publisher, or publish a package. Future npm distribution requires a
+  new milestone decision.
+- **D-25 (updated 2026-08-07):** Use Changesets only to version the private
+  source package and changelog. The root manifest is `private: true`, has no
+  `publishConfig`, and remains locally packable for exact clean-consumer proof.
+- **D-26 (updated 2026-08-07):** Publication is tag/commit coherent. The local
+  tarball evidence, generated registry catalog/items, docs, source examples,
+  release notes, and compatibility metadata all identify the same version and
   source commit. The local demo is compatibility-tested from that source but is
-  not a separately deployed or badged version surface. CI fails on generated
-  drift or version disagreement.
-- **D-27 (updated 2026-07-30):** Release order is verify candidate → publish npm
-  with provenance → publish the static registry/docs → verify the public
-  package, registry, docs, tag, and provenance. No demo deployment or public-URL
-  smoke step exists. A failed downstream step leaves an explicit failed release
-  state and supports idempotent rerun; it must not quietly present mixed
-  versions as a successful release.
-- **D-28:** Before publication, add and validate canonical public repository,
-  homepage, issue tracker, license, funding/author if applicable, and source
-  provenance metadata. Configure the exact public GitHub repository/workflow as
-  npm's trusted publisher and the exact static registry/docs publication
-  settings. Account ownership and secret values remain operator configuration,
-  not repository defaults.
-- **D-29:** Fast-moving versions and platform APIs from the July 2026 research
+  not a separately deployed or badged version surface.
+- **D-27 (updated 2026-08-07):** Release order is verify candidate → verify exact
+  source tag and GitHub configuration → publish the static registry/docs →
+  verify the public tag, registry, docs, manifest, and tagged local acceptance.
+  No npm or demo deployment step exists. A failed downstream step leaves an
+  explicit failed release state and supports idempotent rerun.
+- **D-28 (updated 2026-08-07):** Before publication, validate the canonical
+  public repository, homepage, issue tracker, license, source identity, Pages
+  environment, and exact static registry/docs settings. Account ownership and
+  employer/IP authorization remain operator configuration, not repository
+  defaults.
+- **D-29 (updated 2026-08-07):** Fast-moving versions and platform APIs from the July 2026 research
   are compatibility snapshots. Planning/release work must revalidate Convex,
   Convex Auth, Clerk, Better Auth, shadcn, local anonymous Convex development,
-  adopter Convex deployment, Node/npm, and trusted-publishing requirements,
+  adopter Convex deployment, Node/npm source-build tooling, and GitHub Pages,
   then pin one tested matrix rather than upgrading opportunistically.
-- **D-30:** Treat `afferent/test` as an intentional testing-only public export,
+- **D-30 (updated 2026-08-07):** Treat `afferent/test` as an intentional testing-only packed export,
   not an accidental raw-source escape hatch. Phase 4 must choose and document a
   Convex-compatible packaged form, supply usable declarations, and prove the
   export from the packed artifact; if the Convex test registration mechanism
   requires source modules, that exception must be explicit and validated rather
   than leaving `"./test": "./src/test.ts"` as an unexamined release gap.
-- **D-31 (updated 2026-07-30):** GitHub release/static-site permissions and npm
-  trusted-publisher configuration are operator-provisioned external
-  prerequisites. Repository work must provide deterministic local gates, exact
-  setup documentation, and fail-closed human-present package-release
-  checkpoints. The demo itself has no live Convex/Vercel prerequisite. Agents
-  must not fabricate credentials or mark publication/provenance complete from
-  an offline package simulation.
+- **D-31 (updated 2026-08-07):** GitHub repository and static-site permissions
+  are operator-provisioned external prerequisites. Repository work must provide
+  deterministic local gates, exact setup documentation, and fail-closed
+  human-present release checkpoints. The demo has no live Convex/Vercel
+  prerequisite. Agents must not fabricate authorization or mark source/Pages
+  publication complete from an offline simulation.
 
 ### the agent's Discretion
 
@@ -237,12 +232,15 @@ Afferent SaaS.
 
 - `.planning/PROJECT.md` — Product boundary, current Phase 1–3 completion state,
   local-example direction, and non-negotiable security/distribution decisions.
-- `.planning/REQUIREMENTS.md` — Locked COMP-01, DEMO-02 through DEMO-08,
-  QUAL-05, QUAL-06, QUAL-09, and QUAL-11 acceptance requirements; DEMO-01 is
-  historical and superseded.
+- `.planning/REQUIREMENTS.md` — Retired COMP-01 plus locked DEMO-02 through
+  DEMO-08, QUAL-05, QUAL-06, QUAL-09, and revised QUAL-11 acceptance
+  requirements; DEMO-01 is historical and superseded.
 - `.planning/phases/04-hosted-production-release/04-SCOPE-PIVOT.md` — The
   authoritative hosted-to-local change, terminology, preserved gates, and
   remaining-plan impact.
+- `.planning/phases/04-hosted-production-release/04-DISTRIBUTION-PIVOT.md` — The
+  authoritative removal of npm publication from v1 and preserved local package
+  proof.
 - `.planning/ROADMAP.md` — Phase 4 goal, success criteria, dependency order, and
   requirement traceability.
 - `.planning/research/SUMMARY.md` — Phase 4 release synthesis and the
