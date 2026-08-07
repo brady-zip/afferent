@@ -71,22 +71,6 @@ export function validateRuntimeFloor(runtime) {
   }
 }
 
-export function validateNpmNameResult(result) {
-  if (result.status === "available-at-check-time") return result;
-  const repository = repositoryFromMetadata(result.repository);
-  if (
-    result.status !== "published" ||
-    result.name !== requiredIdentity.name ||
-    result.version !== requiredIdentity.version ||
-    repository !== requiredIdentity.repository
-  ) {
-    throw new Error(
-      "npm package ownership or version drift detected for afferent; do not rename or publish",
-    );
-  }
-  return result;
-}
-
 function exportTargets(exports) {
   return Object.values(exports).flatMap((entry) => {
     if (typeof entry === "string") return [entry];
@@ -102,7 +86,7 @@ export function validatePackageCandidate({ manifest, packedFiles, registry }) {
     "homepage",
     "bugs",
     "engines",
-    "publishConfig",
+    "private",
   ]) {
     if (!manifest[field])
       throw new Error(`package metadata is missing ${field}`);
@@ -124,6 +108,11 @@ export function validatePackageCandidate({ manifest, packedFiles, registry }) {
   if (!manifest.homepage || !manifest.bugs?.url) {
     throw new Error("package homepage and bugs metadata are required");
   }
+  if (manifest.private !== true || manifest.publishConfig !== undefined) {
+    throw new Error(
+      "package must remain private with no npm publishConfig in v1",
+    );
+  }
   const repositoryUrl = `https://github.com/${requiredIdentity.repository}`;
   if (
     manifest.homepage !== `${repositoryUrl}#readme` ||
@@ -137,13 +126,9 @@ export function validatePackageCandidate({ manifest, packedFiles, registry }) {
     manifest.engines.node !== `>=${runtimeFloor.node}` ||
     manifest.engines.npm !== `>=${runtimeFloor.npm}`
   ) {
-    throw new Error("package engines must pin the trusted-publishing floor");
-  }
-  if (
-    manifest.publishConfig.access !== "public" ||
-    manifest.publishConfig.provenance !== true
-  ) {
-    throw new Error("package publishConfig must require public provenance");
+    throw new Error(
+      "package engines must pin the source-build toolchain floor",
+    );
   }
   if (JSON.stringify(manifest.files) !== JSON.stringify(["dist", "LICENSE"])) {
     throw new Error(
@@ -176,34 +161,6 @@ export function validatePackageCandidate({ manifest, packedFiles, registry }) {
     ) {
       throw new Error(`tarball contains forbidden repository file ${path}`);
     }
-  }
-}
-
-async function npmVersion() {
-  const result = await run("npm", ["--version"]);
-  return result.stdout.trim();
-}
-
-async function npmNamePreflight() {
-  try {
-    const result = await run("npm", [
-      "view",
-      requiredIdentity.name,
-      "name",
-      "version",
-      "repository",
-      "--json",
-    ]);
-    return validateNpmNameResult({
-      status: "published",
-      ...JSON.parse(result.stdout),
-    });
-  } catch (error) {
-    const output = error instanceof Error ? error.message : String(error);
-    if (/\bE404\b|404 Not Found/.test(output)) {
-      return validateNpmNameResult({ status: "available-at-check-time" });
-    }
-    throw error;
   }
 }
 
@@ -264,7 +221,7 @@ async function verifyOfflineCandidate() {
       { cwd: repositoryRoot },
     );
     return {
-      artifact: `${manifest.name}@${manifest.version}`,
+      localArtifact: `${manifest.name}@${manifest.version}`,
       files: packed.files.length,
       registry: registryCatalog.name,
       tarball: "<temporary>/afferent-0.1.0.tgz",
@@ -276,13 +233,6 @@ async function verifyOfflineCandidate() {
 
 async function main() {
   const result = await verifyOfflineCandidate();
-  if (process.argv.includes("--online-preflight")) {
-    validateRuntimeFloor({
-      node: process.versions.node,
-      npm: await npmVersion(),
-    });
-    result.npmName = await npmNamePreflight();
-  }
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
 }
 

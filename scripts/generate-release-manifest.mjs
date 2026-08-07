@@ -96,6 +96,14 @@ export async function loadReleaseIdentity(
   if (packageManifest.name !== "afferent") {
     throw new Error("release package name must remain afferent");
   }
+  if (
+    packageManifest.private !== true ||
+    packageManifest.publishConfig !== undefined
+  ) {
+    throw new Error(
+      "release package must remain private with no npm publishConfig",
+    );
+  }
   if (!semverPattern.test(packageManifest.version)) {
     throw new Error("release package version must be exact semver");
   }
@@ -133,6 +141,17 @@ export function validateReleaseManifest(manifest, expectedIdentity) {
   if (!expectedIdentity?.repository || !expectedIdentity.releaseWorkflow) {
     throw new Error("declared release identity is required");
   }
+  if (
+    manifest.schemaVersion !== 2 ||
+    manifest.distribution?.packagePublication !==
+      plannedReleasePolicy.packagePublication ||
+    manifest.distribution?.sourcePublication !==
+      plannedReleasePolicy.sourcePublication ||
+    manifest.distribution?.staticPublication !==
+      plannedReleasePolicy.staticPublication
+  ) {
+    throw new Error("release manifest distribution policy is invalid");
+  }
   const version = manifest.package?.version;
   if (!semverPattern.test(version ?? "")) {
     throw new Error("release manifest package version is invalid");
@@ -147,6 +166,7 @@ export function validateReleaseManifest(manifest, expectedIdentity) {
     throw new Error("release manifest source tag does not match package");
   }
   if (
+    manifest.package?.publication !== plannedReleasePolicy.packagePublication ||
     !sha256Pattern.test(manifest.package?.sha256 ?? "") ||
     !sha256Pattern.test(manifest.registry?.sha256 ?? "")
   ) {
@@ -212,12 +232,18 @@ export async function createReleaseManifest({
     );
   const registry = await digestRegistry(repositoryRoot);
   const body = {
-    schemaVersion: 1,
+    schemaVersion: 2,
+    distribution: {
+      packagePublication: plannedReleasePolicy.packagePublication,
+      sourcePublication: plannedReleasePolicy.sourcePublication,
+      staticPublication: plannedReleasePolicy.staticPublication,
+    },
     documentation: {
       version: identity.docsVersion,
     },
     package: {
       name: identity.packageName,
+      publication: plannedReleasePolicy.packagePublication,
       sha256: sha256(await readFile(tarball)),
       tarball: basename(tarball),
       version: identity.version,

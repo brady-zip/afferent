@@ -26,16 +26,18 @@ export function validatePackageSurface(manifest) {
   if (
     manifest.name !== "afferent" ||
     manifest.version !== "0.1.0" ||
-    manifest.private === true
+    manifest.private !== true
   ) {
-    throw new Error("release must remain a public package: afferent@0.1.0");
+    throw new Error(
+      "release must remain a private local package: afferent@0.1.0",
+    );
   }
   if (
     manifest.license !== "Apache-2.0" ||
     manifest.repository?.type !== "git" ||
     !repository
   ) {
-    throw new Error("public package license or repository identity drifted");
+    throw new Error("local package license or repository identity drifted");
   }
   const repositoryUrl = `https://github.com/${repository}`;
   if (
@@ -46,11 +48,8 @@ export function validatePackageSurface(manifest) {
       "package homepage or issue tracker does not match repository",
     );
   }
-  if (
-    manifest.publishConfig?.access !== "public" ||
-    manifest.publishConfig?.provenance !== true
-  ) {
-    throw new Error("public package provenance settings are incomplete");
+  if (manifest.publishConfig !== undefined) {
+    throw new Error("private local package must not define npm publishConfig");
   }
   if (
     manifest.packageManager !== "npm@11.15.0" ||
@@ -62,10 +61,10 @@ export function validatePackageSurface(manifest) {
     manifest.engines?.node !== ">=22.14.0" ||
     manifest.engines?.npm !== ">=11.5.1"
   ) {
-    throw new Error("published package runtime floors have drifted");
+    throw new Error("source-build package runtime floors have drifted");
   }
   if (JSON.stringify(manifest.files) !== JSON.stringify(exactPackageFiles)) {
-    throw new Error("public package files allowlist has drifted");
+    throw new Error("local package files allowlist has drifted");
   }
   for (const target of exportedTargets(manifest.exports)) {
     if (
@@ -135,12 +134,12 @@ export function validateVersionSurfaces({
 
 function validateChangesetsConfig(config) {
   if (
-    config.access !== "public" ||
+    config.access !== "restricted" ||
     config.baseBranch !== "main" ||
-    config.privatePackages?.version !== false ||
+    config.privatePackages?.version !== true ||
     config.privatePackages?.tag !== false
   ) {
-    throw new Error("Changesets must target one public package");
+    throw new Error("Changesets must version one private source package");
   }
 }
 
@@ -207,7 +206,7 @@ async function main() {
     `${JSON.stringify(
       {
         status: "verified",
-        package: `${identity.packageName}@${identity.version}`,
+        localPackage: `${identity.packageName}@${identity.version}`,
         repository: identity.repository,
         sourceTag: identity.sourceTag,
       },

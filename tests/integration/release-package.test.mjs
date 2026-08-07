@@ -3,7 +3,6 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import {
-  validateNpmNameResult,
   validatePackageCandidate,
   validateRuntimeFloor,
 } from "../../scripts/verify-package-release.mjs";
@@ -15,6 +14,7 @@ const declaredPackageManifest = JSON.parse(
 const manifest = {
   name: "afferent",
   version: "0.1.0",
+  private: true,
   description: "A provider-neutral product feedback Convex component.",
   license: "Apache-2.0",
   type: "module",
@@ -23,7 +23,6 @@ const manifest = {
   homepage: declaredPackageManifest.homepage,
   bugs: structuredClone(declaredPackageManifest.bugs),
   engines: { node: ">=22.14.0", npm: ">=11.5.1" },
-  publishConfig: { access: "public", provenance: true },
   exports: {
     ".": {
       types: "./dist/client/index.d.ts",
@@ -65,7 +64,7 @@ test("package candidate requires exact metadata and existing export targets", ()
     "homepage",
     "bugs",
     "engines",
-    "publishConfig",
+    "private",
   ]) {
     const invalid = structuredClone(manifest);
     delete invalid[field];
@@ -79,6 +78,28 @@ test("package candidate requires exact metadata and existing export targets", ()
       new RegExp(field),
     );
   }
+
+  assert.throws(
+    () =>
+      validatePackageCandidate({
+        manifest: { ...manifest, private: false },
+        packedFiles: files,
+        registry: { name: "afferent", compatibleVersion: "0.1.0" },
+      }),
+    /private/,
+  );
+  assert.throws(
+    () =>
+      validatePackageCandidate({
+        manifest: {
+          ...manifest,
+          publishConfig: { access: "public", provenance: true },
+        },
+        packedFiles: files,
+        registry: { name: "afferent", compatibleVersion: "0.1.0" },
+      }),
+    /publishConfig/,
+  );
 
   assert.throws(
     () =>
@@ -117,7 +138,7 @@ test("package candidate rejects raw source publication and raw TypeScript export
   );
 });
 
-test("trusted publishing runtime floor is explicit", () => {
+test("source-build runtime floor is explicit", () => {
   assert.doesNotThrow(() =>
     validateRuntimeFloor({ node: "22.14.0", npm: "11.5.1" }),
   );
@@ -128,29 +149,5 @@ test("trusted publishing runtime floor is explicit", () => {
   assert.throws(
     () => validateRuntimeFloor({ node: "22.14.0", npm: "11.4.9" }),
     /npm 11\.5\.1/,
-  );
-});
-
-test("npm name preflight accepts only availability or the canonical release", () => {
-  assert.doesNotThrow(() =>
-    validateNpmNameResult({ status: "available-at-check-time" }),
-  );
-  assert.doesNotThrow(() =>
-    validateNpmNameResult({
-      status: "published",
-      name: "afferent",
-      version: "0.1.0",
-      repository: declaredPackageManifest.repository,
-    }),
-  );
-  assert.throws(
-    () =>
-      validateNpmNameResult({
-        status: "published",
-        name: "afferent",
-        version: "9.9.9",
-        repository: "https://example.invalid/occupied.git",
-      }),
-    /ownership or version drift/,
   );
 });

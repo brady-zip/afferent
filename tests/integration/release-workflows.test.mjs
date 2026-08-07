@@ -1,9 +1,22 @@
-import { readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import {
+  cp,
+  mkdir,
+  mkdtemp,
+  readFile,
+  readdir,
+  rm,
+  writeFile,
+} from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test } from "vitest";
 
-import { repositoryFromMetadata } from "../../scripts/generate-release-manifest.mjs";
+import {
+  createReleaseManifest,
+  repositoryFromMetadata,
+} from "../../scripts/generate-release-manifest.mjs";
 import { plannedReleasePolicy } from "../../scripts/release-policy.mjs";
 import {
   validateArtifactActionCompatibility,
@@ -12,6 +25,8 @@ import {
   validateCiWorkflow,
   validateExternalConfiguration,
   validateReleaseWorkflow,
+  preparePagesSite,
+  verifyPublishedStatic,
 } from "../../scripts/verify-release-candidate.mjs";
 
 const repositoryRoot = new URL("../..", import.meta.url).pathname;
@@ -22,7 +37,7 @@ const declaredRepository = repositoryFromMetadata(packageManifest.repository);
 
 const sha = "a".repeat(64);
 const candidateRecord = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   artifactName: "afferent-release-candidate-0.1.0",
   source: {
     commit: "b".repeat(40),
@@ -30,6 +45,7 @@ const candidateRecord = {
   },
   package: {
     name: "afferent",
+    publication: "none",
     version: "0.1.0",
     tarball: "package/afferent-0.1.0.tgz",
     sha256: sha,
@@ -65,6 +81,114 @@ const ciRunMetadata = {
     full_name: declaredRepository,
   },
 };
+
+const temporaryRoots = [];
+
+afterEach(async () => {
+  await Promise.all(
+    temporaryRoots
+      .splice(0)
+      .map((path) => rm(path, { force: true, recursive: true })),
+  );
+});
+
+function digest(value) {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+async function filesUnder(directory) {
+  const entries = await readdir(directory, { withFileTypes: true });
+  const nested = await Promise.all(
+    entries.map(async (entry) => {
+      const path = join(directory, entry.name);
+      return entry.isDirectory() ? filesUnder(path) : [path];
+    }),
+  );
+  return nested.flat().sort();
+}
+
+async function createFinalCandidate() {
+  const temporaryRoot = await mkdtemp(join(tmpdir(), "afferent-static-test-"));
+  temporaryRoots.push(temporaryRoot);
+  const candidateRoot = join(temporaryRoot, "release-candidate-fixture");
+  const tarball = join(candidateRoot, "package/afferent-0.1.0.tgz");
+  await Promise.all([
+    mkdir(join(candidateRoot, "docs"), { recursive: true }),
+    mkdir(join(candidateRoot, "evidence"), { recursive: true }),
+    mkdir(join(candidateRoot, "package"), { recursive: true }),
+  ]);
+  await Promise.all([
+    cp(join(repositoryRoot, "registry"), join(candidateRoot, "registry"), {
+      recursive: true,
+    }),
+    writeFile(join(candidateRoot, "docs/index.html"), "<h1>Afferent</h1>"),
+    writeFile(tarball, "local package only"),
+  ]);
+  const manifest = await createReleaseManifest({
+    repositoryRoot,
+    sourceCommit: "b".repeat(40),
+    sourceDateEpoch: 1_700_000_000,
+    tarball,
+  });
+  await writeFile(
+    join(candidateRoot, "release-manifest.json"),
+    `${JSON.stringify(manifest, null, 2)}\n`,
+  );
+  const phase4 = {
+    schemaVersion: 1,
+    status: "complete",
+    backendKind: "local-real-convex",
+    artifactDigest: manifest.package.sha256,
+    sourceCommit: manifest.source.commit,
+  };
+  await writeFile(
+    join(candidateRoot, "evidence/phase4.json"),
+    `${JSON.stringify(phase4, null, 2)}\n`,
+  );
+  const candidateFiles = await filesUnder(candidateRoot);
+  const artifactPaths = candidateFiles.map((path) =>
+    path.slice(candidateRoot.length + 1),
+  );
+  const artifacts = await Promise.all(
+    artifactPaths.map(async (path) => ({
+      path,
+      sha256: digest(await readFile(join(candidateRoot, path))),
+    })),
+  );
+  const record = {
+    ...candidateRecord,
+    artifacts,
+    evidence: {
+      checksums: "checksums.sha256",
+      phase4: "evidence/phase4.json",
+      phase4Status: "complete",
+    },
+    package: {
+      ...candidateRecord.package,
+      sha256: manifest.package.sha256,
+    },
+    source: {
+      ...candidateRecord.source,
+      commit: manifest.source.commit,
+    },
+  };
+  await writeFile(
+    join(candidateRoot, "candidate.json"),
+    `${JSON.stringify(record, null, 2)}\n`,
+  );
+  const checksumFiles = await filesUnder(candidateRoot);
+  const checksumLines = await Promise.all(
+    checksumFiles.map(async (path) => {
+      const candidatePath = path.slice(candidateRoot.length + 1);
+      return `${digest(await readFile(path))}  ${candidatePath}`;
+    }),
+  );
+  await writeFile(
+    join(candidateRoot, "checksums.sha256"),
+    `${checksumLines.join("\n")}\n`,
+  );
+  return { candidateRoot, temporaryRoot };
+}
 
 describe("release workflow contracts", () => {
   test("CI is least-privilege, immutable, bounded, and dependency ordered", async () => {
@@ -117,6 +241,62 @@ describe("release workflow contracts", () => {
         source: { ...candidateRecord.source, tag: "v9.9.9" },
       }),
     ).toThrow(/tag|version/iu);
+    expect(() =>
+      validateCandidateRecord({
+        ...candidateRecord,
+        package: { ...candidateRecord.package, publication: "npm" },
+      }),
+    ).toThrow(/package tag|version/iu);
+  });
+
+  test("Pages publishes exact static bytes and never the local tarball", async () => {
+    const { candidateRoot, temporaryRoot } = await createFinalCandidate();
+    const output = join(temporaryRoot, "pages-site-fixture");
+    const prepared = await preparePagesSite(candidateRoot, output);
+    const outputFiles = await filesUnder(prepared.outputRoot);
+    const publicPaths = outputFiles.map((path) =>
+      path.slice(prepared.outputRoot.length + 1),
+    );
+    expect(publicPaths).toContain("release.json");
+    expect(publicPaths).toContain("release-manifest.json");
+    expect(publicPaths).toContain("registry.json");
+    expect(publicPaths.some((path) => path.endsWith(".tgz"))).toBe(false);
+
+    const fetchStatic = async (input) => {
+      const url = new URL(input);
+      const prefix = "/afferent/";
+      if (!url.pathname.startsWith(prefix)) {
+        return new Response(null, { status: 404 });
+      }
+      const path = decodeURIComponent(url.pathname.slice(prefix.length));
+      try {
+        return new Response(await readFile(join(prepared.outputRoot, path)), {
+          status: 200,
+        });
+      } catch {
+        return new Response(null, { status: 404 });
+      }
+    };
+    await expect(
+      verifyPublishedStatic(candidateRoot, "https://example.test/afferent/", {
+        attempts: 1,
+        delayMs: 0,
+        fetchImpl: fetchStatic,
+      }),
+    ).resolves.toMatchObject({
+      baseUrl: "https://example.test/afferent/",
+    });
+
+    await expect(
+      verifyPublishedStatic(candidateRoot, "https://example.test/afferent/", {
+        attempts: 1,
+        delayMs: 0,
+        fetchImpl: async (input) =>
+          new URL(input).pathname.endsWith(".tgz")
+            ? new Response("leaked", { status: 200 })
+            : fetchStatic(input),
+      }),
+    ).rejects.toThrow(/local package artifact was published unexpectedly/iu);
   });
 
   test("package exposes the local release-candidate verifier", async () => {
@@ -128,7 +308,7 @@ describe("release workflow contracts", () => {
     );
   });
 
-  test("release publication is manual, protected, OIDC-only, and artifact preserving", async () => {
+  test("source and static publication is manual, protected, and artifact preserving", async () => {
     const [ciSource, releaseSource] = await Promise.all([
       readFile(join(repositoryRoot, ".github/workflows/ci.yml"), "utf8"),
       readFile(
@@ -145,16 +325,20 @@ describe("release workflow contracts", () => {
     expect(() =>
       validateArtifactActionCompatibility(ciSource, releaseSource),
     ).not.toThrow();
+    expect(releaseSource).toContain("inputs.allow_release == true");
     expect(releaseSource).toContain(
-      'npm publish "$RUNNER_TEMP/release-candidate/package/afferent-0.1.0.tgz" --access public --provenance',
+      "npm run verify:release-candidate -- --prepare-pages",
     );
-    expect(releaseSource).toContain("npm audit signatures");
+    expect(releaseSource).toContain(
+      'npm run verify:release-candidate -- --public-static "$AFFERENT_PUBLIC_BASE_URL"',
+    );
+    expect(releaseSource).toContain("actions/deploy-pages@");
     expect(releaseSource).toContain(
       'gh api --method GET "repos/$GITHUB_REPOSITORY/actions/runs/$AFFERENT_CI_RUN_ID"',
     );
     expect(releaseSource).not.toContain("registry-url:");
     expect(releaseSource).not.toMatch(
-      /NODE_AUTH_TOKEN|NPM_TOKEN|convex deploy|vercel|test:e2e:phase4:remote/iu,
+      /npm\s+(?:stage\s+)?publish|npm audit signatures|NODE_AUTH_TOKEN|NPM_TOKEN|convex deploy|vercel|test:e2e:phase4:remote/iu,
     );
   });
 
@@ -219,13 +403,13 @@ describe("release workflow contracts", () => {
       validateReleaseWorkflow(
         source.replace(
           "version: npm run version:packages",
-          "publish: npm publish\n          version: npm run version:packages",
+          "publish: npm run version:packages\n          version: npm run version:packages",
         ),
       ),
     ).toThrow(/Changesets.*publish/iu);
   });
 
-  test("release validation rejects missing OIDC and reordered static publication", async () => {
+  test("release validation rejects missing Pages OIDC and reordered static publication", async () => {
     const source = await readFile(
       join(repositoryRoot, ".github/workflows", plannedReleasePolicy.workflow),
       "utf8",
@@ -235,12 +419,15 @@ describe("release workflow contracts", () => {
       validateReleaseWorkflow(
         source.replace("id-token: write", "id-token: none"),
       ),
-    ).toThrow(/OIDC|id-token/iu);
+    ).toThrow(/OIDC|id-token|permissions/iu);
     expect(() =>
       validateReleaseWorkflow(
-        source.replace("needs: verify-public-npm", "needs: release-readiness"),
+        source.replace("needs: prepare-static", "needs: release-readiness"),
       ),
-    ).toThrow(/dependency|public npm|publication/iu);
+    ).toThrow(/dependency|prepared candidate|publication/iu);
+    expect(() =>
+      validateReleaseWorkflow(`${source}\n# npm publish is forbidden\n`),
+    ).toThrow(/forbidden|publication/iu);
   });
 
   test("external release configuration fails closed outside the protected workflow", () => {
@@ -255,7 +442,8 @@ describe("release workflow contracts", () => {
         workflowRef: `${declaredRepository}/.github/workflows/${plannedReleasePolicy.workflow}@refs/heads/${plannedReleasePolicy.branch}`,
         runnerEnvironment: "github-hosted",
         releaseOwner: declaredRepository,
-        trustedPublisher: `${declaredRepository}:${plannedReleasePolicy.workflow}:${plannedReleasePolicy.npmEnvironment}:${plannedReleasePolicy.trustedPublisherPermission}`,
+        repositoryVisibility: "public",
+        packagePublication: "none",
         staticPublication: plannedReleasePolicy.staticPublication,
         approvedTag: `v${packageManifest.version}`,
       }),
@@ -269,7 +457,8 @@ describe("release workflow contracts", () => {
         workflowRef: `${declaredRepository}/.github/workflows/${plannedReleasePolicy.workflow}@refs/heads/${plannedReleasePolicy.branch}`,
         runnerEnvironment: "github-hosted",
         releaseOwner: declaredRepository,
-        trustedPublisher: `${declaredRepository}:${plannedReleasePolicy.workflow}:${plannedReleasePolicy.npmEnvironment}:${plannedReleasePolicy.trustedPublisherPermission}`,
+        repositoryVisibility: "public",
+        packagePublication: "none",
         staticPublication: plannedReleasePolicy.staticPublication,
         approvedTag: `v${packageManifest.version}`,
       }),
@@ -290,24 +479,22 @@ describe("release workflow contracts", () => {
     );
   });
 
-  test("release runbook records first-package bootstrap and action compatibility", async () => {
+  test("release runbook records the no-npm source and Pages boundary", async () => {
     const source = await readFile(
       join(repositoryRoot, "docs/operations/releases.md"),
       "utf8",
     );
 
-    expect(source).toMatch(/0\.0\.0-bootstrap\.0/iu);
-    expect(source).toMatch(/--tag bootstrap/iu);
-    expect(source).toContain(
-      `--${plannedReleasePolicy.trustedPublisherPermission}`,
-    );
+    expect(source).toMatch(/package publication[\s\S]*none/iu);
+    expect(source).toMatch(/private:\s*true/iu);
+    expect(source).toMatch(/npm pack --ignore-scripts/iu);
+    expect(source).toMatch(/immutable GitHub tag `v0\.1\.0`/iu);
+    expect(source).toMatch(/github-pages/iu);
+    expect(source).toMatch(/no `\.tgz` file|no \.tgz file/iu);
     expect(source).toMatch(/upload-artifact@v7[\s\S]*download-artifact@v8/iu);
-    expect(source).toMatch(/never.*successful.*v1/iu);
     expect(source).toMatch(/h5i share push[\s\S]*explicitly authorizes/iu);
-    expect(source).toMatch(/staging cannot create the initial name/iu);
-    expect(source).toMatch(
-      /pending-confirmation[\s\S]*scripts\/release-policy\.mjs/iu,
+    expect(source).not.toMatch(
+      /npm\s+(?:stage\s+)?publish|NPM_TOKEN|NODE_AUTH_TOKEN|npm-production/iu,
     );
-    expect(source).not.toMatch(/NPM_TOKEN|NODE_AUTH_TOKEN/iu);
   });
 });

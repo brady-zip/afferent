@@ -50,7 +50,7 @@ describe("canonical release identity", () => {
     expect(identity.registryVersion).toBe(packageManifest.version);
   });
 
-  it("creates a deterministic manifest that binds one tarball and registry digest", async () => {
+  it("creates a deterministic manifest that binds one local tarball and registry digest", async () => {
     const temporaryRoot = await mkdtemp(
       join(tmpdir(), "afferent-version-sync-"),
     );
@@ -69,9 +69,15 @@ describe("canonical release identity", () => {
 
     expect(second).toEqual(first);
     expect(first).toMatchObject({
-      schemaVersion: 1,
+      schemaVersion: 2,
+      distribution: {
+        packagePublication: "none",
+        sourcePublication: "github-tag",
+        staticPublication: "github-pages",
+      },
       package: {
         name: "afferent",
+        publication: "none",
         version: "0.1.0",
         tarball: "afferent-0.1.0.tgz",
         sha256: createHash("sha256")
@@ -116,7 +122,7 @@ describe("canonical release identity", () => {
 });
 
 describe("versioned release surfaces", () => {
-  it("keeps public package metadata and compiled exports release-safe", async () => {
+  it("keeps private local package metadata and compiled exports release-safe", async () => {
     const packageManifest = JSON.parse(
       await readFile(join(repositoryRoot, "package.json"), "utf8"),
     );
@@ -134,9 +140,15 @@ describe("versioned release surfaces", () => {
     expect(() =>
       validatePackageSurface({
         ...packageManifest,
-        private: true,
+        private: false,
       }),
-    ).toThrow(/public package/i);
+    ).toThrow(/private local package/i);
+    expect(() =>
+      validatePackageSurface({
+        ...packageManifest,
+        publishConfig: { access: "public" },
+      }),
+    ).toThrow(/publishConfig/i);
   });
 
   it("derives generated registry, docs, and changelog versions without abbreviated literals", async () => {
@@ -171,7 +183,7 @@ describe("versioned release surfaces", () => {
     expect(changelog).toContain(`## ${packageManifest.version}`);
   });
 
-  it("configures one public Changesets package with an exact CLI pin", async () => {
+  it("configures one private version-only Changesets package with an exact CLI pin", async () => {
     const [packageManifest, changesets] = await Promise.all([
       readFile(join(repositoryRoot, "package.json"), "utf8").then(JSON.parse),
       readFile(join(repositoryRoot, ".changeset/config.json"), "utf8").then(
@@ -179,9 +191,9 @@ describe("versioned release surfaces", () => {
       ),
     ]);
 
-    expect(changesets.access).toBe("public");
+    expect(changesets.access).toBe("restricted");
     expect(changesets.baseBranch).toBe("main");
-    expect(changesets.privatePackages?.version).toBe(false);
+    expect(changesets.privatePackages?.version).toBe(true);
     expect(changesets.privatePackages?.tag).toBe(false);
     expect(packageManifest.devDependencies["@changesets/cli"]).toMatch(
       /^\d+\.\d+\.\d+$/u,

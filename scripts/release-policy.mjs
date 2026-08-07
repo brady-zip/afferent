@@ -1,10 +1,11 @@
-// Plan 04-08 defaults await explicit human confirmation at Plan 04-09.
+// The no-npm v1 distribution is locked. Exact GitHub ownership and external
+// publication authority still require the Plan 04-09 human checkpoint.
 // Revise the policy, workflow, tests, and documentation together on override.
 export const plannedReleasePolicy = Object.freeze({
   branch: "main",
-  npmEnvironment: "npm-production",
+  packagePublication: "none",
+  sourcePublication: "github-tag",
   staticEnvironment: "github-pages",
   staticPublication: "github-pages",
-  trustedPublisherPermission: "allow-publish",
   workflow: "release.yml",
 });

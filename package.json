@@ -1,6 +1,7 @@
 {
   "name": "afferent",
   "version": "0.1.0",
+  "private": true,
   "description": "A provider-neutral product feedback Convex component.",
   "license": "Apache-2.0",
   "repository": {
@@ -14,10 +15,6 @@
   "engines": {
     "node": ">=22.14.0",
     "npm": ">=11.5.1"
-  },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
   },
   "packageManager": "npm@11.15.0",
   "type": "module",
