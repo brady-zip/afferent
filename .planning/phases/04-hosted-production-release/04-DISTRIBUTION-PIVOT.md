@@ -75,4 +75,3 @@ the existence of a packable `package.json`.
 - Plan 04-09 is revised in place because it has not executed. It removes the npm
   path, hardens the no-publication guard, publishes only source/registry/docs,
   and records exact public and tagged-local evidence.
-

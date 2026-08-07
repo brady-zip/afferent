@@ -14,19 +14,34 @@ routing, and external side effects.
 | Package module format | ESM                                 |
 | Repository tools      | Node.js `>=22.14.0`, npm `>=11.5.1` |
 
-Install the package in the consuming application:
+## Build the v1 package locally
 
-<!-- afferent-docs: shell mode=package-install context=adopter -->
+Afferent v0.1 is not published to npm. Clone the immutable `v0.1.0` tag from
+`AFFERENT_RELEASE_REPOSITORY_URL`, enter that checkout, and build one local
+tarball:
+
+<!-- afferent-docs: shell mode=source-build context=adopter -->
 
 ```sh
-npm install afferent
+npm ci
+npm run build
+npm pack --ignore-scripts
 ```
 
-Before public publication, the documentation verifier replaces that registry
-request with the exact locally packed tarball. The immutable npm release link
-remains `AFFERENT_RELEASE_NPM_URL` until release verification.
+Install the resulting tarball from its absolute path in the consuming
+application:
 
-## Public package surfaces
+<!-- afferent-docs: shell mode=local-package-install context=adopter -->
+
+```sh
+npm install /absolute/path/to/afferent-0.1.0.tgz
+```
+
+Do not request the unscoped package name from npm: v1 deliberately has no npm
+registry package. The release verifier builds and installs the same local
+tarball in clean fixtures before publishing the matching registry and docs.
+
+## Packed component surfaces
 
 | Import                             | Purpose                                                  |
 | ---------------------------------- | -------------------------------------------------------- |

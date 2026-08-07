@@ -22,12 +22,25 @@ No Convex account, project, or deploy key is used. See the
 [local-demo guide](./docs/guide/local-demo.md) for prerequisites, the security
 model, and recovery steps.
 
-## Install into a Convex application
+## Build and install into a Convex application
 
-<!-- afferent-docs: shell mode=package-install context=adopter -->
+Afferent v0.1 is not published to npm. Clone the immutable `v0.1.0` tag from
+`AFFERENT_RELEASE_REPOSITORY_URL`, then build one local tarball from that source:
+
+<!-- afferent-docs: shell mode=source-build context=adopter -->
 
 ```sh
-npm install afferent
+npm ci
+npm run build
+npm pack --ignore-scripts
+```
+
+Install that exact tarball in the consuming application:
+
+<!-- afferent-docs: shell mode=local-package-install context=adopter -->
+
+```sh
+npm install /absolute/path/to/afferent-0.1.0.tgz
 ```
 
 Mount `afferent/convex.config.js`, run Convex code generation, and expose only
@@ -62,14 +75,13 @@ files in your application.
 - Node.js `>=22.14.0` and npm `>=11.5.1` for repository development and the
   local evaluator
 
-Release publication will replace these explicit markers with immutable public
+Source/static release publication will replace these explicit markers with immutable public
 links:
 
-| Surface           | Release marker                    |
-| ----------------- | --------------------------------- |
-| npm package       | `AFFERENT_RELEASE_NPM_URL`        |
-| documentation     | `AFFERENT_RELEASE_DOCS_URL`       |
-| shadcn registry   | `AFFERENT_RELEASE_REGISTRY_URL`   |
-| source repository | `AFFERENT_RELEASE_REPOSITORY_URL` |
+| Surface                   | Release marker                    |
+| ------------------------- | --------------------------------- |
+| documentation             | `AFFERENT_RELEASE_DOCS_URL`       |
+| shadcn registry           | `AFFERENT_RELEASE_REGISTRY_URL`   |
+| source repository and tag | `AFFERENT_RELEASE_REPOSITORY_URL` |
 
 Source is licensed under [Apache-2.0](./LICENSE).

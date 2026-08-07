@@ -5,10 +5,10 @@ milestone_name: milestone
 current_phase: 04
 current_phase_name: Local Production Release
 status: executing
-stopped_at: Completed 04-08-PLAN.md; ready for 04-09 human publication checkpoint
-last_updated: "2026-07-30T22:10:26.295Z"
-last_activity: 2026-07-30
-last_activity_desc: Built synchronized release candidates and protected npm OIDC plus static publication workflows
+stopped_at: Recorded the no-npm v1 pivot and implemented the local 04-09 source/static release contract; awaiting the GitHub publication checkpoint
+last_updated: "2026-08-07T19:39:26Z"
+last_activity: 2026-08-07
+last_activity_desc: Removed npm publication from v1 and converted release automation to tagged source plus verified GitHub Pages
 progress:
   total_phases: 7
   completed_phases: 6
@@ -30,8 +30,8 @@ See: .planning/PROJECT.md (updated 2026-07-24)
 
 Phase: 04 (Local Production Release) — EXECUTING
 Plan: 9 of 9
-Status: Ready for 04-09 human publication checkpoint
-Last activity: 2026-07-30 — Built synchronized release candidates and protected npm OIDC plus static publication workflows
+Status: Local no-npm contract implemented; awaiting 04-09 GitHub publication checkpoint
+Last activity: 2026-08-07 — Removed npm publication from v1 and converted release automation to tagged source plus verified GitHub Pages
 
 Progress: [██████████] 98%
 
@@ -230,9 +230,9 @@ Recent decisions affecting current work:
 - [Phase 03]: Ground anti-skip assertions in the artifact that owns each key, sentence, scenario, and executable action. — Dead identifiers in unrelated files cannot satisfy release evidence.
 - [Phase 03]: Expose paginated retry on roadmap and notification error states while reserving loadMore for ready pagination. — Recovery actions must create a new originating query attempt from Error.
 - [Phase 03]: Keep installed public recovery scenarios independent from administrative states and expose attempt counts only as hidden evidence metadata. — The packed browser can prove callback ownership without injecting product markup or authority.
-- [Phase 04]: Publish afferent/test only as compiled JavaScript plus declarations; raw source is excluded from the npm allowlist.
+- [Phase 04]: Pack afferent/test locally only as compiled JavaScript plus declarations; raw source is excluded from the package allowlist.
 - [Phase 04]: Reuse one exact tarball across content audit, clean consumer, publint, and ATTW release checks.
-- [Phase 04]: Keep offline package verification deterministic and run npm identity/runtime checks only in explicit online-preflight mode.
+- [Phase 04]: Keep package verification deterministic and local; v1 performs no npm identity, ownership, or registry preflight.
 - [Phase 04]: Activate a fully seeded opaque physical generation before exposing a private sandbox; reset and expiry never expose partial state.
 - [Phase 04]: Keep lifecycle authority and identifiers server-only while the browser receives a closed signed-out/preparing/ready/resetting/expired/error DTO.
 - [Phase 04]: Count every active, pending, failed, and retired-not-cleaned physical generation toward one logical sandbox footprint.
@@ -244,19 +244,21 @@ Recent decisions affecting current work:
 - [Phase 04]: Pin react-router 8.3.0 exactly and synthesize packed metadata from committed package state so unrelated experiments cannot enter release artifacts.
 - [Phase 04]: Pin VitePress 1.6.4 and keep the adopter documentation theme-neutral. — An exact stable version keeps local, CI, and packed-artifact documentation builds deterministic.
 - [Phase 04]: Require explicit validation metadata on every code fence and compile provider examples from the exact packed artifact. — Security-sensitive wrapper guidance must be executable release evidence rather than unverified prose.
-- [Phase 04]: Permit only AFFERENT_RELEASE_DOCS_URL, AFFERENT_RELEASE_NPM_URL, AFFERENT_RELEASE_REGISTRY_URL, and AFFERENT_RELEASE_REPOSITORY_URL until Plans 04-08 and 04-09 provide verified publication facts. — The docs gate rejects undeclared release markers, remote execution, and cloud identifiers.
-- [Phase 04]: Derive package, tag, registry, docs, UI, and evidence identity from one canonical 0.1.0 release manifest.
-- [Phase 04]: Keep Changesets version-only and make the protected npm-production OIDC job the sole npm writer.
+- [Phase 04]: Permit only AFFERENT_RELEASE_DOCS_URL, AFFERENT_RELEASE_REGISTRY_URL, and AFFERENT_RELEASE_REPOSITORY_URL. — The docs gate rejects npm publication claims, undeclared release markers, remote execution, and cloud identifiers.
+- [Phase 04]: Derive local package, source tag, registry, docs, UI, and evidence identity from one canonical 0.1.0 release manifest.
+- [Phase 04]: Keep the root package private with no publishConfig and keep Changesets version-only for tagged source releases.
 - [Phase 04]: Accept cross-run candidates only from the successful ci.yml push on main for the exact source commit.
-- [Phase 04]: Publish matching registry and docs through an isolated GitHub Pages environment only after public npm bytes and provenance verify.
+- [Phase 04]: Publish matching registry and docs through an isolated GitHub Pages environment after release readiness, then compare public bytes to the candidate and prove no tarball was exposed.
 
 ### Pending Todos
 
-None yet.
+- [Phase 4]: Complete the exact GitHub owner/IP/Pages authorization checkpoint, publish the protected source tag and Pages artifact, and record public verification evidence.
 
 ### Blockers/Concerns
 
 - [Phase 4]: Prove every sandbox query, search, count, seed, reset, quota, and cleanup path is scope-complete.
+- [Phase 4]: External publication remains blocked on the exact GitHub owner/repository, employer or IP authorization, and explicit authorization to push main, tag v0.1.0, and publish Pages.
+- [Phase 4]: refs/h5i/* remain private unless separately inspected and explicitly authorized for disclosure.
 
 ### Roadmap Evolution
 
@@ -274,6 +276,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-07-30T22:10:12.157Z
-Stopped at: Completed 04-08-PLAN.md; ready for 04-09 human publication checkpoint
+Last session: 2026-08-07T19:39:26Z
+Stopped at: Local 04-09 source/static release contract implemented; awaiting exact GitHub owner/IP/Pages authorization
 Resume file: None

@@ -32,12 +32,19 @@ test("the adopter entry path is concise, local-first, and versioned", async () =
   assert.match(localDemo, /local.*account/is);
   assert.match(localDemo, /never commit/i);
 
-  assert.match(install, /npm install afferent/);
+  assert.match(install, /not published to npm/i);
+  assert.match(install, /npm pack --ignore-scripts/);
+  assert.match(
+    install,
+    /npm install \/absolute\/path\/to\/afferent-0\.1\.0\.tgz/,
+  );
   assert.match(mount, /afferent\/convex\.config\.js/);
   assert.match(mount, /createAfferentClient/);
   assert.match(config, /defineConfig/);
   assert.equal(packageJson.scripts["docs:build"], "vitepress build docs");
   assert.equal(packageJson.devDependencies.vitepress, "1.6.4");
+  assert.equal(packageJson.private, true);
+  assert.equal(packageJson.publishConfig, undefined);
 });
 
 test("provider, UI, and operations guides preserve the release contract", async () => {
@@ -116,7 +123,8 @@ test("provider, UI, and operations guides preserve the release contract", async 
   assert.doesNotMatch(deployment, /Vercel-specific/i);
 
   assert.match(upgrades, /Changesets/);
-  assert.match(upgrades, /package.*registry/is);
+  assert.match(upgrades, /local.*artifact.*static registry/is);
+  assert.match(upgrades, /source tag/i);
   assert.match(upgrades, /copied source/i);
   assert.match(upgrades, /migration/i);
   assert.match(upgrades, /rollback/i);
@@ -124,11 +132,27 @@ test("provider, UI, and operations guides preserve the release contract", async 
 
 test("the documentation verifier rejects authority, link, and deployment drift", async () => {
   const {
+    assertNoNpmPublicationClaims,
     assertNoRemoteDemoClaims,
     assertSafeTypeScriptSnippet,
     validateInternalLinks,
     validateRegistryExamples,
   } = await import("../../scripts/test-docs.mjs");
+
+  assert.doesNotThrow(() =>
+    assertNoNpmPublicationClaims(
+      "Afferent v0.1 is not published to npm. Build it from source.",
+      "install.md",
+    ),
+  );
+  assert.throws(
+    () =>
+      assertNoNpmPublicationClaims(
+        "Run npm install afferent to continue.",
+        "unsafe.md",
+      ),
+    /npm publication claim/i,
+  );
 
   assert.doesNotThrow(() =>
     assertSafeTypeScriptSnippet(

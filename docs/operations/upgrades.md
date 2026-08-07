@@ -6,17 +6,18 @@ upgrade.
 
 ## Read release evidence
 
-Start with the repository changelog generated from Changesets. Note package
+Start with the repository changelog generated from Changesets. Note source
 version, compatibility ranges, DTO or intent-validator changes, migration
 instructions, registry changes, and known limitations.
 
-The npm package and registry must come from the same release. Do not combine a
-new package with an older registry snapshot merely because the copied source
-still typechecks.
+The locally packed artifact and static registry must come from the same source
+tag. Do not combine a tarball built from one tag with an older registry snapshot
+merely because the copied source still typechecks.
 
 ## Upgrade in preview
 
-1. Update `afferent` and regenerate the host's Convex references.
+1. Check out the new immutable source tag, build and pack it locally, install
+   that tarball, and regenerate the host's Convex references.
 2. Fetch the matching registry item versions.
 3. Diff each item against the application's copied source.
 4. Reapply or revise intentional copy, styling, routing, and component changes.
@@ -44,12 +45,13 @@ component tables from browser or host application code.
 
 Rollback must keep these layers compatible:
 
-- the previous npm package and generated host references;
+- the previous tagged source, locally packed artifact, and generated host
+  references;
 - the previous reviewed copied-source snapshot;
 - the corresponding registry release;
 - the component schema/data state supported by that package.
 
-If a migration is backward-compatible, restore the previous package and
+If a migration is backward-compatible, rebuild and restore the previous tag and
 frontend together. If it is not, follow the release's explicit reverse
 migration or restore the host deployment using its planned recovery mechanism.
 Never roll back only the browser bundle while leaving incompatible host

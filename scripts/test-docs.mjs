@@ -25,9 +25,12 @@ import ts from "typescript";
 const repositoryRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const allowedReleaseTokens = new Set([
   "AFFERENT_RELEASE_DOCS_URL",
-  "AFFERENT_RELEASE_NPM_URL",
   "AFFERENT_RELEASE_REGISTRY_URL",
   "AFFERENT_RELEASE_REPOSITORY_URL",
+]);
+const operationalReleaseTokens = new Set([
+  "AFFERENT_RELEASE_APPROVED_TAG",
+  "AFFERENT_RELEASE_OWNER",
 ]);
 const requiredDocuments = [
   "README.md",
@@ -202,6 +205,23 @@ export function assertNoRemoteDemoClaims(source, documentPath) {
   }
 }
 
+export function assertNoNpmPublicationClaims(source, documentPath) {
+  const publicInstall = source.match(
+    /\bnpm\s+install\s+afferent(?=\s|$|[`"'])/imu,
+  );
+  const publicationCommand = source.match(/\bnpm\s+(?:stage\s+)?publish\b/iu);
+  const npmReleaseSurface = source.match(
+    /\b(?:AFFERENT_RELEASE_NPM_URL|npm-production|NODE_AUTH_TOKEN|NPM_TOKEN)\b/u,
+  );
+  const found =
+    publicInstall?.[0] ?? publicationCommand?.[0] ?? npmReleaseSurface?.[0];
+  if (found) {
+    throw new Error(
+      `npm publication claim is forbidden in ${documentPath}: ${found}`,
+    );
+  }
+}
+
 export function validateRegistryExamples(source, registryItems, documentPath) {
   for (const match of source.matchAll(/\bafferent-[a-z][a-z0-9-]*\b/gu)) {
     const name = match[0];
@@ -344,13 +364,42 @@ function validateShellFence(fence, manifest, registryItems) {
   }
   for (const line of fence.source.split("\n").map((value) => value.trim())) {
     if (!line) continue;
-    if (line === "npm install" || line === "npm install afferent") {
+    if (line === "npm install") {
       if (
         fence.metadata.mode !== "package-install" &&
         fence.metadata.mode !== "script-reference"
       ) {
         throw new Error(
           `package install metadata is invalid in ${fence.documentPath}`,
+        );
+      }
+      continue;
+    }
+    if (line === "npm ci") {
+      if (
+        fence.metadata.mode !== "source-build" &&
+        fence.metadata.mode !== "script-reference"
+      ) {
+        throw new Error(
+          `source install metadata is invalid in ${fence.documentPath}`,
+        );
+      }
+      continue;
+    }
+    if (line === "npm pack --ignore-scripts") {
+      if (fence.metadata.mode !== "source-build") {
+        throw new Error(
+          `source package metadata is invalid in ${fence.documentPath}`,
+        );
+      }
+      continue;
+    }
+    if (
+      line === `npm install /absolute/path/to/afferent-${manifest.version}.tgz`
+    ) {
+      if (fence.metadata.mode !== "local-package-install") {
+        throw new Error(
+          `local package install metadata is invalid in ${fence.documentPath}`,
         );
       }
       continue;
@@ -397,6 +446,7 @@ function validateReleaseTokens(documents) {
   const found = new Set();
   for (const [documentPath, source] of documents) {
     for (const match of source.matchAll(/\bAFFERENT_RELEASE_[A-Z0-9_]+\b/gu)) {
+      if (operationalReleaseTokens.has(match[0])) continue;
       if (!allowedReleaseTokens.has(match[0])) {
         throw new Error(
           `unknown release placeholder ${match[0]} in ${documentPath}`,
@@ -519,6 +569,7 @@ function validateDocuments({
   validateInternalLinks(documents, new Set([...documents.keys(), "LICENSE"]));
   for (const [documentPath, source] of documents) {
     assertNoRemoteDemoClaims(source, documentPath);
+    assertNoNpmPublicationClaims(source, documentPath);
   }
   const releaseTokens = validateReleaseTokens(documents);
   validateRegistryExamples(

@@ -9,11 +9,12 @@ clone-and-run local working example.
 The first release covers public feedback boards, authenticated participation,
 administrative feedback management, a status-driven public roadmap, and manually published
 changelog entries linked to feedback. One Afferent installation represents **one product**
-and can contain multiple boards. All repository code and published packages are Apache-2.0.
+and can contain multiple boards. All repository code and locally packed artifacts are Apache-2.0.
 
 ## Core model
 
-- **Component** — the reusable Convex backend, distributed on npm. It owns
+- **Component** — the reusable Convex backend, built and installed from tagged source in
+  v1 rather than published to npm. It owns
   provider-neutral actors, boards, posts, votes, comments, configurable statuses,
   moderation state, roadmap projections, changelog entries, and their invariants. It is an
   isolated boundary and **cannot** access the host application's `ctx.auth`.
