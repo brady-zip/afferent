@@ -11,7 +11,7 @@ export const afferentRegistry = {
     {
       name: "afferent-board",
       description: "Source-owned public feedback board over Afferent hooks.",
-      registryDependencies: ["./afferent-ui-core.json"],
+      registryDependencies: ["@afferent/afferent-ui-core"],
       files: [
         {
           path: "ui/afferent/board/activity.tsx",
@@ -58,7 +58,7 @@ export const afferentRegistry = {
     {
       name: "afferent-admin",
       description: "Source-owned feedback administration over Afferent hooks.",
-      registryDependencies: ["./afferent-ui-core.json"],
+      registryDependencies: ["@afferent/afferent-ui-core"],
       files: [
         {
           path: "ui/afferent/admin/confirmation-dialog.tsx",
@@ -100,7 +100,7 @@ export const afferentRegistry = {
     {
       name: "afferent-roadmap",
       description: "Source-owned public roadmap over Afferent hooks.",
-      registryDependencies: ["./afferent-ui-core.json"],
+      registryDependencies: ["@afferent/afferent-ui-core"],
       files: [
         {
           path: "ui/afferent/roadmap/roadmap-screen.tsx",
@@ -122,7 +122,7 @@ export const afferentRegistry = {
     {
       name: "afferent-changelog",
       description: "Source-owned public changelog over Afferent hooks.",
-      registryDependencies: ["./afferent-ui-core.json"],
+      registryDependencies: ["@afferent/afferent-ui-core"],
       files: [
         {
           path: "ui/afferent/changelog/changelog-screen.tsx",
@@ -140,7 +140,7 @@ export const afferentRegistry = {
       name: "afferent-notifications",
       description:
         "Source-owned notification list and popover over Afferent hooks.",
-      registryDependencies: ["./afferent-ui-core.json"],
+      registryDependencies: ["@afferent/afferent-ui-core"],
       files: [
         {
           path: "ui/afferent/notifications/notifications-list.tsx",

@@ -130,7 +130,7 @@ test("registry catalog and emitted items use stable approved metadata", async ()
   const board = JSON.parse(
     await readFile(join(root, "registry/r/afferent-board.json"), "utf8"),
   );
-  assert.deepEqual(board.registryDependencies, ["./afferent-ui-core.json"]);
+  assert.deepEqual(board.registryDependencies, ["@afferent/afferent-ui-core"]);
   assert.deepEqual(board.dependencies, [
     "class-variance-authority@0.7.1",
     "clsx@2.1.1",

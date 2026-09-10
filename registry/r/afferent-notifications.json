@@ -11,7 +11,7 @@
     "tailwind-merge@3.6.0"
   ],
   "registryDependencies": [
-    "./afferent-ui-core.json"
+    "@afferent/afferent-ui-core"
   ],
   "files": [
     {

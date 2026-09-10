@@ -2,8 +2,10 @@
 
 These files are source-owned shadcn-compatible React components. Install the packed `afferent`
 package first, then add the feature items you need from the generated local registry. Each feature
-item declares `./afferent-ui-core.json` explicitly; copy and restyle the resulting files in your
-application.
+item declares `@afferent/afferent-ui-core` explicitly. Configure `@afferent` in the
+`registries` map of your application's `components.json`: use `./{name}.json` when installing
+local JSON files, or `https://brady-zip.github.io/afferent/r/{name}.json` for the public
+registry. Copy and restyle the resulting files in your application.
 
 ## Host adapter
 

@@ -55,7 +55,7 @@
       },
       "name": "afferent-admin",
       "registryDependencies": [
-        "./afferent-ui-core.json"
+        "@afferent/afferent-ui-core"
       ],
       "title": "afferent-admin",
       "type": "registry:block"
@@ -118,7 +118,7 @@
       },
       "name": "afferent-board",
       "registryDependencies": [
-        "./afferent-ui-core.json"
+        "@afferent/afferent-ui-core"
       ],
       "title": "afferent-board",
       "type": "registry:block"
@@ -151,7 +151,7 @@
       },
       "name": "afferent-changelog",
       "registryDependencies": [
-        "./afferent-ui-core.json"
+        "@afferent/afferent-ui-core"
       ],
       "title": "afferent-changelog",
       "type": "registry:block"
@@ -184,7 +184,7 @@
       },
       "name": "afferent-notifications",
       "registryDependencies": [
-        "./afferent-ui-core.json"
+        "@afferent/afferent-ui-core"
       ],
       "title": "afferent-notifications",
       "type": "registry:block"
@@ -222,7 +222,7 @@
       },
       "name": "afferent-roadmap",
       "registryDependencies": [
-        "./afferent-ui-core.json"
+        "@afferent/afferent-ui-core"
       ],
       "title": "afferent-roadmap",
       "type": "registry:block"

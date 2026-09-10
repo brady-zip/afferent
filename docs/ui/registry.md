@@ -32,7 +32,14 @@ shared layer is installed with it.
 ## Install blocks
 
 From a configured shadcn application with the matching local Afferent tarball
-already installed:
+already installed, add an `@afferent` entry to the `registries` object in
+`components.json`. Set its value to
+`https://brady-zip.github.io/afferent/r/{name}.json`; retain the literal `{name}`
+placeholder. This lets feature blocks resolve their shared core dependency.
+For local JSON installation, use `./{name}.json` instead and keep the six item
+files together in the application's working directory.
+
+Then install the desired blocks:
 
 <!-- afferent-docs: shell mode=registry-install context=adopter -->
 

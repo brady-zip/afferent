@@ -309,6 +309,14 @@ describe("release workflow contracts", () => {
     expect(() => validateCiWorkflow(source)).not.toThrow();
     expect(source).toContain("npm run verify:release-candidate -- --build");
     expect(source).toContain("npm run verify:phase4");
+    const reordered = parse(source);
+    const steps = reordered.jobs.quality.steps;
+    const build = steps.findIndex((step) => step.run === "npm run build");
+    const tests = steps.findIndex((step) => step.run === "npm test");
+    [steps[build], steps[tests]] = [steps[tests], steps[build]];
+    expect(() => validateCiWorkflow(stringify(reordered))).toThrow(
+      /must build package exports before tests/iu,
+    );
     expect(() =>
       validateCiWorkflow(
         source.replace("run: npm run build", "run: node --version"),
@@ -351,7 +359,7 @@ describe("release workflow contracts", () => {
       'test "$(npm --version)" = "11.15.0"',
     ]) {
       expect(() => validateCiWorkflow(source.replace(command, ""))).toThrow(
-        /missing required command/iu,
+        /missing required command|pinned npm bootstrap/iu,
       );
     }
   });
@@ -438,6 +446,30 @@ describe("release workflow contracts", () => {
     expect(packageManifest.scripts["verify:release-candidate"]).toBe(
       "node scripts/verify-release-candidate.mjs",
     );
+  });
+
+  test("all release jobs that install dependencies select pinned npm first", async () => {
+    const source = await readFile(
+      join(repositoryRoot, ".github/workflows/release.yml"),
+      "utf8",
+    );
+    for (const name of [
+      "version-pr",
+      "release-readiness",
+      "prepare-static",
+      "verify-static",
+    ]) {
+      const workflow = parse(source);
+      const steps = workflow.jobs[name].steps;
+      const bootstrap = steps.findIndex(
+        (step) => step.name === "Install the pinned npm release client",
+      );
+      const install = steps.findIndex((step) => step.run === "npm ci");
+      [steps[bootstrap], steps[install]] = [steps[install], steps[bootstrap]];
+      expect(() => validateReleaseWorkflow(stringify(workflow))).toThrow(
+        /pinned npm bootstrap/iu,
+      );
+    }
   });
 
   test("source and static publication is manual, protected, and artifact preserving", async () => {

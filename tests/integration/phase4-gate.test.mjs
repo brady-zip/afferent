@@ -44,6 +44,9 @@ describe("Phase 4 real-browser release gate", () => {
     expect(manifest.scripts["test:release:contracts"]).toContain(
       "--no-file-parallelism",
     );
+    expect(manifest.scripts["test:release:contracts"]).toContain(
+      "node scripts/verify-registry-http.mjs",
+    );
     expect(manifest.scripts["typecheck:demo"]).toBe(
       "node scripts/prepare-demo-consumer.mjs --gate",
     );

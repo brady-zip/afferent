@@ -104,6 +104,10 @@ test("provider, UI, and operations guides preserve the release contract", async 
   }
   assert.match(registry, /registry\/r/);
   assert.match(registry, /copy-owned|source-owned/i);
+  assert.match(registry, /components\.json/);
+  assert.match(registry, /registries/);
+  assert.match(registry, /@afferent/);
+  assert.match(registry, /\/r\/\{name\}\.json/);
   assert.match(customization, /AfferentUiProvider/);
   assert.match(customization, /currentLocation/);
   assert.match(customization, /WCAG 2\.2 AA/);
@@ -189,6 +193,11 @@ test("the documentation verifier rejects authority, link, and deployment drift",
     "AFFERENT_RELEASE_REGISTRY_URL",
     "AFFERENT_RELEASE_REPOSITORY_URL",
     "AFFERENT_RELEASE_*_URL",
+    "AFFERENT_RELEASE_<NAME>_URL",
+    "AFFERENT_RELEASE_{DOCS,REGISTRY}_URL",
+    "afferent_release_docs_url",
+    "https://AFFERENT_RELEASE_OWNER.github.io/afferent/",
+    "https://example.test/AFFERENT_RELEASE_APPROVED_TAG/",
   ]) {
     assert.throws(
       () =>
@@ -199,6 +208,17 @@ test("the documentation verifier rejects authority, link, and deployment drift",
       /(?:unknown|unresolved) release placeholder/iu,
     );
   }
+  assert.deepEqual(
+    validateReleaseTokens(
+      releaseDocuments([
+        ...releaseDestinations,
+        "AFFERENT_RELEASE_OWNER",
+        "AFFERENT_RELEASE_APPROVED_TAG",
+      ]),
+      manifest,
+    ),
+    [],
+  );
   const registryFence = (registry) => ({
     source: `npx shadcn@${manifest.devDependencies.shadcn} add ${registry}/r/afferent-board.json`,
     metadata: { mode: "registry-install" },

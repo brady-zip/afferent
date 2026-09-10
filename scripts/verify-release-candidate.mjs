@@ -34,6 +34,25 @@ const commitPattern = /^[a-f0-9]{40}$/u;
 const actionPinPattern = /^[^@\s]+@[a-f0-9]{40}$/u;
 const declaredIdentity = await loadReleaseIdentity(repositoryRoot);
 const declaredRepository = declaredIdentity.repository;
+const npmBootstrap = [
+  'npm install --global --prefix "$RUNNER_TEMP/afferent-npm" npm@11.15.0',
+  'echo "$RUNNER_TEMP/afferent-npm/bin" >> "$GITHUB_PATH"',
+  'export PATH="$RUNNER_TEMP/afferent-npm/bin:$PATH"',
+  "node --version",
+  "npm --version",
+  'test "$(npm --version)" = "11.15.0"',
+].join("\n");
+
+function requireNpmBootstrap(job, name) {
+  const steps = job.steps ?? [];
+  const bootstrap = steps.findIndex(
+    (step) => step.run?.trim() === npmBootstrap,
+  );
+  const install = steps.findIndex((step) => step.run?.trim() === "npm ci");
+  if (bootstrap === -1 || install <= bootstrap) {
+    throw new Error(`${name} requires pinned npm bootstrap before npm ci`);
+  }
+}
 const canonicalCiActions = new Set([
   "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
   "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
@@ -215,6 +234,7 @@ export function validateCiWorkflow(source) {
     candidate,
     "local-acceptance": localAcceptance,
   })) {
+    requireNpmBootstrap(job, name);
     if (
       job["runs-on"] !== "ubuntu-latest" ||
       !Number.isSafeInteger(job["timeout-minutes"]) ||
@@ -244,6 +264,12 @@ export function validateCiWorkflow(source) {
     throw new Error("local acceptance must depend on candidate");
   }
   const qualityCommands = commandFor(quality);
+  if (
+    qualityCommands.indexOf("npm run build") >
+    qualityCommands.indexOf("npm test")
+  ) {
+    throw new Error("quality must build package exports before tests");
+  }
   for (const required of [
     "npm run verify:version-sync -- --surfaces-only",
     "npm run typecheck",
@@ -407,15 +433,25 @@ export function validateReleaseWorkflow(source) {
   }
   const staticCommands = {
     "prepare-static": new Set([
+      npmBootstrap,
       "npm ci",
       'npm run verify:release-candidate -- --prepare-pages --candidate-dir "$RUNNER_TEMP/release-candidate" --output "$RUNNER_TEMP/pages-site"',
     ]),
     "publish-static": new Set(),
     "verify-static": new Set([
+      npmBootstrap,
       "npm ci",
       'npm run verify:release-candidate -- --public-static "$AFFERENT_PUBLIC_BASE_URL" --candidate-dir "$RUNNER_TEMP/release-candidate"',
     ]),
   };
+  for (const [name, job] of Object.entries({
+    "version-pr": version,
+    "release-readiness": readiness,
+    "prepare-static": prepareStatic,
+    "verify-static": verifyStatic,
+  })) {
+    requireNpmBootstrap(job, name);
+  }
   for (const [name, job] of Object.entries({
     "prepare-static": prepareStatic,
     "publish-static": publishStatic,

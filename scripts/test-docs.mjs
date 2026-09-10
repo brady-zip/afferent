@@ -145,10 +145,7 @@ export function validateInternalLinks(
     walk(tree, (node) => {
       if (node.type !== "link" && node.type !== "image") return;
       const url = node.url;
-      if (
-        /^(?:[a-z][a-z0-9+.-]*:|#)/iu.test(url) ||
-        url.includes("AFFERENT_RELEASE_")
-      ) {
+      if (/^(?:[a-z][a-z0-9+.-]*:|#)/iu.test(url)) {
         return;
       }
       const candidates = internalLinkCandidates(documentPath, url);
@@ -465,8 +462,10 @@ export function validateReleaseTokens(documents, manifest) {
     for (const match of source.matchAll(/https:\/\/[^\s<>"'`)\]]+/gu)) {
       urls.add(match[0]);
     }
-    for (const match of source.matchAll(/\bAFFERENT_RELEASE_[A-Z0-9_*]+/gu)) {
-      if (operationalReleaseTokens.has(match[0])) continue;
+    const prose = source.replace(/`(?<value>[^`\n]+)`/gu, (span, value) =>
+      operationalReleaseTokens.has(value) ? "" : span,
+    );
+    for (const match of prose.matchAll(/\bAFFERENT_RELEASE_[^\s`]*/giu)) {
       if (!allowedReleaseTokens.has(match[0])) {
         throw new Error(
           `unknown release placeholder ${match[0]} in ${documentPath}`,
