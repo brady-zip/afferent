@@ -611,6 +611,9 @@ describe("release workflow contracts", () => {
   test("repository metadata normalizes supported GitHub remote forms", () => {
     for (const remote of [
       "git@github.com:Owner/Repository.git",
+      "ssh://git@github.com/Owner/Repository.git",
+      "git+ssh://git@github.com/Owner/Repository.git",
+      "git+https://github.com/Owner/Repository.git",
       "https://github.com/Owner/Repository",
       "https://github.com/Owner/Repository.git",
       "https://github.com/Owner/Repository/",

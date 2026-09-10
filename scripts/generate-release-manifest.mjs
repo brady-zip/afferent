@@ -78,7 +78,7 @@ export function repositoryFromMetadata(repository) {
   const match = url
     ?.trim()
     .match(
-      /^(?:(?:git\+)?https:\/\/github\.com\/|ssh:\/\/git@github\.com\/|git@github\.com:)(?<owner>[a-z0-9-]+)\/(?<repository>[a-z0-9_.-]+?)(?:\.git)?\/?$/iu,
+      /^(?:(?:git\+)?https:\/\/github\.com\/|(?:git\+)?ssh:\/\/git@github\.com\/|git@github\.com:)(?<owner>[a-z0-9-]+)\/(?<repository>[a-z0-9_.-]+?)(?:\.git)?\/?$/iu,
     );
   if (!match?.groups) return undefined;
   return normalizeRepositoryName(

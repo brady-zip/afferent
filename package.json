@@ -112,7 +112,7 @@
   },
   "dependencies": {
     "@convex-dev/rate-limiter": "0.3.2",
-    "convex-helpers": "^0.1.120",
+    "convex-helpers": "0.1.120",
     "mdast-util-from-markdown": "2.0.3"
   },
   "peerDependencies": {
