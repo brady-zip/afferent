@@ -756,27 +756,57 @@ async function buildPackAndCompile({ documents, fences, manifest }) {
   }
 }
 
+export async function readDocumentationRequirements(root = repositoryRoot) {
+  // Phase 04-07 belongs to planning milestone v1.0 (product release v0.1.0).
+  // Keep its plan and requirements together after archival; a later milestone's
+  // active requirements must never replace this documentation contract.
+  const sources = [
+    [
+      ".planning/milestones/v1.0-phases/04-hosted-production-release/04-07-PLAN.md",
+      ".planning/milestones/v1.0-REQUIREMENTS.md",
+    ],
+    [
+      ".planning/phases/04-hosted-production-release/04-07-PLAN.md",
+      ".planning/REQUIREMENTS.md",
+    ],
+  ];
+  for (const paths of sources) {
+    const results = await Promise.allSettled(
+      paths.map((path) => readFile(join(root, path), "utf8")),
+    );
+    for (const result of results) {
+      if (result.status === "rejected" && result.reason.code !== "ENOENT") {
+        throw result.reason;
+      }
+    }
+    if (results.every((result) => result.status === "fulfilled")) {
+      return {
+        planSource: results[0].value,
+        requirementsSource: results[1].value,
+      };
+    }
+    if (results.some((result) => result.status === "fulfilled")) {
+      throw new Error(
+        `Incomplete documentation requirement sources: ${paths.join(", ")}`,
+      );
+    }
+  }
+  throw new Error("Missing documentation requirement plan and requirements");
+}
+
 export async function verifyDocumentation() {
   const [
     documents,
     manifestSource,
     catalogSource,
     generatedCatalogSource,
-    planSource,
-    requirementsSource,
+    { planSource, requirementsSource },
   ] = await Promise.all([
     readDocuments(),
     readFile(join(repositoryRoot, "package.json"), "utf8"),
     readFile(join(repositoryRoot, "registry/registry.json"), "utf8"),
     readFile(join(repositoryRoot, "registry/r/registry.json"), "utf8"),
-    readFile(
-      join(
-        repositoryRoot,
-        ".planning/phases/04-hosted-production-release/04-07-PLAN.md",
-      ),
-      "utf8",
-    ),
-    readFile(join(repositoryRoot, ".planning/REQUIREMENTS.md"), "utf8"),
+    readDocumentationRequirements(),
   ]);
   const manifest = JSON.parse(manifestSource);
   const catalog = JSON.parse(catalogSource);

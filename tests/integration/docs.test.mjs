@@ -1,9 +1,66 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
 import { test } from "node:test";
 
 const readRepositoryFile = (path) =>
   readFile(new URL(`../../${path}`, import.meta.url), "utf8");
+
+test("documentation keeps its original requirement contract through milestone archival", async (t) => {
+  const { readDocumentationRequirements } =
+    await import("../../scripts/test-docs.mjs");
+  const root = await mkdtemp(join(tmpdir(), "afferent-docs-archive-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const activePlan =
+    ".planning/phases/04-hosted-production-release/04-07-PLAN.md";
+  const activeRequirements = ".planning/REQUIREMENTS.md";
+  const archivedPlan =
+    ".planning/milestones/v1.0-phases/04-hosted-production-release/04-07-PLAN.md";
+  const archivedRequirements = ".planning/milestones/v1.0-REQUIREMENTS.md";
+  const write = async (path, content) => {
+    await mkdir(dirname(join(root, path)), { recursive: true });
+    await writeFile(join(root, path), content);
+  };
+  const expected = {
+    planSource: "original plan",
+    requirementsSource: "original requirements",
+  };
+  await write(activePlan, expected.planSource);
+  await write(activeRequirements, expected.requirementsSource);
+  assert.deepEqual(await readDocumentationRequirements(root), expected);
+
+  await write(archivedRequirements, expected.requirementsSource);
+  await assert.rejects(
+    readDocumentationRequirements(root),
+    /Incomplete documentation requirement sources/,
+  );
+  await write(archivedPlan, expected.planSource);
+  await rm(join(root, activePlan));
+  await rm(join(root, activeRequirements));
+  assert.deepEqual(await readDocumentationRequirements(root), expected);
+
+  await write(activeRequirements, "next milestone requirements");
+  assert.deepEqual(await readDocumentationRequirements(root), expected);
+
+  await rm(join(root, archivedPlan));
+  await assert.rejects(
+    readDocumentationRequirements(root),
+    /Incomplete documentation requirement sources/,
+  );
+  await rm(join(root, archivedRequirements));
+  await assert.rejects(
+    readDocumentationRequirements(root),
+    /Incomplete documentation requirement sources/,
+  );
+  await rm(join(root, activeRequirements));
+  await assert.rejects(
+    readDocumentationRequirements(root),
+    /Missing documentation requirement/,
+  );
+  await mkdir(join(root, archivedPlan), { recursive: true });
+  await assert.rejects(readDocumentationRequirements(root), { code: "EISDIR" });
+});
 
 test("the adopter entry path is concise, local-first, and versioned", async () => {
   const [readme, localDemo, install, mount, config, packageSource] =
