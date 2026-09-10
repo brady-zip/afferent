@@ -115,6 +115,14 @@ status: complete
 
 # Phase 4 Plan 08: Hosted Production Release Automation Summary
 
+> Distribution update: this summary records the original Plan 04-08 work. The
+> 2026-08-07 [distribution pivot](./04-DISTRIBUTION-PIVOT.md) supersedes its npm
+> publication, trusted-publisher, and public provenance requirements. Commit
+> `f04f96cf` removed that implementation; `739c6cc8` and `1051f33f` updated the
+> documentation and requirement gate. Those commits preserve the removal history
+> for any separately approved future npm milestone. Current v1 release authority
+> is revised Plan 04-09: source tag, registry/docs, and local tarball evidence.
+
 One synchronized Afferent 0.1.0 candidate now moves from deterministic generation through full local acceptance to protected token-free npm OIDC and dependency-ordered static publication without rebuilding or deploying the demo.
 
 ## Performance

@@ -5,10 +5,10 @@ milestone_name: milestone
 current_phase: 04
 current_phase_name: Local Production Release
 status: executing
-stopped_at: Recorded the no-npm v1 pivot and implemented the local 04-09 source/static release contract; awaiting the GitHub publication checkpoint
-last_updated: "2026-08-07T19:39:26Z"
-last_activity: 2026-08-07
-last_activity_desc: Removed npm publication from v1 and converted release automation to tagged source plus verified GitHub Pages
+stopped_at: Plan 04-09 local release gates verified at 7df3be97; live code review approved; awaiting GitHub publication authorization
+last_updated: "2026-09-10T07:39:00Z"
+last_activity: 2026-09-10
+last_activity_desc: Live Claude review approved; 57 tests plus clean package, docs, and installed-demo checks pass; publication authorization pending
 progress:
   total_phases: 7
   completed_phases: 6
@@ -30,8 +30,8 @@ See: .planning/PROJECT.md (updated 2026-07-24)
 
 Phase: 04 (Local Production Release) — EXECUTING
 Plan: 9 of 9
-Status: Local no-npm contract implemented; awaiting 04-09 GitHub publication checkpoint
-Last activity: 2026-08-07 — Removed npm publication from v1 and converted release automation to tagged source plus verified GitHub Pages
+Status: Local preparation verified and live review approved; awaiting 04-09 GitHub publication authorization
+Last activity: 2026-09-10 — Verified source/static preparation at 7df3be97 with 57 tests, clean TypeScript 6, and npm 11.15.0
 
 Progress: [██████████] 98%
 
@@ -256,8 +256,8 @@ Recent decisions affecting current work:
 
 ### Blockers/Concerns
 
-- [Phase 4]: Prove every sandbox query, search, count, seed, reset, quota, and cleanup path is scope-complete.
-- [Phase 4]: External publication remains blocked on the exact GitHub owner/repository, employer or IP authorization, and explicit authorization to push main, tag v0.1.0, and publish Pages.
+- [Phase 4]: The exact released tag must pass the full local real-Convex Phase 4 gate, including sandbox isolation, lifecycle, and accessibility.
+- [Phase 4]: The selected repository is brady-zip/afferent; read-only GitHub identity is brady-zip, but the repository and origin do not exist. Explicit authorization to publish this Apache-2.0 source, create/configure the public repository, push main, tag v0.1.0, and publish Pages remains pending.
 - [Phase 4]: refs/h5i/* remain private unless separately inspected and explicitly authorized for disclosure.
 
 ### Roadmap Evolution
@@ -276,6 +276,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-08-07T19:39:26Z
-Stopped at: Local 04-09 source/static release contract implemented; awaiting exact GitHub owner/IP/Pages authorization
-Resume file: None
+Last session: 2026-09-10T07:39:00Z
+Stopped at: Verified 04-09 local preparation; await explicit GitHub publication authorization
+Resume file: .planning/phases/04-hosted-production-release/04-09-CHECKPOINT.md
