@@ -780,6 +780,20 @@ export async function readDocumentationRequirements(root = repositoryRoot) {
       }
     }
     if (results.every((result) => result.status === "fulfilled")) {
+      const coverage = validateRequirementCoverage(
+        results[0].value,
+        results[1].value,
+      );
+      if (
+        coverage.active.length !== 1 ||
+        coverage.active[0] !== "QUAL-09" ||
+        coverage.retired.length !== 1 ||
+        coverage.retired[0] !== "COMP-01"
+      ) {
+        throw new Error(
+          "Documentation requirements must retain active QUAL-09 and retired COMP-01",
+        );
+      }
       return {
         planSource: results[0].value,
         requirementsSource: results[1].value,

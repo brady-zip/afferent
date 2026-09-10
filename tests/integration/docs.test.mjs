@@ -23,8 +23,8 @@ test("documentation keeps its original requirement contract through milestone ar
     await writeFile(join(root, path), content);
   };
   const expected = {
-    planSource: "original plan",
-    requirementsSource: "original requirements",
+    planSource: "requirements: [COMP-01, QUAL-09]",
+    requirementsSource: "**Removed from v1:** `COMP-01`\nQUAL-09 is active",
   };
   await write(activePlan, expected.planSource);
   await write(activeRequirements, expected.requirementsSource);
@@ -57,6 +57,18 @@ test("documentation keeps its original requirement contract through milestone ar
   await assert.rejects(
     readDocumentationRequirements(root),
     /Missing documentation requirement/,
+  );
+  await write(activePlan, expected.planSource);
+  await write(activeRequirements, "QUAL-09 and COMP-01 are both active now");
+  await assert.rejects(
+    readDocumentationRequirements(root),
+    /must retain active QUAL-09 and retired COMP-01/,
+  );
+  await write(activePlan, "requirements: [QUAL-99]");
+  await write(activeRequirements, "QUAL-99 is the new milestone requirement");
+  await assert.rejects(
+    readDocumentationRequirements(root),
+    /must retain active QUAL-09 and retired COMP-01/,
   );
   await mkdir(join(root, archivedPlan), { recursive: true });
   await assert.rejects(readDocumentationRequirements(root), { code: "EISDIR" });
