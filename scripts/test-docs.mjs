@@ -758,9 +758,9 @@ async function buildPackAndCompile({ documents, fences, manifest }) {
 
 export async function readDocumentationRequirements(root = repositoryRoot) {
   // Phase 04-07 belongs to planning milestone v1.0 (product release v0.1.0).
-  // Keep its plan and requirements together after archival; a later milestone's
-  // active requirements must never replace this documentation contract. GSD
-  // copies requirements before moving plans, so the plan selects the tier.
+  // Keep its plan and requirements together after archival.
+  // Later active requirements must never replace this documentation contract.
+  // GSD copies requirements before moving plans; the plan selects the tier.
   const sources = [
     [
       ".planning/milestones/v1.0-phases/04-hosted-production-release/04-07-PLAN.md",
