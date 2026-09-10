@@ -1,6 +1,6 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry.json",
-  "homepage": "https://github.com/bradywatkinson/afferent",
+  "homepage": "https://github.com/brady-zip/afferent",
   "items": [
     {
       "dependencies": [

@@ -1,6 +1,6 @@
 export const afferentRegistry = {
   name: "afferent",
-  homepage: "https://github.com/bradywatkinson/afferent",
+  homepage: "https://github.com/brady-zip/afferent",
   dependencies: [
     "class-variance-authority@0.7.1",
     "clsx@2.1.1",

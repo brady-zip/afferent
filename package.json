@@ -6,11 +6,11 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bradywatkinson/afferent.git"
+    "url": "git+https://github.com/brady-zip/afferent.git"
   },
-  "homepage": "https://github.com/bradywatkinson/afferent#readme",
+  "homepage": "https://github.com/brady-zip/afferent#readme",
   "bugs": {
-    "url": "https://github.com/bradywatkinson/afferent/issues"
+    "url": "https://github.com/brady-zip/afferent/issues"
   },
   "engines": {
     "node": ">=22.14.0",

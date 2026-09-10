@@ -1,9 +1,14 @@
 # Copy-owned UI registry
 
-Afferent publishes shadcn-compatible source files in a static registry. Install
-the `afferent` package first, then copy only the feature blocks you need. The
-files become application source: review, edit, test, and version them with the
-host application.
+Afferent publishes shadcn-compatible source files in a static registry. Before
+adding any registry item, [build Afferent from the matching source tag and
+install its local tarball](../guide/install.md#build-the-v1-package-locally)
+in your application. This is required: copied components import `afferent` and
+`afferent/react.js`, and the shadcn command does not install that local package.
+Afferent v0.1 is not published to npm.
+
+Then copy only the feature blocks you need. The files become application source:
+review, edit, test, and version them with the host application.
 
 ## Generated artifacts
 
@@ -26,7 +31,8 @@ shared layer is installed with it.
 
 ## Install blocks
 
-From a configured shadcn application:
+From a configured shadcn application with the matching local Afferent tarball
+already installed:
 
 <!-- afferent-docs: shell mode=registry-install context=adopter -->
 
@@ -48,7 +54,7 @@ builders, and render the copied screen component.
 
 Registry installation is not a runtime dependency. When upgrading:
 
-1. update the `afferent` package;
+1. build the new source tag and install its local tarball in your application;
 2. fetch the matching registry item JSON;
 3. review the diff against your copied source;
 4. reconcile intentional application customizations;

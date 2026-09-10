@@ -117,7 +117,7 @@ jobs:
           name: afferent-verified-release-candidate-${{ inputs.source_commit }}
           path: ${{ runner.temp }}/release-candidate
           github-token: ${{ github.token }}
-          repository: bradywatkinson/afferent
+          repository: brady-zip/afferent
           run-id: ${{ inputs.ci_run_id }}
       - name: Verify candidate, commit, and protected tag
         run: npm run verify:release-candidate -- --release-preflight --candidate-dir "$RUNNER_TEMP/release-candidate"
