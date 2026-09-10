@@ -14,18 +14,18 @@ The human-approved 2026-08-07 distribution pivot is encoded in
 `scripts/release-policy.mjs` and
 `.planning/phases/04-hosted-production-release/04-DISTRIBUTION-PIVOT.md`.
 
-| Surface                   | Exact v0.1 policy                                                                  |
-| ------------------------- | ---------------------------------------------------------------------------------- |
-| Package publication       | None; local `npm pack` evidence only                                               |
-| Source repository         | `brady-zip/afferent`, declared by `package.json`; publication awaits authorization |
-| Source publication        | Immutable GitHub tag `v0.1.0`                                                      |
-| Workflow                  | `.github/workflows/release.yml`                                                    |
-| Static publication        | GitHub Pages, environment `github-pages`                                           |
-| Documentation             | `AFFERENT_RELEASE_DOCS_URL`                                                        |
-| shadcn registry           | `AFFERENT_RELEASE_REGISTRY_URL`                                                    |
-| Source/tag entry point    | `AFFERENT_RELEASE_REPOSITORY_URL`                                                  |
-| Node                      | `.node-version` (`22.22.2`)                                                        |
-| npm CLI for source builds | `11.15.0`                                                                          |
+| Surface                   | Exact v0.1 policy                                                                   |
+| ------------------------- | ----------------------------------------------------------------------------------- |
+| Package publication       | None; local `npm pack` evidence only                                                |
+| Source repository         | `brady-zip/afferent`, declared by `package.json`; publication authorized 2026-09-10 |
+| Source publication        | Immutable GitHub tag `v0.1.0`                                                       |
+| Workflow                  | `.github/workflows/release.yml`                                                     |
+| Static publication        | GitHub Pages, environment `github-pages`                                            |
+| Documentation             | `https://brady-zip.github.io/afferent/`                                             |
+| shadcn registry           | `https://brady-zip.github.io/afferent`                                              |
+| Source/tag entry point    | `https://github.com/brady-zip/afferent`                                             |
+| Node                      | `.node-version` (`22.22.2`)                                                         |
+| npm CLI for source builds | `11.15.0`                                                                           |
 
 The root `package.json` is deliberately `private: true` and has no
 `publishConfig`. Changesets may update the private source version and changelog,
@@ -33,10 +33,11 @@ but the workflow has no package-publish input, job, permission, environment, or
 credential. A future npm distribution path requires a new milestone decision;
 it must not be inferred from the package name or the ability to run `npm pack`.
 
-## Human-owned external checkpoint
+## Authorized external release boundary
 
-Before any external write, the operator must explicitly confirm all of the
-following:
+On 2026-09-10, the owner explicitly confirmed IP/open-source authority and
+authorized the following publication scope. Future releases must retain these
+boundaries or obtain approval for a change:
 
 1. Exact public GitHub owner and repository name.
 2. Employer/open-source/IP authorization for publishing this Apache-2.0 work.

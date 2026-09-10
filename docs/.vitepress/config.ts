@@ -5,6 +5,7 @@ import { loadReleaseIdentity } from "../../scripts/generate-release-manifest.mjs
 const releaseIdentity = await loadReleaseIdentity();
 
 export default defineConfig({
+  base: `/${releaseIdentity.repository.split("/")[1]}/`,
   title: "Afferent",
   description:
     "Install, secure, and customize the Afferent product-feedback Convex component.",

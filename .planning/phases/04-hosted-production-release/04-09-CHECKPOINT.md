@@ -1,15 +1,17 @@
 ---
 phase: 04-hosted-production-release
 plan: "09"
-status: awaiting_publication_authorization
+status: publishing_authorized_release
 updated: 2026-09-10
 source_commit: 7df3be978da472998f5fa5b4faea6cc49f64f719
 ---
 
 # Plan 04-09: Local preparation and publication checkpoint
 
-Task 1 is implemented and locally verified. Task 2 awaits explicit human
-authorization for GitHub publication. Tasks 3 and 4 have not executed. Do not
+Task 1 is implemented and locally verified. On 2026-09-10, the human replied
+"yes" to the exact public Apache-2.0 GitHub/IP/Actions/Pages authorization
+question. Task 2 configuration and Tasks 3-4 publication/verification are now
+executing within that approved scope. Do not
 create the plan SUMMARY or mark QUAL-11 complete before actual public and
 tagged-local verification.
 
@@ -146,3 +148,15 @@ deploy the demo. No external writes have been performed in this continuation.
    and create its immutable tag, and dispatch the source/static release workflow.
 4. Verify public bytes and the exact tagged clone, including the complete local
    real-Convex Phase 4 gate, before writing release evidence and the plan SUMMARY.
+
+## Authorization and isolated release checkout — 2026-09-10
+
+The approval covers public `brady-zip/afferent`, pushing `main`, protected
+Actions/Pages, and publishing the immutable `v0.1.0` source plus registry/docs
+at `https://brady-zip.github.io/afferent/`. Private h5i refs remain excluded.
+No npm package, public tarball asset, or hosted demo is authorized or required.
+
+The release starts from reviewed checkpoint `3368ff50` in an independent clone.
+The original workspace's newer local tooling and TypeScript 7 experiment remain
+private and have no public remote. The public clone contains only the reviewed
+release history and this publication continuation.

@@ -22,6 +22,8 @@ import { fileURLToPath } from "node:url";
 import { fromMarkdown } from "mdast-util-from-markdown";
 import ts from "typescript";
 
+import { repositoryFromMetadata } from "./generate-release-manifest.mjs";
+
 const repositoryRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const allowedReleaseTokens = new Set([
   "AFFERENT_RELEASE_DOCS_URL",
@@ -356,7 +358,7 @@ function validatePackageImports(fence, manifest) {
   }
 }
 
-function validateShellFence(fence, manifest, registryItems) {
+export function validateShellFence(fence, manifest, registryItems) {
   if (/[;&|>]|\$\(|`/u.test(fence.source)) {
     throw new Error(
       `shell composition is not allowed in ${fence.documentPath}`,
@@ -422,12 +424,20 @@ function validateShellFence(fence, manifest, registryItems) {
       continue;
     }
     const registryInstall = line.match(
-      /^npx shadcn@(?<version>\d+\.\d+\.\d+) add AFFERENT_RELEASE_REGISTRY_URL\/r\/(?<item>afferent-[a-z0-9-]+)\.json$/u,
+      /^npx shadcn@(?<version>\d+\.\d+\.\d+) add (?<registry>\S+)\/r\/(?<item>afferent-[a-z0-9-]+)\.json$/u,
     );
     if (registryInstall) {
+      const repository = repositoryFromMetadata(manifest.repository);
+      const [owner, name] = repository?.split("/") ?? [];
+      const publicRegistry = repository
+        ? `https://${owner}.github.io/${name}`
+        : undefined;
       if (
         fence.metadata.mode !== "registry-install" ||
         registryInstall.groups.version !== manifest.devDependencies.shadcn ||
+        !["AFFERENT_RELEASE_REGISTRY_URL", publicRegistry].includes(
+          registryInstall.groups.registry,
+        ) ||
         !registryItems.has(registryInstall.groups.item)
       ) {
         throw new Error(
@@ -442,9 +452,21 @@ function validateShellFence(fence, manifest, registryItems) {
   }
 }
 
-function validateReleaseTokens(documents) {
+export function validateReleaseTokens(documents, manifest) {
+  const repository = repositoryFromMetadata(manifest.repository);
+  if (!repository) throw new Error("release repository metadata is missing");
+  const [owner, name] = repository.split("/");
+  const destinations = {
+    AFFERENT_RELEASE_DOCS_URL: `https://${owner}.github.io/${name}/`,
+    AFFERENT_RELEASE_REGISTRY_URL: `https://${owner}.github.io/${name}`,
+    AFFERENT_RELEASE_REPOSITORY_URL: `https://github.com/${repository}`,
+  };
+  const urls = new Set();
   const found = new Set();
   for (const [documentPath, source] of documents) {
+    for (const match of source.matchAll(/https:\/\/[^\s<>"'`)\]]+/gu)) {
+      urls.add(match[0]);
+    }
     for (const match of source.matchAll(/\bAFFERENT_RELEASE_[A-Z0-9_]+\b/gu)) {
       if (operationalReleaseTokens.has(match[0])) continue;
       if (!allowedReleaseTokens.has(match[0])) {
@@ -456,8 +478,8 @@ function validateReleaseTokens(documents) {
     }
   }
   for (const token of allowedReleaseTokens) {
-    if (!found.has(token)) {
-      throw new Error(`required release placeholder is missing: ${token}`);
+    if (!found.has(token) && !urls.has(destinations[token])) {
+      throw new Error(`required release destination is missing: ${token}`);
     }
   }
   return [...found].sort();
@@ -596,7 +618,7 @@ function validateDocuments({
     assertNoRemoteDemoClaims(source, documentPath);
     assertNoNpmPublicationClaims(source, documentPath);
   }
-  const releaseTokens = validateReleaseTokens(documents);
+  const releaseTokens = validateReleaseTokens(documents, manifest);
   validateRegistryExamples(
     documents.get("docs/ui/registry.md"),
     registryItems,

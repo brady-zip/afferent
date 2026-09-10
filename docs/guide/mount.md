@@ -116,7 +116,7 @@ references, the host's current auth state, and a Convex client; hooks then own
 query generations, pagination, optimism, pending states, and normalized errors.
 
 For the copy-owned interface, install only the blocks you need from
-`AFFERENT_RELEASE_REGISTRY_URL`. The board block is named `afferent-board`; its
+`https://brady-zip.github.io/afferent`. The board block is named `afferent-board`; its
 generated dependency on `afferent-ui-core` installs the shared provider,
 navigation seam, tokens, and styles. The copied files belong to your
 application—review and version them like application source.

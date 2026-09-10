@@ -17,7 +17,7 @@ routing, and external side effects.
 ## Build the v1 package locally
 
 Afferent v0.1 is not published to npm. Clone the immutable `v0.1.0` tag from
-`AFFERENT_RELEASE_REPOSITORY_URL`, enter that checkout, and build one local
+`https://github.com/brady-zip/afferent`, enter that checkout, and build one local
 tarball:
 
 <!-- afferent-docs: shell mode=source-build context=adopter -->
@@ -66,7 +66,7 @@ scope. Do not accept `scopeId` from a browser or use
 3. Expose only the public-read, authenticated-participation, and authorized-admin
    functions your frontend needs.
 4. Use `afferent/react.js` for a custom interface, or install the matching
-   version of the source-owned UI from `AFFERENT_RELEASE_REGISTRY_URL`.
+   version of the source-owned UI from `https://brady-zip.github.io/afferent`.
 
 The component cannot read host `ctx.auth`. Every host function must derive the
 current actor and re-authorize admin access for that call.

@@ -15,7 +15,7 @@ review, edit, test, and version them with the host application.
 The repository catalog is `registry/registry.json`. Generated install artifacts
 live under `registry/r/`, including one JSON file per item and
 `registry/r/registry.json`. The release base is
-`AFFERENT_RELEASE_REGISTRY_URL`.
+`https://brady-zip.github.io/afferent`.
 
 | Item                     | Purpose                                 |
 | ------------------------ | --------------------------------------- |
@@ -37,9 +37,9 @@ already installed:
 <!-- afferent-docs: shell mode=registry-install context=adopter -->
 
 ```sh
-npx shadcn@4.11.0 add AFFERENT_RELEASE_REGISTRY_URL/r/afferent-board.json
-npx shadcn@4.11.0 add AFFERENT_RELEASE_REGISTRY_URL/r/afferent-roadmap.json
-npx shadcn@4.11.0 add AFFERENT_RELEASE_REGISTRY_URL/r/afferent-changelog.json
+npx shadcn@4.11.0 add https://brady-zip.github.io/afferent/r/afferent-board.json
+npx shadcn@4.11.0 add https://brady-zip.github.io/afferent/r/afferent-roadmap.json
+npx shadcn@4.11.0 add https://brady-zip.github.io/afferent/r/afferent-changelog.json
 ```
 
 Add `afferent-admin` and `afferent-notifications` only where their host bindings

@@ -25,7 +25,7 @@ model, and recovery steps.
 ## Build and install into a Convex application
 
 Afferent v0.1 is not published to npm. Clone the immutable `v0.1.0` tag from
-`AFFERENT_RELEASE_REPOSITORY_URL`, then build one local tarball from that source:
+`https://github.com/brady-zip/afferent`, then build one local tarball from that source:
 
 <!-- afferent-docs: shell mode=source-build context=adopter -->
 
@@ -75,13 +75,12 @@ files in your application.
 - Node.js `>=22.14.0` and npm `>=11.5.1` for repository development and the
   local evaluator
 
-Source/static release publication will replace these explicit markers with immutable public
-links:
+The v0.1.0 source and static release use these public destinations:
 
-| Surface                   | Release marker                    |
-| ------------------------- | --------------------------------- |
-| documentation             | `AFFERENT_RELEASE_DOCS_URL`       |
-| shadcn registry           | `AFFERENT_RELEASE_REGISTRY_URL`   |
-| source repository and tag | `AFFERENT_RELEASE_REPOSITORY_URL` |
+| Surface                   | Release destination                     |
+| ------------------------- | --------------------------------------- |
+| documentation             | `https://brady-zip.github.io/afferent/` |
+| shadcn registry           | `https://brady-zip.github.io/afferent`  |
+| source repository and tag | `https://github.com/brady-zip/afferent` |
 
 Source is licensed under [Apache-2.0](./LICENSE).
