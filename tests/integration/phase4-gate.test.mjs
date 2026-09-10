@@ -41,6 +41,9 @@ describe("Phase 4 real-browser release gate", () => {
       "node scripts/test-demo.mjs",
     );
     expect(manifest.scripts["test:e2e:phase4:remote"]).toBeUndefined();
+    expect(manifest.scripts["test:release:contracts"]).toContain(
+      "--no-file-parallelism",
+    );
     expect(manifest.scripts["typecheck:demo"]).toBe(
       "node scripts/prepare-demo-consumer.mjs --gate",
     );

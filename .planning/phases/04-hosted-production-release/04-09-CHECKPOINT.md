@@ -3,7 +3,8 @@ phase: 04-hosted-production-release
 plan: "09"
 status: publishing_authorized_release
 updated: 2026-09-10
-source_commit: 7df3be978da472998f5fa5b4faea6cc49f64f719
+reviewed_baseline_commit: 7df3be978da472998f5fa5b4faea6cc49f64f719
+release_base_commit: 3368ff50f8ba52aea0cf15bff618fa361be6d62b
 ---
 
 # Plan 04-09: Local preparation and publication checkpoint

@@ -32,7 +32,6 @@ features:
 - Choosing an auth provider or UI layer? The provider, headless, registry, and
   operations sections contain the complete adopter recipes.
 
-The v0.1 release uses explicit `AFFERENT_RELEASE_*_URL` markers until the
-static registry, documentation, and source tag have been published and verified
-from one immutable release candidate. Its package tarball remains local
+The v0.1.0 release ties the public static registry, documentation, and source
+tag to one immutable release candidate. Its package tarball remains local
 verification evidence and is not published to npm or attached publicly.

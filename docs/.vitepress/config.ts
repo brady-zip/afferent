@@ -5,6 +5,7 @@ import { loadReleaseIdentity } from "../../scripts/generate-release-manifest.mjs
 const releaseIdentity = await loadReleaseIdentity();
 
 export default defineConfig({
+  // The approved release uses a GitHub Pages project site without a custom domain.
   base: `/${releaseIdentity.repository.split("/")[1]}/`,
   title: "Afferent",
   description:

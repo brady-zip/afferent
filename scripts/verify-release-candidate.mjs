@@ -224,9 +224,12 @@ export function validateCiWorkflow(source) {
     }
     const commands = commandFor(job);
     for (const required of [
-      "npm install --global npm@11.15.0",
+      'npm install --global --prefix "$RUNNER_TEMP/afferent-npm" npm@11.15.0',
+      'echo "$RUNNER_TEMP/afferent-npm/bin" >> "$GITHUB_PATH"',
+      'export PATH="$RUNNER_TEMP/afferent-npm/bin:$PATH"',
       "node --version",
       "npm --version",
+      'test "$(npm --version)" = "11.15.0"',
       "npm ci",
     ]) {
       if (!commands.includes(required)) {
@@ -256,6 +259,9 @@ export function validateCiWorkflow(source) {
       "npm run verify:release-candidate -- --build",
     ) ||
     !commandFor(localAcceptance).includes("npm run verify:phase4") ||
+    !commandFor(localAcceptance).includes(
+      "npx --no-install playwright install --with-deps chromium",
+    ) ||
     !commandFor(localAcceptance).includes(
       "npm run verify:release-candidate -- --finalize",
     )

@@ -309,6 +309,14 @@ describe("release workflow contracts", () => {
     expect(() => validateCiWorkflow(source)).not.toThrow();
     expect(source).toContain("npm run verify:release-candidate -- --build");
     expect(source).toContain("npm run verify:phase4");
+    expect(() =>
+      validateCiWorkflow(
+        source.replace(
+          "npx --no-install playwright install --with-deps chromium",
+          "",
+        ),
+      ),
+    ).toThrow();
     expect(source).not.toMatch(
       /NODE_AUTH_TOKEN|NPM_TOKEN|CONVEX_DEPLOY_KEY|VITE_CONVEX_URL|vercel|convex deploy|remote playwright/iu,
     );
@@ -331,6 +339,16 @@ describe("release workflow contracts", () => {
     expect(() =>
       validateCiWorkflow(`${source}\n# NODE_AUTH_TOKEN: forbidden\n`),
     ).toThrow(/credential|forbidden/iu);
+    for (const command of [
+      'npm install --global --prefix "$RUNNER_TEMP/afferent-npm" npm@11.15.0',
+      'echo "$RUNNER_TEMP/afferent-npm/bin" >> "$GITHUB_PATH"',
+      'export PATH="$RUNNER_TEMP/afferent-npm/bin:$PATH"',
+      'test "$(npm --version)" = "11.15.0"',
+    ]) {
+      expect(() => validateCiWorkflow(source.replace(command, ""))).toThrow(
+        /missing required command/iu,
+      );
+    }
   });
 
   test("candidate records bind the tested tarball to checksummed evidence", () => {

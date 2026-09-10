@@ -142,50 +142,81 @@ test("the documentation verifier rejects authority, link, and deployment drift",
     validateShellFence,
   } = await import("../../scripts/test-docs.mjs");
 
-  const manifest = JSON.parse(await readRepositoryFile("package.json"));
+  const manifest = {
+    ...JSON.parse(await readRepositoryFile("package.json")),
+    repository: {
+      type: "git",
+      url: "git+https://github.com/example-owner/example-project.git",
+    },
+  };
   const releaseDestinations = [
-    "https://brady-zip.github.io/afferent/",
-    "https://brady-zip.github.io/afferent",
-    "https://github.com/brady-zip/afferent",
+    "https://example-owner.github.io/example-project/",
+    "https://example-owner.github.io/example-project",
+    "https://github.com/example-owner/example-project",
   ];
   const releaseDocuments = (destinations) =>
-    new Map([["README.md", destinations.map((url) => `\`${url}\``).join("\n")]]);
+    new Map([
+      ["README.md", destinations.map((url) => `\`${url}\``).join("\n")],
+    ]);
   assert.deepEqual(
     validateReleaseTokens(releaseDocuments(releaseDestinations), manifest),
     [],
   );
   for (const destination of releaseDestinations) {
     assert.throws(
-      () => validateReleaseTokens(releaseDocuments(
-        releaseDestinations.map((url) => url === destination ? `${url}.invalid` : url),
-      ), manifest),
+      () =>
+        validateReleaseTokens(
+          releaseDocuments(
+            releaseDestinations.map((url) =>
+              url === destination ? `${url}.invalid` : url,
+            ),
+          ),
+          manifest,
+        ),
       /required release destination is missing/iu,
     );
   }
   assert.throws(
-    () => validateReleaseTokens(releaseDocuments([
-      ...releaseDestinations, "AFFERENT_RELEASE_UNKNOWN",
-    ]), manifest),
+    () =>
+      validateReleaseTokens(
+        releaseDocuments([...releaseDestinations, "AFFERENT_RELEASE_UNKNOWN"]),
+        manifest,
+      ),
     /unknown release placeholder/iu,
   );
+  for (const placeholder of [
+    "AFFERENT_RELEASE_DOCS_URL",
+    "AFFERENT_RELEASE_REGISTRY_URL",
+    "AFFERENT_RELEASE_REPOSITORY_URL",
+    "AFFERENT_RELEASE_*_URL",
+  ]) {
+    assert.throws(
+      () =>
+        validateReleaseTokens(
+          releaseDocuments([...releaseDestinations, placeholder]),
+          manifest,
+        ),
+      /(?:unknown|unresolved) release placeholder/iu,
+    );
+  }
   const registryFence = (registry) => ({
     source: `npx shadcn@${manifest.devDependencies.shadcn} add ${registry}/r/afferent-board.json`,
     metadata: { mode: "registry-install" },
     documentPath: "docs/ui/registry.md",
   });
   const registryItems = new Set(["afferent-board"]);
+  assert.doesNotThrow(() =>
+    validateShellFence(
+      registryFence(releaseDestinations[1]),
+      manifest,
+      registryItems,
+    ),
+  );
   for (const registry of [
     "AFFERENT_RELEASE_REGISTRY_URL",
-    "https://brady-zip.github.io/afferent",
-  ]) {
-    assert.doesNotThrow(() =>
-      validateShellFence(registryFence(registry), manifest, registryItems),
-    );
-  }
-  for (const registry of [
-    "https://attacker.github.io/afferent",
-    "https://brady-zip.github.io/wrong-project",
-    "http://brady-zip.github.io/afferent",
+    "https://attacker.github.io/example-project",
+    "https://example-owner.github.io/wrong-project",
+    "http://example-owner.github.io/example-project",
   ]) {
     assert.throws(
       () =>

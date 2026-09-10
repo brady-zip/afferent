@@ -36,17 +36,19 @@ it must not be inferred from the package name or the ability to run `npm pack`.
 ## Authorized external release boundary
 
 On 2026-09-10, the owner explicitly confirmed IP/open-source authority and
-authorized the following publication scope. Future releases must retain these
-boundaries or obtain approval for a change:
+authorized the following v0.1.0 publication scope:
 
-1. Exact public GitHub owner and repository name.
-2. Employer/open-source/IP authorization for publishing this Apache-2.0 work.
-3. Permission to create or update the repository, push `main`, create the
+1. Publish `brady-zip/afferent` as public Apache-2.0 source, with confirmed
+   employer/open-source/IP authority.
+2. Create or update the repository, push `main`, create the
    protected `v0.1.0` tag, run the release workflow, and publish GitHub Pages.
-4. Public repository visibility, Actions permissions, tag protection, and the
-   protected `github-pages` environment.
-5. The decision to keep `refs/h5i/*` private, unless those refs are separately
-   inspected and explicitly approved for disclosure.
+3. Configure Actions permissions, tag protection, and the protected
+   `github-pages` environment at `https://brady-zip.github.io/afferent/`.
+4. Keep `refs/h5i/*` private. Publishing those refs requires separate inspection
+   and explicit authorization.
+
+Future releases require their own publication authorization before external
+writes; the v0.1.0 approval does not authorize a different release or destination.
 
 The repository variables below are assertions, not credentials:
 

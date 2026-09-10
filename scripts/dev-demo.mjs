@@ -3,10 +3,7 @@ import { access } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import {
-  prepareLocalDemoTarget,
-  stopOwned,
-} from "./test-demo.mjs";
+import { prepareLocalDemoTarget, stopOwned } from "./test-demo.mjs";
 
 const repositoryRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const minimumNodeVersion = [22, 14, 0];
@@ -81,7 +78,9 @@ async function waitForVite(baseURL, child) {
   const deadline = Date.now() + readinessTimeoutMs;
   while (Date.now() < deadline) {
     if (child.exitCode !== null) {
-      throw new Error(`Vite exited before readiness with code ${child.exitCode}`);
+      throw new Error(
+        `Vite exited before readiness with code ${child.exitCode}`,
+      );
     }
     try {
       const response = await fetch(baseURL, {

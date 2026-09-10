@@ -3,10 +3,7 @@ import { createScopedAfferentClient } from "afferent/server.js";
 import type { ComponentApi } from "afferent/_generated/component.js";
 
 import { components, internal } from "./_generated/api.js";
-import {
-  internalMutation,
-  type QueryCtx,
-} from "./_generated/server.js";
+import { internalMutation, type QueryCtx } from "./_generated/server.js";
 import {
   deriveLogicalSandboxKey,
   derivePhysicalSandboxScope,

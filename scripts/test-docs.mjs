@@ -435,9 +435,7 @@ export function validateShellFence(fence, manifest, registryItems) {
       if (
         fence.metadata.mode !== "registry-install" ||
         registryInstall.groups.version !== manifest.devDependencies.shadcn ||
-        !["AFFERENT_RELEASE_REGISTRY_URL", publicRegistry].includes(
-          registryInstall.groups.registry,
-        ) ||
+        registryInstall.groups.registry !== publicRegistry ||
         !registryItems.has(registryInstall.groups.item)
       ) {
         throw new Error(
@@ -467,7 +465,7 @@ export function validateReleaseTokens(documents, manifest) {
     for (const match of source.matchAll(/https:\/\/[^\s<>"'`)\]]+/gu)) {
       urls.add(match[0]);
     }
-    for (const match of source.matchAll(/\bAFFERENT_RELEASE_[A-Z0-9_]+\b/gu)) {
+    for (const match of source.matchAll(/\bAFFERENT_RELEASE_[A-Z0-9_*]+/gu)) {
       if (operationalReleaseTokens.has(match[0])) continue;
       if (!allowedReleaseTokens.has(match[0])) {
         throw new Error(
@@ -478,7 +476,10 @@ export function validateReleaseTokens(documents, manifest) {
     }
   }
   for (const token of allowedReleaseTokens) {
-    if (!found.has(token) && !urls.has(destinations[token])) {
+    if (found.has(token)) {
+      throw new Error(`unresolved release placeholder: ${token}`);
+    }
+    if (!urls.has(destinations[token])) {
       throw new Error(`required release destination is missing: ${token}`);
     }
   }

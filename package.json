@@ -92,7 +92,7 @@
     "test:release:package": "node --test tests/integration/release-package.test.mjs && node scripts/verify-package-release.mjs",
     "verify:docs": "node --test tests/integration/docs.test.mjs && node scripts/test-docs.mjs",
     "verify:demo:artifacts": "node scripts/prepare-demo-consumer.mjs --gate",
-    "test:release:contracts": "vitest run tests/integration/demo-artifacts.test.mjs tests/integration/phase4-gate.test.mjs tests/integration/release-workflows.test.mjs tests/integration/version-sync.test.mjs",
+    "test:release:contracts": "vitest run --no-file-parallelism tests/integration/demo-artifacts.test.mjs tests/integration/phase4-gate.test.mjs tests/integration/release-workflows.test.mjs tests/integration/version-sync.test.mjs",
     "verify:phase4": "npm run test:release:contracts && npm run verify:docs && npm run test:release:package && npm run test:demo:maintenance && npm run verify:demo:artifacts && npm run test:e2e:phase4",
     "test:backend:phase2": "npm run test:backend:real && node scripts/test-search-backend.mjs && node scripts/test-rate-limiter-backend.mjs && node scripts/test-tag-cleanup-backend.mjs && node scripts/test-fanout-backend.mjs && node scripts/test-outbox-backend.mjs && node scripts/test-merge-backend.mjs && node scripts/test-headless-backend.mjs",
     "test:phase1": "npm run build && npm run test:fixtures && npm run test:auth-conformance && npm run test:scope && npm run test:component && npm run test:static && npm run test:backend:real && npm run test:package",

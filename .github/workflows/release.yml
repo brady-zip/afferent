@@ -50,9 +50,12 @@ jobs:
           cache: npm
       - name: Install the pinned npm release client
         run: |
-          npm install --global npm@11.15.0
+          npm install --global --prefix "$RUNNER_TEMP/afferent-npm" npm@11.15.0
+          echo "$RUNNER_TEMP/afferent-npm/bin" >> "$GITHUB_PATH"
+          export PATH="$RUNNER_TEMP/afferent-npm/bin:$PATH"
           node --version
           npm --version
+          test "$(npm --version)" = "11.15.0"
       - name: Install from the lockfile
         run: npm ci
       - name: Create a version pull request
@@ -87,9 +90,12 @@ jobs:
           cache: npm
       - name: Install the pinned npm release client
         run: |
-          npm install --global npm@11.15.0
+          npm install --global --prefix "$RUNNER_TEMP/afferent-npm" npm@11.15.0
+          echo "$RUNNER_TEMP/afferent-npm/bin" >> "$GITHUB_PATH"
+          export PATH="$RUNNER_TEMP/afferent-npm/bin:$PATH"
           node --version
           npm --version
+          test "$(npm --version)" = "11.15.0"
       - name: Install from the lockfile
         run: npm ci
       - name: Verify human-owned release configuration

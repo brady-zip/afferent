@@ -30,9 +30,12 @@ jobs:
           cache: npm
       - name: Install the pinned npm release client
         run: |
-          npm install --global npm@11.15.0
+          npm install --global --prefix "$RUNNER_TEMP/afferent-npm" npm@11.15.0
+          echo "$RUNNER_TEMP/afferent-npm/bin" >> "$GITHUB_PATH"
+          export PATH="$RUNNER_TEMP/afferent-npm/bin:$PATH"
           node --version
           npm --version
+          test "$(npm --version)" = "11.15.0"
       - name: Install from the lockfile
         run: npm ci
       - name: Verify release surface drift
@@ -59,9 +62,12 @@ jobs:
           cache: npm
       - name: Install the pinned npm release client
         run: |
-          npm install --global npm@11.15.0
+          npm install --global --prefix "$RUNNER_TEMP/afferent-npm" npm@11.15.0
+          echo "$RUNNER_TEMP/afferent-npm/bin" >> "$GITHUB_PATH"
+          export PATH="$RUNNER_TEMP/afferent-npm/bin:$PATH"
           node --version
           npm --version
+          test "$(npm --version)" = "11.15.0"
       - name: Install from the lockfile
         run: npm ci
       - name: Build and test one candidate artifact set
@@ -89,9 +95,12 @@ jobs:
           cache: npm
       - name: Install the pinned npm release client
         run: |
-          npm install --global npm@11.15.0
+          npm install --global --prefix "$RUNNER_TEMP/afferent-npm" npm@11.15.0
+          echo "$RUNNER_TEMP/afferent-npm/bin" >> "$GITHUB_PATH"
+          export PATH="$RUNNER_TEMP/afferent-npm/bin:$PATH"
           node --version
           npm --version
+          test "$(npm --version)" = "11.15.0"
       - name: Install from the lockfile
         run: npm ci
       - name: Download the exact candidate
@@ -99,6 +108,8 @@ jobs:
         with:
           name: afferent-release-candidate-${{ github.sha }}
           path: ${{ runner.temp }}/release-candidate
+      - name: Install the pinned browser and system dependencies
+        run: npx --no-install playwright install --with-deps chromium
       - name: Run the complete local acceptance gate
         run: npm run verify:phase4
       - name: Bind Phase 4 evidence to the candidate checksum
