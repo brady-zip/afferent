@@ -311,6 +311,11 @@ describe("release workflow contracts", () => {
     expect(source).toContain("npm run verify:phase4");
     expect(() =>
       validateCiWorkflow(
+        source.replace("run: npm run build", "run: node --version"),
+      ),
+    ).toThrow(/quality is missing required command/iu);
+    expect(() =>
+      validateCiWorkflow(
         source.replace(
           "npx --no-install playwright install --with-deps chromium",
           "",

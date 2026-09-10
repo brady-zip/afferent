@@ -248,6 +248,7 @@ export function validateCiWorkflow(source) {
     "npm run verify:version-sync -- --surfaces-only",
     "npm run typecheck",
     "npm run lint",
+    "npm run build",
     "npm test",
   ]) {
     if (!qualityCommands.includes(required)) {

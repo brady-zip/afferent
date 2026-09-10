@@ -44,6 +44,8 @@ jobs:
         run: npm run typecheck
       - name: Lint
         run: npm run lint
+      - name: Build package exports for auth conformance
+        run: npm run build
       - name: Test
         run: npm test
 
