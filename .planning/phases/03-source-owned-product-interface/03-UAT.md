@@ -1,5 +1,8 @@
 ---
-status: passed
+status: complete
+outcome: passed
+completed: 2026-07-24
+metadata_normalized: 2026-09-10
 phase: 03-source-owned-product-interface
 source: [03-VERIFICATION.md]
 started: 2026-07-22T21:34:50Z
@@ -10,12 +13,9 @@ updated: 2026-07-24T03:38:17Z
 
 ## Current Test
 
-number: 3
-name: Adopter content and theme variability
-expected: |
-  Copy-owned source remains straightforward to restyle and preserves readable
-  hierarchy, contrast, focus, reflow, and action discoverability.
-awaiting: complete
+Testing complete. All three scenarios passed with the user's recorded approval.
+The September 10 milestone audit normalized the completed lifecycle status; it
+retains the original July approval, scenario results, and update timestamp.
 
 ## Tests
 
