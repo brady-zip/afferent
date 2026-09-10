@@ -57,7 +57,9 @@ export type SeedGeneration = (input: {
 type GenerationState = "pending" | "active" | "retired" | "failed";
 type PreparationReason = "first_access" | "reset" | "expired";
 
-function preparationState(reason: PreparationReason | undefined) {
+function preparationState(
+  reason: PreparationReason | undefined,
+): "resetting" | "expired" | "preparing" {
   if (reason === "reset") return "resetting";
   if (reason === "expired") return "expired";
   return "preparing";
