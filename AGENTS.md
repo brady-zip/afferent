@@ -66,8 +66,10 @@ and can contain multiple boards. All repository code and locally packed artifact
 
 The repository now contains the component, headless bindings, canonical UI, generated
 registry, auth fixtures, and local example. Treat `.planning/PROJECT.md`,
-`.planning/REQUIREMENTS.md`, and `.planning/ROADMAP.md` as the current product and
-milestone authority.
+`.planning/ROADMAP.md`, and `.planning/MILESTONES.md` as the current product and
+milestone authority. Completed v1 requirements are archived in
+`.planning/milestones/v1.0-REQUIREMENTS.md`; a future milestone creates a fresh
+`.planning/REQUIREMENTS.md`.
 
 ## Conventions
 
@@ -84,18 +86,21 @@ Codex should use `h5i recall context` as shared cross-session memory and `h5i ca
 ### Workflow
 
 **At the start of a non-trivial task**, check the current goal/pin, then (re)set it:
+
 ```bash
 h5i recall context goal        # prints the goal + warns if context is PINNED to a stale branch
 h5i recall context init --goal "<one-line task summary>"
 ```
+
 Run `init` **even if a workspace already exists** — it is idempotent and just
 updates the goal in place (keeping the context branch and milestones). A session
-often resumes with a *stale* goal from a previous task; always re-point it at
+often resumes with a _stale_ goal from a previous task; always re-point it at
 what you are doing now instead of skipping `init` because a workspace exists. If
 `context goal` reports the context is **pinned** to a branch other than the
 current git branch, run `h5i recall context unpin` to resume branch tracking.
 
 **While working:**
+
 ```bash
 h5i hook codex sync           # after a burst of reads/edits — auto-traces OBSERVE/ACT and mines THINK/NOTE from your transcript
 ```
@@ -110,6 +115,7 @@ h5i recall context trace --kind NOTE "TODO: … / LIMITATION: … / RISK: …"
 ```
 
 **After a logical milestone:**
+
 ```bash
 h5i hook codex finish --summary "<milestone summary>"
 ```
@@ -127,14 +133,16 @@ When `h5i hook setup --write --target codex` has installed the Stop hook,
 session sync runs.
 
 Add flags when relevant:
-- `--tests`  — tests were added or modified
-- `--audit`  — security-sensitive or high-risk changes
+
+- `--tests` — tests were added or modified
+- `--audit` — security-sensitive or high-risk changes
 
 **In an agent team: always `h5i capture commit` your work before `h5i team agent submit`.** Submit freezes your env branch; an uncommitted worktree has nothing for reviewers to see.
 
 ### Capturing large command output (token reduction)
 
-Prefer wrapping all shell commands, so the agent receives compact, token-efficient output while preserving the original command behavior; the full raw is stored out-of-band and stays recoverable. Small *successful* output (under ~2 KB) passes through unstored, but failures are always captured regardless of size so they stay searchable:
+Prefer wrapping all shell commands, so the agent receives compact, token-efficient output while preserving the original command behavior; the full raw is stored out-of-band and stays recoverable. Small _successful_ output (under ~2 KB) passes through unstored, but failures are always captured regardless of size so they stay searchable:
+
 ```bash
 h5i capture run -- <command> [args…]     # e.g. h5i capture run -- npm test
 h5i capture run --file <path> -- <cmd>   # tag the files it relates to
@@ -183,7 +191,7 @@ h5i share pull   # pull h5i refs from origin
 
 ## Talking to peer agents (h5i radio)
 
-This repo runs a **peer radio** between two *live, interactive* sessions — a Claude Code
+This repo runs a **peer radio** between two _live, interactive_ sessions — a Claude Code
 TUI and a Codex TUI — over the git ref `refs/h5i/msg` (the i5h protocol). Each session has
 an identity: Claude is `claude`, Codex is `codex`.
 
@@ -216,7 +224,7 @@ If the wait times out with no reply, report that the interactive Claude peer is 
 and leave the ASK pending. **Never fall back to spawning Claude to obtain a response.**
 
 **Do NOT** hold a conversation by running `claude -p …` or `h5i env run <env> -- claude …`.
-That spawns a *headless, non-interactive* Claude subprocess (a puppet you drive) which
+That spawns a _headless, non-interactive_ Claude subprocess (a puppet you drive) which
 cannot be foregrounded and is **not** the peer radio. It is not a fallback for an offline or
 slow peer. Reserve `h5i env run -- claude -p` for an explicitly requested sandboxed batch
 task with provenance — never to chat with the interactive Claude session.

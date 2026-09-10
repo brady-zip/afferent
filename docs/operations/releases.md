@@ -12,7 +12,7 @@ project, Convex deploy key, Vercel project, or remote browser target.
 
 The human-approved 2026-08-07 distribution pivot is encoded in
 `scripts/release-policy.mjs` and
-`.planning/phases/04-hosted-production-release/04-DISTRIBUTION-PIVOT.md`.
+`.planning/milestones/v1.0-phases/04-hosted-production-release/04-DISTRIBUTION-PIVOT.md`.
 
 | Surface                   | Exact v0.1 policy                                                                   |
 | ------------------------- | ----------------------------------------------------------------------------------- |
