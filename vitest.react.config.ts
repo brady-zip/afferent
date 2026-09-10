@@ -22,6 +22,9 @@ const reactEntry = demoPackageRoot
 const clientEntry = demoPackageRoot
   ? resolve(demoPackageRoot, "dist/client/index.js")
   : fileURLToPath(new URL("src/client/index.ts", import.meta.url));
+const packageManifest = demoPackageRoot
+  ? resolve(demoPackageRoot, "package.json")
+  : fileURLToPath(new URL("package.json", import.meta.url));
 const candidateModules = demoPackageRoot
   ? resolve(demoPackageRoot, "..")
   : undefined;
@@ -82,6 +85,7 @@ export default defineConfig({
       ...candidateRuntimeAliases,
       { find: "@/components/afferent", replacement: uiRoot },
       { find: "afferent/react.js", replacement: reactEntry },
+      { find: /^afferent\/package\.json$/, replacement: packageManifest },
       { find: /^afferent$/, replacement: clientEntry },
     ],
   },

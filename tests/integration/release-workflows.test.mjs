@@ -14,7 +14,7 @@ import { join } from "node:path";
 import { promisify } from "node:util";
 import { parse, stringify } from "yaml";
 
-import { afterEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import {
   createReleaseManifest,
@@ -115,6 +115,15 @@ async function gitFixture() {
 }
 
 describe("real Git release identity", () => {
+  beforeEach(() => {
+    vi.stubEnv("GIT_CONFIG_GLOBAL", "/dev/null");
+    vi.stubEnv("GIT_CONFIG_SYSTEM", "/dev/null");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   test("rejects insteadOf and pushInsteadOf rewrites to another host", async () => {
     for (const setting of ["insteadOf", "pushInsteadOf"]) {
       const { root, git } = await gitFixture();
@@ -125,7 +134,7 @@ describe("real Git release identity", () => {
         "https://github.com/",
       );
       await expect(originRepository(root)).rejects.toThrow(
-        /fetch and push destinations/iu,
+        /unsupported GitHub URL form or host/iu,
       );
     }
   }, 30_000);
@@ -172,12 +181,15 @@ describe("real Git release identity", () => {
     await writeFile(join(root, "fixture.txt"), "changed");
     await expect(
       validateReleaseCheckout(commit, "v0.1.0", root),
-    ).rejects.toThrow(/clean checkout/iu);
+    ).rejects.toThrow(/checkout contains tracked changes/iu);
     await git("add", "fixture.txt");
     await git("commit", "--quiet", "-m", "next candidate");
     await expect(
       validateReleaseCheckout(await git("rev-parse", "HEAD"), "v0.1.0", root),
-    ).rejects.toThrow(/tag, commit/iu);
+    ).rejects.toThrow(/tag does not point to the candidate commit/iu);
+    await expect(
+      validateReleaseCheckout(commit, "v0.1.0", root),
+    ).rejects.toThrow(/HEAD does not match the candidate commit/iu);
   }, 30_000);
 });
 
@@ -426,7 +438,7 @@ describe("release workflow contracts", () => {
       validateArtifactActionCompatibility(
         ciSource,
         releaseSource.replace(
-          "repository: $" + "{{ github.repository }}",
+          `repository: \${{ github.repository }}`,
           "repository: attacker/afferent",
         ),
       ),
@@ -536,17 +548,26 @@ describe("release workflow contracts", () => {
     ).toThrow(/forbidden|publication/iu);
   });
 
-  test("static jobs cannot rebuild or repack the verified candidate", async () => {
+  test("static jobs reject commands outside the approved candidate operations", async () => {
     const source = await readFile(
       join(repositoryRoot, ".github/workflows/release.yml"),
       "utf8",
     );
     for (const name of ["prepare-static", "publish-static", "verify-static"]) {
-      for (const command of ["npm run build", "npm pack --ignore-scripts"]) {
+      for (const command of [
+        "npm run build",
+        "npm pack --ignore-scripts",
+        "npm run ui:generate",
+        "npm run docs:build",
+        "npm exec -- vitepress build docs",
+        "npx tsc",
+        "node scripts/generate-ui-artifacts.mjs",
+        "npm ci\nnpm run ui:generate",
+      ]) {
         const workflow = parse(source);
         workflow.jobs[name].steps.push({ name: "Rebuild", run: command });
         expect(() => validateReleaseWorkflow(stringify(workflow))).toThrow(
-          /rebuild or repack/iu,
+          /unapproved command/iu,
         );
       }
     }

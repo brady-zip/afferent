@@ -187,6 +187,13 @@ test("the documentation verifier rejects authority, link, and deployment drift",
     ),
     { active: ["QUAL-09"], retired: ["REL-05", "REL-06"] },
   );
+  assert.deepEqual(
+    validateRequirementCoverage(
+      "requirements: [COMP-01, QUAL-09]",
+      "**Removed from v1:** requirement `COMP-01` was retired; `QUAL-09` remains active.",
+    ),
+    { active: ["QUAL-09"], retired: ["COMP-01"] },
+  );
 
   assert.doesNotThrow(() =>
     assertSafeTypeScriptSnippet(

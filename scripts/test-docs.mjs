@@ -521,7 +521,7 @@ export function validateRequirementCoverage(planSource, requirementsSource) {
     .filter(Boolean);
   const retired = new Set();
   for (const retirement of requirementsSource.matchAll(
-    /\*\*Removed from v1:\*\*\s*(?<ids>`[A-Z]+-\d+`(?:\s*(?:,\s*(?:and\s+)?|and\s+|&\s+)`[A-Z]+-\d+`)*)/gu,
+    /\*\*Removed from v1:\*\*[ \t]*(?:\r?\n[ \t]*)?[^`\r\n]*(?<ids>`[A-Z]+-\d+`(?:\s*(?:,\s*(?:and\s+)?|and\s+|&\s+)`[A-Z]+-\d+`)*)/gu,
   )) {
     for (const match of retirement.groups.ids.matchAll(
       /`(?<id>[A-Z]+-\d+)`/gu,

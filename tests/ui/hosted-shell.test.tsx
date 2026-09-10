@@ -3,11 +3,12 @@
 import { readFile, realpath } from "node:fs/promises";
 import { resolve, sep } from "node:path";
 import React, { act, useState } from "react";
-import afferentPackage from "afferent/package.json";
 import { createRoot } from "react-dom/client";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
+import declaredManifest from "../../package.json";
+import { repositoryFromMetadata } from "../../scripts/generate-release-manifest.mjs";
 import { App, HostedProductBoundary } from "../../example/src/App.js";
 import type {
   HostedAuthState,
@@ -16,6 +17,8 @@ import type {
 import { ResetSandboxDialog } from "../../example/src/components/host/ResetSandboxDialog.js";
 import { SandboxLifecycle } from "../../example/src/components/host/SandboxLifecycle.js";
 import { uiBindings, ControlledUiClient, board, click } from "./harness.js";
+
+const repositoryUrl = `https://github.com/${repositoryFromMetadata(declaredManifest.repository)}`;
 
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -101,7 +104,6 @@ describe("hosted Afferent shell", () => {
     expect(mounted.container.textContent).not.toContain("Reset my sandbox");
     expect(mounted.container.textContent).toContain("afferent v0.1.0");
     expect(mounted.container.textContent).toContain("Source 0123456");
-    const repositoryUrl = afferentPackage.homepage.replace(/#readme$/u, "");
     const links = [
       ...mounted.container.querySelectorAll<HTMLAnchorElement>("a[href]"),
     ];

@@ -398,19 +398,30 @@ export function validateReleaseWorkflow(source) {
       throw new Error("release jobs require the manual allow-release guard");
     }
   }
+  const staticCommands = {
+    "prepare-static": new Set([
+      "npm ci",
+      'npm run verify:release-candidate -- --prepare-pages --candidate-dir "$RUNNER_TEMP/release-candidate" --output "$RUNNER_TEMP/pages-site"',
+    ]),
+    "publish-static": new Set(),
+    "verify-static": new Set([
+      "npm ci",
+      'npm run verify:release-candidate -- --public-static "$AFFERENT_PUBLIC_BASE_URL" --candidate-dir "$RUNNER_TEMP/release-candidate"',
+    ]),
+  };
   for (const [name, job] of Object.entries({
     "prepare-static": prepareStatic,
     "publish-static": publishStatic,
     "verify-static": verifyStatic,
   })) {
-    if (
-      /\b(?:npm\s+(?:run\s+)?(?:build|pack)\b|changeset\s+publish\b)/iu.test(
-        commandFor(job),
-      )
-    ) {
-      throw new Error(
-        `${name} must not rebuild or repack the verified candidate`,
-      );
+    for (const step of job.steps ?? []) {
+      if (
+        step.run !== undefined &&
+        (typeof step.run !== "string" ||
+          !staticCommands[name].has(step.run.trim()))
+      ) {
+        throw new Error(`${name} contains an unapproved command`);
+      }
     }
   }
   if (!dependencyList(prepareStatic).includes("release-readiness")) {
@@ -529,7 +540,7 @@ export function validateArtifactActionCompatibility(ciSource, releaseSource) {
       `afferent-verified-release-candidate-${githubShaExpression}` ||
     crossRunDownload.with.name !==
       `afferent-verified-release-candidate-${sourceCommitExpression}` ||
-    crossRunDownload.with.repository !== "$" + "{{ github.repository }}" ||
+    crossRunDownload.with.repository !== `\${{ github.repository }}` ||
     !crossRunDownload.with["run-id"]
   ) {
     throw new Error(
@@ -1014,8 +1025,13 @@ export async function originRepository(root = repositoryRoot) {
   const repositories = results.flatMap((result) =>
     result.stdout.trim().split(/\r?\n/u).map(repositoryFromMetadata),
   );
+  if (repositories.some((value) => !value)) {
+    throw new Error(
+      "external release configuration is incomplete: an origin fetch or push URL has an unsupported GitHub URL form or host",
+    );
+  }
   const repository = repositories[0];
-  if (!repository || repositories.some((value) => value !== repository)) {
+  if (repositories.some((value) => value !== repository)) {
     throw new Error(
       "external release configuration is incomplete: all origin fetch and push destinations must resolve to the same github.com/<owner>/<repository>",
     );
@@ -1089,12 +1105,16 @@ export async function validateReleaseCheckout(
       cwd: root,
     }),
   ]);
-  if (
-    headResult.stdout.trim() !== sourceCommit ||
-    tagResult.stdout.trim() !== sourceCommit ||
-    statusResult.stdout.trim() !== ""
-  ) {
-    throw new Error("release tag, commit, or clean checkout gate failed");
+  if (headResult.stdout.trim() !== sourceCommit) {
+    throw new Error(
+      "release checkout HEAD does not match the candidate commit",
+    );
+  }
+  if (tagResult.stdout.trim() !== sourceCommit) {
+    throw new Error("release tag does not point to the candidate commit");
+  }
+  if (statusResult.stdout.trim() !== "") {
+    throw new Error("release checkout contains tracked changes");
   }
 }
 
