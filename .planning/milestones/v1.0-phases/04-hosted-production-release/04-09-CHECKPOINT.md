@@ -34,7 +34,7 @@ The user's explicit `yes` authorized public `brady-zip/afferent`, Apache-2.0/IP 
 - A fresh public-tag clone passed the complete Phase 4 gate with six of six real Convex browser suite/project markers and independently passed the documented demo startup. The tagged checkout remained clean.
 - Live official Claude review approved the release, with zero critical findings, one nonblocking warning, and five informational findings retained in `04-REVIEW.md`.
 
-Exact digests and links are in [the release evidence](../../../docs/releases/0.1.0.md). Task history, deviations, and requirement completion are in `04-09-SUMMARY.md`.
+Exact digests and links are in [the release evidence](../../../../docs/releases/0.1.0.md). Task history, deviations, and requirement completion are in `04-09-SUMMARY.md`.
 
 ## Workspace boundary
 

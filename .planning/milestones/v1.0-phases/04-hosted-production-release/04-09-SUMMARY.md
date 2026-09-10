@@ -122,7 +122,7 @@ Tasks 2 and 3 also changed external repository configuration and created the imm
 
 ## Verification Evidence
 
-[docs/releases/0.1.0.md](../../../docs/releases/0.1.0.md) records public URLs, exact tag/source identities, SHA-256 digests, toolchain, controls, and every completed verification surface.
+[docs/releases/0.1.0.md](../../../../docs/releases/0.1.0.md) records public URLs, exact tag/source identities, SHA-256 digests, toolchain, controls, and every completed verification surface.
 
 The final tag clone reproduced tarball SHA-256 `b8279ea847fa672ace6ef151390b90c839f31162c3b70309348d4812100d1d4d`. Normalized Phase 4 evidence binds it to `279d6e47558612476752d81a2a4a844230d7a306`, `local-real-convex`, and six required/completed browser suite/project combinations. These cover signed-out showcase, authenticated admin workflows, two-user isolation, lifecycle and reset, keyboard behavior, responsive layouts, and axe checks. The clean checkout remained unchanged after an additional documented demo-start smoke test.
 

@@ -57,7 +57,7 @@ The corresponding historical npm OIDC/name-preflight and hosted-demo plan truths
 - Tagged normalized evidence: `status: complete`, `backendKind: local-real-convex`, `required: 6`, `completed: 6`.
 - The CI and independently rebuilt tagged package share SHA-256 `b8279ea847fa672ace6ef151390b90c839f31162c3b70309348d4812100d1d4d`.
 - The tagged checkout remained clean after full verification and the extra documented-start smoke test.
-- [Release evidence](../../../docs/releases/0.1.0.md) includes the full identity, digests, public-byte checks, toolchain, controls and review outcome.
+- [Release evidence](../../../../docs/releases/0.1.0.md) includes the full identity, digests, public-byte checks, toolchain, controls and review outcome.
 
 ## Human Authorization and Review Limits
 

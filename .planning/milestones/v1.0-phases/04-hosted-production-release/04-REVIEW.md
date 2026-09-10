@@ -126,7 +126,7 @@ Final approval is correlated to ASK `8be074a1ae2b71c0` by Claude's reply `ec3285
 
 ## Evidence and Limitations
 
-Final required CI run `34457806781` passed all three jobs; release run `34460472107` passed readiness, assembly, Pages deployment, and public-byte verification. A fresh public `v0.1.0` clone passed the full Phase 4 gate with six of six real Convex suite/project completion markers. Public checks installed all five registry features into a clean packed consumer, passed type checking and production build, compared all 77 documentation files/assets, and exercised desktop/mobile documentation. See [release evidence](../../../docs/releases/0.1.0.md).
+Final required CI run `34457806781` passed all three jobs; release run `34460472107` passed readiness, assembly, Pages deployment, and public-byte verification. A fresh public `v0.1.0` clone passed the full Phase 4 gate with six of six real Convex suite/project completion markers. Public checks installed all five registry features into a clean packed consumer, passed type checking and production build, compared all 77 documentation files/assets, and exercised desktop/mobile documentation. See [release evidence](../../../../docs/releases/0.1.0.md).
 
 The shared-source negative test observes an overwrite prompt and preserves the edited provider marker. It does not independently prove that the delayed `n` response was consumed or that the second feature's own files landed in that specific negative case; an aborted default-false prompt can also preserve the file. Future strengthening should assert the second feature's files and add a paired positive overwrite case. The separate public clean-consumer check does prove installation/build of all five features.
 
