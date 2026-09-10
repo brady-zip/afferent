@@ -17,7 +17,7 @@ Afferent reaches its first public release through four coarse vertical slices. T
 - [x] **Phase 2.2: Notification Navigation Target Contract** - Project versioned, public, accessible notification destinations without exposing polymorphic internal identifiers. (INSERTED) (completed 2026-07-21)
 - [x] **Phase 2.3: Admin Read and Projection Completion** - Complete server-authorized admin reads and presentation-ready moderation, changelog, and activity projections. (INSERTED) (completed 2026-07-21)
 - [x] **Phase 3: Source-Owned Product Interface** - Source-owned public and admin interfaces, deterministic distribution, and exhaustive accessibility/recovery evidence are complete. (completed 2026-07-22)
-- [ ] **Phase 4: Local Production Release** - The tagged source, registry, documentation, locally packed component, and clone-and-run local demo work together against real anonymous Convex.
+- [x] **Phase 4: Local Production Release** - The tagged source, registry, documentation, locally packed component, and clone-and-run local demo work together against real anonymous Convex. (completed 2026-09-10)
 
 ## Phase Details
 
@@ -317,7 +317,7 @@ Plans:
 4. Browser tests run the feedback, roadmap, changelog, notification, and admin workflows against real local Convex using the exact artifacts consumers install, including keyboard, axe, responsive, and lifecycle gates.
 5. Documentation covers local-demo operation plus source-build adopter installation through upgrades for all supported auth and UI paths, and a validated source release publishes one immutable tag with synchronized registry/docs while exact local tarball evidence proves exports and declarations.
 
-**Plans:** 8/9 plans executed
+**Plans:** 9/9 plans complete
 
 - [x] 04-01-PLAN.md
 - [x] 04-02-PLAN.md
@@ -327,7 +327,7 @@ Plans:
 - [x] 04-06-PLAN.md
 - [x] 04-07-PLAN.md
 - [x] 04-08-PLAN.md
-- [ ] 04-09-PLAN.md
+- [x] 04-09-PLAN.md
 
 **Wave 1**
 
@@ -363,7 +363,7 @@ Plans:
 
 **Wave 9** _(human-present source/static release; blocked on Wave 8 completion)_
 
-- [ ] `04-09-PLAN.md` — Remove npm publication from v1, confirm GitHub ownership, publish and verify the source tag plus registry/docs, and close exact release evidence without deploying the demo.
+- [x] `04-09-PLAN.md` — Remove npm publication from v1, confirm GitHub ownership, publish and verify the source tag plus registry/docs, and close exact release evidence without deploying the demo.
 
 **UI hint**: yes
 
@@ -372,15 +372,15 @@ Plans:
 **Execution Order:**
 Phases execute sequentially: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 3 -> 4
 
-| Phase                                         | Plans Complete | Status      | Completed  |
-| --------------------------------------------- | -------------- | ----------- | ---------- |
-| 1. Secure Installable Feedback Board          | 8/8            | Complete    | 2026-07-16 |
-| 2. Complete Feedback-to-Changelog Workflow    | 17/17          | Complete    | 2026-07-21 |
-| 2.1 Server-Derived Viewer Capability Contract | 1/1            | Complete    | 2026-07-21 |
-| 2.2 Notification Navigation Target Contract   | 2/2            | Complete    | 2026-07-21 |
-| 2.3 Admin Read and Projection Completion      | 2/2            | Complete    | 2026-07-21 |
-| 3. Source-Owned Product Interface             | 12/12          | Complete    | 2026-07-22 |
-| 4. Local Production Release                   | 8/9            | In Progress |             |
+| Phase                                         | Plans Complete | Status   | Completed  |
+| --------------------------------------------- | -------------- | -------- | ---------- |
+| 1. Secure Installable Feedback Board          | 8/8            | Complete | 2026-07-16 |
+| 2. Complete Feedback-to-Changelog Workflow    | 17/17          | Complete | 2026-07-21 |
+| 2.1 Server-Derived Viewer Capability Contract | 1/1            | Complete | 2026-07-21 |
+| 2.2 Notification Navigation Target Contract   | 2/2            | Complete | 2026-07-21 |
+| 2.3 Admin Read and Projection Completion      | 2/2            | Complete | 2026-07-21 |
+| 3. Source-Owned Product Interface             | 12/12          | Complete | 2026-07-22 |
+| 4. Local Production Release                   | 9/9            | Complete | 2026-09-10 |
 
 ---
 

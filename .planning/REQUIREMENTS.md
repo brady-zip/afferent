@@ -128,7 +128,7 @@ publication from v1; this requirement is retired, not satisfied or reworded.
 
 - [x] **QUAL-09**: Documentation covers installation, component mounting, all three auth integrations, access policy, headless React usage, shadcn installation, customization, testing, host-application deployment, and upgrades. Demo documentation covers local anonymous development rather than a hosted Afferent deployment.
 - [x] **QUAL-10**: The repository and locally packed artifact include the Apache-2.0 license.
-- [ ] **QUAL-11**: A validated source release publishes one immutable tag plus synchronized registry and documentation versions, while checksum-bound local tarball evidence proves the explicit exports and declarations from that exact source.
+- [x] **QUAL-11**: A validated source release publishes one immutable tag plus synchronized registry and documentation versions, while checksum-bound local tarball evidence proves the explicit exports and declarations from that exact source.
 
 ## v2 Requirements
 
@@ -180,98 +180,98 @@ Explicit exclusions for the first product direction, documented to prevent scope
 | Deep comment threading and social reactions               | Flat comments with reply references keep discussion and moderation focused on feedback.                     |
 | Opaque packaged design system                             | Headless APIs and copy-owned shadcn source preserve consumer styling and ownership.                         |
 | Shared mutable demo workspace                             | Private locally authenticated sandboxes prevent cross-user interference and preserve the authority model.   |
-| npm-registry package publication                         | v1 publishes tagged source plus static registry/documentation and verifies an installable local tarball.    |
+| npm-registry package publication                          | v1 publishes tagged source plus static registry/documentation and verifies an installable local tarball.    |
 
 ## Traceability
 
 Every v1 requirement maps to exactly one roadmap phase.
 
-| Requirement | Phase     | Status   |
-| ----------- | --------- | -------- |
-| ACCS-01     | Phase 1   | Complete |
-| ACCS-02     | Phase 1   | Complete |
-| ACCS-03     | Phase 1   | Complete |
-| ACCS-04     | Phase 1   | Complete |
-| ACCS-05     | Phase 1   | Complete |
-| ACCS-06     | Phase 1   | Complete |
-| FDBK-01     | Phase 1   | Complete |
-| FDBK-02     | Phase 1   | Complete |
-| FDBK-03     | Phase 1   | Complete |
-| FDBK-04     | Phase 1   | Complete |
-| FDBK-05     | Phase 1   | Complete |
-| FDBK-06     | Phase 1   | Complete |
-| FDBK-07     | Phase 1   | Complete |
-| FDBK-08     | Phase 1   | Complete |
-| DISC-01     | Phase 2   | Complete |
-| DISC-02     | Phase 2   | Complete |
-| DISC-03     | Phase 2   | Complete |
-| DISC-04     | Phase 2   | Complete |
-| DISC-05     | Phase 2   | Complete |
-| DISC-06     | Phase 2   | Complete |
-| DISC-07     | Phase 2   | Complete |
-| DISC-08     | Phase 2   | Complete |
-| ADMN-01     | Phase 2   | Complete |
-| ADMN-02     | Phase 2   | Complete |
-| ADMN-03     | Phase 2   | Complete |
-| ADMN-04     | Phase 2   | Complete |
-| ADMN-05     | Phase 2   | Complete |
-| ADMN-06     | Phase 2   | Complete |
-| ADMN-07     | Phase 2   | Complete |
-| ADMN-08     | Phase 2   | Complete |
-| ADMN-09     | Phase 2   | Complete |
-| ADMN-10     | Phase 2   | Complete |
-| ADMN-11     | Phase 2.3 | Complete |
-| RMAP-01     | Phase 2   | Complete |
-| RMAP-02     | Phase 2   | Complete |
-| RMAP-03     | Phase 2   | Complete |
-| CHLG-01     | Phase 2   | Complete |
-| CHLG-02     | Phase 2   | Complete |
-| CHLG-03     | Phase 2   | Complete |
-| CHLG-04     | Phase 2   | Complete |
-| CHLG-05     | Phase 2   | Complete |
-| CHLG-06     | Phase 2   | Complete |
-| NOTF-01     | Phase 2   | Complete |
-| NOTF-02     | Phase 2   | Complete |
-| NOTF-03     | Phase 2   | Complete |
-| NOTF-04     | Phase 2   | Complete |
-| NOTF-05     | Phase 2   | Complete |
-| NOTF-06     | Phase 2   | Complete |
-| NOTF-07     | Phase 2   | Complete |
-| NOTF-08     | Phase 2.2 | Complete |
-| COMP-01     | —         | Removed  |
-| COMP-02     | Phase 1   | Complete |
-| COMP-03     | Phase 1   | Complete |
-| COMP-04     | Phase 1   | Complete |
-| COMP-05     | Phase 1   | Complete |
-| COMP-06     | Phase 1   | Complete |
-| COMP-07     | Phase 1   | Complete |
-| UI-01       | Phase 2   | Complete |
-| UI-02       | Phase 2   | Complete |
-| UI-03       | Phase 2   | Complete |
-| UI-04       | Phase 3   | Complete |
-| UI-05       | Phase 3   | Complete |
-| UI-06       | Phase 3   | Complete |
-| UI-07       | Phase 3   | Complete |
-| UI-08       | Phase 2.1 | Complete |
+| Requirement | Phase     | Status     |
+| ----------- | --------- | ---------- |
+| ACCS-01     | Phase 1   | Complete   |
+| ACCS-02     | Phase 1   | Complete   |
+| ACCS-03     | Phase 1   | Complete   |
+| ACCS-04     | Phase 1   | Complete   |
+| ACCS-05     | Phase 1   | Complete   |
+| ACCS-06     | Phase 1   | Complete   |
+| FDBK-01     | Phase 1   | Complete   |
+| FDBK-02     | Phase 1   | Complete   |
+| FDBK-03     | Phase 1   | Complete   |
+| FDBK-04     | Phase 1   | Complete   |
+| FDBK-05     | Phase 1   | Complete   |
+| FDBK-06     | Phase 1   | Complete   |
+| FDBK-07     | Phase 1   | Complete   |
+| FDBK-08     | Phase 1   | Complete   |
+| DISC-01     | Phase 2   | Complete   |
+| DISC-02     | Phase 2   | Complete   |
+| DISC-03     | Phase 2   | Complete   |
+| DISC-04     | Phase 2   | Complete   |
+| DISC-05     | Phase 2   | Complete   |
+| DISC-06     | Phase 2   | Complete   |
+| DISC-07     | Phase 2   | Complete   |
+| DISC-08     | Phase 2   | Complete   |
+| ADMN-01     | Phase 2   | Complete   |
+| ADMN-02     | Phase 2   | Complete   |
+| ADMN-03     | Phase 2   | Complete   |
+| ADMN-04     | Phase 2   | Complete   |
+| ADMN-05     | Phase 2   | Complete   |
+| ADMN-06     | Phase 2   | Complete   |
+| ADMN-07     | Phase 2   | Complete   |
+| ADMN-08     | Phase 2   | Complete   |
+| ADMN-09     | Phase 2   | Complete   |
+| ADMN-10     | Phase 2   | Complete   |
+| ADMN-11     | Phase 2.3 | Complete   |
+| RMAP-01     | Phase 2   | Complete   |
+| RMAP-02     | Phase 2   | Complete   |
+| RMAP-03     | Phase 2   | Complete   |
+| CHLG-01     | Phase 2   | Complete   |
+| CHLG-02     | Phase 2   | Complete   |
+| CHLG-03     | Phase 2   | Complete   |
+| CHLG-04     | Phase 2   | Complete   |
+| CHLG-05     | Phase 2   | Complete   |
+| CHLG-06     | Phase 2   | Complete   |
+| NOTF-01     | Phase 2   | Complete   |
+| NOTF-02     | Phase 2   | Complete   |
+| NOTF-03     | Phase 2   | Complete   |
+| NOTF-04     | Phase 2   | Complete   |
+| NOTF-05     | Phase 2   | Complete   |
+| NOTF-06     | Phase 2   | Complete   |
+| NOTF-07     | Phase 2   | Complete   |
+| NOTF-08     | Phase 2.2 | Complete   |
+| COMP-01     | —         | Removed    |
+| COMP-02     | Phase 1   | Complete   |
+| COMP-03     | Phase 1   | Complete   |
+| COMP-04     | Phase 1   | Complete   |
+| COMP-05     | Phase 1   | Complete   |
+| COMP-06     | Phase 1   | Complete   |
+| COMP-07     | Phase 1   | Complete   |
+| UI-01       | Phase 2   | Complete   |
+| UI-02       | Phase 2   | Complete   |
+| UI-03       | Phase 2   | Complete   |
+| UI-04       | Phase 3   | Complete   |
+| UI-05       | Phase 3   | Complete   |
+| UI-06       | Phase 3   | Complete   |
+| UI-07       | Phase 3   | Complete   |
+| UI-08       | Phase 2.1 | Complete   |
 | DEMO-01     | Phase 4   | Superseded |
-| DEMO-02     | Phase 4   | Complete |
-| DEMO-03     | Phase 4   | Complete |
-| DEMO-04     | Phase 4   | Complete |
-| DEMO-05     | Phase 4   | Complete |
-| DEMO-06     | Phase 4   | Complete |
-| DEMO-07     | Phase 4   | Complete |
-| DEMO-08     | Phase 4   | Complete |
-| QUAL-01     | Phase 2   | Complete |
-| QUAL-02     | Phase 1   | Complete |
-| QUAL-03     | Phase 1   | Complete |
-| QUAL-04     | Phase 3   | Complete |
-| QUAL-05     | Phase 4   | Complete |
-| QUAL-06     | Phase 4   | Complete |
-| QUAL-07     | Phase 3   | Complete |
-| QUAL-08     | Phase 3   | Complete |
-| QUAL-09     | Phase 4   | Complete |
-| QUAL-10     | Phase 1   | Complete |
-| QUAL-11     | Phase 4   | Pending  |
+| DEMO-02     | Phase 4   | Complete   |
+| DEMO-03     | Phase 4   | Complete   |
+| DEMO-04     | Phase 4   | Complete   |
+| DEMO-05     | Phase 4   | Complete   |
+| DEMO-06     | Phase 4   | Complete   |
+| DEMO-07     | Phase 4   | Complete   |
+| DEMO-08     | Phase 4   | Complete   |
+| QUAL-01     | Phase 2   | Complete   |
+| QUAL-02     | Phase 1   | Complete   |
+| QUAL-03     | Phase 1   | Complete   |
+| QUAL-04     | Phase 3   | Complete   |
+| QUAL-05     | Phase 4   | Complete   |
+| QUAL-06     | Phase 4   | Complete   |
+| QUAL-07     | Phase 3   | Complete   |
+| QUAL-08     | Phase 3   | Complete   |
+| QUAL-09     | Phase 4   | Complete   |
+| QUAL-10     | Phase 1   | Complete   |
+| QUAL-11     | Phase 4   | Complete   |
 
 **Coverage:**
 
@@ -282,4 +282,4 @@ Every v1 requirement maps to exactly one roadmap phase.
 ---
 
 _Requirements defined: 2026-07-15_
-_Last updated: 2026-08-07 after the Phase 4 distribution pivot_
+_Last updated: 2026-09-10 after verified v0.1.0 publication_

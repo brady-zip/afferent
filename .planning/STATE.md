@@ -2,119 +2,121 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 04
-current_phase_name: Local Production Release
-status: executing
-stopped_at: Plan 04-09 local release gates verified at 7df3be97; live code review approved; awaiting GitHub publication authorization
-last_updated: "2026-09-10T07:39:00Z"
+current_phase: 4
+status: complete
+stopped_at: Phase 4 complete; v0.1.0 source and Pages published and verified
+last_updated: "2026-09-10T14:32:11Z"
 last_activity: 2026-09-10
-last_activity_desc: Live Claude review approved; 57 tests plus clean package, docs, and installed-demo checks pass; publication authorization pending
+last_activity_desc: Phase 4 complete
 progress:
   total_phases: 7
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 51
-  completed_plans: 50
-  percent: 98
+  completed_plans: 51
+  percent: 100
+current_phase_name: Local Production Release
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-07-24)
+See: .planning/PROJECT.md (updated 2026-09-10)
 
 **Core value:** SaaS teams can add deeply integrated product feedback to an existing Convex application while retaining native ownership of their data, identity, permissions, and user experience.
 **Current focus:** Phase 04 — Local Production Release (historical directory slug: `hosted-production-release`)
 
 ## Current Position
 
-Phase: 04 (Local Production Release) — EXECUTING
-Plan: 9 of 9
-Status: Local preparation verified and live review approved; awaiting 04-09 GitHub publication authorization
-Last activity: 2026-09-10 — Verified source/static preparation at 7df3be97 with 57 tests, clean TypeScript 6, and npm 11.15.0
+Phase: 4 (Local Production Release) — COMPLETE
+Plan: 9 of 9 complete
+Status: All 51 milestone plans complete; v0.1.0 published and verified
+Last activity: 2026-09-10 — Phase 4 complete
 
-Progress: [██████████] 98%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 50
-- Average duration: 73 min
-- Total execution time: 3641 min
+- Total plans completed: 51
+- Average duration: 73 min across the previously timed plans; 04-09 spans multiple sessions
+- Previously recorded execution time: 3641 min, excluding multi-session 04-09
 
 **By Phase:**
 
-| Phase      | Plans | Total    | Avg/Plan |
-| ---------- | ----- | -------- | -------- |
-| Phase 01   | 8     | 299 min  | 37 min   |
-| Phase 02   | 17    | 854 min  | 50 min   |
-| Phase 02.1 | 1     | 68 min   | 68 min   |
-| Phase 02.3 | 2     | 33 min   | 17 min   |
-| Phase 03   | 12    | 1401 min | 117 min  |
-| Phase 04   | 8     | 998 min  | 125 min  |
+| Phase      | Plans | Total                         | Avg/Plan |
+| ---------- | ----- | ----------------------------- | -------- |
+| Phase 01   | 8     | 299 min                       | 37 min   |
+| Phase 02   | 17    | 854 min                       | 50 min   |
+| Phase 02.1 | 1     | 68 min                        | 68 min   |
+| Phase 02.2 | 2     | 25 min                        | 13 min   |
+| Phase 02.3 | 2     | 33 min                        | 17 min   |
+| Phase 03   | 12    | 1401 min                      | 117 min  |
+| Phase 04   | 9     | 998 min + multi-session 04-09 | —        |
 
 **Recent Trend:**
 
 - Last 5 plans: 68 min, 37 min, 81 min, 53 min, 53 min
-- Trend: Phase 4 package, lifecycle, local browser, documentation, and protected release-automation gates are complete
+- Trend: Phase 4 public source/static publication and exact tagged local acceptance are complete
 
 _Updated after each plan completion_
 
 **Plan History:**
 
-| Plan           | Duration | Tasks   | Files    |
-| -------------- | -------- | ------- | -------- |
-| Phase 01 P01   | 8 min    | 2 tasks | 2 files  |
-| Phase 01 P02   | 148 min  | 2 tasks | 30 files |
-| Phase 01 P03   | 21 min   | 3 tasks | 27 files |
-| Phase 01 P04   | 90 min   | 3 tasks | 23 files |
-| Phase 01 P05   | 13m      | 3 tasks | 16 files |
-| Phase 01 P06   | 4 min    | 2 tasks | 8 files  |
-| Phase 01 P07   | 5 min    | 2 tasks | 6 files  |
-| Phase 01 P08   | 10 min   | 3 tasks | 13 files |
-| Phase 02 P01   | 12 min   | 3 tasks | 24 files |
-| Phase 02 P02   | 14 min   | 3 tasks | 26 files |
-| Phase 02 P03   | 26 min   | 3 tasks | 45 files |
-| Phase 02 P04   | 15min    | 3 tasks | 26 files |
-| Phase 02 P06   | 8min     | 3 tasks | 14 files |
-| Phase 02 P07   | 13min    | 3 tasks | 20 files |
-| Phase 02 P08   | 13min    | 3 tasks | 29 files |
-| Phase 02 P09   | 31min    | 3 tasks | 16 files |
-| Phase 02 P10   | 446min   | 3 tasks | 21 files |
-| Phase 02 P05   | 55min    | 3 tasks | 23 files |
-| Phase 02 P11   | 27min    | 3 tasks | 20 files |
-| Phase 02 P12   | 34min    | 3 tasks | 28 files |
-| Phase 02 P13   | 47min    | 3 tasks | 4 files  |
-| Phase 02 P14   | 14min    | 3 tasks | 4 files  |
-| Phase 03 P01   | 14min    | 3 tasks | 35 files |
-| Phase 02 P15   | 100min   | 3 tasks | 11 files |
-| Phase 02 P16   | 17min    | 3 tasks | 9 files  |
-| Phase 02 P17   | 30min    | 3 tasks | 5 files  |
-| Phase 02.1 P01 | 68min    | 3 tasks | 31 files |
-| Phase 03 P02   | 15 min   | 3 tasks | 32 files |
-| Phase 02.2 P01 | 17min    | 3 tasks | 16 files |
-| Phase 02.2 P02 | 8min     | 2 tasks | 2 files  |
-| Phase 02.3 P01 | 13min    | 3 tasks | 31 files |
-| Phase 02.3 P02 | 20min    | 3 tasks | 7 files  |
-| Phase 03 P03   | 20min    | 3 tasks | 27 files |
-| Phase 03 P04   | 8min     | 3 tasks | 25 files |
-| Phase 03 P05   | 17min    | 3 tasks | 15 files |
-| Phase 03 P06   | 32min    | 3 tasks | 42 files |
-| Phase 03 P07   | 9min     | 3 tasks | 38 files |
-| Phase 03 P08   | 20h 38m  | 3 tasks | 35 files |
-| Phase 03 P09   | 8min     | 3 tasks | 32 files |
-| Phase 03 P10   | 10min    | 3 tasks | 35 files |
-| Phase 03 P11   | 8min     | 3 tasks | 36 files |
-| Phase 03 P12   | 22min    | 3 tasks | 30 files |
-| Phase 04 P01   | 12 min   | 3 tasks | 6 files  |
-| Phase 04 P02   | 3 min    | 3 tasks | 12 files |
-| Phase 04 P03   | 697 min  | 3 tasks | 10 files |
-| Phase 04 P04   | 68 min   | 3 tasks | 16 files |
-| Phase 04 P05   | 37 min   | 3 tasks | 20 files |
-| Phase 04 P06   | 81 min   | 3 tasks | 22 files |
-| Phase 04 P07   | 53 min   | 3 tasks | 19 files |
-| Phase 04 P08   | 53 min   | 3 tasks | 24 files |
+| Plan           | Duration      | Tasks   | Files                |
+| -------------- | ------------- | ------- | -------------------- |
+| Phase 01 P01   | 8 min         | 2 tasks | 2 files              |
+| Phase 01 P02   | 148 min       | 2 tasks | 30 files             |
+| Phase 01 P03   | 21 min        | 3 tasks | 27 files             |
+| Phase 01 P04   | 90 min        | 3 tasks | 23 files             |
+| Phase 01 P05   | 13m           | 3 tasks | 16 files             |
+| Phase 01 P06   | 4 min         | 2 tasks | 8 files              |
+| Phase 01 P07   | 5 min         | 2 tasks | 6 files              |
+| Phase 01 P08   | 10 min        | 3 tasks | 13 files             |
+| Phase 02 P01   | 12 min        | 3 tasks | 24 files             |
+| Phase 02 P02   | 14 min        | 3 tasks | 26 files             |
+| Phase 02 P03   | 26 min        | 3 tasks | 45 files             |
+| Phase 02 P04   | 15min         | 3 tasks | 26 files             |
+| Phase 02 P06   | 8min          | 3 tasks | 14 files             |
+| Phase 02 P07   | 13min         | 3 tasks | 20 files             |
+| Phase 02 P08   | 13min         | 3 tasks | 29 files             |
+| Phase 02 P09   | 31min         | 3 tasks | 16 files             |
+| Phase 02 P10   | 446min        | 3 tasks | 21 files             |
+| Phase 02 P05   | 55min         | 3 tasks | 23 files             |
+| Phase 02 P11   | 27min         | 3 tasks | 20 files             |
+| Phase 02 P12   | 34min         | 3 tasks | 28 files             |
+| Phase 02 P13   | 47min         | 3 tasks | 4 files              |
+| Phase 02 P14   | 14min         | 3 tasks | 4 files              |
+| Phase 03 P01   | 14min         | 3 tasks | 35 files             |
+| Phase 02 P15   | 100min        | 3 tasks | 11 files             |
+| Phase 02 P16   | 17min         | 3 tasks | 9 files              |
+| Phase 02 P17   | 30min         | 3 tasks | 5 files              |
+| Phase 02.1 P01 | 68min         | 3 tasks | 31 files             |
+| Phase 03 P02   | 15 min        | 3 tasks | 32 files             |
+| Phase 02.2 P01 | 17min         | 3 tasks | 16 files             |
+| Phase 02.2 P02 | 8min          | 2 tasks | 2 files              |
+| Phase 02.3 P01 | 13min         | 3 tasks | 31 files             |
+| Phase 02.3 P02 | 20min         | 3 tasks | 7 files              |
+| Phase 03 P03   | 20min         | 3 tasks | 27 files             |
+| Phase 03 P04   | 8min          | 3 tasks | 25 files             |
+| Phase 03 P05   | 17min         | 3 tasks | 15 files             |
+| Phase 03 P06   | 32min         | 3 tasks | 42 files             |
+| Phase 03 P07   | 9min          | 3 tasks | 38 files             |
+| Phase 03 P08   | 20h 38m       | 3 tasks | 35 files             |
+| Phase 03 P09   | 8min          | 3 tasks | 32 files             |
+| Phase 03 P10   | 10min         | 3 tasks | 35 files             |
+| Phase 03 P11   | 8min          | 3 tasks | 36 files             |
+| Phase 03 P12   | 22min         | 3 tasks | 30 files             |
+| Phase 04 P01   | 12 min        | 3 tasks | 6 files              |
+| Phase 04 P02   | 3 min         | 3 tasks | 12 files             |
+| Phase 04 P03   | 697 min       | 3 tasks | 10 files             |
+| Phase 04 P04   | 68 min        | 3 tasks | 16 files             |
+| Phase 04 P05   | 37 min        | 3 tasks | 20 files             |
+| Phase 04 P06   | 81 min        | 3 tasks | 22 files             |
+| Phase 04 P07   | 53 min        | 3 tasks | 19 files             |
+| Phase 04 P08   | 53 min        | 3 tasks | 24 files             |
+| Phase 04 P09   | multi-session | 4 tasks | 42 publication paths |
 
 ## Accumulated Context
 
@@ -244,7 +246,7 @@ Recent decisions affecting current work:
 - [Phase 04]: Pin react-router 8.3.0 exactly and synthesize packed metadata from committed package state so unrelated experiments cannot enter release artifacts.
 - [Phase 04]: Pin VitePress 1.6.4 and keep the adopter documentation theme-neutral. — An exact stable version keeps local, CI, and packed-artifact documentation builds deterministic.
 - [Phase 04]: Require explicit validation metadata on every code fence and compile provider examples from the exact packed artifact. — Security-sensitive wrapper guidance must be executable release evidence rather than unverified prose.
-- [Phase 04]: Permit only AFFERENT_RELEASE_DOCS_URL, AFFERENT_RELEASE_REGISTRY_URL, and AFFERENT_RELEASE_REPOSITORY_URL. — The docs gate rejects npm publication claims, undeclared release markers, remote execution, and cloud identifiers.
+- [Phase 04]: Resolve every release-facing identity to brady-zip/afferent and its approved Pages base; reject unresolved release placeholders. Operational variable names remain allowed only in their documented code spans.
 - [Phase 04]: Derive local package, source tag, registry, docs, UI, and evidence identity from one canonical 0.1.0 release manifest.
 - [Phase 04]: Keep the root package private with no publishConfig and keep Changesets version-only for tagged source releases.
 - [Phase 04]: Accept cross-run candidates only from the successful ci.yml push on main for the exact source commit.
@@ -252,13 +254,13 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-- [Phase 4]: Complete the exact GitHub owner/IP/Pages authorization checkpoint, publish the protected source tag and Pages artifact, and record public verification evidence.
+No required Phase 4 work remains. Nonblocking review maintenance: one warning and five informational findings in `04-REVIEW.md`.
 
 ### Blockers/Concerns
 
-- [Phase 4]: The exact released tag must pass the full local real-Convex Phase 4 gate, including sandbox isolation, lifecycle, and accessibility.
-- [Phase 4]: The selected repository is brady-zip/afferent; read-only GitHub identity is brady-zip, but the repository and origin do not exist. Explicit authorization to publish this Apache-2.0 source, create/configure the public repository, push main, tag v0.1.0, and publish Pages remains pending.
-- [Phase 4]: refs/h5i/* remain private unless separately inspected and explicitly authorized for disclosure.
+No release blocker remains. `v0.1.0` is immutable at `279d6e47558612476752d81a2a4a844230d7a306`; CI `34457806781`, release `34460472107`, public registry/docs checks, and the exact tagged real Convex gate passed.
+
+Publication used the sibling `afferent-public-release` checkout. The original workspace's subsequent private history and TypeScript 7 experiment remain separate. `refs/h5i/*` remain private.
 
 ### Roadmap Evolution
 
@@ -276,6 +278,6 @@ Items acknowledged and carried forward from initial requirements:
 
 ## Session Continuity
 
-Last session: 2026-09-10T07:39:00Z
-Stopped at: Verified 04-09 local preparation; await explicit GitHub publication authorization
-Resume file: .planning/phases/04-hosted-production-release/04-09-CHECKPOINT.md
+Last session: 2026-09-10T14:32:11Z
+Stopped at: Phase 4 complete; public v0.1.0 verified; milestone archival is a separate next action
+Resume file: .planning/phases/04-hosted-production-release/04-09-SUMMARY.md

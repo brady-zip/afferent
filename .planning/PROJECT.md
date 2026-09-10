@@ -19,7 +19,7 @@ SaaS teams can add deeply integrated product feedback to an existing Convex appl
 
 ## Current State
 
-Phases 1 through 3 are complete and verified. The packed Convex component supports provider-neutral trusted-host integration for Convex Auth, Clerk, and Better Auth; secure multi-board feedback; ranked and searchable discovery; participation and moderation; a status-driven roadmap; manually published linked changelog entries; in-app notifications and a host delivery outbox; and the complete framework-light headless React contract. The accessible, responsive public and admin interfaces now ship from one canonical source through mirrored examples and a deterministic shadcn registry. Phase 4 is preparing the tagged source release, public registry/documentation, and a feature-full local demo that starts an anonymous Convex development backend without account credentials.
+Phases 1 through 4 are complete and verified. The packed Convex component supports provider-neutral trusted-host integration for Convex Auth, Clerk, and Better Auth; secure multi-board feedback; ranked and searchable discovery; participation and moderation; a status-driven roadmap; manually published linked changelog entries; in-app notifications and a host delivery outbox; and the complete framework-light headless React contract. The accessible, responsive public and admin interfaces now ship from one canonical source through mirrored examples and a deterministic shadcn registry. Afferent v0.1.0 is publicly released at https://github.com/brady-zip/afferent/tree/v0.1.0 with matching registry and documentation at https://brady-zip.github.io/afferent/. The exact tag passes clean packed-consumer checks and the complete real Convex local gate; its feature-full demo starts an anonymous development backend without account credentials. See docs/releases/0.1.0.md for immutable identities and evidence.
 
 ## Requirements
 
@@ -36,11 +36,13 @@ Phases 1 through 3 are complete and verified. The packed Convex component suppor
 - [x] Developers can build custom interfaces using headless React hooks and providers. — Validated in Phase 2.
 - [x] Developers can adopt complete user-facing and admin interfaces as source-owned shadcn components from both a shadcn registry and repository examples. — Validated in Phase 3: Source-Owned Product Interface.
 
+- [x] A developer can clone the repository and start the complete Vite and Convex Auth example with one documented command and no Convex account, deploy key, or committed auth material. — Validated in Phase 4 against public v0.1.0.
+- [x] Each locally signed-in demo user receives a private, seeded admin sandbox that they can modify and reset without affecting other local users. — Validated in Phase 4 against public v0.1.0.
+- [x] The first public release includes typed APIs, automated tests, integration documentation, source-build installation documentation, a tagged Apache-2.0 source release, shadcn registry distribution, and the feature-full local working example. — Validated in Phase 4 against public v0.1.0.
+
 ### Active
 
-- [ ] A developer can clone the repository and start the complete Vite and Convex Auth example with one documented command and no Convex account, deploy key, or committed auth material.
-- [ ] Each locally signed-in demo user receives a private, seeded admin sandbox that they can modify and reset without affecting other local users.
-- [ ] The first public release includes typed APIs, automated tests, integration documentation, source-build installation documentation, a tagged Apache-2.0 source release, shadcn registry distribution, and the feature-full local working example.
+No remaining v1 requirements. Milestone archival and future scope selection are separate next actions.
 
 ### Out of Scope
 
@@ -82,32 +84,33 @@ The repository itself is also the product showcase. Its Vite example must start 
 
 ## Key Decisions
 
-| Decision | Rationale | Outcome |
-|----------|-----------|---------|
-| Build a Convex component rather than a hosted feedback service | Keeps data and workflows natively inside the adopting application's Convex deployment | — Pending |
-| Optimize for Convex SaaS teams | These teams benefit most from native data, auth, and UI integration | — Pending |
-| Scope v1 to feedback core plus a status-driven roadmap | Delivers the central feedback lifecycle without beginning as a full enterprise Canny clone | — Pending |
-| Represent one product per installation | Keeps tenancy and authorization simple for the first production-ready release | — Pending |
-| Use installation-wide access policy | Provides useful configurability without introducing per-board policy complexity | — Pending |
-| Keep identity and admin authorization in the host app | Convex component isolation prevents direct `ctx.auth` access and provider-neutral wrappers support all target auth systems | — Pending |
-| Ship headless React plus copyable shadcn source | Gives consumers a fast polished start while preserving full styling and ownership | ✓ Validated in Phase 3 |
-| Publish UI through both a shadcn registry and repository examples | Supports convenient installation and transparent reference implementations | ✓ Validated in Phase 3 |
-| Keep the Vite React example local rather than publicly hosted | Delivers a credential-free clone-and-run evaluator path without operating a public demo service; the accepted tradeoff is that evaluators install the repository toolchain | Locked 2026-07-30 |
-| Keep npm-registry publication out of v1 | Ships source, registry, and documentation without claiming or publishing an npm package; local tarball gates preserve installability | Locked 2026-08-07 |
-| Use a Vite React app for the local example | Demonstrates a simple client-side integration without tying the component to a full-stack React framework | — Pending |
-| Use Convex Auth in the local example | Keeps the canonical demo within the Convex ecosystem while other auth providers remain documented and tested integrations | — Pending |
-| Provide private per-user demo sandboxes | Enables safe hands-on admin evaluation without shared-state vandalism or browser-session cleanup complexity | — Pending |
-| Publish under Apache-2.0 | Permits broad commercial use while providing an explicit patent grant | — Pending |
-| Keep roadmap grouping server-derived | The fixed Planned, In Progress, and Complete projection must stay consistent across consumers | ✓ Validated in Phase 2 |
-| Keep changelog publication manual and editorial | Status changes should not silently create public release notes | ✓ Validated in Phase 2 |
-| Expose domain hooks with a closed state and error vocabulary | Copied or custom UI can render every workflow without duplicating Convex access, auth gating, optimism, or pagination | ✓ Validated in Phase 2 |
-| Deliver notifications through an in-app inbox plus a leased host outbox | Hosts receive vendor-neutral events while external side effects remain in their trusted server boundary | ✓ Validated in Phase 2 |
+| Decision                                                                | Rationale                                                                                                                                                                  | Outcome                |
+| ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| Build a Convex component rather than a hosted feedback service          | Keeps data and workflows natively inside the adopting application's Convex deployment                                                                                      | — Pending              |
+| Optimize for Convex SaaS teams                                          | These teams benefit most from native data, auth, and UI integration                                                                                                        | — Pending              |
+| Scope v1 to feedback core plus a status-driven roadmap                  | Delivers the central feedback lifecycle without beginning as a full enterprise Canny clone                                                                                 | — Pending              |
+| Represent one product per installation                                  | Keeps tenancy and authorization simple for the first production-ready release                                                                                              | — Pending              |
+| Use installation-wide access policy                                     | Provides useful configurability without introducing per-board policy complexity                                                                                            | — Pending              |
+| Keep identity and admin authorization in the host app                   | Convex component isolation prevents direct `ctx.auth` access and provider-neutral wrappers support all target auth systems                                                 | — Pending              |
+| Ship headless React plus copyable shadcn source                         | Gives consumers a fast polished start while preserving full styling and ownership                                                                                          | ✓ Validated in Phase 3 |
+| Publish UI through both a shadcn registry and repository examples       | Supports convenient installation and transparent reference implementations                                                                                                 | ✓ Validated in Phase 3 |
+| Keep the Vite React example local rather than publicly hosted           | Delivers a credential-free clone-and-run evaluator path without operating a public demo service; the accepted tradeoff is that evaluators install the repository toolchain | Locked 2026-07-30      |
+| Keep npm-registry publication out of v1                                 | Ships source, registry, and documentation without claiming or publishing an npm package; local tarball gates preserve installability                                       | Locked 2026-08-07      |
+| Use a Vite React app for the local example                              | Demonstrates a simple client-side integration without tying the component to a full-stack React framework                                                                  | ✓ Validated in Phase 4 |
+| Use Convex Auth in the local example                                    | Keeps the canonical demo within the Convex ecosystem while other auth providers remain documented and tested integrations                                                  | ✓ Validated in Phase 4 |
+| Provide private per-user demo sandboxes                                 | Enables safe hands-on admin evaluation without shared-state vandalism or browser-session cleanup complexity                                                                | ✓ Validated in Phase 4 |
+| Publish under Apache-2.0                                                | Permits broad commercial use while providing an explicit patent grant                                                                                                      | ✓ Validated in Phase 4 |
+| Keep roadmap grouping server-derived                                    | The fixed Planned, In Progress, and Complete projection must stay consistent across consumers                                                                              | ✓ Validated in Phase 2 |
+| Keep changelog publication manual and editorial                         | Status changes should not silently create public release notes                                                                                                             | ✓ Validated in Phase 2 |
+| Expose domain hooks with a closed state and error vocabulary            | Copied or custom UI can render every workflow without duplicating Convex access, auth gating, optimism, or pagination                                                      | ✓ Validated in Phase 2 |
+| Deliver notifications through an in-app inbox plus a leased host outbox | Hosts receive vendor-neutral events while external side effects remain in their trusted server boundary                                                                    | ✓ Validated in Phase 2 |
 
 ## Evolution
 
 This document evolves at phase transitions and milestone boundaries.
 
 **After each phase transition** (via `$gsd-transition`):
+
 1. Requirements invalidated? → Move to Out of Scope with reason
 2. Requirements validated? → Move to Validated with phase reference
 3. New requirements emerged? → Add to Active
@@ -115,10 +118,12 @@ This document evolves at phase transitions and milestone boundaries.
 5. "What This Is" still accurate? → Update if drifted
 
 **After each milestone** (via `$gsd-complete-milestone`):
+
 1. Full review of all sections
 2. Core Value check — still the right priority?
 3. Audit Out of Scope — reasons still valid?
 4. Update Context with current state
 
 ---
-*Last updated: 2026-08-07 after the Phase 4 distribution pivot*
+
+_Last updated: 2026-09-10 after verified v0.1.0 publication_

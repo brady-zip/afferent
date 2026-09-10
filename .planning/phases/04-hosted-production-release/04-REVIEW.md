@@ -1,196 +1,145 @@
 ---
 phase: 04-hosted-production-release
-reviewed: 2026-09-10T07:34:47Z
-depth: standard
-files_reviewed: 38
+reviewed: 2026-09-10T09:19:42Z
+depth: deep
+files_reviewed: 42
 files_reviewed_list:
-  - .changeset/config.json
+  - .github/workflows/ci.yml
   - .github/workflows/release.yml
-  - .planning/PROJECT.md
-  - .planning/REQUIREMENTS.md
-  - .planning/ROADMAP.md
-  - .planning/STATE.md
-  - .planning/phases/04-hosted-production-release/04-09-PLAN.md
-  - .planning/phases/04-hosted-production-release/04-CONTEXT.md
-  - .planning/phases/04-hosted-production-release/04-DISTRIBUTION-PIVOT.md
-  - .planning/phases/04-hosted-production-release/04-SCOPE-PIVOT.md
-  - AGENTS.md
-  - CLAUDE.md
+  - .planning/phases/04-hosted-production-release/04-09-CHECKPOINT.md
   - README.md
+  - docs/.vitepress/config.ts
   - docs/guide/install.md
+  - docs/guide/mount.md
   - docs/index.md
   - docs/operations/releases.md
-  - docs/operations/upgrades.md
   - docs/ui/registry.md
-  - example/src/components/host/AppShell.tsx
-  - package-lock.json
+  - example/components.json
+  - example/convex/_generated/api.d.ts
+  - example/convex/sandboxLifecycle.ts
+  - example/convex/seeds.ts
+  - examples/ui/afferent/README.md
+  - examples/ui/afferent/manifest.json
+  - fixtures/registry-vite/components.json
   - package.json
+  - registry/r/afferent-admin.json
+  - registry/r/afferent-board.json
+  - registry/r/afferent-changelog.json
+  - registry/r/afferent-manifest.json
+  - registry/r/afferent-notifications.json
+  - registry/r/afferent-roadmap.json
   - registry/r/registry.json
   - registry/registry.json
-  - scripts/generate-release-manifest.mjs
-  - scripts/generate-ui-artifacts.mjs
+  - scripts/codegen-demo.mjs
+  - scripts/dev-demo.mjs
+  - scripts/prepare-demo-consumer.mjs
   - scripts/release-policy.mjs
   - scripts/test-docs.mjs
-  - scripts/verify-package-release.mjs
+  - scripts/verify-registry-http.mjs
   - scripts/verify-release-candidate.mjs
-  - scripts/verify-version-sync.mjs
+  - src/component/maintenance/sandbox.ts
+  - tests/demo/sandbox-lifecycle.test.ts
+  - tests/e2e/fixtures/phase4Test.ts
   - tests/integration/docs.test.mjs
   - tests/integration/phase4-gate.test.mjs
-  - tests/integration/release-package.test.mjs
   - tests/integration/release-workflows.test.mjs
-  - tests/integration/version-sync.test.mjs
-  - tests/ui/hosted-shell.test.tsx
+  - tests/integration/ui-artifacts.test.mjs
+  - ui/afferent/README.md
   - ui/afferent/registry.ts
-  - vitest.react.config.ts
 findings:
   critical: 0
   warning: 1
-  info: 3
-  total: 4
+  info: 5
+  total: 6
 status: issues_found
 ---
 
 # Phase 4: Code Review Report
 
-**Reviewed:** 2026-09-10T07:34:47Z
-**Depth:** standard (official Anthropic code-review skill, medium effort)
-**Files Reviewed:** 38
-**Status:** issues_found — APPROVED with four nonblocking findings
+**Reviewed:** 2026-09-10T09:19:42Z
+
+**Depth:** deep
+
+**Files Reviewed:** 42
+
+**Status:** issues_found
+
+**Verdict:** APPROVED — confidence 92/100
 
 ## Summary
 
-The live Claude peer approved the Plan 04-09 source/static-release continuation
-at `7df3be978da472998f5fa5b4faea6cc49f64f719`, confidence 88/100. The cumulative
-review covers `3ae6e657..7df3be97`; this is not a fresh review of every earlier
-Phase 4 implementation plan. No blocking findings remain. The required GSD
-status is `issues_found` because the peer retained one Warning and three Info
-findings, explicitly nonblocking and available for follow-up scheduling.
+The live Claude peer approved release commit `279d6e47558612476752d81a2a4a844230d7a306`. The cumulative publication scope is checkpoint `3368ff50` through that commit. All blocking findings from earlier passes were resolved before tagging; the final official pass retains one nonblocking warning and five informational follow-ups. The verdict does not mean the report is clean.
 
-**Code verdict:** APPROVED.
-**Publication authorization:** PENDING; the review grants no external-write authority.
-
-The final reply is `894febcbd45daa2b`, whose inbox header carries
-`re #28f274aeb4dd86ff`, the directed final review ASK. The peer's follow-up
-`289bb01a42d0c18b` confirms that the final clean-checkout evidence strengthens
-that disposition without changing it. Both were received through the dedicated
-`gsd-review` identity; no headless reviewer was spawned.
-
-All earlier blocking findings are closed: effective fetch/push destinations,
-annotated tags and clean checkout identity, packaged source links, repository
-casing, immutable artifact reuse, supported Git URL forms, real-Git test timing,
-no-npm documentation, static command allowlists, installed metadata resolution,
-retirement parsing, and CI regression-test routing.
+Final approval is correlated to ASK `8be074a1ae2b71c0` by Claude's reply `ec3285a45daeb1d0` (`re #8be074a1ae2b71c0`, 2026-09-10T08:57:37Z). Correction `2599fadd557ed413` reconciles the initial informational count. Official-pass addendum `2920b37ce3013060` (2026-09-10T09:19:42Z), explicitly scoped to `c3543425..279d6e47`, adds one warning and three informational findings without changing approval. The resulting counts below preserve the peer's severities. These are private radio audit IDs, not public message links.
 
 ## Warnings
 
-### WR-01: Repeated demo preparation increases release-gate duration
+### WR-01: Registry identity URLs outside the documentation identity gate
 
-**File:** `package.json:97`
-**Issue:** Peer G1: `verify:phase4` prepares the demo consumer three times:
-through the demo-artifact contract test, maintenance's `typecheck:demo`, and
-`verify:demo:artifacts`. The last two invoke the same `--gate` command. This
-adds cold-install work and reduces headroom under CI's 60-minute timeout.
-The peer explicitly classified this as nonblocking: timeout failure is visible.
-**Fix:** Reuse the candidate or remove redundant preparation. The peer also
-suggested dropping `demo-artifacts.test.mjs` from the combined contract command
-and consolidating the duplicate gate aliases. Preserve the artifact test's
-negative assertions when choosing an implementation; a successful consumer
-build alone does not establish every failure-path contract.
+**File:** `ui/afferent/README.md:7` and its generated mirror `examples/ui/afferent/README.md:7`
+
+**Issue:** These correct current public registry URLs sit outside the root README/docs inputs scanned by the identity validator. A future repository rename could leave obsolete identity in the README copied to adopters. This does not invalidate the current release URLs.
+
+**Fix:** Include canonical UI and mirrored example READMEs in documentation identity validation, or generate their identity-bearing URLs from canonical metadata.
 
 ## Info
 
-### IN-01: Integration-test routing is repeated in several places
+### IN-01: Optional GSD harness uses nonportable absolute includes
 
-**File:** `vitest.config.ts:5`
-**Issue:** Peer G2: the selected integration files are repeated across Vitest
-include/exclude configuration and npm commands, with an exact Phase 4 command
-assertion elsewhere. A new test can be omitted from automated runs.
-**Fix:** Add a routing audit that enumerates integration test files and fails
-when one has no configured runner/command. Include the earlier-phase follow-up
-inventory in `04-09-CHECKPOINT.md`; do not claim those tests ran in this release
-verification.
+**File:** `.codex/agents/` and related optional GSD harness files
 
-### IN-02: Malformed retirement diagnostics lack a location
+**Issue:** The optional harness contains 206 absolute includes across its 561-file scope, which are not portable to other clones. The peer withdrew its earlier critical classification: these references are optional tooling, not a runtime defect or secret.
 
-**File:** `scripts/test-docs.mjs:522`
-**Issue:** Peer G3: the required marker error explains the format but does not
-identify the offending marker in a document containing several markers.
-**Fix:** Include the marker offset, line number, or a short surrounding snippet.
+**Fix:** Make harness includes portable during tooling maintenance, preserving the planning inputs used by the executable documentation gate.
 
-### IN-03: The contract command also rebuilds artifacts
+### IN-02: HTTP registry preservation test depends on the pinned CLI prompt
 
-**File:** `package.json:96`
-**Issue:** Peer G4: `test:release:contracts` includes a mutating demo-artifact
-suite that recreates build/candidate output and needs package installation;
-its name does not make that cost apparent.
-**Fix:** Split or rename the mutating suite while addressing WR-01 and retaining
-its assertions in the release path.
+**File:** `scripts/verify-registry-http.mjs:44`
 
-## Verification and closure evidence
+**Issue:** The test recognizes the exact `Would you like to overwrite?` prompt. The pinned shadcn 4.11.0 behavior is verified; a future CLI upgrade could change that prompt and fail the gate.
 
-The authoritative runtime checks used a separate clean checkout of `7df3be97`
-with the committed TypeScript 6.0.3 dependency graph, Node 22.22.2, and npm
-11.15.0. The user's unstaged TypeScript 7 experiment was preserved.
+**Fix:** Revalidate overwrite semantics when upgrading shadcn, including the prompt and preservation behavior, rather than merely changing a matching string.
 
-- Clean `npm ci`, `verify:version-sync` (including package regression tests,
-  clean tarball consumer, publint, and ATTW), `verify:docs`, and
-  `verify:demo:artifacts` passed.
-- `test:release:contracts` passed 36 tests across all four selected suites;
-  the installed mounted-shell suite passed 15; the docs/package Node suites
-  passed six: 57 tests total.
-- Workflow validation, changed-file lint/formatting, and diff whitespace checks
-  passed. The tested checkout had no tracked changes.
-- The peer independently verified the pure-function and code contracts and six
-  Node tests. Its full gate attempts in the shared working tree hit the local
-  TypeScript 7 experiment and missing generated artifacts; those attempts are
-  not recorded as passing runtime evidence.
-- The complete real-Convex browser Phase 4 gate still must run against the
-  actual released tag. No public source/static release exists yet.
+### IN-03: Prefixed unresolved release placeholders can evade detection
 
-### Reusable mutation procedures
+**File:** `scripts/test-docs.mjs:468`
 
-To verify installed-package metadata resolution, first prepare the disposable
-consumer. Save `node_modules/afferent/package.json` as bytes, then run the
-focused `opens on an explicitly immutable` test using
-`vitest.react.config.ts`, `AFFERENT_REQUIRE_DEMO_PROVENANCE=1`, and the prepared
-candidate's package/UI/provenance paths. Change only its homepage to
-`https://example.invalid/wrong-candidate#readme`: the test must fail with the
-incorrect installed URL. Change it to
-`https://github.com/Brady-Zip/Afferent#readme`: the test must pass. Restore the
-original bytes in a `finally` block and verify byte equality. Both cases passed
-at `7df3be97`. This checks alias resolution and the independent repository
-expectation together.
+**Issue:** A word-boundary check can miss prefixed forms such as `VITE_AFFERENT_RELEASE_DOCS_URL` and `NEXT_PUBLIC_AFFERENT_RELEASE_REGISTRY_URL`. None is present in shipped documentation; this is a future validation gap.
 
-To verify native gate routing, save each Node test file as bytes. Append a
-`node:test` case calling `assert.fail` with a unique sentinel to
-`docs.test.mjs`, then run `npm run verify:docs`; repeat for
-`release-package.test.mjs` and `npm run test:release:package`. Each command must
-exit nonzero with its sentinel before the implementation gate executes.
-Restore each file byte-for-byte in `finally`. Both checks passed; the restored
-native gates subsequently passed in the clean checkout.
+**Fix:** Remove the word-boundary assumption and add negative cases for prefixed release placeholders.
 
-Retirement parsing now requires the backticked ID list immediately after the
-marker, on the same or next line. Every malformed marker throws, including a
-malformed second marker after a valid first one. Permissive prose lead-ins were
-removed deliberately: arbitrary prose can turn cross-references into false
-retirements. The strict format plus a loud error preserves requirement coverage
-under rewording instead of silently interpreting intent.
+### IN-04: Registry commands rely on the separately documented configuration prerequisite
 
-### Artifact identity
+**File:** `docs/ui/registry.md:44`
 
-Final local tarball SHA-256:
-`aca4fe384b6cf3dad0919c25d53d0bafc9df0fbddc9b69bc3fce75b12ab87ecc`.
-Installed-demo output: private h5i object `ff3493934b58553b`.
-Resolved installed dependency graph: private h5i object `0e25cf9e463247ce`.
+**Issue:** The command fence requires the registry mapping documented immediately above it. Copying the fence alone into an unconfigured application will fail. The full documented sequence is correct and was tested against the public registry.
 
-The earlier `a4d8ad609f220b02c567b47d954a3ddbf2eb62af1fe073ad5e7a74ab93160f64`
-digest remained unchanged across verifier/test-only corrections. The final
-digest changed because `7df3be97` changed npm scripts in the packed
-`package.json`; registry and example digests stayed unchanged. These are local
-verification artifacts, not public release assets. Keep `refs/h5i/*` private.
+**Fix:** Present the required `components.json` mapping alongside installation commands to make their configuration dependency explicit when copied.
+
+### IN-05: npm bootstrap validation enumerates current jobs
+
+**File:** `scripts/verify-release-candidate.mjs:237` and `scripts/verify-release-candidate.mjs:441`
+
+**Issue:** All eight current npm-using jobs have the correct pinned bootstrap, but future jobs could be omitted from the validator's explicit list.
+
+**Fix:** Discover jobs requiring bootstrap from their `npm ci` usage and validate that set, so newly introduced jobs are covered automatically.
+
+## Evidence and Limitations
+
+Final required CI run `34457806781` passed all three jobs; release run `34460472107` passed readiness, assembly, Pages deployment, and public-byte verification. A fresh public `v0.1.0` clone passed the full Phase 4 gate with six of six real Convex suite/project completion markers. Public checks installed all five registry features into a clean packed consumer, passed type checking and production build, compared all 77 documentation files/assets, and exercised desktop/mobile documentation. See [release evidence](../../../docs/releases/0.1.0.md).
+
+The shared-source negative test observes an overwrite prompt and preserves the edited provider marker. It does not independently prove that the delayed `n` response was consumed or that the second feature's own files landed in that specific negative case; an aborted default-false prompt can also preserve the file. Future strengthening should assert the second feature's files and add a paired positive overwrite case. The separate public clean-consumer check does prove installation/build of all five features.
+
+The official addendum also noted nonblocking robustness follow-ups for the delayed stdin write's possible EPIPE, network-install retries, and diagnostics when a quality-job test step is absent. These were additional validation observations, not additional classified findings; they are not silently folded into the severity counts.
+
+## Historical Review Scope
+
+The earlier approved baseline review at commit `3368ff50` retained concerns about repeated demo preparation cost, duplicated integration-test routing, malformed retirement-record diagnostic location, and a contract command that also builds artifacts. That historical scope remains available in Git history. Its counts are separate from this final publication review. Earlier blocking npm-bootstrap, CI build ordering, unresolved-identity, installed-consumer typing, and real HTTP registry findings were repaired before the final approved commit.
 
 ---
 
-_Reviewed: 2026-09-10T07:34:47Z_
+_Reviewed: 2026-09-10T09:19:42Z_
+
 _Reviewer: Claude (dark factory radio · official code-review skill)_
-_Depth: standard_
+
+_Depth: deep_
