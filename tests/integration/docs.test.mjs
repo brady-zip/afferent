@@ -187,23 +187,23 @@ test("the documentation verifier rejects authority, link, and deployment drift",
     ),
     { active: ["QUAL-09"], retired: ["REL-05", "REL-06"] },
   );
-  assert.deepEqual(
-    validateRequirementCoverage(
-      "requirements: [COMP-01, QUAL-09]",
-      "**Removed from v1:** requirement `COMP-01` was retired; `QUAL-09` remains active.",
-    ),
-    { active: ["QUAL-09"], retired: ["COMP-01"] },
-  );
-  for (const leadIn of [
-    "the `component` requirement",
-    "see `npm install` note,",
+  for (const malformed of [
+    "**Removed from v1:** requirement `COMP-01` was retired.",
+    "**Removed from v1:** the `component` requirement `COMP-01` was retired.",
+    "**Removed from v1:** see `npm install` note, `COMP-01` was retired.",
+    "**Removed from v1:** the requirement for npm-registry installation,\n`COMP-01`, is retired.",
+    "**Removed from v1:** none; see `COMP-02` for the replacement.",
+    "**Removed from v1:** superseded, do not use `QUAL-11` as a guide.",
+    "**Removed from v1:** nothing here at all",
+    "**Removed from v1:** `COMP-01` was retired.\n\n**Removed from v1:** no ID list",
   ]) {
-    assert.deepEqual(
-      validateRequirementCoverage(
-        "requirements: [COMP-01, QUAL-09]",
-        `**Removed from v1:** ${leadIn} \`COMP-01\` was retired; \`QUAL-09\` remains active.`,
-      ),
-      { active: ["QUAL-09"], retired: ["COMP-01"] },
+    assert.throws(
+      () =>
+        validateRequirementCoverage(
+          "requirements: [QUAL-09]",
+          `${malformed}\nQUAL-09 remains active.`,
+        ),
+      /marker must be followed directly by a backticked requirement ID list/iu,
     );
   }
 

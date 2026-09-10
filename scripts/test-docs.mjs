@@ -520,9 +520,21 @@ export function validateRequirementCoverage(planSource, requirementsSource) {
     .map((value) => value.trim())
     .filter(Boolean);
   const retired = new Set();
-  for (const retirement of requirementsSource.matchAll(
-    /\*\*Removed from v1:\*\*[ \t]*(?:\r?\n[ \t]*)?[^\r\n]*?(?<ids>`[A-Z]+-\d+`(?:\s*(?:,\s*(?:and\s+)?|and\s+|&\s+)`[A-Z]+-\d+`)*)/gu,
+  // A retirement marker must introduce an ID list directly. Validate every
+  // Marker so malformed or reflowed prose cannot silently change coverage.
+  for (const marker of requirementsSource.matchAll(
+    /\*\*Removed from v1:\*\*/gu,
   )) {
+    const retirement = requirementsSource
+      .slice(marker.index + marker[0].length)
+      .match(
+        /^[ \t]*(?:\r?\n[ \t]*)?(?<ids>`[A-Z]+-\d+`(?:\s*(?:,\s*(?:and\s+)?|and\s+|&\s+)`[A-Z]+-\d+`)*)/u,
+      );
+    if (!retirement) {
+      throw new Error(
+        "Removed from v1 marker must be followed directly by a backticked requirement ID list on the same or next line",
+      );
+    }
     for (const match of retirement.groups.ids.matchAll(
       /`(?<id>[A-Z]+-\d+)`/gu,
     )) {

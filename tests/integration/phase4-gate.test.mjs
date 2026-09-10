@@ -37,13 +37,15 @@ describe("Phase 4 real-browser release gate", () => {
   it("declares only the one-command local demo and local E2E scripts", async () => {
     const manifest = JSON.parse(await source("package.json"));
     expect(manifest.scripts["dev:demo"]).toBe("node scripts/dev-demo.mjs");
-    expect(manifest.scripts["test:e2e:phase4"]).toBe("node scripts/test-demo.mjs");
+    expect(manifest.scripts["test:e2e:phase4"]).toBe(
+      "node scripts/test-demo.mjs",
+    );
     expect(manifest.scripts["test:e2e:phase4:remote"]).toBeUndefined();
     expect(manifest.scripts["typecheck:demo"]).toBe(
       "node scripts/prepare-demo-consumer.mjs --gate",
     );
     expect(manifest.scripts["verify:phase4"]).toBe(
-      "npm run test:release:package && npm run test:demo:maintenance && npm run verify:demo:artifacts && npm run test:e2e:phase4",
+      "npm run test:release:contracts && npm run verify:docs && npm run test:release:package && npm run test:demo:maintenance && npm run verify:demo:artifacts && npm run test:e2e:phase4",
     );
   });
 

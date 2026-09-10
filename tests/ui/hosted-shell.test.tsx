@@ -8,7 +8,10 @@ import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import declaredManifest from "../../package.json";
-import { repositoryFromMetadata } from "../../scripts/generate-release-manifest.mjs";
+import {
+  matchesRepositoryWebUrl,
+  repositoryFromMetadata,
+} from "../../scripts/generate-release-manifest.mjs";
 import { App, HostedProductBoundary } from "../../example/src/App.js";
 import type {
   HostedAuthState,
@@ -18,7 +21,7 @@ import { ResetSandboxDialog } from "../../example/src/components/host/ResetSandb
 import { SandboxLifecycle } from "../../example/src/components/host/SandboxLifecycle.js";
 import { uiBindings, ControlledUiClient, board, click } from "./harness.js";
 
-const repositoryUrl = `https://github.com/${repositoryFromMetadata(declaredManifest.repository)}`;
+const declaredRepository = repositoryFromMetadata(declaredManifest.repository);
 
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -107,16 +110,19 @@ describe("hosted Afferent shell", () => {
     const links = [
       ...mounted.container.querySelectorAll<HTMLAnchorElement>("a[href]"),
     ];
-    expect(
-      links.find((link) => link.textContent?.trim() === "afferent v0.1.0")
-        ?.href,
-    ).toBe(`${repositoryUrl}/tree/v0.1.0`);
-    expect(
-      links.find((link) => link.textContent?.trim() === "Source 0123456")?.href,
-    ).toBe(`${repositoryUrl}/commit/0123456789abcdef`);
-    expect(
-      links.find((link) => link.textContent?.trim() === "Repository")?.href,
-    ).toBe(repositoryUrl);
+    for (const [label, suffix] of [
+      ["afferent v0.1.0", "/tree/v0.1.0"],
+      ["Source 0123456", "/commit/0123456789abcdef"],
+      ["Repository", ""],
+    ]) {
+      const href = links.find(
+        (link) => link.textContent?.trim() === label,
+      )?.href;
+      expect(
+        matchesRepositoryWebUrl(href, declaredRepository, suffix),
+        href,
+      ).toBe(true);
+    }
     expect(links.some((link) => link.hostname === "www.npmjs.com")).toBe(false);
     mounted.unmount();
   });
