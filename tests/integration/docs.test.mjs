@@ -26,39 +26,46 @@ test("documentation keeps its original requirement contract through milestone ar
     planSource: "requirements: [COMP-01, QUAL-09]",
     requirementsSource: "**Removed from v1:** `COMP-01`\nQUAL-09 is active",
   };
+  await assert.rejects(
+    readDocumentationRequirements(root),
+    /Missing documentation requirement/,
+  );
   await write(activePlan, expected.planSource);
-  await write(activeRequirements, expected.requirementsSource);
-  assert.deepEqual(await readDocumentationRequirements(root), expected);
-
-  await write(archivedRequirements, expected.requirementsSource);
   await assert.rejects(
     readDocumentationRequirements(root),
     /Incomplete documentation requirement sources/,
   );
+  await write(activeRequirements, expected.requirementsSource);
+  assert.deepEqual(await readDocumentationRequirements(root), expected);
+
+  // Default milestone completion copies requirements but leaves plans active.
+  await write(archivedRequirements, expected.requirementsSource);
+  assert.deepEqual(await readDocumentationRequirements(root), expected);
+  // A selected archive plan with no archived requirements is an actual error.
+  await rm(join(root, archivedRequirements));
   await write(archivedPlan, expected.planSource);
+  await assert.rejects(
+    readDocumentationRequirements(root),
+    /Incomplete documentation requirement sources/,
+  );
+  await write(archivedRequirements, expected.requirementsSource);
+  assert.deepEqual(await readDocumentationRequirements(root), expected);
   await rm(join(root, activePlan));
   await rm(join(root, activeRequirements));
   assert.deepEqual(await readDocumentationRequirements(root), expected);
 
   await write(activeRequirements, "next milestone requirements");
   assert.deepEqual(await readDocumentationRequirements(root), expected);
-
-  await rm(join(root, archivedPlan));
-  await assert.rejects(
-    readDocumentationRequirements(root),
-    /Incomplete documentation requirement sources/,
-  );
-  await rm(join(root, archivedRequirements));
-  await assert.rejects(
-    readDocumentationRequirements(root),
-    /Incomplete documentation requirement sources/,
-  );
-  await rm(join(root, activeRequirements));
-  await assert.rejects(
-    readDocumentationRequirements(root),
-    /Missing documentation requirement/,
-  );
+  await write(archivedRequirements, "QUAL-09 and COMP-01 are both active now");
   await write(activePlan, expected.planSource);
+  await write(activeRequirements, expected.requirementsSource);
+  await assert.rejects(
+    readDocumentationRequirements(root),
+    /must retain active QUAL-09 and retired COMP-01/,
+  );
+  await rm(join(root, archivedPlan));
+  await rm(join(root, archivedRequirements));
+
   await write(activeRequirements, "QUAL-09 and COMP-01 are both active now");
   await assert.rejects(
     readDocumentationRequirements(root),
@@ -70,8 +77,33 @@ test("documentation keeps its original requirement contract through milestone ar
     readDocumentationRequirements(root),
     /must retain active QUAL-09 and retired COMP-01/,
   );
-  await mkdir(join(root, archivedPlan), { recursive: true });
-  await assert.rejects(readDocumentationRequirements(root), { code: "EISDIR" });
+
+  // Unexpected I/O errors propagate in either tier, on either input.
+  for (const [planPath, requirementsPath] of [
+    [activePlan, activeRequirements],
+    [archivedPlan, archivedRequirements],
+  ]) {
+    await write(planPath, expected.planSource);
+    await write(requirementsPath, expected.requirementsSource);
+    await rm(join(root, requirementsPath));
+    await mkdir(join(root, requirementsPath));
+    await assert.rejects(readDocumentationRequirements(root), {
+      code: "EISDIR",
+    });
+    await rm(join(root, requirementsPath), { recursive: true });
+    await write(requirementsPath, expected.requirementsSource);
+    await rm(join(root, planPath));
+    await mkdir(join(root, planPath));
+    await assert.rejects(readDocumentationRequirements(root), {
+      code: "EISDIR",
+    });
+    await rm(join(root, planPath), { recursive: true });
+    await rm(join(root, requirementsPath));
+  }
+  await assert.rejects(
+    readDocumentationRequirements(root),
+    /Missing documentation requirement/,
+  );
 });
 
 test("the adopter entry path is concise, local-first, and versioned", async () => {
