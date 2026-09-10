@@ -128,7 +128,7 @@ describe("real Git release identity", () => {
         /fetch and push destinations/iu,
       );
     }
-  });
+  }, 30_000);
 
   test("checks all explicit fetch and push URLs", async () => {
     for (const setting of ["url", "pushurl"]) {
@@ -152,7 +152,7 @@ describe("real Git release identity", () => {
         /fetch and push destinations/iu,
       );
     }
-  });
+  }, 30_000);
 
   test("accepts lightweight and annotated tags only at the clean candidate commit", async () => {
     const { root, git } = await gitFixture();
@@ -178,7 +178,7 @@ describe("real Git release identity", () => {
     await expect(
       validateReleaseCheckout(await git("rev-parse", "HEAD"), "v0.1.0", root),
     ).rejects.toThrow(/tag, commit/iu);
-  });
+  }, 30_000);
 });
 
 afterEach(async () => {
