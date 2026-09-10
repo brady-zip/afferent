@@ -42,4 +42,6 @@ Preserve the original final release review severities: **one warning and five in
 
 The phase review also retains historical validation limitations. Its preserved report is [04-REVIEW.md](milestones/v1.0-phases/04-hosted-production-release/04-REVIEW.md).
 
+The closure review and clean archived-checkout validation are recorded in [v1.0-CLOSEOUT.md](milestones/v1.0-CLOSEOUT.md), including the optional future diagnostic for starting a new contract before fully archiving the prior plan.
+
 **Next:** Choose the next milestone's goals. Existing v2 ideas remain in the archived requirements; none becomes active automatically.

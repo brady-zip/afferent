@@ -41,6 +41,13 @@ test("documentation keeps its original requirement contract through milestone ar
   // Default milestone completion copies requirements but leaves plans active.
   await write(archivedRequirements, expected.requirementsSource);
   assert.deepEqual(await readDocumentationRequirements(root), expected);
+  // Starting new requirements before archiving the old plan must fail closed.
+  await write(activeRequirements, "QUAL-99 is the next milestone requirement");
+  await assert.rejects(
+    readDocumentationRequirements(root),
+    /documentation requirement does not exist/,
+  );
+  await write(activeRequirements, expected.requirementsSource);
   // A selected archive plan with no archived requirements is an actual error.
   await rm(join(root, archivedRequirements));
   await write(archivedPlan, expected.planSource);
@@ -55,6 +62,7 @@ test("documentation keeps its original requirement contract through milestone ar
   assert.deepEqual(await readDocumentationRequirements(root), expected);
 
   await write(activeRequirements, "next milestone requirements");
+  await write(activePlan, "requirements: [QUAL-99]");
   assert.deepEqual(await readDocumentationRequirements(root), expected);
   await write(archivedRequirements, "QUAL-09 and COMP-01 are both active now");
   await write(activePlan, expected.planSource);
