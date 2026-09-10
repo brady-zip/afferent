@@ -77,8 +77,9 @@ describe("generation-fenced sandbox lifecycle", () => {
     expect(firstResult).toEqual(concurrentResult);
     expect(firstResult.state).toBe("ready");
     expect(seed).toHaveBeenCalledTimes(1);
+    const ready = await lifecycle.inspectForTest(USER);
     expect(await lifecycle.resolvePhysicalScope(USER)).toBe(
-      (await lifecycle.inspectForTest(USER)).activePhysicalScope,
+      ready.activePhysicalScope,
     );
   });
 
@@ -137,7 +138,8 @@ describe("generation-fenced sandbox lifecycle", () => {
     await expect(lifecycle.reset(USER)).resolves.toMatchObject({
       state: "ready",
     });
-    expect((await lifecycle.inspectForTest(USER)).activeGeneration).toBe(3);
+    const recovered = await lifecycle.inspectForTest(USER);
+    expect(recovered.activeGeneration).toBe(3);
   });
 
   it("returns a closed visitor-safe lifecycle shape", async () => {
@@ -160,7 +162,7 @@ describe("generation-fenced sandbox lifecycle", () => {
   });
 
   it("re-creates an active sandbox after seven days without activity", async () => {
-    let now = 1_000;
+    let now = 1000;
     const seed = vi.fn<SeedGeneration>(async () => undefined);
     const lifecycle = createSandboxLifecycle({
       seedGeneration: seed,
@@ -169,7 +171,7 @@ describe("generation-fenced sandbox lifecycle", () => {
     await lifecycle.ensure(USER);
     const first = await lifecycle.inspectForTest(USER);
 
-    now += 7 * 24 * 60 * 60 * 1_000 + 1;
+    now += 7 * 24 * 60 * 60 * 1000 + 1;
     await lifecycle.ensure(USER);
     const refreshed = await lifecycle.inspectForTest(USER);
 

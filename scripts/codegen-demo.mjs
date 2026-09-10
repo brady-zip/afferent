@@ -11,6 +11,8 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { sanitizeGeneratedBindings } from "./prepare-demo-consumer.mjs";
+
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const temporary = await mkdtemp(join(tmpdir(), "afferent-demo-codegen-"));
 
@@ -74,6 +76,7 @@ try {
     join(root, "example/convex/_generated"),
     { recursive: true },
   );
+  await sanitizeGeneratedBindings(join(root, "example"));
 } finally {
   await rm(temporary, { recursive: true, force: true });
 }

@@ -357,7 +357,7 @@ export const cleanupScopeBatch = mutation({
 
     const [tableName, disposition] = TABLES_IN_CLEANUP_ORDER[stage]!;
     // Components do not support cursor pagination. Delete a bounded prefix and
-    // revisit the same stage until the scope-leading index returns no rows.
+    // Revisit the same stage until the scope-leading index returns no rows.
     const documents = await (
       ctx.db as unknown as {
         query: (table: string) => {

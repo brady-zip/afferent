@@ -403,7 +403,7 @@ async function buildReleasePackage() {
   );
 }
 
-async function sanitizeGeneratedBindings(candidateRoot) {
+export async function sanitizeGeneratedBindings(candidateRoot) {
   const apiTypes = join(candidateRoot, "convex/_generated/api.d.ts");
   if (!(await pathExists(apiTypes))) return;
   const source = await readFile(apiTypes, "utf8");

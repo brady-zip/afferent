@@ -86,7 +86,7 @@ async function waitForVite(baseURL, child) {
     try {
       const response = await fetch(baseURL, {
         headers: { accept: "text/html" },
-        signal: AbortSignal.timeout(2_000),
+        signal: AbortSignal.timeout(2000),
       });
       if (response.ok) return;
     } catch {

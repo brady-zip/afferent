@@ -69,6 +69,6 @@ export declare const internal: FilterApi<
 >;
 
 export declare const components: {
-  showcase: import("/Users/bradywatkinson/dev/afferent/dist/component/_generated/component.js").ComponentApi<"showcase">;
-  sandbox: import("/Users/bradywatkinson/dev/afferent/dist/component/_generated/component.js").ComponentApi<"sandbox">;
+  showcase: import("afferent/_generated/component.js").ComponentApi<"showcase">;
+  sandbox: import("afferent/_generated/component.js").ComponentApi<"sandbox">;
 };

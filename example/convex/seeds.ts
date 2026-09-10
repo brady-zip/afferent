@@ -223,7 +223,7 @@ export async function runRepresentativeSeed(input: {
     await input.progress.listEntities(input.physicalScopeId),
   );
 
-  const steps: Array<() => Promise<void | readonly SeedEntity[]>> = [
+  const steps: (() => Promise<void | readonly SeedEntity[]>)[] = [
     () => input.operations.configureInstallation(REPRESENTATIVE_SEED.boards),
     ...REPRESENTATIVE_SEED.posts.map(
       (post) => () => input.operations.createPost(post),

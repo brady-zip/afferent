@@ -112,7 +112,8 @@ export const exerciseCleanupRecovery = internalMutation({
   args: { email: v.string() },
   handler: async (ctx, args) => {
     const { ownerKey } = await ownerForEmail(ctx, args.email);
-    const retired = (await generationsForOwner(ctx, ownerKey))
+    const generations = await generationsForOwner(ctx, ownerKey);
+    const retired = generations
       .filter((generation) => generation.state === "retired")
       .sort((left, right) => right.generation - left.generation)[0];
     if (retired === undefined) {

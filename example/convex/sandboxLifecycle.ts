@@ -5,7 +5,6 @@ import type { ComponentApi } from "afferent/_generated/component.js";
 import { components, internal } from "./_generated/api.js";
 import {
   internalMutation,
-  type MutationCtx,
   type QueryCtx,
 } from "./_generated/server.js";
 import {
@@ -21,9 +20,9 @@ import {
 } from "./seeds.js";
 import { SANDBOX_QUOTAS } from "./sandboxQuotas.js";
 
-export const SANDBOX_INACTIVITY_MS = 7 * 24 * 60 * 60 * 1_000;
-const PREPARATION_LEASE_MS = 5 * 60 * 1_000;
-const RESET_WINDOW_MS = 60 * 60 * 1_000;
+export const SANDBOX_INACTIVITY_MS = 7 * 24 * 60 * 60 * 1000;
+const PREPARATION_LEASE_MS = 5 * 60 * 1000;
+const RESET_WINDOW_MS = 60 * 60 * 1000;
 const sandboxComponent = components.sandbox as ComponentApi;
 
 export const sandboxLifecycleStateValidator = v.union(
@@ -61,7 +60,13 @@ export type SeedGeneration = (input: {
 type GenerationState = "pending" | "active" | "retired" | "failed";
 type PreparationReason = "first_access" | "reset" | "expired";
 
-type GenerationRecord = {
+function preparationState(reason: PreparationReason | undefined) {
+  if (reason === "reset") return "resetting";
+  if (reason === "expired") return "expired";
+  return "preparing";
+}
+
+interface GenerationRecord {
   generation: number;
   physicalScopeId: string;
   state: GenerationState;
@@ -70,9 +75,9 @@ type GenerationRecord = {
   retiredAt?: number;
   failedAt?: number;
   leaseVersion: number;
-};
+}
 
-type OwnerRecord = {
+interface OwnerRecord {
   logicalOwnerKey: string;
   activeGeneration: number | null;
   pendingGeneration: number | null;
@@ -80,7 +85,7 @@ type OwnerRecord = {
   lastActivityAt: number;
   leaseVersion: number;
   generations: Map<number, GenerationRecord>;
-};
+}
 
 type LifecycleOptions = Readonly<{
   seedGeneration: SeedGeneration;
@@ -151,7 +156,6 @@ export function createSandboxLifecycle(
 
   function startPreparation(
     owner: OwnerRecord,
-    reason: PreparationReason,
   ): Promise<SandboxLifecycleResult> {
     const existing = inFlight.get(owner.logicalOwnerKey);
     if (existing !== undefined) return existing;
@@ -231,22 +235,19 @@ export function createSandboxLifecycle(
     if (current !== undefined) return current;
     if (owner.activeGeneration !== null) {
       if (now() - owner.lastActivityAt > SANDBOX_INACTIVITY_MS) {
-        return startPreparation(owner, "expired");
+        return startPreparation(owner);
       }
       owner.lastActivityAt = now();
       return readyResult(owner);
     }
-    return startPreparation(owner, "first_access");
+    return startPreparation(owner);
   }
 
   async function reset(verifiedUserId: string) {
     const owner = ownerFor(await identify(verifiedUserId));
     const current = inFlight.get(owner.logicalOwnerKey);
     if (current !== undefined) return current;
-    return startPreparation(
-      owner,
-      owner.activeGeneration === null ? "first_access" : "reset",
-    );
+    return startPreparation(owner);
   }
 
   async function resolvePhysicalScope(verifiedUserId: string) {
@@ -360,13 +361,7 @@ export async function readSandboxLifecycle(
     return safeLifecycleResult("expired");
   }
   if (owner.pendingGeneration !== undefined) {
-    return safeLifecycleResult(
-      owner.preparationReason === "reset"
-        ? "resetting"
-        : owner.preparationReason === "expired"
-          ? "expired"
-          : "preparing",
-    );
+    return safeLifecycleResult(preparationState(owner.preparationReason));
   }
   if (owner.lifecycleState === "error") {
     return safeLifecycleResult("error");
@@ -405,12 +400,6 @@ export async function resolveActivePhysicalScope(
   if (active?.state !== "active") throw new Error("SANDBOX_NOT_READY");
   return active.physicalScopeId;
 }
-
-const preparationReasonValidator = v.union(
-  v.literal("first_access"),
-  v.literal("reset"),
-  v.literal("expired"),
-);
 
 export const beginPreparation = internalMutation({
   args: {
@@ -522,12 +511,12 @@ export const beginPreparation = internalMutation({
       };
     }
 
-    const reason =
-      args.requestedReason === "reset"
-        ? ("reset" as const)
-        : isExpired || owner?.lifecycleState === "expired"
-          ? ("expired" as const)
-          : ("first_access" as const);
+    let reason: PreparationReason = "first_access";
+    if (args.requestedReason === "reset") {
+      reason = "reset";
+    } else if (isExpired || owner?.lifecycleState === "expired") {
+      reason = "expired";
+    }
     const generation = owner?.nextGeneration ?? 1;
     const leaseVersion = (owner?.leaseVersion ?? 0) + 1;
     const physicalScopeId = await derivePhysicalSandboxScope(
@@ -548,12 +537,7 @@ export const beginPreparation = internalMutation({
       pendingGeneration: generation,
       nextGeneration: generation + 1,
       lastActivityAt: owner?.lastActivityAt ?? args.currentTime,
-      lifecycleState:
-        reason === "reset"
-          ? ("resetting" as const)
-          : reason === "expired"
-            ? ("expired" as const)
-            : ("preparing" as const),
+      lifecycleState: preparationState(reason),
       preparationReason: reason,
       leaseOwner: args.leaseOwner,
       leaseUntil: args.currentTime + PREPARATION_LEASE_MS,
