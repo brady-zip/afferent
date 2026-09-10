@@ -56,6 +56,29 @@ test("package candidate requires exact metadata and existing export targets", ()
       registry: { name: "afferent", compatibleVersion: "0.1.0" },
     }),
   );
+  assert.doesNotThrow(() =>
+    validatePackageCandidate({
+      manifest: {
+        ...manifest,
+        repository: {
+          ...manifest.repository,
+          url: manifest.repository.url.toUpperCase(),
+        },
+        homepage: manifest.homepage.replace(
+          /github\.com\/(?<repository>[^#]+)/u,
+          (_, name) => `github.com/${name.toUpperCase()}`,
+        ),
+        bugs: {
+          url: manifest.bugs.url.replace(
+            /github\.com\/(?<repository>.+)\/issues/u,
+            (_, name) => `github.com/${name.toUpperCase()}/issues`,
+          ),
+        },
+      },
+      packedFiles: files,
+      registry: { name: "afferent", compatibleVersion: "0.1.0" },
+    }),
+  );
 
   for (const field of [
     "license",

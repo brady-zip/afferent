@@ -14,18 +14,18 @@ The human-approved 2026-08-07 distribution pivot is encoded in
 `scripts/release-policy.mjs` and
 `.planning/phases/04-hosted-production-release/04-DISTRIBUTION-PIVOT.md`.
 
-| Surface                   | Exact v0.1 policy                                                         |
-| ------------------------- | ------------------------------------------------------------------------- |
-| Package publication       | None; local `npm pack` evidence only                                      |
-| Source repository         | Declared by `package.json`; exact owner still requires human confirmation |
-| Source publication        | Immutable GitHub tag `v0.1.0`                                             |
-| Workflow                  | `.github/workflows/release.yml`                                           |
-| Static publication        | GitHub Pages, environment `github-pages`                                  |
-| Documentation             | `AFFERENT_RELEASE_DOCS_URL`                                               |
-| shadcn registry           | `AFFERENT_RELEASE_REGISTRY_URL`                                           |
-| Source/tag entry point    | `AFFERENT_RELEASE_REPOSITORY_URL`                                         |
-| Node                      | `.node-version` (`22.22.2`)                                               |
-| npm CLI for source builds | `11.15.0`                                                                 |
+| Surface                   | Exact v0.1 policy                                                                  |
+| ------------------------- | ---------------------------------------------------------------------------------- |
+| Package publication       | None; local `npm pack` evidence only                                               |
+| Source repository         | `brady-zip/afferent`, declared by `package.json`; publication awaits authorization |
+| Source publication        | Immutable GitHub tag `v0.1.0`                                                      |
+| Workflow                  | `.github/workflows/release.yml`                                                    |
+| Static publication        | GitHub Pages, environment `github-pages`                                           |
+| Documentation             | `AFFERENT_RELEASE_DOCS_URL`                                                        |
+| shadcn registry           | `AFFERENT_RELEASE_REGISTRY_URL`                                                    |
+| Source/tag entry point    | `AFFERENT_RELEASE_REPOSITORY_URL`                                                  |
+| Node                      | `.node-version` (`22.22.2`)                                                        |
+| npm CLI for source builds | `11.15.0`                                                                          |
 
 The root `package.json` is deliberately `private: true` and has no
 `publishConfig`. Changesets may update the private source version and changelog,
@@ -56,8 +56,9 @@ The repository variables below are assertions, not credentials:
 | `AFFERENT_STATIC_PUBLICATION`   | `github-pages`                          |
 
 `package.json#repository` is the declared repository identity. The release
-verifier requires that declaration, the effective `git remote get-url origin`
-destination (including Git `insteadOf` rewrites), `GITHUB_REPOSITORY`, workflow
+verifier requires that declaration, every effective origin fetch and push
+destination (including explicit `pushurl`, Git `insteadOf`, and `pushInsteadOf`
+rewrites), `GITHUB_REPOSITORY`, workflow
 ref, repository visibility, release owner, CI run, candidate, and source tag to
 agree. A missing or non-GitHub origin, private repository, or owner mismatch
 fails closed before release.

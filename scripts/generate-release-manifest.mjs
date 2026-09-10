@@ -78,11 +78,24 @@ export function repositoryFromMetadata(repository) {
   const match = url
     ?.trim()
     .match(
-      /github\.com[/:](?<owner>[^/:\s]+)\/(?<repository>[^/#\s]+?)(?:\.git)?\/?$/iu,
+      /^(?:(?:git\+)?https:\/\/github\.com\/|ssh:\/\/git@github\.com\/|git@github\.com:)(?<owner>[a-z0-9-]+)\/(?<repository>[a-z0-9_.-]+?)(?:\.git)?\/?$/iu,
     );
   if (!match?.groups) return undefined;
   return normalizeRepositoryName(
     `${match.groups.owner}/${match.groups.repository}`,
+  );
+}
+
+export function matchesRepositoryWebUrl(value, repository, suffix) {
+  if (typeof value !== "string") return false;
+  const match = value.match(
+    /^https:\/\/github\.com\/(?<repository>[^/?#]+\/[^/?#]+)(?<suffix>.*)$/iu,
+  );
+  return Boolean(
+    match &&
+    normalizeRepositoryName(match.groups.repository) ===
+      normalizeRepositoryName(repository) &&
+    match.groups.suffix === suffix,
   );
 }
 

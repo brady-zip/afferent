@@ -85,7 +85,7 @@ try {
   const catalog = {
     $schema: "https://ui.shadcn.com/schema/registry.json",
     name: afferentRegistry.name,
-    homepage: afferentRegistry.homepage,
+    homepage: `https://github.com/${releaseIdentity.repository}`,
     packageVersion: releaseIdentity.registryVersion,
     sourceTag: releaseIdentity.sourceTag,
     items,

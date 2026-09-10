@@ -3,6 +3,7 @@
 import { readFile, realpath } from "node:fs/promises";
 import { resolve, sep } from "node:path";
 import React, { act, useState } from "react";
+import afferentPackage from "afferent/package.json";
 import { createRoot } from "react-dom/client";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
@@ -100,6 +101,21 @@ describe("hosted Afferent shell", () => {
     expect(mounted.container.textContent).not.toContain("Reset my sandbox");
     expect(mounted.container.textContent).toContain("afferent v0.1.0");
     expect(mounted.container.textContent).toContain("Source 0123456");
+    const repositoryUrl = afferentPackage.homepage.replace(/#readme$/u, "");
+    const links = [
+      ...mounted.container.querySelectorAll<HTMLAnchorElement>("a[href]"),
+    ];
+    expect(
+      links.find((link) => link.textContent?.trim() === "afferent v0.1.0")
+        ?.href,
+    ).toBe(`${repositoryUrl}/tree/v0.1.0`);
+    expect(
+      links.find((link) => link.textContent?.trim() === "Source 0123456")?.href,
+    ).toBe(`${repositoryUrl}/commit/0123456789abcdef`);
+    expect(
+      links.find((link) => link.textContent?.trim() === "Repository")?.href,
+    ).toBe(repositoryUrl);
+    expect(links.some((link) => link.hostname === "www.npmjs.com")).toBe(false);
     mounted.unmount();
   });
 

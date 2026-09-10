@@ -207,7 +207,7 @@ export function assertNoRemoteDemoClaims(source, documentPath) {
 
 export function assertNoNpmPublicationClaims(source, documentPath) {
   const publicInstall = source.match(
-    /\bnpm\s+install\s+afferent(?=\s|$|[`"'])/imu,
+    /\b(?:npm\s+(?:install|i|add)|pnpm\s+(?:install|i|add)|yarn\s+add)\s+(?:--?[\w-]+\s+)*afferent(?=@|\s|$|[`"'])/imu,
   );
   const publicationCommand = source.match(/\bnpm\s+(?:stage\s+)?publish\b/iu);
   const npmReleaseSurface = source.match(
@@ -519,13 +519,16 @@ export function validateRequirementCoverage(planSource, requirementsSource) {
     .split(",")
     .map((value) => value.trim())
     .filter(Boolean);
-  const retired = new Set(
-    [
-      ...requirementsSource.matchAll(
-        /\*\*Removed from v1:\*\*[^`\n]*`(?<id>[A-Z]+-\d+)`/gu,
-      ),
-    ].map((retirement) => retirement.groups.id),
-  );
+  const retired = new Set();
+  for (const retirement of requirementsSource.matchAll(
+    /\*\*Removed from v1:\*\*\s*(?<ids>`[A-Z]+-\d+`(?:\s*(?:,\s*(?:and\s+)?|and\s+|&\s+)`[A-Z]+-\d+`)*)/gu,
+  )) {
+    for (const match of retirement.groups.ids.matchAll(
+      /`(?<id>[A-Z]+-\d+)`/gu,
+    )) {
+      retired.add(match.groups.id);
+    }
+  }
   for (const id of ids) {
     if (!requirementsSource.includes(id)) {
       throw new Error(`documentation requirement does not exist: ${id}`);

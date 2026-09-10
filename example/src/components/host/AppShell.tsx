@@ -8,11 +8,14 @@ import {
   type RefObject,
 } from "react";
 import { Link, NavLink } from "react-router";
+import afferentPackage from "afferent/package.json";
 
 import type { HostedAuthState, SandboxLifecycleDto } from "../../bindings.js";
 import { ResetSandboxDialog } from "./ResetSandboxDialog.js";
 
 export type HostedEnvironment = "showcase" | "sandbox";
+
+const repositoryUrl = afferentPackage.homepage.replace(/#readme$/u, "");
 
 export function AppShell({
   environment,
@@ -91,7 +94,7 @@ export function AppShell({
               Afferent
             </Link>
             <a
-              href={`https://www.npmjs.com/package/afferent/v/${version}`}
+              href={`${repositoryUrl}/tree/v${version}`}
               rel="noreferrer"
               target="_blank"
             >
@@ -132,17 +135,13 @@ export function AppShell({
         <div>
           <span>Apache-2.0 open source</span>
           <a
-            href={`https://github.com/bradywatkinson/afferent/commit/${sourceCommit}`}
+            href={`${repositoryUrl}/commit/${sourceCommit}`}
             rel="noreferrer"
             target="_blank"
           >
             Source {sourceCommit.slice(0, 7)}
           </a>
-          <a
-            href="https://github.com/bradywatkinson/afferent"
-            rel="noreferrer"
-            target="_blank"
-          >
+          <a href={repositoryUrl} rel="noreferrer" target="_blank">
             Repository
           </a>
         </div>

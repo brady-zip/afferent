@@ -128,6 +128,26 @@ describe("versioned release surfaces", () => {
     );
 
     expect(() => validatePackageSurface(packageManifest)).not.toThrow();
+    const upperRepository = repositoryFromMetadata(
+      packageManifest.repository,
+    ).toUpperCase();
+    expect(() =>
+      validatePackageSurface({
+        ...packageManifest,
+        repository: {
+          type: "git",
+          url: `git+https://github.com/${upperRepository}.git`,
+        },
+        homepage: `https://github.com/${upperRepository}#readme`,
+        bugs: { url: `https://github.com/${upperRepository}/issues` },
+      }),
+    ).not.toThrow();
+    expect(() =>
+      validatePackageSurface({
+        ...packageManifest,
+        homepage: `https://github.com/${upperRepository}#README`,
+      }),
+    ).toThrow(/homepage/iu);
     expect(() =>
       validatePackageSurface({
         ...packageManifest,

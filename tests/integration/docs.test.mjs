@@ -154,12 +154,38 @@ test("the documentation verifier rejects authority, link, and deployment drift",
       ),
     /npm publication claim/i,
   );
+  for (const command of [
+    "npm install afferent@0.1.0",
+    "npm i afferent",
+    "npm add --save afferent@latest",
+    "pnpm add afferent",
+    "yarn add afferent",
+  ]) {
+    assert.throws(
+      () => assertNoNpmPublicationClaims(command, "unsafe.md"),
+      /npm publication claim/i,
+    );
+  }
+  for (const command of [
+    "npm install /absolute/path/to/afferent-0.1.0.tgz",
+    "npm install afferent-other",
+    "npm install @other/afferent",
+  ]) {
+    assert.doesNotThrow(() => assertNoNpmPublicationClaims(command, "safe.md"));
+  }
   assert.deepEqual(
     validateRequirementCoverage(
       "requirements: [COMP-01, QUAL-09]",
       "**Removed from v1:** `COMP-01` was retired.\n- [x] **QUAL-09**: Docs.",
     ),
     { active: ["QUAL-09"], retired: ["COMP-01"] },
+  );
+  assert.deepEqual(
+    validateRequirementCoverage(
+      "requirements: [REL-05, REL-06, QUAL-09]",
+      "**Removed from v1:**\n`REL-05` and `REL-06` are retired; `QUAL-09` remains active.",
+    ),
+    { active: ["QUAL-09"], retired: ["REL-05", "REL-06"] },
   );
 
   assert.doesNotThrow(() =>

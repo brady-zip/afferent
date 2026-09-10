@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { execFile } from "node:child_process";
 import {
   cp,
   mkdir,
@@ -10,6 +11,8 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { promisify } from "node:util";
+import { parse, stringify } from "yaml";
 
 import { afterEach, describe, expect, test } from "vitest";
 
@@ -27,6 +30,8 @@ import {
   validateReleaseWorkflow,
   preparePagesSite,
   verifyPublishedStatic,
+  originRepository,
+  validateReleaseCheckout,
 } from "../../scripts/verify-release-candidate.mjs";
 
 const repositoryRoot = new URL("../..", import.meta.url).pathname;
@@ -83,6 +88,98 @@ const ciRunMetadata = {
 };
 
 const temporaryRoots = [];
+const execFileAsync = promisify(execFile);
+
+async function gitFixture() {
+  const root = await mkdtemp(join(tmpdir(), "afferent-release-git-"));
+  temporaryRoots.push(root);
+  const git = async (...args) => {
+    const result = await execFileAsync("git", args, {
+      cwd: root,
+      encoding: "utf8",
+    });
+    return result.stdout.trim();
+  };
+  await git("init", "--quiet");
+  await git("config", "user.name", "Release fixture");
+  await git("config", "user.email", "fixture@example.invalid");
+  await git("config", "commit.gpgsign", "false");
+  await git("config", "tag.gpgsign", "false");
+  await git(
+    "remote",
+    "add",
+    "origin",
+    `https://github.com/${declaredRepository}.git`,
+  );
+  return { root, git };
+}
+
+describe("real Git release identity", () => {
+  test("rejects insteadOf and pushInsteadOf rewrites to another host", async () => {
+    for (const setting of ["insteadOf", "pushInsteadOf"]) {
+      const { root, git } = await gitFixture();
+      expect(await originRepository(root)).toBe(declaredRepository);
+      await git(
+        "config",
+        `url.https://example.invalid/mirror/.${setting}`,
+        "https://github.com/",
+      );
+      await expect(originRepository(root)).rejects.toThrow(
+        /fetch and push destinations/iu,
+      );
+    }
+  });
+
+  test("checks all explicit fetch and push URLs", async () => {
+    for (const setting of ["url", "pushurl"]) {
+      const { root, git } = await gitFixture();
+      if (setting === "pushurl") {
+        await git(
+          "config",
+          "--add",
+          "remote.origin.pushurl",
+          `git@github.com:${declaredRepository}.git`,
+        );
+      }
+      expect(await originRepository(root)).toBe(declaredRepository);
+      await git(
+        "config",
+        "--add",
+        `remote.origin.${setting}`,
+        "https://github.com/attacker/afferent.git",
+      );
+      await expect(originRepository(root)).rejects.toThrow(
+        /fetch and push destinations/iu,
+      );
+    }
+  });
+
+  test("accepts lightweight and annotated tags only at the clean candidate commit", async () => {
+    const { root, git } = await gitFixture();
+    await writeFile(join(root, "fixture.txt"), "candidate");
+    await git("add", "fixture.txt");
+    await git("commit", "--quiet", "-m", "fixture candidate");
+    const commit = await git("rev-parse", "HEAD");
+    await git("tag", "v0.1.0-lightweight");
+    await git("tag", "-a", "v0.1.0", "-m", "annotated release");
+    expect(await git("rev-parse", "refs/tags/v0.1.0")).not.toBe(commit);
+    await expect(
+      validateReleaseCheckout(commit, "v0.1.0-lightweight", root),
+    ).resolves.toBeUndefined();
+    await expect(
+      validateReleaseCheckout(commit, "v0.1.0", root),
+    ).resolves.toBeUndefined();
+    await writeFile(join(root, "fixture.txt"), "changed");
+    await expect(
+      validateReleaseCheckout(commit, "v0.1.0", root),
+    ).rejects.toThrow(/clean checkout/iu);
+    await git("add", "fixture.txt");
+    await git("commit", "--quiet", "-m", "next candidate");
+    await expect(
+      validateReleaseCheckout(await git("rev-parse", "HEAD"), "v0.1.0", root),
+    ).rejects.toThrow(/tag, commit/iu);
+  });
+});
 
 afterEach(async () => {
   await Promise.all(
@@ -325,6 +422,15 @@ describe("release workflow contracts", () => {
     expect(() =>
       validateArtifactActionCompatibility(ciSource, releaseSource),
     ).not.toThrow();
+    expect(() =>
+      validateArtifactActionCompatibility(
+        ciSource,
+        releaseSource.replace(
+          "repository: $" + "{{ github.repository }}",
+          "repository: attacker/afferent",
+        ),
+      ),
+    ).toThrow(/continuity/iu);
     expect(releaseSource).toContain("inputs.allow_release == true");
     expect(releaseSource).toContain(
       "npm run verify:release-candidate -- --prepare-pages",
@@ -430,6 +536,45 @@ describe("release workflow contracts", () => {
     ).toThrow(/forbidden|publication/iu);
   });
 
+  test("static jobs cannot rebuild or repack the verified candidate", async () => {
+    const source = await readFile(
+      join(repositoryRoot, ".github/workflows/release.yml"),
+      "utf8",
+    );
+    for (const name of ["prepare-static", "publish-static", "verify-static"]) {
+      for (const command of ["npm run build", "npm pack --ignore-scripts"]) {
+        const workflow = parse(source);
+        workflow.jobs[name].steps.push({ name: "Rebuild", run: command });
+        expect(() => validateReleaseWorkflow(stringify(workflow))).toThrow(
+          /rebuild or repack/iu,
+        );
+      }
+    }
+  });
+
+  test("workflow repository casing is normalized without weakening branch or filename identity", () => {
+    const configuration = {
+      githubActions: true,
+      repository: declaredRepository.toUpperCase(),
+      originRepository: declaredRepository,
+      workflowRef: `${declaredRepository.toUpperCase()}/.github/workflows/${plannedReleasePolicy.workflow}@refs/heads/${plannedReleasePolicy.branch}`,
+      runnerEnvironment: "github-hosted",
+      releaseOwner: declaredRepository,
+      repositoryVisibility: "public",
+      staticPublication: plannedReleasePolicy.staticPublication,
+      approvedTag: `v${packageManifest.version}`,
+    };
+    expect(() => validateExternalConfiguration(configuration)).not.toThrow();
+    for (const workflowRef of [
+      configuration.workflowRef.replace("release.yml", "Release.yml"),
+      configuration.workflowRef.replace("refs/heads/main", "refs/heads/Main"),
+    ]) {
+      expect(() =>
+        validateExternalConfiguration({ ...configuration, workflowRef }),
+      ).toThrow(/workflowRef/iu);
+    }
+  });
+
   test("external release configuration fails closed outside the protected workflow", () => {
     expect(() => validateExternalConfiguration({})).toThrow(
       /external release configuration/iu,
@@ -443,7 +588,6 @@ describe("release workflow contracts", () => {
         runnerEnvironment: "github-hosted",
         releaseOwner: declaredRepository,
         repositoryVisibility: "public",
-        packagePublication: "none",
         staticPublication: plannedReleasePolicy.staticPublication,
         approvedTag: `v${packageManifest.version}`,
       }),
@@ -458,7 +602,6 @@ describe("release workflow contracts", () => {
         runnerEnvironment: "github-hosted",
         releaseOwner: declaredRepository,
         repositoryVisibility: "public",
-        packagePublication: "none",
         staticPublication: plannedReleasePolicy.staticPublication,
         approvedTag: `v${packageManifest.version}`,
       }),
@@ -477,6 +620,14 @@ describe("release workflow contracts", () => {
     expect(repositoryFromMetadata("https://example.com/owner/repository")).toBe(
       undefined,
     );
+    for (const remote of [
+      "https://evilgithub.com/owner/repository",
+      "https://github.com.evil.example/owner/repository",
+      "https://example.com/github.com/owner/repository",
+      "https://github.com@evil.example/owner/repository",
+    ]) {
+      expect(repositoryFromMetadata(remote)).toBeUndefined();
+    }
   });
 
   test("release runbook records the no-npm source and Pages boundary", async () => {

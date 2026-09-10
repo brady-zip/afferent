@@ -4,7 +4,10 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { repositoryFromMetadata } from "./generate-release-manifest.mjs";
+import {
+  matchesRepositoryWebUrl,
+  repositoryFromMetadata,
+} from "./generate-release-manifest.mjs";
 
 const repositoryRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const declaredPackageManifest = JSON.parse(
@@ -113,10 +116,17 @@ export function validatePackageCandidate({ manifest, packedFiles, registry }) {
       "package must remain private with no npm publishConfig in v1",
     );
   }
-  const repositoryUrl = `https://github.com/${requiredIdentity.repository}`;
   if (
-    manifest.homepage !== `${repositoryUrl}#readme` ||
-    manifest.bugs.url !== `${repositoryUrl}/issues`
+    !matchesRepositoryWebUrl(
+      manifest.homepage,
+      requiredIdentity.repository,
+      "#readme",
+    ) ||
+    !matchesRepositoryWebUrl(
+      manifest.bugs.url,
+      requiredIdentity.repository,
+      "/issues",
+    )
   ) {
     throw new Error(
       "package homepage or issue tracker does not match repository",

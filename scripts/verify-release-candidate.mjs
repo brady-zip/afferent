@@ -398,6 +398,21 @@ export function validateReleaseWorkflow(source) {
       throw new Error("release jobs require the manual allow-release guard");
     }
   }
+  for (const [name, job] of Object.entries({
+    "prepare-static": prepareStatic,
+    "publish-static": publishStatic,
+    "verify-static": verifyStatic,
+  })) {
+    if (
+      /\b(?:npm\s+(?:run\s+)?(?:build|pack)\b|changeset\s+publish\b)/iu.test(
+        commandFor(job),
+      )
+    ) {
+      throw new Error(
+        `${name} must not rebuild or repack the verified candidate`,
+      );
+    }
+  }
   if (!dependencyList(prepareStatic).includes("release-readiness")) {
     throw new Error(
       "static publication preparation must depend on release readiness",
@@ -514,8 +529,7 @@ export function validateArtifactActionCompatibility(ciSource, releaseSource) {
       `afferent-verified-release-candidate-${githubShaExpression}` ||
     crossRunDownload.with.name !==
       `afferent-verified-release-candidate-${sourceCommitExpression}` ||
-    normalizeRepositoryName(crossRunDownload.with.repository) !==
-      declaredRepository ||
+    crossRunDownload.with.repository !== "$" + "{{ github.repository }}" ||
     !crossRunDownload.with["run-id"]
   ) {
     throw new Error(
@@ -553,16 +567,21 @@ export function validateExternalConfiguration(configuration) {
     runnerEnvironment: "github-hosted",
     releaseOwner: declaredRepository,
     repositoryVisibility: "public",
-    packagePublication: plannedReleasePolicy.packagePublication,
     staticPublication: plannedReleasePolicy.staticPublication,
     approvedTag: declaredIdentity.sourceTag,
   };
   for (const [key, value] of Object.entries(expected)) {
-    const actual = ["originRepository", "releaseOwner", "repository"].includes(
+    let actual = ["originRepository", "releaseOwner", "repository"].includes(
       key,
     )
       ? normalizeRepositoryName(configuration?.[key])
       : configuration?.[key];
+    if (key === "workflowRef" && typeof actual === "string") {
+      const match = actual.match(/^(?<repository>[^/]+\/[^/]+)(?<ref>\/.*)$/u);
+      actual = match
+        ? `${normalizeRepositoryName(match.groups.repository)}${match.groups.ref}`
+        : undefined;
+    }
     if (actual !== value) {
       throw new Error(
         `external release configuration is incomplete: ${key} must be ${value}`,
@@ -972,23 +991,33 @@ export async function validateCandidateDirectory(
   return record;
 }
 
-async function originRepository() {
-  let result;
+export async function originRepository(root = repositoryRoot) {
+  let results;
   try {
-    // Resolve insteadOf rewrites deliberately.
-    // The effective push destination must agree with the release declaration.
-    result = await run("git", ["remote", "get-url", "origin"], {
-      capture: true,
-    });
+    // Expand Git's insteadOf/pushInsteadOf rewrites for every destination.
+    // Explicit pushurl entries must agree with all fetch URLs.
+    results = await Promise.all([
+      run("git", ["remote", "get-url", "--all", "origin"], {
+        capture: true,
+        cwd: root,
+      }),
+      run("git", ["remote", "get-url", "--push", "--all", "origin"], {
+        capture: true,
+        cwd: root,
+      }),
+    ]);
   } catch {
     throw new Error(
       "external release configuration is incomplete: no usable git remote named origin is configured",
     );
   }
-  const repository = repositoryFromMetadata(result.stdout);
-  if (!repository) {
+  const repositories = results.flatMap((result) =>
+    result.stdout.trim().split(/\r?\n/u).map(repositoryFromMetadata),
+  );
+  const repository = repositories[0];
+  if (!repository || repositories.some((value) => value !== repository)) {
     throw new Error(
-      "external release configuration is incomplete: git remote named origin must resolve to github.com/<owner>/<repository>",
+      "external release configuration is incomplete: all origin fetch and push destinations must resolve to the same github.com/<owner>/<repository>",
     );
   }
   return repository;
@@ -1003,7 +1032,6 @@ async function externalConfigurationFromEnvironment() {
     runnerEnvironment: process.env.RUNNER_ENVIRONMENT,
     releaseOwner: process.env.AFFERENT_RELEASE_OWNER,
     repositoryVisibility: process.env.AFFERENT_REPOSITORY_VISIBILITY,
-    packagePublication: plannedReleasePolicy.packagePublication,
     staticPublication: process.env.AFFERENT_STATIC_PUBLICATION,
     approvedTag: process.env.AFFERENT_RELEASE_APPROVED_TAG,
   };
@@ -1037,11 +1065,28 @@ export async function validateReleasePreflight(candidateDirectory) {
   ) {
     throw new Error("release source does not match the verified candidate");
   }
+  await validateReleaseCheckout(sourceCommit, sourceTag);
+  validateRuntimeFloor({
+    node: process.versions.node,
+    npm: await npmVersion(),
+  });
+  return record;
+}
+
+export async function validateReleaseCheckout(
+  sourceCommit,
+  sourceTag,
+  root = repositoryRoot,
+) {
   const [headResult, tagResult, statusResult] = await Promise.all([
-    run("git", ["rev-parse", "HEAD"], { capture: true }),
-    run("git", ["rev-parse", `refs/tags/${sourceTag}`], { capture: true }),
+    run("git", ["rev-parse", "HEAD"], { capture: true, cwd: root }),
+    run("git", ["rev-parse", `refs/tags/${sourceTag}^{commit}`], {
+      capture: true,
+      cwd: root,
+    }),
     run("git", ["status", "--porcelain", "--untracked-files=no"], {
       capture: true,
+      cwd: root,
     }),
   ]);
   if (
@@ -1051,11 +1096,6 @@ export async function validateReleasePreflight(candidateDirectory) {
   ) {
     throw new Error("release tag, commit, or clean checkout gate failed");
   }
-  validateRuntimeFloor({
-    node: process.versions.node,
-    npm: await npmVersion(),
-  });
-  return record;
 }
 
 export async function preparePagesSite(candidateDirectory, outputDirectory) {

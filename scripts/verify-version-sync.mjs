@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import {
   loadReleaseIdentity,
+  matchesRepositoryWebUrl,
   repositoryFromMetadata,
 } from "./generate-release-manifest.mjs";
 
@@ -39,10 +40,9 @@ export function validatePackageSurface(manifest) {
   ) {
     throw new Error("local package license or repository identity drifted");
   }
-  const repositoryUrl = `https://github.com/${repository}`;
   if (
-    manifest.homepage !== `${repositoryUrl}#readme` ||
-    manifest.bugs?.url !== `${repositoryUrl}/issues`
+    !matchesRepositoryWebUrl(manifest.homepage, repository, "#readme") ||
+    !matchesRepositoryWebUrl(manifest.bugs?.url, repository, "/issues")
   ) {
     throw new Error(
       "package homepage or issue tracker does not match repository",
